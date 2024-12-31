@@ -1,0 +1,508 @@
+#include "datasketches_extension.hpp"
+#include "duckdb.hpp"
+#include "duckdb/common/exception.hpp"
+#include "duckdb/common/string_util.hpp"
+#include "duckdb/common/extra_type_info.hpp"
+#include "duckdb/function/scalar_function.hpp"
+#include "duckdb/main/extension_util.hpp"
+#include <duckdb/parser/parsed_data/create_scalar_function_info.hpp>
+#include <duckdb/parser/parsed_data/create_aggregate_function_info.hpp>
+
+#include <DataSketches/quantiles_sketch.hpp>
+#include <DataSketches/kll_sketch.hpp>
+#include <DataSketches/req_sketch.hpp>
+#include <DataSketches/tdigest.hpp>
+#include <DataSketches/hll.hpp>
+#include <DataSketches/cpc_sketch.hpp>
+#include <DataSketches/cpc_union.hpp>
+#include <optional>
+
+namespace duckdb
+{
+
+static std::string toLowerCase(const std::string& input) {
+    std::string result = input;
+    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
+    return result;
+}
+
+    {% for sketch_type in sketch_types %}
+
+    {% if sketch_type not in counting_sketch_names %}
+    template <class T>
+    {% endif %}
+    struct DS{{sketch_type}}State
+    {
+        {% if sketch_type in counting_sketch_names %}
+        {{sketch_class_name(sketch_type)}} *sketch = nullptr;
+        {% else %}
+        {{sketch_class_name(sketch_type)}}<T> *sketch = nullptr;
+        {% endif %}
+
+        ~DS{{sketch_type}}State()
+        {
+            if (sketch)
+            {
+                delete sketch;
+            }
+        }
+
+        {% if sketch_type in ["Quantiles", "KLL"] %}
+        void CreateSketch(int32_t k)
+        {
+            D_ASSERT(!sketch);
+            D_ASSERT(k > 0);
+            D_ASSERT(k <= 32768);
+            sketch = new {{sketch_class_name(sketch_type)}}<T>(k);
+        }
+        {% elif sketch_type == "REQ" %}
+        void CreateSketch(int32_t k)
+        {
+            D_ASSERT(!sketch);
+            D_ASSERT(k >= 4);
+            D_ASSERT(k <= 1024);
+            sketch = new {{sketch_class_name(sketch_type)}}<T>(k);
+        }
+        {% elif sketch_type == "TDigest" %}
+        void CreateSketch(uint16_t k)
+        {
+            D_ASSERT(!sketch);
+            sketch = new {{sketch_class_name(sketch_type)}}<T>(k);
+        }
+        {% elif sketch_type == "HLL" %}
+        void CreateSketch(uint16_t k)
+        {
+            D_ASSERT(!sketch);
+            sketch = new {{sketch_class_name(sketch_type)}}(k);
+        }
+        {% elif sketch_type == "CPC" %}
+        void CreateSketch(uint8_t k)
+        {
+            D_ASSERT(!sketch);
+            sketch = new {{sketch_class_name(sketch_type)}}(k);
+        }
+        {% endif %}
+
+        void CreateSketch(const DS{{sketch_type}}State &existing)
+        {
+            if (existing.sketch)
+            {
+                {% if sketch_type in counting_sketch_names %}
+                sketch = new {{sketch_class_name(sketch_type)}}(*existing.sketch);
+                {% else %}
+                sketch = new {{sketch_class_name(sketch_type)}}<T>(*existing.sketch);
+                {% endif %}
+            }
+        }
+
+        {% if sketch_type not in counting_sketch_names %}
+        {{sketch_class_name(sketch_type)}}<T> deserialize_sketch(const string_t &data)
+        {
+            return {{sketch_class_name(sketch_type)}}<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+        }
+        {% else %}
+        {{sketch_class_name(sketch_type)}} deserialize_sketch(const string_t &data)
+        {
+            return {{sketch_class_name(sketch_type)}}::deserialize(data.GetDataUnsafe(), data.GetSize());
+        }
+        {% endif %}
+    };
+
+
+
+    {% if sketch_type in counting_sketch_names %}
+    static LogicalType Create{{sketch_type}}CountingSketchType(DatabaseInstance &instance)
+    {
+        LogicalType new_type = LogicalType::BLOB;
+        auto new_type_name = "sketch_{{sketch_type|lower}}";
+        auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
+        type_info.temporary = false;
+        type_info.internal = true;
+        new_type.SetAlias(new_type_name);
+        auto &system_catalog = Catalog::GetSystemCatalog(instance);
+        auto data = CatalogTransaction::GetSystemTransaction(instance);
+        system_catalog.CreateType(data, type_info);
+	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        return new_type;
+    }
+    {% else %}
+    static LogicalType Create{{sketch_type}}SketchType(DatabaseInstance &instance, LogicalType embedded_type)
+    {
+        LogicalType new_type = LogicalType::BLOB;
+        auto type_suffix = toLowerCase(embedded_type.ToString());
+        auto new_type_name = "sketch_{{sketch_type|lower}}_" + type_suffix;
+        auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
+        type_info.temporary = false;
+        type_info.internal = true;
+        new_type.SetAlias(new_type_name);
+        auto &system_catalog = Catalog::GetSystemCatalog(instance);
+        auto data = CatalogTransaction::GetSystemTransaction(instance);
+        system_catalog.CreateType(data, type_info);
+	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        return new_type;
+    }
+    {% endif %}
+
+
+    {%- endfor %}
+
+    struct DSQuantilesMergeOperation
+    {
+        template <class STATE>
+        static void Initialize(STATE &state)
+        {
+            state.sketch = nullptr;
+        }
+
+        template <class A_TYPE, class B_TYPE, class STATE, class OP>
+        static void Operation(STATE &state,
+                              const A_TYPE &a_data,
+                              const B_TYPE &b_data,
+                              AggregateBinaryInput &idata)
+        {
+            if (!state.sketch)
+            {
+                state.CreateSketch(a_data);
+            }
+
+            // this is a sketch in b_data, so we need to deserialize it.
+            state.sketch->merge(state.deserialize_sketch(b_data));
+        }
+
+        template <class STATE, class OP>
+        static void Combine(const STATE &source, STATE &target,
+                            AggregateInputData &aggr_input_data)
+        {
+            if (!target.sketch)
+            {
+                target.CreateSketch(source);
+            }
+            else
+            {
+                target.sketch->merge(*source.sketch);
+            }
+        }
+
+        template <class T, class STATE>
+        static void Finalize(STATE &state, T &target,
+                             AggregateFinalizeData &finalize_data)
+        {
+            if (!state.sketch)
+            {
+                finalize_data.ReturnNull();
+            }
+            else
+            {
+                auto serialized_data = state.sketch->serialize();
+                auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
+                delete state.sketch;
+                state.sketch = nullptr;
+
+                target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
+            }
+        }
+
+        static bool IgnoreNull() { return true; }
+    };
+
+    struct DSQuantilesCreateOperation
+    {
+        template <class STATE>
+        static void Initialize(STATE &state)
+        {
+            state.sketch = nullptr;
+        }
+
+        template <class A_TYPE, class B_TYPE, class STATE, class OP>
+        static void Operation(STATE &state,
+                              const A_TYPE &a_data,
+                              const B_TYPE &b_data,
+                              AggregateBinaryInput &idata)
+        {
+            if (!state.sketch)
+            {
+                state.CreateSketch(a_data);
+            }
+
+            state.sketch->update(b_data);
+        }
+
+        template <class STATE, class OP>
+        static void Combine(const STATE &source, STATE &target,
+                            AggregateInputData &aggr_input_data)
+        {
+            if (!target.sketch)
+            {
+                target.CreateSketch(source);
+            }
+            else
+            {
+                target.sketch->merge(*source.sketch);
+            }
+        }
+
+        template <class T, class STATE>
+        static void Finalize(STATE &state, T &target,
+                             AggregateFinalizeData &finalize_data)
+        {
+            if (!state.sketch)
+            {
+                finalize_data.ReturnNull();
+            }
+            else
+            {
+                auto serialized_data = state.sketch->serialize();
+                auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
+                delete state.sketch;
+                state.sketch = nullptr;
+
+                target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
+            }
+        }
+
+        static bool IgnoreNull() { return true; }
+    };
+
+
+    struct DSHLLCreateOperation
+    {
+        template <class STATE>
+        static void Initialize(STATE &state)
+        {
+            state.sketch = nullptr;
+        }
+
+        template <class A_TYPE, class B_TYPE, class STATE, class OP>
+        static void Operation(STATE &state,
+                              const A_TYPE &a_data,
+                              const B_TYPE &b_data,
+                              AggregateBinaryInput &idata)
+        {
+            if (!state.sketch)
+            {
+                state.CreateSketch(a_data);
+            }
+
+            if constexpr (std::is_same_v<B_TYPE, duckdb::string_t>) {
+                state.sketch->update(b_data.GetData(), b_data.GetSize());
+            } else {
+                state.sketch->update(b_data);
+            }
+        }
+
+        template <class STATE, class OP>
+        static void Combine(const STATE &source, STATE &target,
+                            AggregateInputData &aggr_input_data)
+        {
+            if (!target.sketch)
+            {
+                target.CreateSketch(source);
+            }
+            else
+            {
+                datasketches::hll_union u(target.sketch->get_lg_config_k());
+                u.update(*target.sketch);
+                u.update(*source.sketch);
+
+                *target.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
+            }
+        }
+
+        template <class T, class STATE>
+        static void Finalize(STATE &state, T &target,
+                             AggregateFinalizeData &finalize_data)
+        {
+            if (!state.sketch)
+            {
+                finalize_data.ReturnNull();
+            }
+            else
+            {
+                auto serialized_data = state.sketch->serialize_updatable();
+                auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
+                delete state.sketch;
+                state.sketch = nullptr;
+
+                target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
+            }
+        }
+
+        static bool IgnoreNull() { return true; }
+    };
+
+    struct DSCPCCreateOperation
+    {
+        template <class STATE>
+        static void Initialize(STATE &state)
+        {
+            state.sketch = nullptr;
+        }
+
+        template <class A_TYPE, class B_TYPE, class STATE, class OP>
+        static void Operation(STATE &state,
+                              const A_TYPE &a_data,
+                              const B_TYPE &b_data,
+                              AggregateBinaryInput &idata)
+        {
+            if (!state.sketch)
+            {
+                state.CreateSketch(a_data);
+            }
+
+            if constexpr (std::is_same_v<B_TYPE, duckdb::string_t>) {
+                state.sketch->update(b_data.GetData(), b_data.GetSize());
+            } else {
+                state.sketch->update(b_data);
+            }
+        }
+
+        template <class STATE, class OP>
+        static void Combine(const STATE &source, STATE &target,
+                            AggregateInputData &aggr_input_data)
+        {
+            if (!target.sketch)
+            {
+                target.CreateSketch(source);
+            }
+            else
+            {
+                datasketches::cpc_union u(target.sketch->get_lg_k());
+                u.update(*target.sketch);
+                u.update(*source.sketch);
+                *target.sketch = u.get_result();
+            }
+        }
+
+        template <class T, class STATE>
+        static void Finalize(STATE &state, T &target,
+                             AggregateFinalizeData &finalize_data)
+        {
+            if (!state.sketch)
+            {
+                finalize_data.ReturnNull();
+            }
+            else
+            {
+                auto serialized_data = state.sketch->serialize();
+                auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
+                delete state.sketch;
+                state.sketch = nullptr;
+
+                target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
+            }
+        }
+
+        static bool IgnoreNull() { return true; }
+    };
+
+
+
+{% for sketch_type in sketch_types %}
+    {% for unary_function in functions_per_sketch_type(sketch_type) %}
+
+{% if sketch_type not in counting_sketch_names %}
+template <class T>
+{% endif %}
+static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == {{unary_function.arguments|length}});
+
+    {% for a in unary_function.arguments %}
+        auto &{{a.name}}_vector = args.data[{{loop.index0}}];
+    {%- endfor %}
+
+    {{ get_function_block(unary_function) }}
+
+}
+
+    {% endfor %}
+
+
+    {% if sketch_type not in counting_sketch_names %}
+    template <typename T>
+    auto static DS{{sketch_type}}MergeAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
+    {
+        return AggregateFunction::BinaryAggregate<DS{{sketch_type}}State<T>, int32_t, string_t, string_t, DSQuantilesMergeOperation>(
+            LogicalType::INTEGER, result_type, result_type);
+    }
+    {% endif %}
+
+
+
+    template <typename T>
+    auto static DS{{sketch_type}}CreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
+    {
+        {% if sketch_type == 'HLL' %}
+        return AggregateFunction::BinaryAggregate<DS{{sketch_type}}State, int32_t, T, string_t, DSHLLCreateOperation>(
+            LogicalType::INTEGER, type, result_type);
+        {% elif sketch_type == 'CPC' %}
+        return AggregateFunction::BinaryAggregate<DS{{sketch_type}}State, int32_t, T, string_t, DSCPCCreateOperation>(
+            LogicalType::INTEGER, type, result_type);
+        {% else %}
+        return AggregateFunction::BinaryAggregate<DS{{sketch_type}}State<T>, int32_t, T, string_t, DSQuantilesCreateOperation>(
+            LogicalType::INTEGER, type, result_type);
+        {% endif %}
+    }
+
+
+  void Load{{sketch_type}}Sketch(DatabaseInstance &instance) {
+      auto &system_catalog = Catalog::GetSystemCatalog(instance);
+      auto data = CatalogTransaction::GetSystemTransaction(instance);
+
+
+      {% if sketch_type in counting_sketch_names %}
+        auto sketch_type = Create{{sketch_type}}CountingSketchType(instance);
+      {% else %}
+        std::unordered_map<LogicalTypeId, LogicalType> sketch_map_types;
+        {% for logical_type in logical_type_to_cplusplus_type(sketch_type).keys() %}
+            sketch_map_types.insert({ {{logical_type}}, Create{{sketch_type}}SketchType(instance, LogicalType({{logical_type}}))});
+        {%- endfor %}
+      {% endif %}
+
+
+      {% for unary_function in functions_per_sketch_type(sketch_type) %}
+      {
+        ScalarFunctionSet fs("datasketch_{{sketch_type|lower}}_{{unary_function.name|lower}}");
+        {% if sketch_type in counting_sketch_names %}
+                fs.AddFunction(ScalarFunction(
+                {{get_scalar_function_args(unary_function, None, None)}}
+                ,    DS{{sketch_type}}{{unary_function.name}}));
+        {% else %}
+            {% for logical_type, cpp_type in logical_type_to_cplusplus_type(sketch_type).items() %}
+                fs.AddFunction(ScalarFunction(
+                {{get_scalar_function_args(unary_function, logical_type, cpp_type)}}
+                ,    DS{{sketch_type}}{{unary_function.name}}<{{cpp_type}}>));
+            {%- endfor %}
+        {% endif %}
+        ExtensionUtil::RegisterFunction(instance, fs);
+      }
+      {%- endfor %}
+
+
+      AggregateFunctionSet sketch("datasketch_{{sketch_type|lower}}");
+      {% for logical_type, cpp_type in logical_type_to_cplusplus_type(sketch_type).items() %}
+
+        {% if sketch_type in counting_sketch_names %}
+            sketch.AddFunction(DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_type));
+            {% if sketch_type not in counting_sketch_names %}
+            sketch.AddFunction(DS{{sketch_type}}MergeAggregate<{{cpp_type}}>({{logical_type}}, sketch_type));
+            {% endif %}
+        {% else %}
+            sketch.AddFunction(DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{logical_type}}]));
+            {% if sketch_type not in counting_sketch_names %}
+            sketch.AddFunction(DS{{sketch_type}}MergeAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{logical_type}}]));
+            {% endif %}
+        {% endif %}
+      {%- endfor %}
+
+
+      CreateAggregateFunctionInfo sketch_info(sketch);
+      system_catalog.CreateFunction(data, sketch_info);
+  }
+  {%- endfor %}
+
+
+}

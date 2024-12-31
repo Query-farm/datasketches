@@ -1,5 +1,10 @@
 {
   "dependencies": [
-    "openssl"
-  ]
+    "apache-datasketches"
+  ],
+  "vcpkg-configuration": {
+    "overlay-ports": [
+      "./vcpkg-overlay/apache-datasketches"
+    ]
+  }
 }

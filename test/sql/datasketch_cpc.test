@@ -1,0 +1,80 @@
+# name: test/sql/datasketch_cpc.test
+# description: test datasketch CPC sketches
+# group: [datasketches]
+
+# Before we load the extension, this will fail
+statement error
+SELECT datasketch_cpc_is_empty(''::blob);
+----
+Catalog Error: Scalar Function with name datasketch_cpc_is_empty does not exist!
+
+# Require statement will ensure this test is run with this extension loaded
+require datasketches
+
+query I
+SELECT datasketch_cpc(8, 5);
+----
+\x08\x01\x10\x08\x00\x0E\xCC\x93\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\xF8o@\x00\x00\x00\x00\x00\x00\xF0?\xDD\x03\x00\x00
+
+query I
+SELECT datasketch_cpc_is_empty('\x08\x01\x10\x08\x00\x0E\xCC\x93\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\xF8o@\x00\x00\x00\x00\x00\x00\xF0?\xDD\x03\x00\x00');
+----
+false
+
+# Do some tests with integers.
+
+statement ok
+CREATE TABLE items(id integer)
+
+statement ok
+INSERT INTO items(id) select unnest(generate_series(1, 100000));
+
+# Duplicate items shouldn't affect the count.
+
+statement ok
+INSERT INTO items(id) select unnest(generate_series(1, 100000));
+
+query I
+SELECT datasketch_cpc_estimate(datasketch_cpc(12, id))::int from items
+----
+101054
+
+query I
+SELECT datasketch_cpc_estimate(datasketch_cpc(4, id))::int from items
+----
+104074
+
+query I
+SELECT datasketch_cpc_is_empty(datasketch_cpc(12, id)) from items
+----
+False
+
+query I
+SELECT datasketch_cpc_lower_bound(datasketch_cpc(12, id), 1)::int from items
+----
+99962
+
+query I
+SELECT datasketch_cpc_upper_bound(datasketch_cpc(12, id), 1)::int from items
+----
+102151
+
+
+query I
+SELECT datasketch_cpc_describe(datasketch_cpc(4, id)) like '%CPC sketch summary%' from items
+----
+True
+
+# Test with strings
+
+statement ok
+CREATE TABLE employees(name string)
+
+statement ok
+INSERT INTO employees(name) VALUES
+('John Doe'), ('Jane Smith'), ('Michael Johnson'), ('Emily Davis'), ('Chris Brown'), ('Sarah Wilson'), ('David Martinez'),('Sophia Anderson'), ('Daniel Lee'),('Olivia Taylor');
+
+query I
+SELECT datasketch_cpc_estimate(datasketch_cpc(4, name))::int from employees
+----
+11

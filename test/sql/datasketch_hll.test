@@ -1,0 +1,95 @@
+# name: test/sql/datasketch_hll.test
+# description: test datasketch HLL sketches
+# group: [datasketches]
+
+# Before we load the extension, this will fail
+statement error
+SELECT datasketch_hll_is_empty(''::blob);
+----
+Catalog Error: Scalar Function with name datasketch_hll_is_empty does not exist!
+
+# Require statement will ensure this test is run with this extension loaded
+require datasketches
+
+query I
+SELECT datasketch_hll(8, 5);
+----
+\x02\x01\x07\x08\x03\x00\x01\x00{e\xE6\x08\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00
+
+query I
+SELECT datasketch_hll_is_empty('\x02\x01\x07\x08\x03\x00\x01\x00{e\xE6\x08\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00');
+----
+false
+
+query I
+SELECT datasketch_hll_estimate('\x02\x01\x07\x08\x03\x00\x01\x00{e\xE6\x08\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00');
+----
+1
+
+# Do some tests with integers.
+
+statement ok
+CREATE TABLE items(id integer)
+
+statement ok
+INSERT INTO items(id) select unnest(generate_series(1, 100000));
+
+# Duplicate items shouldn't affect the count.
+
+statement ok
+INSERT INTO items(id) select unnest(generate_series(1, 100000));
+
+query I
+SELECT datasketch_hll_estimate(datasketch_hll(12, id))::int from items
+----
+102878
+
+query I
+SELECT datasketch_hll_estimate(datasketch_hll(4, id))::int from items
+----
+146185
+
+query I
+SELECT datasketch_hll_is_empty(datasketch_hll(12, id)) from items
+----
+False
+
+query I
+SELECT datasketch_hll_lower_bound(datasketch_hll(12, id), 1)::int from items
+----
+101243
+
+query I
+SELECT datasketch_hll_upper_bound(datasketch_hll(12, id), 1)::int from items
+----
+104571
+
+query I
+SELECT datasketch_hll_lg_config_k(datasketch_hll(12, id)) from items
+----
+12
+
+query I
+SELECT datasketch_hll_is_compact(datasketch_hll(12, id)) from items
+----
+False
+
+
+query I
+SELECT datasketch_hll_describe(datasketch_hll(4, id), true, false) like '%HLL sketch summary%' from items
+----
+True
+
+# Test with strings
+
+statement ok
+CREATE TABLE employees(name string)
+
+statement ok
+INSERT INTO employees(name) VALUES
+('John Doe'), ('Jane Smith'), ('Michael Johnson'), ('Emily Davis'), ('Chris Brown'), ('Sarah Wilson'), ('David Martinez'),('Sophia Anderson'), ('Daniel Lee'),('Olivia Taylor');
+
+query I
+SELECT datasketch_hll_estimate(datasketch_hll(4, name))::int from employees
+----
+11
