@@ -49,8 +49,30 @@ SELECT datasketch_tdigest_pmf(datasketch_tdigest(10, temp), [100, 200, 500]) fro
 ----
 [0.0995, 0.1, 0.3, 0.5005]
 
-
 query I
 SELECT datasketch_tdigest_k(datasketch_tdigest(10, temp)) from readings
 ----
 10
+
+statement ok
+CREATE TABLE sketches (sketch sketch_tdigest_double)
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_tdigest(12, temp) from readings where mod(temp::int, 3) == 0
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_tdigest(12, temp) from readings where mod(temp::int, 3) == 1
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_tdigest(12, temp) from readings where mod(temp::int, 3) == 2
+
+query I
+select datasketch_tdigest_is_empty(datasketch_tdigest(12, sketch)) from sketches
+----
+False
+
+query I
+select datasketch_tdigest_quantile(datasketch_tdigest(12, sketch), 0.5)::int from sketches
+----
+351
+

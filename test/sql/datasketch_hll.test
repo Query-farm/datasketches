@@ -116,3 +116,4 @@ query I
 select datasketch_hll_estimate(datasketch_hll_union(12, sketch))::int from sketches
 ----
 102878
+
