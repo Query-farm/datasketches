@@ -77,9 +77,13 @@ This same aggregate function can perform a union of multiple sketches.
 
 Compute approximate normalized rank of the given value.
 
+-----
+
 **`datasketch_tdigest_quantile(sketch_tdigest, DOUBLE) -> DOUBLE`**
 
 Compute approximate quantile value corresponding to the given normalized rank
+
+-----
 
 
 **`datasketch_tdigest_pmf(sketch_tdigest, value[]) -> double[]`**
@@ -87,6 +91,8 @@ Compute approximate quantile value corresponding to the given normalized rank
 Returns an approximation to the Probability Mass Function (PMF) of the input stream given a set of split points.
 
 The returned value is a list of <i>m</i>+1 doubles each of which is an approximation to the fraction of the input stream values (the mass) that fall into one of those intervals.
+
+-----
 
 **`datasketch_tdigest_cdf(sketch_tdigest, value[]) -> double[]`**
 
@@ -161,6 +167,8 @@ datasketch_hll(8, id) = \x0A\x01\x07\x08\x00\x10\x06\x02\x00\x00\x00\x00\x00\x00
 
 The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the value to aggregate into the sketch.
 
+-----
+
 **`datasketch_hll_union(INTEGER, sketch_hll) -> sketch_hll`**
 
 The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the sketch to aggregate via a union operation.
@@ -171,26 +179,35 @@ The first argument is the base two logarithm of the number of bins in the sketch
 
 Get the estimated number of distinct elements seen by this sketch
 
+-----
+
 **`datasketch_hll_lower_bound(sketch_hll, integer) -> DOUBLE`**
 
 Returns the approximate lower error bound given the specified number of standard deviations.
+
+-----
 
 **`datasketch_hll_upper_bound(sketch_hll, integer) -> DOUBLE`**
 
 Returns the approximate lower error bound given the specified number of standard deviations.
 
+-----
+
 **`datasketch_hll_describe(sketch_hll) -> VARCHAR`**
 
 Returns a human readable summary of the sketch.
+
+-----
 
 **`datasketch_hll_is_empty(sketch_hll) -> BOOLEAN`**
 
 Returns if the sketch is empty.
 
+-----
+
 **`datasketch_hll_lg_config_k(sketch_hll) -> UTINYINT`**
 
 Returns the base two logarithm for the number of bins in the sketch.
-
 
 #### Compressed Probability Counting - "`cpc`"
 
@@ -242,6 +259,8 @@ datasketch_cpc(4, id) = \x04\x01\x10\x04\x0A\x12\xCC\x93\xD0\x00\x00\x00\x03\x00
 
 The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the value to aggregate into the sketch.
 
+-----
+
 **`datasketch_cpc_union(INTEGER, sketch_cpc) -> sketch_cpc`**
 
 The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the sketch to aggregate via a union operation.
@@ -252,25 +271,31 @@ The first argument is the base two logarithm of the number of bins in the sketch
 
 Get the estimated number of distinct elements seen by this sketch
 
+-----
+
 **`datasketch_cpc_lower_bound(sketch_cpc, integer kappa) -> DOUBLE`**
 
 Returns the approximate lower error bound given a parameter kappa (1, 2 or 3).
 This parameter is similar to the number of standard deviations of the normal distribution and corresponds to approximately 67%, 95% and 99% confidence intervals.
+
+-----
 
 **`datasketch_cpc_upper_bound(sketch_cpc, integer kappa) -> DOUBLE`**
 
 Returns the approximate upper error bound given a parameter kappa (1, 2 or 3).
 This parameter is similar to the number of standard deviations of the normal distribution and corresponds to approximately 67%, 95% and 99% confidence intervals.
 
+-----
+
 **`datasketch_cpc_describe(sketch_cpc) -> VARCHAR`**
 
 Returns a human readable summary of the sketch.
 
+-----
+
 **`datasketch_cpc_is_empty(sketch_cpc) -> BOOLEAN`**
 
 Returns if the sketch is empty.
-
-
 
 
 ## Building
