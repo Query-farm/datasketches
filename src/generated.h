@@ -2,7 +2,8 @@
 
 #include "datasketches_extension.hpp"
 
-namespace duckdb
+using namespace duckdb;
+namespace duckdb_datasketches
 {
   void LoadQuantilesSketch(DatabaseInstance &instance);
   void LoadKLLSketch(DatabaseInstance &instance);

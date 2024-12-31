@@ -19,12 +19,12 @@ namespace duckdb
 
     static void LoadInternal(DatabaseInstance &instance)
     {
-        LoadQuantilesSketch(instance);
-        LoadKLLSketch(instance);
-        LoadREQSketch(instance);
-        LoadTDigestSketch(instance);
-        LoadHLLSketch(instance);
-        LoadCPCSketch(instance);
+        duckdb_datasketches::LoadQuantilesSketch(instance);
+        duckdb_datasketches::LoadKLLSketch(instance);
+        duckdb_datasketches::LoadREQSketch(instance);
+        duckdb_datasketches::LoadTDigestSketch(instance);
+        duckdb_datasketches::LoadHLLSketch(instance);
+        duckdb_datasketches::LoadCPCSketch(instance);
     }
 
     void DatasketchesExtension::Load(DuckDB &db)

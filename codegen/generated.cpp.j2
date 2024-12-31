@@ -1,6 +1,10 @@
 #include "datasketches_extension.hpp"
 
 
+#include "duckdb/parser/parsed_data/create_scalar_function_info.hpp"
+#include "duckdb/parser/parsed_data/create_aggregate_function_info.hpp"
+#include "duckdb/function/scalar_function.hpp"
+
 #include <DataSketches/quantiles_sketch.hpp>
 #include <DataSketches/kll_sketch.hpp>
 #include <DataSketches/req_sketch.hpp>
@@ -9,7 +13,8 @@
 #include <DataSketches/cpc_sketch.hpp>
 #include <DataSketches/cpc_union.hpp>
 
-namespace duckdb
+using namespace duckdb;
+namespace duckdb_datasketches
 {
 
 static std::string toLowerCase(const std::string& input) {
@@ -598,7 +603,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
       {% else %}
         std::unordered_map<LogicalTypeId, LogicalType> sketch_map_types;
         {% for logical_type in logical_type_to_cplusplus_type(sketch_type).keys() %}
-            sketch_map_types.insert({ {{logical_type}}, Create{{sketch_type}}SketchType(instance, LogicalType({{logical_type}}))});
+            sketch_map_types.insert({ {{to_type_id(logical_type)}}, Create{{sketch_type}}SketchType(instance, LogicalType({{logical_type}}))});
         {%- endfor %}
       {% endif %}
 
@@ -628,8 +633,8 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         {% if sketch_type in counting_sketch_names %}
             sketch.AddFunction(DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_type));
         {% else %}
-            sketch.AddFunction(DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{logical_type}}]));
-            sketch.AddFunction(DS{{sketch_type}}MergeAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{logical_type}}]));
+            sketch.AddFunction(DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]));
+            sketch.AddFunction(DS{{sketch_type}}MergeAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]));
         {% endif %}
       {%- endfor %}
       CreateAggregateFunctionInfo sketch_info(sketch);

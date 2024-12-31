@@ -82,10 +82,11 @@ def unary_functions_per_sketch_type(sketch_type: str):
     else:
         sketch_argument = {
             "cpp_type": "string_t",
-            "duckdb_type": lambda contained_type: f"sketch_map_types[{contained_type}]",
+            "duckdb_type": lambda contained_type: f"sketch_map_types[{contained_type.replace("LogicalType", "LogicalTypeId")}]",
             "name": "sketch",
             "process": deserialize_sketch,
         }
+
     cdf_points_argument = {
         "cpp_type": "list_entry_t",
         "duckdb_type": lambda contained_type: f"LogicalType::LIST({contained_type})",
@@ -572,7 +573,9 @@ data = {
     "get_function_block": get_function_block,
     "get_scalar_function_args": get_scalar_function_args,
     "logical_type_mapping": logical_type_mapping,
+    "to_type_id": lambda v: v.replace("LogicalType", "LogicalTypeId"),
 }
+
 
 # Render the template
 output = template.render(data)
