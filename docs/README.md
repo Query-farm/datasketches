@@ -30,9 +30,9 @@ This implementation is based on the following paper:
 Ted Dunning, Otmar Ertl. Extremely Accurate Quantiles Using t-Digests and the following implementation in Java
 [https://github.com/tdunning/t-digest](https://github.com/tdunning/t-digest). This implementation is similar to MergingDigest in the above Java implementation
 
-The values that can be aggregated by the CPC sketch are: `DOUBLE` and `FLOAT`.
+The values that can be aggregated by this sketch are: `DOUBLE` and `FLOAT`.
 
-The TDigest sketch is returned as a type `sketch_tdigest` which is equal to a BLOB.
+The TDigest sketch is returned as a type `sketch_tdigest_[type]` which is equal to a BLOB.
 
 ```sql
 -- Lets simulate a temperature sensor

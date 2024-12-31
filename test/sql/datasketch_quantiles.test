@@ -1,0 +1,74 @@
+# name: test/sql/datasketch_quantiles.test
+# description: test datasketch Quantiles sketches
+# group: [datasketches]
+
+# Before we load the extension, this will fail
+statement error
+SELECT datasketch_quantiles_is_empty(''::blob);
+----
+Catalog Error: Scalar Function with name datasketch_quantiles_is_empty does not exist!
+
+# Require statement will ensure this test is run with this extension loaded
+require datasketches
+
+query I
+SELECT datasketch_quantiles(16, 5.0::float);
+----
+\x02\x03\x08\x18\x10\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\xA0@\x00\x00\xA0@\x00\x00\xA0@
+
+query I
+SELECT datasketch_quantiles_is_empty('\x02\x03\x08\x18\x10\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\xA0@\x00\x00\xA0@\x00\x00\xA0@'::sketch_quantiles_float);
+----
+false
+
+# Do some tests with integers.
+
+statement ok
+CREATE TABLE readings(temp double)
+
+statement ok
+INSERT INTO readings(temp) select unnest(generate_series(1, 1000))::double;
+
+query I
+SELECT datasketch_quantiles_rank(datasketch_quantiles(16, temp), 500.0, true) between 0.40 and 0.60 from readings
+----
+True
+
+query I
+SELECT datasketch_quantiles_quantile(datasketch_quantiles(16, temp), 0.5, true) between 400 and 600 from readings
+----
+True
+
+# Can't save results on these because they are random
+
+statement ok
+SELECT datasketch_quantiles_cdf(datasketch_quantiles(16, temp), [100, 200, 500], true) from readings
+
+statement ok
+SELECT datasketch_quantiles_pmf(datasketch_quantiles(16, temp), [100, 200, 500], true) from readings
+
+query I
+SELECT datasketch_quantiles_k(datasketch_quantiles(16, temp)) from readings
+----
+16
+
+statement ok
+CREATE TABLE sketches (sketch sketch_quantiles_double)
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_quantiles(16, temp) from readings where mod(temp::int, 3) == 0
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_quantiles(16, temp) from readings where mod(temp::int, 3) == 1
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_quantiles(16, temp) from readings where mod(temp::int, 3) == 2
+
+query I
+select datasketch_quantiles_is_empty(datasketch_quantiles(16, sketch)) from sketches
+----
+False
+
+statement ok
+select datasketch_quantiles_quantile(datasketch_quantiles(16, sketch), 0.5, true)::int from sketches
+
