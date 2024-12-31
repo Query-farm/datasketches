@@ -61,28 +61,27 @@ The values that can be aggregated by the CPC sketch are:
 
 ##### Scalar Functions
 
-`datasketch_cpc_estimate(sketch) -> DOUBLE`
+`datasketch_cpc_estimate(sketch_cpc) -> DOUBLE`
 
 Get the estimated number of distinct elements seen by this sketch
 
-`datasketch_cpc_lower_bound(integer kappa) -> DOUBLE`
+`datasketch_cpc_lower_bound(sketch_cpc, integer kappa) -> DOUBLE`
 
 Returns the approximate lower error bound given a parameter kappa (1, 2 or 3).
 This parameter is similar to the number of standard deviations of the normal distribution and corresponds to approximately 67%, 95% and 99% confidence intervals.
 
-`datasketch_cpc_upper_bound(integer kappa) -> DOUBLE`
+`datasketch_cpc_upper_bound(sketch_cpc, integer kappa) -> DOUBLE`
 
 Returns the approximate upper error bound given a parameter kappa (1, 2 or 3).
 This parameter is similar to the number of standard deviations of the normal distribution and corresponds to approximately 67%, 95% and 99% confidence intervals.
 
-`datasketch_cpc_describe(sketch) -> VARCHAR`
+`datasketch_cpc_describe(sketch_cpc) -> VARCHAR`
 
 Returns a human readable summary of the sketch.
 
-`datasketch_cpc_is_empty(sketch) -> BOOLEAN`
+**`datasketch_cpc_is_empty(sketch_cpc) -> BOOLEAN`**
 
 Returns if the sketch is empty.
-
 
 
 
