@@ -520,6 +520,7 @@ def get_function_block(function_info: Any) -> str:
     executor_args = []
     lambda_args = []
     lambda_lines = []
+    lambda_cleanup_lines = []
     pre_executor_lines = []
 
     for argument in function_info["arguments"]:
@@ -533,6 +534,9 @@ def get_function_block(function_info: Any) -> str:
         if "process" in argument:
             lambda_lines.append(argument["process"])
 
+        if "cleanup" in argument:
+            lambda_cleanup_lines.append(argument["cleanup"])
+
         if "pre_executor" in argument:
             pre_executor_lines.append(argument["pre_executor"])
 
@@ -543,6 +547,8 @@ def get_function_block(function_info: Any) -> str:
     joined_lambda_args = ",".join(lambda_args)
 
     lambda_lines.append(function_info["method"])
+
+    lambda_lines.extend(lambda_cleanup_lines)
 
     lambda_body = "\n".join(lambda_lines)
     pre_executor_body = "\n".join(pre_executor_lines)

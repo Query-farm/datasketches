@@ -915,6 +915,7 @@ auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclu
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, cdf_result.size()};
                 
+duckdb_free(passing_points);
         });
 
 }
@@ -981,6 +982,7 @@ auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclu
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, pmf_result.size()};
                 
+duckdb_free(passing_points);
         });
 
 }
@@ -1935,6 +1937,7 @@ auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclu
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, cdf_result.size()};
                 
+duckdb_free(passing_points);
         });
 
 }
@@ -2001,6 +2004,7 @@ auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclu
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, pmf_result.size()};
                 
+duckdb_free(passing_points);
         });
 
 }
@@ -2955,6 +2959,7 @@ auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclu
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, cdf_result.size()};
                 
+duckdb_free(passing_points);
         });
 
 }
@@ -3021,6 +3026,7 @@ auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclu
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, pmf_result.size()};
                 
+duckdb_free(passing_points);
         });
 
 }
@@ -3909,6 +3915,7 @@ auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length);
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, cdf_result.size()};
                 
+duckdb_free(passing_points);
         });
 
 }
@@ -3974,6 +3981,7 @@ auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length);
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, pmf_result.size()};
                 
+duckdb_free(passing_points);
         });
 
 }
