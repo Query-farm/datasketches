@@ -277,7 +277,7 @@ Returns an approximation to the Probability Mass Function (PMF) of the input str
 given a set of split points (items).
 
 The resulting approximations have a probabilistic guarantee that can be obtained from the
-get_normalized_rank_error(true) function.
+`datasketch_quantiles_normalized_rank_error(sketch, true)` function.
 
 The second argument is a list of <i>m</i> unique, monotonically increasing items
 that divide the input domain into <i>m+1</i> consecutive disjoint intervals (bins).
@@ -322,6 +322,36 @@ Returns if the sketch is empty.
 
 -----
 
+**`datasketch_quantiles_n(sketch_quantiles) -> UBIGINT`**
+
+Return the length of the input stream
+
+-----
+
+**`datasketch_quantiles_is_estimation_mode(sketch_quantiles) -> BOOLEAN`**
+
+Return if the sketch is in estimation mode
+
+-----
+
+**`datasketch_quantiles_num_retained(sketch_quantiles) -> BOOLEAN`**
+
+Return the number of items in the sketch
+
+-----
+
+**`datasketch_quantiles_min_item(sketch_quantiles) -> value`**
+
+Return the smallest item in the sketch.
+
+-----
+
+**`datasketch_quantiles_max_item(sketch_quantiles) -> value`**
+
+Return the largest item in the sketch.
+
+-----
+
 **`datasketch_quantiles_normalized_rank_error(sketch_quantiles, BOOLEAN) -> DOUBLE`**
 
 Gets the normalized rank error for this sketch. Constants were derived as the best fit to 99 percentile
@@ -329,6 +359,194 @@ empirically measured max error in thousands of trials.
 
 The second argument if true returns the "double-sided" normalized rank error.
 Otherwise, it is the "single-sided" normalized rank error for all the other queries.
+
+
+#### KLL - "`kll`"
+
+Implementation of a very compact quantiles sketch with lazy compaction scheme
+and nearly optimal accuracy per retained item.
+See[Optimal Quantile Approximation in Streams](https://arxiv.org/abs/1603.05346v2).
+
+This is a stochastic streaming sketch that enables near real-time analysis of the
+approximate distribution of items from a very large stream in a single pass, requiring only
+that the items are comparable.
+
+The values that can be aggregated by this sketch are:
+
+* `TINYINT`, `SMALLINT`, `INTEGER`, `BIGINT`, `FLOAT`, `DOUBLE`, `UTINYINT`, `USMALLINT`, `UINTEGER`, `UBIGINT`
+
+The KLL sketch is returned as a type `sketch_kll_[type]` which is equal to a BLOB.
+
+This sketch is configured with a parameter <i>k</i>, which affects the size of the sketch and
+its estimation error.
+
+The estimation error is commonly called <i>epsilon</i> (or <i>eps</i>) and is a fraction
+between zero and one. Larger values of <i>k</i> result in smaller values of epsilon.
+Epsilon is always with respect to the rank and cannot be applied to the
+corresponding items.
+
+The <i>k</i> of 200 yields a "single-sided" epsilon of about 1.33% and a
+"double-sided" (PMF) epsilon of about 1.65%.
+
+```sql
+-- Lets simulate a temperature sensor
+CREATE TABLE readings(temp integer);
+
+INSERT INTO readings(temp) select unnest(generate_series(1, 10));
+
+-- Create a sketch by aggregating id over the readings table.
+SELECT datasketch_kll_rank(datasketch_kll(16, temp), 5, true) from readings;
+┌──────────────────────────────────────────────────────────────────────────┐
+│ datasketch_kll_rank(datasketch_kll(16, "temp"), 5, CAST('t' AS BOOLEAN)) │
+│                                  double                                  │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                      0.5 │
+└──────────────────────────────────────────────────────────────────────────┘
+
+-- Put some more readings in at the high end.
+INSERT INTO readings(temp) values (10), (10), (10), (10);
+
+-- Now the rank of 5 is moved down.
+SELECT datasketch_kll_rank(datasketch_kll(16, temp), 5, true) from readings;
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│ datasketch_kll_rank(datasketch_kll(16, "temp"), 5, CAST('t' AS BOOLEAN)) │
+│                                        double                                        │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                  0.35714285714285715 │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+
+-- Lets get the cumulative distribution function from the sketch.
+SELECT datasketch_kll_cdf(datasketch_kll(16, temp), [1,5,9], true) from readings;
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ datasketch_kll_cdf(datasketch_kll(16, "temp"), main.list_value(1, 5, 9), CAST('t' AS BOOLEAN)) │
+│                                            int32[]                                             │
+├────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ [0, 0, 0, 1]                                                                                   │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+-- The sketch can be persisted and updated later when more data
+-- arrives without having to rescan the previously aggregated data.
+SELECT datasketch_kll(16, temp) from readings;
+datasketch_kll(16, "temp") = \x05\x01\x0F\x00\x10\x00\x08\x00\x0E\x00\x00\x0
+```
+
+##### Aggregate Functions
+
+**`datasketch_kll(INTEGER, DOUBLE | FLOAT | sketch_kll) -> sketch_kll_[type]`**
+
+The first argument is the the value of K for the sketch.
+
+This same aggregate function can perform a union of multiple sketches.
+
+##### Scalar Functions
+
+**`datasketch_kll_rank(sketch_kll, value, BOOLEAN) -> DOUBLE`**
+
+Returns an approximation to the normalized rank of the given item from 0 to 1, inclusive.
+
+The third argument if true means the weight of the given item is included into the rank.
+
+-----
+
+**`datasketch_kll_kll(sketch_kll, DOUBLE) -> DOUBLE`**
+
+Returns an approximation to the data item associated with the given rank
+of a hypothetical sorted version of the input stream so far.
+
+The third argument if true means the weight of the given item is included into the rank.
+
+-----
+
+
+**`datasketch_kll_pmf(sketch_kll, value[], BOOLEAN) -> double[]`**
+
+Returns an approximation to the Probability Mass Function (PMF) of the input stream
+given a set of split points (items).
+
+The resulting approximations have a probabilistic guarantee that can be obtained from the
+`datasketch_kll_normalized_rank_error(sketch, true)` function.
+
+The second argument is a list of <i>m</i> unique, monotonically increasing items
+that divide the input domain into <i>m+1</i> consecutive disjoint intervals (bins).
+
+The third argument if true the rank of an item includes its own weight, and therefore
+if the sketch contains items equal to a split point, then in PMF such items are
+included into the interval to the left of split point. Otherwise they are included into the interval
+to the right of split point.
+
+-----
+
+**`datasketch_kll_cdf(sketch_kll, value[], BOOLEAN) -> double[]`**
+
+Returns an approximation to the Cumulative Distribution Function (CDF), which is the
+cumulative analog of the PMF, of the input stream given a set of split points (items).
+
+The second argument is a list of <i>m</i> unique, monotonically increasing items
+that divide the input domain into <i>m+1</i> consecutive disjoint intervals.
+
+The third argument if true the rank of an item includes its own weight, and therefore
+if the sketch contains items equal to a split point, then in PMF such items are
+included into the interval to the left of split point. Otherwise they are included into the interval
+to the right of split point.
+
+The reesult is an array of m+1 double values, which are a consecutive approximation to the CDF
+of the input stream given the split_points. The value at array position j of the returned
+CDF array is the sum of the returned values in positions 0 through j of the returned PMF
+array. This can be viewed as array of ranks of the given split points plus one more value
+that is always 1.
+
+-----
+
+**`datasketch_kll_k(sketch_kll) -> USMALLINT`**
+
+Return the value of K for the passed sketch.
+
+-----
+
+**`datasketch_kll_is_empty(sketch_kll) -> BOOLEAN`**
+
+Returns if the sketch is empty.
+
+-----
+
+**`datasketch_kll_n(sketch_kll) -> UBIGINT`**
+
+Return the length of the input stream
+
+-----
+
+**`datasketch_kll_is_estimation_mode(sketch_kll) -> BOOLEAN`**
+
+Return if the sketch is in estimation mode
+
+-----
+
+**`datasketch_kll_num_retained(sketch_kll) -> BOOLEAN`**
+
+Return the number of items in the sketch
+
+-----
+
+**`datasketch_kll_min_item(sketch_kll) -> value`**
+
+Return the smallest item in the sketch.
+
+-----
+
+**`datasketch_kll_max_item(sketch_kll) -> value`**
+
+Return the largest item in the sketch.
+
+-----
+
+**`datasketch_kll_normalized_rank_error(sketch_kll, BOOLEAN) -> DOUBLE`**
+
+Gets the normalized rank error for this sketch. Constants were derived as the best fit to 99 percentile
+empirically measured max error in thousands of trials.
+
+The second argument if true returns the "double-sided" normalized rank error.
+Otherwise, it is the "single-sided" normalized rank error for all the other queries.
+
 
 ### Approximate Distinct Count
 
