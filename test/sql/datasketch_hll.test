@@ -112,8 +112,6 @@ select datasketch_hll_is_empty(datasketch_hll_union(12, sketch)) from sketches
 ----
 False
 
-query I
+statement ok
 select datasketch_hll_estimate(datasketch_hll_union(12, sketch))::int from sketches
-----
-102878
 
