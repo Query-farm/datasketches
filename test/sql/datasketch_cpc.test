@@ -78,3 +78,26 @@ query I
 SELECT datasketch_cpc_estimate(datasketch_cpc(4, name))::int from employees
 ----
 11
+
+statement ok
+CREATE TABLE sketches (sketch sketch_cpc)
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_cpc(12, id) from items where mod(id, 3) == 0
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_cpc(12, id) from items where mod(id, 3) == 1
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_cpc(12, id) from items where mod(id, 3) == 2
+
+query I
+select datasketch_cpc_is_empty(datasketch_cpc_union(12, sketch)) from sketches
+----
+False
+
+query I
+select datasketch_cpc_estimate(datasketch_cpc_union(12, sketch))::int from sketches
+----
+101054
+

@@ -1,23 +1,173 @@
-# DuckDB Extension Template
-This repository contains a template for creating a DuckDB extension. The main goal of this template is to allow users to easily develop, test and distribute their own DuckDB extension. The main branch of the template is always based on the latest stable DuckDB allowing you to try out your extension right away.
+# datasketches
 
-## Getting started
-First step to getting started is to create your own repo from this template by clicking `Use this template`. Then clone your new repository using
-```sh
-git clone --recurse-submodules https://github.com/<you>/<your-new-extension-repo>.git
-```
-Note that `--recurse-submodules` will ensure DuckDB is pulled which is required to build the extension.
+
+The DuckDB DataSketches Extension is a plugin for [DuckDB](https://duckdb.org) that provides an interface to the [Apache DataSketches](https://datasketches.apache.org/) library. This extension enables users to efficiently compute approximate results for large datasets directly within DuckDB, using state-of-the-art streaming algorithms for distinct counting, quantile estimation, and more.
+
+This repository is based on https://github.com/duckdb/extension-template, check it out if you want to build and ship your own DuckDB extension.
+
+## Features
+
+### Approximate Distinct Count
+
+These sketches provide fast and memory-efficient cardinality estimation.
+
+Sketch Types
+
+#### HyperLogLog - "`HLL`"
+
+
+
+#### Compressed Probability Counting - "`CPC`"
+
+The is an implementations of [Kevin J. Lang’s CPC sketch1](https://arxiv.org/abs/1708.06839). The stored CPC sketch can consume about 40% less space than a HyperLogLog sketch of comparable accuracy. Nonetheless, the HLL and CPC sketches have been intentially designed to offer different tradeoffs so that, in fact, they complement each other in many ways.
+
+The CPC sketch has better accuracy for a given stored size then HyperLogLog, HyperLogLog has faster serialization and deserialization times than CPC.
+
+Similar to the HyperLogLog sketch, the primary use-case for the CPC sketch is for counting distinct values as a stream, and then merging multiple sketches together for a total distinct count
+
+Neither HLL nor CPC sketches provide means for set intersections or set differences
+
+The values that can be aggregated by the CPC sketch are:
+
+* TINYINT, SMALLINT, INTEGER, BIGINT, FLOAT,  DOUBLE, UTINYINT, USMALLINT,  UINTEGER, UBIGINT,  VARCHAR, BLOB
+
+##### Aggregate Functions
+
+`datasketch_cpc(k, value) -> sketch_cpc`
+
+Arguments:
+
+| Argument name | Type | Description |
+|---------------|------|-------------|
+| `k` | INTEGER | The K parameter for the sketch, determines the amount of memory the sketch will use |
+| `value` | CPC_SUPPORTED_TYPE | The value to aggregate into the sketch |
+
+Return type:
+
+`sketch_cpc` a CPC sketch which is a logical BLOB type.
+
+`datasketch_cpc_union(k, value) -> sketch_cpc`
+
+Arguments:
+
+| Argument name | Type | Description |
+|---------------|------|-------------|
+| `k` | INTEGER | The K parameter for the sketch, determines the amount of memory the sketch will use |
+| `value` | `sketch_cpc` | The CPC sketch to combine togehter |
+
+Return type:
+
+`sketch_cpc` a CPC sketch that is the union of all aggregated CPC sketches
+
+##### Scalar Functions
+
+
+statement error
+SELECT datasketch_cpc_is_empty(''::blob);
+----
+Catalog Error: Scalar Function with name datasketch_cpc_is_empty does not exist!
+
+# Require statement will ensure this test is run with this extension loaded
+require datasketches
+
+query I
+SELECT datasketch_cpc(8, 5);
+----
+\x08\x01\x10\x08\x00\x0E\xCC\x93\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\xF8o@\x00\x00\x00\x00\x00\x00\xF0?\xDD\x03\x00\x00
+
+query I
+SELECT datasketch_cpc_is_empty('\x08\x01\x10\x08\x00\x0E\xCC\x93\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\xF8o@\x00\x00\x00\x00\x00\x00\xF0?\xDD\x03\x00\x00');
+----
+false
+
+# Do some tests with integers.
+
+statement ok
+CREATE TABLE items(id integer)
+
+statement ok
+INSERT INTO items(id) select unnest(generate_series(1, 100000));
+
+# Duplicate items shouldn't affect the count.
+
+statement ok
+INSERT INTO items(id) select unnest(generate_series(1, 100000));
+
+query I
+SELECT datasketch_cpc_estimate(datasketch_cpc(12, id))::int from items
+----
+101054
+
+query I
+SELECT datasketch_cpc_estimate(datasketch_cpc(4, id))::int from items
+----
+104074
+
+query I
+SELECT datasketch_cpc_is_empty(datasketch_cpc(12, id)) from items
+----
+False
+
+query I
+SELECT datasketch_cpc_lower_bound(datasketch_cpc(12, id), 1)::int from items
+----
+99962
+
+query I
+SELECT datasketch_cpc_upper_bound(datasketch_cpc(12, id), 1)::int from items
+----
+102151
+
+
+query I
+SELECT datasketch_cpc_describe(datasketch_cpc(4, id)) like '%CPC sketch summary%' from items
+----
+True
+
+# Test with strings
+
+statement ok
+CREATE TABLE employees(name string)
+
+statement ok
+INSERT INTO employees(name) VALUES
+('John Doe'), ('Jane Smith'), ('Michael Johnson'), ('Emily Davis'), ('Chris Brown'), ('Sarah Wilson'), ('David Martinez'),('Sophia Anderson'), ('Daniel Lee'),('Olivia Taylor');
+
+query I
+SELECT datasketch_cpc_estimate(datasketch_cpc(4, name))::int from employees
+----
+11
+
+statement ok
+CREATE TABLE sketches (sketch sketch_cpc)
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_cpc(12, id) from items where mod(id, 3) == 0
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_cpc(12, id) from items where mod(id, 3) == 1
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_cpc(12, id) from items where mod(id, 3) == 2
+
+query I
+select datasketch_cpc_is_empty(datasketch_cpc_union(12, sketch)) from sketches
+----
+False
+
+query I
+select datasketch_cpc_estimate(datasketch_cpc_union(12, sketch))::int from sketches
+
+
 
 ## Building
 ### Managing dependencies
 DuckDB extensions uses VCPKG for dependency management. Enabling VCPKG is very simple: follow the [installation instructions](https://vcpkg.io/en/getting-started) or just run the following:
 ```shell
-cd <your-working-dir-not-the-plugin-repo>
 git clone https://github.com/Microsoft/vcpkg.git
-sh ./vcpkg/scripts/bootstrap.sh -disableMetrics
+./vcpkg/bootstrap-vcpkg.sh
 export VCPKG_TOOLCHAIN_PATH=`pwd`/vcpkg/scripts/buildsystems/vcpkg.cmake
 ```
-Note: VCPKG is only required for extensions that want to rely on it for dependency management. If you want to develop an extension without dependencies, or want to do your own dependency management, just skip this step. Note that the example extension uses VCPKG to build with a dependency for instructive purposes, so when skipping this step the build may not work without removing the dependency.
 
 ### Build steps
 Now to build the extension, run:
@@ -28,25 +178,15 @@ The main binaries that will be built are:
 ```sh
 ./build/release/duckdb
 ./build/release/test/unittest
-./build/release/extension/<extension_name>/<extension_name>.duckdb_extension
+./build/release/extension/datasketches/datasketches.duckdb_extension
 ```
 - `duckdb` is the binary for the duckdb shell with the extension code automatically loaded.
 - `unittest` is the test runner of duckdb. Again, the extension is already linked into the binary.
-- `<extension_name>.duckdb_extension` is the loadable binary as it would be distributed.
+- `datasketches.duckdb_extension` is the loadable binary as it would be distributed.
 
 ## Running the extension
-To run the extension code, simply start the shell with `./build/release/duckdb`. This shell will have the extension pre-loaded.
+To run the extension code, simply start the shell with `./build/release/duckdb`.
 
-Now we can use the features from the extension directly in DuckDB. The template contains a single scalar function `datasketches()` that takes a string arguments and returns a string:
-```
-D select datasketches('Jane') as result;
-┌───────────────┐
-│    result     │
-│    varchar    │
-├───────────────┤
-│ datasketches Jane 🐥 │
-└───────────────┘
-```
 
 ## Running the tests
 Different tests can be created for DuckDB extensions. The primary way of testing DuckDB extensions should be the SQL tests in `./test/sql`. These SQL tests can be run using:
@@ -54,84 +194,35 @@ Different tests can be created for DuckDB extensions. The primary way of testing
 make test
 ```
 
-## Getting started with your own extension
-After creating a repository from this template, the first step is to name your extension. To rename the extension, run:
-```
-python3 ./scripts/bootstrap-template.py <extension_name_you_want>
-```
-Feel free to delete the script after this step.
+### Installing the deployed binaries
+To install your extension binaries from S3, you will need to do two things. Firstly, DuckDB should be launched with the
+`allow_unsigned_extensions` option set to true. How to set this will depend on the client you're using. Some examples:
 
-Now you're good to go! After a (re)build, you should now be able to use your duckdb extension:
-```
-./build/release/duckdb
-D select <extension_name_you_chose>('Jane') as result;
-┌─────────────────────────────────────┐
-│                result               │
-│               varchar               │
-├─────────────────────────────────────┤
-│ <extension_name_you_chose> Jane 🐥  │
-└─────────────────────────────────────┘
-```
-
-For inspiration/examples on how to extend DuckDB in a more meaningful way, check out the [test extensions](https://github.com/duckdb/duckdb/blob/main/test/extension),
-the [in-tree extensions](https://github.com/duckdb/duckdb/tree/main/extension), and the [out-of-tree extensions](https://github.com/duckdblabs).
-
-## Distributing your extension
-To distribute your extension binaries, there are a few options.
-
-### Community extensions
-The recommended way of distributing extensions is through the [community extensions repository](https://github.com/duckdb/community-extensions).
-This repository is designed specifically for extensions that are built using this extension template, meaning that as long as your extension can be
-built using the default CI in this template, submitting it to the community extensions is a very simple process. The process works similarly to popular
-package managers like homebrew and vcpkg, where a PR containing a descriptor file is submitted to the package manager repository. After the CI in the
-community extensions repository completes, the extension can be installed and loaded in DuckDB with:
-```SQL
-INSTALL <my_extension> FROM community;
-LOAD <my_extension>
-```
-For more information, see the [community extensions documentation](https://duckdb.org/community_extensions/documentation).
-
-### Downloading artifacts from GitHub
-The default CI in this template will automatically upload the binaries for every push to the main branch as GitHub Actions artifacts. These
-can be downloaded manually and then loaded directly using:
-```SQL
-LOAD '/path/to/downloaded/extension.duckdb_extension';
-```
-Note that this will require starting DuckDB with the
-`allow_unsigned_extensions` option set to true. How to set this will depend on the client you're using. For the CLI it is done like:
+CLI:
 ```shell
 duckdb -unsigned
 ```
 
-### Uploading to a custom repository
-If for some reason distributing through community extensions is not an option, extensions can also be uploaded to a custom extension repository.
-This will give some more control over where and how the extensions are distributed, but comes with the downside of requiring the `allow_unsigned_extensions`
-option to be set. For examples of how to configure a manual GitHub Actions deploy pipeline, check out the extension deploy script in https://github.com/duckdb/extension-ci-tools.
-Some examples of extensions that use this CI/CD workflow check out [spatial](https://github.com/duckdblabs/duckdb_spatial) or [aws](https://github.com/duckdb/duckdb_aws).
-
-Extensions in custom repositories can be installed and loaded using:
-```SQL
-INSTALL <my_extension> FROM 'http://my-custom-repo'
-LOAD <my_extension>
+Python:
+```python
+con = duckdb.connect(':memory:', config={'allow_unsigned_extensions' : 'true'})
 ```
 
-### Versioning of your extension
-Extension binaries will only work for the specific DuckDB version they were built for. The version of DuckDB that is targeted
-is set to the latest stable release for the main branch of the template so initially that is all you need. As new releases
-of DuckDB are published however, the extension repository will need to be updated. The template comes with a workflow set-up
-that will automatically build the binaries for all DuckDB target architectures that are available in the corresponding DuckDB
-version. This workflow is found in `.github/workflows/MainDistributionPipeline.yml`. It is up to the extension developer to keep
-this up to date with DuckDB. Note also that its possible to distribute binaries for multiple DuckDB versions in this workflow
-by simply duplicating the jobs.
+NodeJS:
+```js
+db = new duckdb.Database(':memory:', {"allow_unsigned_extensions": "true"});
+```
 
-## Setting up CLion
+Secondly, you will need to set the repository endpoint in DuckDB to the HTTP url of your bucket + version of the extension
+you want to install. To do this run the following SQL query in DuckDB:
+```sql
+SET custom_extension_repository='bucket.s3.eu-west-1.amazonaws.com/<your_extension_name>/latest';
+```
+Note that the `/latest` path will allow you to install the latest extension version available for your current version of
+DuckDB. To specify a specific version, you can pass the version instead.
 
-### Opening project
-Configuring CLion with the extension template requires a little work. Firstly, make sure that the DuckDB submodule is available.
-Then make sure to open `./duckdb/CMakeLists.txt` (so not the top level `CMakeLists.txt` file from this repo) as a project in CLion.
-Now to fix your project path go to `tools->CMake->Change Project Root`([docs](https://www.jetbrains.com/help/clion/change-project-root-directory.html)) to set the project root to the root dir of this repo.
-
-### Debugging
-To set up debugging in CLion, there are two simple steps required. Firstly, in `CLion -> Settings / Preferences -> Build, Execution, Deploy -> CMake` you will need to add the desired builds (e.g. Debug, Release, RelDebug, etc). There's different ways to configure this, but the easiest is to leave all empty, except the `build path`, which needs to be set to `../build/{build type}`. Now on a clean repository you will first need to run `make {build type}` to initialize the CMake build directory. After running make, you will be able to (re)build from CLion by using the build target we just created. If you use the CLion editor, you can create a CLion CMake profiles matching the CMake variables that are described in the makefile, and then you don't need to invoke the Makefile.
-
-The second step is to configure the unittest runner as a run/debug configuration. To do this, go to `Run -> Edit Configurations` and click `+ -> Cmake Application`. The target and executable should be `unittest`. This will run all the DuckDB tests. To specify only running the extension specific tests, add `--test-dir ../../.. [sql]` to the `Program Arguments`. Note that it is recommended to use the `unittest` executable for testing/development within CLion. The actual DuckDB CLI currently does not reliably work as a run target in CLion.
+After running these steps, you can install and load your extension using the regular INSTALL/LOAD commands in DuckDB:
+```sql
+INSTALL datasketches
+LOAD datasketches
+```

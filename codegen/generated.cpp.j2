@@ -124,7 +124,8 @@ static std::string toLowerCase(const std::string& input) {
         auto &system_catalog = Catalog::GetSystemCatalog(instance);
         auto data = CatalogTransaction::GetSystemTransaction(instance);
         system_catalog.CreateType(data, type_info);
-	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 2);
+        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 2);
         return new_type;
     }
     {% else %}
@@ -141,6 +142,8 @@ static std::string toLowerCase(const std::string& input) {
         auto data = CatalogTransaction::GetSystemTransaction(instance);
         system_catalog.CreateType(data, type_info);
 	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
+
         return new_type;
     }
     {% endif %}
@@ -332,6 +335,142 @@ static std::string toLowerCase(const std::string& input) {
         static bool IgnoreNull() { return true; }
     };
 
+
+    struct DSHLLMergeOperation
+    {
+        template <class STATE>
+        static void Initialize(STATE &state)
+        {
+            state.sketch = nullptr;
+        }
+
+        template <class A_TYPE, class B_TYPE, class STATE, class OP>
+        static void Operation(STATE &state,
+                              const A_TYPE &a_data,
+                              const B_TYPE &b_data,
+                              AggregateBinaryInput &idata)
+        {
+            if (!state.sketch)
+            {
+                state.CreateSketch(a_data);
+            }
+
+            auto b_sketch = state.deserialize_sketch(b_data);
+
+            datasketches::hll_union u(a_data);
+            u.update(*state.sketch);
+            u.update(b_sketch);
+
+            *state.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
+        }
+
+        template <class STATE, class OP>
+        static void Combine(const STATE &source, STATE &target,
+                            AggregateInputData &aggr_input_data)
+        {
+            if (!target.sketch)
+            {
+                target.CreateSketch(source);
+            }
+            else
+            {
+                datasketches::hll_union u(target.sketch->get_lg_config_k());
+
+                u.update(*source.sketch);
+                u.update(*target.sketch);
+
+                *target.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
+            }
+        }
+
+        template <class T, class STATE>
+        static void Finalize(STATE &state, T &target,
+                             AggregateFinalizeData &finalize_data)
+        {
+            if (!state.sketch)
+            {
+                finalize_data.ReturnNull();
+            }
+            else
+            {
+                auto serialized_data = state.sketch->serialize_updatable();
+                auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
+                delete state.sketch;
+                state.sketch = nullptr;
+                target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
+            }
+        }
+
+        static bool IgnoreNull() { return true; }
+    };
+
+
+    struct DSCPCMergeOperation
+    {
+        template <class STATE>
+        static void Initialize(STATE &state)
+        {
+            state.sketch = nullptr;
+        }
+
+        template <class A_TYPE, class B_TYPE, class STATE, class OP>
+        static void Operation(STATE &state,
+                              const A_TYPE &a_data,
+                              const B_TYPE &b_data,
+                              AggregateBinaryInput &idata)
+        {
+            if (!state.sketch)
+            {
+                state.CreateSketch(a_data);
+            }
+
+            auto b_sketch = state.deserialize_sketch(b_data);
+
+            datasketches::cpc_union u(a_data);
+            u.update(*state.sketch);
+            u.update(b_sketch);
+
+            *state.sketch = u.get_result();
+        }
+
+        template <class STATE, class OP>
+        static void Combine(const STATE &source, STATE &target,
+                            AggregateInputData &aggr_input_data)
+        {
+            if (!target.sketch)
+            {
+                target.CreateSketch(source);
+            }
+            else
+            {
+                datasketches::cpc_union u(target.sketch->get_lg_k());
+                u.update(*source.sketch);
+                u.update(*target.sketch);
+                *target.sketch = u.get_result();
+            }
+        }
+
+        template <class T, class STATE>
+        static void Finalize(STATE &state, T &target,
+                             AggregateFinalizeData &finalize_data)
+        {
+            if (!state.sketch)
+            {
+                finalize_data.ReturnNull();
+            }
+            else
+            {
+                auto serialized_data = state.sketch->serialize();
+                auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
+                delete state.sketch;
+                state.sketch = nullptr;
+                target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
+            }
+        }
+
+        static bool IgnoreNull() { return true; }
+    };
+
     struct DSCPCCreateOperation
     {
         template <class STATE>
@@ -424,11 +563,21 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     {% if sketch_type not in counting_sketch_names %}
     template <typename T>
     auto static DS{{sketch_type}}MergeAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
+    {% else %}
+    auto static DS{{sketch_type}}MergeAggregate(const LogicalType &result_type) -> AggregateFunction
+    {% endif %}
     {
+        {% if sketch_type == "HLL" %}
+        return AggregateFunction::BinaryAggregate<DS{{sketch_type}}State, int32_t, string_t, string_t, DSHLLMergeOperation>(
+            LogicalType::INTEGER, result_type, result_type);
+        {% elif sketch_type == "CPC" %}
+        return AggregateFunction::BinaryAggregate<DS{{sketch_type}}State, int32_t, string_t, string_t, DSCPCMergeOperation>(
+            LogicalType::INTEGER, result_type, result_type);
+        {% else %}
         return AggregateFunction::BinaryAggregate<DS{{sketch_type}}State<T>, int32_t, string_t, string_t, DSQuantilesMergeOperation>(
             LogicalType::INTEGER, result_type, result_type);
+        {% endif %}
     }
-    {% endif %}
 
 
 
@@ -481,26 +630,33 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
       }
       {%- endfor %}
 
-
+      // This funciton creates the sketches.
+      {
       AggregateFunctionSet sketch("datasketch_{{sketch_type|lower}}");
       {% for logical_type, cpp_type in logical_type_to_cplusplus_type(sketch_type).items() %}
-
         {% if sketch_type in counting_sketch_names %}
             sketch.AddFunction(DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_type));
-            {% if sketch_type not in counting_sketch_names %}
-            sketch.AddFunction(DS{{sketch_type}}MergeAggregate<{{cpp_type}}>({{logical_type}}, sketch_type));
-            {% endif %}
         {% else %}
             sketch.AddFunction(DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{logical_type}}]));
-            {% if sketch_type not in counting_sketch_names %}
             sketch.AddFunction(DS{{sketch_type}}MergeAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{logical_type}}]));
-            {% endif %}
         {% endif %}
       {%- endfor %}
-
-
       CreateAggregateFunctionInfo sketch_info(sketch);
       system_catalog.CreateFunction(data, sketch_info);
+      }
+
+
+
+      {% if sketch_type in counting_sketch_names %}
+      {
+      AggregateFunctionSet sketch("datasketch_{{sketch_type|lower}}_union");
+      sketch.AddFunction(DS{{sketch_type}}MergeAggregate(sketch_type));
+      CreateAggregateFunctionInfo sketch_info(sketch);
+      system_catalog.CreateFunction(data, sketch_info);
+      }
+      {% endif %}
+
+
   }
   {%- endfor %}
 

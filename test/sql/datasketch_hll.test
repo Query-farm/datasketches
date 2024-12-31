@@ -93,3 +93,26 @@ query I
 SELECT datasketch_hll_estimate(datasketch_hll(4, name))::int from employees
 ----
 11
+
+
+statement ok
+CREATE TABLE sketches (sketch sketch_hll)
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_hll(12, id) from items where mod(id, 3) == 0
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_hll(12, id) from items where mod(id, 3) == 1
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_hll(12, id) from items where mod(id, 3) == 2
+
+query I
+select datasketch_hll_is_empty(datasketch_hll_union(12, sketch)) from sketches
+----
+False
+
+query I
+select datasketch_hll_estimate(datasketch_hll_union(12, sketch))::int from sketches
+----
+102878
