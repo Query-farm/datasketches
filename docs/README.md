@@ -1,6 +1,6 @@
 # Apache DataSketches for DuckDB
 
-The DuckDB DataSketches Extension is a plugin for [DuckDB](https://duckdb.org) that provides an interface to the [Apache DataSketches](https://datasketches.apache.org/) library. This extension enables users to efficiently compute approximate results for large datasets directly within DuckDB, using state-of-the-art streaming algorithms for distinct counting, quantile estimation, and more.
+The DuckDB DataSketches Extension is an extension for [DuckDB](https://duckdb.org) that provides an interface to the [Apache DataSketches](https://datasketches.apache.org/) library. This extension enables users to efficiently compute approximate results for large datasets directly within DuckDB, using state-of-the-art streaming algorithms for distinct counting, quantile estimation, and more.
 
 ## Why use this extension?
 
@@ -770,7 +770,7 @@ The HLL sketch is returned as a type `sketch_hll` which is equal to a BLOB.
 
 ```sql
 -- This table will contain the items where we are interested in knowing
--- how many unique item id there are.
+-- how many unique item ids there are.
 CREATE TABLE items(id integer);
 
 -- Insert the same ids twice to demonstrate the sketch only counts distinct items.
@@ -862,7 +862,7 @@ The CPC sketch is returned as a type `sketch_cpc` which is equal to a BLOB.
 
 ```sql
 -- This table will contain the items where we are interested in knowing
--- how many unique item id there are.
+-- how many unique item ids there are.
 CREATE TABLE items(id integer);
 
 -- Insert the same ids twice to demonstrate the sketch only counts distinct items.
