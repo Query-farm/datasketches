@@ -129,6 +129,207 @@ Return the value of K for the passed sketch.
 
 Returns if the sketch is empty.
 
+
+#### Quantile - "`quantile`"
+
+This is an implementation of the Low Discrepancy Mergeable Quantiles Sketch
+described in section 3.2 of the journal version of the paper ["Mergeable Summaries"
+by Agarwal, Cormode, Huang, Phillips, Wei, and Yi](http://dblp.org/rec/html/journals/tods/AgarwalCHPWY13).
+
+The values that can be aggregated by this sketch are:
+
+* `TINYINT`, `SMALLINT`, `INTEGER`, `BIGINT`, `FLOAT`, `DOUBLE`, `UTINYINT`, `USMALLINT`, `UINTEGER`, `UBIGINT`
+
+The Quantile sketch is returned as a type `sketch_quantiles_[type]` which is equal to a BLOB.
+
+This algorithm is independent of the distribution of items and requires only that the items be comparable.
+
+This algorithm intentionally inserts randomness into the sampling process for items that
+ultimately get retained in the sketch. The results produced by this algorithm are not
+deterministic. For example, if the same stream is inserted into two different instances
+of this sketch, the answers obtained from the two sketches may not be identical.
+
+Similarly, there may be directional inconsistencies. For example, the result
+obtained from `datasketches_quantile_quantile` input into the reverse directional query
+`datasketches_quantile_rank` may not result in the original item.
+
+The accuracy of this sketch is a function of the configured value <i>k</i>, which also affects
+the overall size of the sketch. Accuracy of this quantile sketch is always with respect to
+the normalized rank. A <i>k</i> of 128 produces a normalized, rank error of about 1.7%.
+For example, the median item returned from `datasketches_quantile_quantile(0.5)` will be between the actual items
+from the hypothetically sorted array of input items at normalized ranks of 0.483 and 0.517, with
+a confidence of about 99%.
+
+<pre>
+Table Guide for DoublesSketch Size in Bytes and Approximate Error:
+          K =&gt; |      16      32      64     128     256     512   1,024
+    ~ Error =&gt; | 12.145%  6.359%  3.317%  1.725%  0.894%  0.463%  0.239%
+             N | Size in Bytes -&gt;
+------------------------------------------------------------------------
+             0 |       8       8       8       8       8       8       8
+             1 |      72      72      72      72      72      72      72
+             3 |      72      72      72      72      72      72      72
+             7 |     104     104     104     104     104     104     104
+            15 |     168     168     168     168     168     168     168
+            31 |     296     296     296     296     296     296     296
+            63 |     424     552     552     552     552     552     552
+           127 |     552     808   1,064   1,064   1,064   1,064   1,064
+           255 |     680   1,064   1,576   2,088   2,088   2,088   2,088
+           511 |     808   1,320   2,088   3,112   4,136   4,136   4,136
+         1,023 |     936   1,576   2,600   4,136   6,184   8,232   8,232
+         2,047 |   1,064   1,832   3,112   5,160   8,232  12,328  16,424
+         4,095 |   1,192   2,088   3,624   6,184  10,280  16,424  24,616
+         8,191 |   1,320   2,344   4,136   7,208  12,328  20,520  32,808
+        16,383 |   1,448   2,600   4,648   8,232  14,376  24,616  41,000
+        32,767 |   1,576   2,856   5,160   9,256  16,424  28,712  49,192
+        65,535 |   1,704   3,112   5,672  10,280  18,472  32,808  57,384
+       131,071 |   1,832   3,368   6,184  11,304  20,520  36,904  65,576
+       262,143 |   1,960   3,624   6,696  12,328  22,568  41,000  73,768
+       524,287 |   2,088   3,880   7,208  13,352  24,616  45,096  81,960
+     1,048,575 |   2,216   4,136   7,720  14,376  26,664  49,192  90,152
+     2,097,151 |   2,344   4,392   8,232  15,400  28,712  53,288  98,344
+     4,194,303 |   2,472   4,648   8,744  16,424  30,760  57,384 106,536
+     8,388,607 |   2,600   4,904   9,256  17,448  32,808  61,480 114,728
+    16,777,215 |   2,728   5,160   9,768  18,472  34,856  65,576 122,920
+    33,554,431 |   2,856   5,416  10,280  19,496  36,904  69,672 131,112
+    67,108,863 |   2,984   5,672  10,792  20,520  38,952  73,768 139,304
+   134,217,727 |   3,112   5,928  11,304  21,544  41,000  77,864 147,496
+   268,435,455 |   3,240   6,184  11,816  22,568  43,048  81,960 155,688
+   536,870,911 |   3,368   6,440  12,328  23,592  45,096  86,056 163,880
+ 1,073,741,823 |   3,496   6,696  12,840  24,616  47,144  90,152 172,072
+ 2,147,483,647 |   3,624   6,952  13,352  25,640  49,192  94,248 180,264
+ 4,294,967,295 |   3,752   7,208  13,864  26,664  51,240  98,344 188,456
+</pre>
+
+```sql
+-- Lets simulate a temperature sensor
+CREATE TABLE readings(temp integer);
+
+INSERT INTO readings(temp) select unnest(generate_series(1, 10));
+
+-- Create a sketch by aggregating id over the readings table.
+SELECT datasketch_quantiles_rank(datasketch_quantiles(16, temp), 5, true) from readings;
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│ datasketch_quantiles_rank(datasketch_quantiles(16, "temp"), 5, CAST('t' AS BOOLEAN)) │
+│                                        double                                        │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  0.5 │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+
+-- Put some more readings in at the high end.
+INSERT INTO readings(temp) values (10), (10), (10), (10);
+
+-- Now the rank of 5 is moved down.
+SELECT datasketch_quantiles_rank(datasketch_quantiles(16, temp), 5, true) from readings;
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│ datasketch_quantiles_rank(datasketch_quantiles(16, "temp"), 5, CAST('t' AS BOOLEAN)) │
+│                                        double                                        │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                  0.35714285714285715 │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+
+-- Lets get the cumulative distribution function from the sketch.
+SELECT datasketch_quantiles_cdf(datasketch_quantiles(16, temp), [1,5,9], true) from readings;
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ datasketch_quantiles_cdf(datasketch_quantiles(16, "temp"), main.list_value(1, 5, 9), CAST('t' AS BOOLEAN)) │
+│                                                  int32[]                                                   │
+├────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ [0, 0, 0, 1]                                                                                               │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+-- The sketch can be persisted and updated later when more data
+-- arrives without having to rescan the previously aggregated data.
+SELECT datasketch_quantiles(16, temp) from readings;
+datasketch_quantiles(16, "temp") = \x02\x03\x08\x18\x10\x00\x00...
+```
+
+##### Aggregate Functions
+
+**`datasketch_quantiles(INTEGER, DOUBLE | FLOAT | sketch_quantiles) -> sketch_quantiles_[type]`**
+
+The first argument is the the value of K for the sketch.
+
+This same aggregate function can perform a union of multiple sketches.
+
+##### Scalar Functions
+
+**`datasketch_quantiles_rank(sketch_quantiles, value, BOOLEAN) -> DOUBLE`**
+
+Returns an approximation to the normalized rank of the given item from 0 to 1, inclusive.
+
+The third argument if true means the weight of the given item is included into the rank.
+
+-----
+
+**`datasketch_quantiles_quantile(sketch_quantiles, DOUBLE) -> DOUBLE`**
+
+Returns an approximation to the data item associated with the given rank
+of a hypothetical sorted version of the input stream so far.
+
+The third argument if true means the weight of the given item is included into the rank.
+
+-----
+
+
+**`datasketch_quantiles_pmf(sketch_quantiles, value[], BOOLEAN) -> double[]`**
+
+Returns an approximation to the Probability Mass Function (PMF) of the input stream
+given a set of split points (items).
+
+The resulting approximations have a probabilistic guarantee that can be obtained from the
+get_normalized_rank_error(true) function.
+
+The second argument is a list of <i>m</i> unique, monotonically increasing items
+that divide the input domain into <i>m+1</i> consecutive disjoint intervals (bins).
+
+The third argument if true the rank of an item includes its own weight, and therefore
+if the sketch contains items equal to a split point, then in PMF such items are
+included into the interval to the left of split point. Otherwise they are included into the interval
+to the right of split point.
+
+-----
+
+**`datasketch_quantiles_cdf(sketch_quantiles, value[], BOOLEAN) -> double[]`**
+
+Returns an approximation to the Cumulative Distribution Function (CDF), which is the
+cumulative analog of the PMF, of the input stream given a set of split points (items).
+
+The second argument is a list of <i>m</i> unique, monotonically increasing items
+that divide the input domain into <i>m+1</i> consecutive disjoint intervals.
+
+The third argument if true the rank of an item includes its own weight, and therefore
+if the sketch contains items equal to a split point, then in PMF such items are
+included into the interval to the left of split point. Otherwise they are included into the interval
+to the right of split point.
+
+The reesult is an array of m+1 double values, which are a consecutive approximation to the CDF
+of the input stream given the split_points. The value at array position j of the returned
+CDF array is the sum of the returned values in positions 0 through j of the returned PMF
+array. This can be viewed as array of ranks of the given split points plus one more value
+that is always 1.
+
+-----
+
+**`datasketch_quantiles_k(sketch_quantiles) -> USMALLINT`**
+
+Return the value of K for the passed sketch.
+
+-----
+
+**`datasketch_quantiles_is_empty(sketch_quantiles) -> BOOLEAN`**
+
+Returns if the sketch is empty.
+
+-----
+
+**`datasketch_quantiles_normalized_rank_error(sketch_quantiles, BOOLEAN) -> DOUBLE`**
+
+Gets the normalized rank error for this sketch. Constants were derived as the best fit to 99 percentile
+empirically measured max error in thousands of trials.
+
+The second argument if true returns the "double-sided" normalized rank error.
+Otherwise, it is the "single-sided" normalized rank error for all the other queries.
+
 ### Approximate Distinct Count
 
 These sketch type provide fast and memory-efficient cardinality estimation.
