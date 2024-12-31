@@ -29,134 +29,60 @@ Neither HLL nor CPC sketches provide means for set intersections or set differen
 
 The values that can be aggregated by the CPC sketch are:
 
-* TINYINT, SMALLINT, INTEGER, BIGINT, FLOAT,  DOUBLE, UTINYINT, USMALLINT,  UINTEGER, UBIGINT,  VARCHAR, BLOB
+* `TINYINT`, `SMALLINT`, `INTEGER`, `BIGINT`, `FLOAT`, `DOUBLE`, `UTINYINT`, `USMALLINT`, `UINTEGER`, `UBIGINT`, `VARCHAR`, `BLOB`
 
 ##### Aggregate Functions
 
 `datasketch_cpc(k, value) -> sketch_cpc`
 
-Arguments:
+###### Arguments:
 
-| Argument name | Type | Description |
+| Argument | Type | Description |
 |---------------|------|-------------|
 | `k` | INTEGER | The K parameter for the sketch, determines the amount of memory the sketch will use |
 | `value` | CPC_SUPPORTED_TYPE | The value to aggregate into the sketch |
 
-Return type:
+###### Return type:
 
 `sketch_cpc` a CPC sketch which is a logical BLOB type.
 
 `datasketch_cpc_union(k, value) -> sketch_cpc`
 
-Arguments:
+###### Arguments:
 
-| Argument name | Type | Description |
+| Argument | Type | Description |
 |---------------|------|-------------|
 | `k` | INTEGER | The K parameter for the sketch, determines the amount of memory the sketch will use |
 | `value` | `sketch_cpc` | The CPC sketch to combine togehter |
 
-Return type:
+###### Return type:
 
 `sketch_cpc` a CPC sketch that is the union of all aggregated CPC sketches
 
 ##### Scalar Functions
 
+`datasketch_cpc_estimate(sketch) -> DOUBLE`
 
-statement error
-SELECT datasketch_cpc_is_empty(''::blob);
-----
-Catalog Error: Scalar Function with name datasketch_cpc_is_empty does not exist!
+Get the estimated number of distinct elements seen by this sketch
 
-# Require statement will ensure this test is run with this extension loaded
-require datasketches
+`datasketch_cpc_lower_bound(integer kappa) -> DOUBLE`
 
-query I
-SELECT datasketch_cpc(8, 5);
-----
-\x08\x01\x10\x08\x00\x0E\xCC\x93\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\xF8o@\x00\x00\x00\x00\x00\x00\xF0?\xDD\x03\x00\x00
+Returns the approximate lower error bound given a parameter kappa (1, 2 or 3).
+This parameter is similar to the number of standard deviations of the normal distribution and corresponds to approximately 67%, 95% and 99% confidence intervals.
 
-query I
-SELECT datasketch_cpc_is_empty('\x08\x01\x10\x08\x00\x0E\xCC\x93\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\xF8o@\x00\x00\x00\x00\x00\x00\xF0?\xDD\x03\x00\x00');
-----
-false
+`datasketch_cpc_upper_bound(integer kappa) -> DOUBLE`
 
-# Do some tests with integers.
+Returns the approximate upper error bound given a parameter kappa (1, 2 or 3).
+This parameter is similar to the number of standard deviations of the normal distribution and corresponds to approximately 67%, 95% and 99% confidence intervals.
 
-statement ok
-CREATE TABLE items(id integer)
+`datasketch_cpc_describe(sketch) -> VARCHAR`
 
-statement ok
-INSERT INTO items(id) select unnest(generate_series(1, 100000));
+Returns a human readable summary of the sketch.
 
-# Duplicate items shouldn't affect the count.
+`datasketch_cpc_is_empty(sketch) -> BOOLEAN`
 
-statement ok
-INSERT INTO items(id) select unnest(generate_series(1, 100000));
+Returns if the sketch is empty.
 
-query I
-SELECT datasketch_cpc_estimate(datasketch_cpc(12, id))::int from items
-----
-101054
-
-query I
-SELECT datasketch_cpc_estimate(datasketch_cpc(4, id))::int from items
-----
-104074
-
-query I
-SELECT datasketch_cpc_is_empty(datasketch_cpc(12, id)) from items
-----
-False
-
-query I
-SELECT datasketch_cpc_lower_bound(datasketch_cpc(12, id), 1)::int from items
-----
-99962
-
-query I
-SELECT datasketch_cpc_upper_bound(datasketch_cpc(12, id), 1)::int from items
-----
-102151
-
-
-query I
-SELECT datasketch_cpc_describe(datasketch_cpc(4, id)) like '%CPC sketch summary%' from items
-----
-True
-
-# Test with strings
-
-statement ok
-CREATE TABLE employees(name string)
-
-statement ok
-INSERT INTO employees(name) VALUES
-('John Doe'), ('Jane Smith'), ('Michael Johnson'), ('Emily Davis'), ('Chris Brown'), ('Sarah Wilson'), ('David Martinez'),('Sophia Anderson'), ('Daniel Lee'),('Olivia Taylor');
-
-query I
-SELECT datasketch_cpc_estimate(datasketch_cpc(4, name))::int from employees
-----
-11
-
-statement ok
-CREATE TABLE sketches (sketch sketch_cpc)
-
-statement ok
-INSERT INTO sketches (sketch) select datasketch_cpc(12, id) from items where mod(id, 3) == 0
-
-statement ok
-INSERT INTO sketches (sketch) select datasketch_cpc(12, id) from items where mod(id, 3) == 1
-
-statement ok
-INSERT INTO sketches (sketch) select datasketch_cpc(12, id) from items where mod(id, 3) == 2
-
-query I
-select datasketch_cpc_is_empty(datasketch_cpc_union(12, sketch)) from sketches
-----
-False
-
-query I
-select datasketch_cpc_estimate(datasketch_cpc_union(12, sketch))::int from sketches
 
 
 
