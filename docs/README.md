@@ -7,13 +7,71 @@ This repository is based on https://github.com/duckdb/extension-template, check 
 
 ## Features
 
+### Quantile Estimation
+
+These sketches estimatate a specific quantile (or percentile) and ranks of a distribution or dataset while being memory-efficient.
+
+#### TDigest - "`tdigest`"
+
+This implementation is based on the following paper:
+Ted Dunning, Otmar Ertl. Extremely Accurate Quantiles Using t-Digests and the following implementation in Java
+[https://github.com/tdunning/t-digest](https://github.com/tdunning/t-digest). This implementation is similar to MergingDigest in the above Java implementation
+
+The values that can be aggregated by the CPC sketch are: `DOUBLE` and `FLOAT`.
+
+The TDigest sketch is returned as a type `sketch_tdigest` which is equal to a BLOB.
+
+```sql
+-- Lets simulate a temperature sensor
+CREATE TABLE readings(temp integer);
+
+INSERT INTO readings(temp) select unnest(generate_series(1, 10));
+
+-- Create a sketch by aggregating id over the readings table.
+SELECT datasketch_tdigest_rank(datasketch_tdigest(10, temp), 5) from readings;
+┌────────────────────────────────────────────────────────────┐
+│ datasketch_tdigest_rank(datasketch_tdigest(10, "temp"), 5) │
+│                           double                           │
+├────────────────────────────────────────────────────────────┤
+│                                                       0.45 │
+└────────────────────────────────────────────────────────────┘
+
+-- Put some more readings in at the high end.
+INSERT INTO readings(temp) values (10), (10), (10), (10);
+
+-- Now the rank of 5 is moved down.
+SELECT datasketch_tdigest_rank(datasketch_tdigest(10, temp), 5) from readings;
+┌────────────────────────────────────────────────────────────┐
+│ datasketch_tdigest_rank(datasketch_tdigest(10, "temp"), 5) │
+│                           double                           │
+├────────────────────────────────────────────────────────────┤
+│                                        0.32142857142857145 │
+└────────────────────────────────────────────────────────────┘
+
+-- Lets get the cumulative distribution function from the sketch.
+SELECT datasketch_tdigest_cdf(datasketch_tdigest(10, temp), [1,5,9]) from readings;
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│ datasketch_tdigest_cdf(datasketch_tdigest(10, "temp"), main.list_value(1, 5, 9)) │
+│                                     double[]                                     │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│ [0.03571428571428571, 0.32142857142857145, 0.6071428571428571, 1.0]              │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+
+-- The sketch can be persisted and updated later when more data
+-- arrives without having to rescan the previously aggregated data.
+SELECT datasketch_tdigest(10, temp) from readings;
+datasketch_tdigest(10, "temp") = \x02\x01\x14\x0A\x00\x04\x00...
+```
+
+
+
+
 ### Approximate Distinct Count
 
-These sketches provide fast and memory-efficient cardinality estimation.
+These sketche type provide fast and memory-efficient cardinality estimation.
 
-Sketch Types
-
-#### HyperLogLog - "`HLL`"
+#### HyperLogLog - "`hll`"
 
 This sketch type contains a set of very compact implementations of Phillipe Flajolet’s HyperLogLog (HLL) but with significantly improved error behavior and excellent speed performance.
 
@@ -92,7 +150,7 @@ Returns if the sketch is empty.
 Returns the base two logarithm for the number of bins in the sketch.
 
 
-#### Compressed Probability Counting - "`CPC`"
+#### Compressed Probability Counting - "`cpc`"
 
 This is an implementations of [Kevin J. Lang’s CPC sketch1](https://arxiv.org/abs/1708.06839). The stored CPC sketch can consume about 40% less space than a HyperLogLog sketch of comparable accuracy. Nonetheless, the HLL and CPC sketches have been intentially designed to offer different tradeoffs so that, in fact, they complement each other in many ways.
 
@@ -169,6 +227,8 @@ Returns a human readable summary of the sketch.
 **`datasketch_cpc_is_empty(sketch_cpc) -> BOOLEAN`**
 
 Returns if the sketch is empty.
+
+
 
 
 ## Building
