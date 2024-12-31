@@ -15,17 +15,92 @@ Sketch Types
 
 #### HyperLogLog - "`HLL`"
 
+This sketch type contains a set of very compact implementations of Phillipe Flajolet’s HyperLogLog (HLL) but with significantly improved error behavior and excellent speed performance.
+
+If the use case for sketching is primarily counting uniques and merging, the HyperLogLog sketch is the 2nd highest performing in terms of accuracy for storage space consumed (the new CPC sketch developed by Kevin J. Lang now beats it).
+
+Neither HLL nor CPC sketches provide means for set intersections or set differences.
+
+The values that can be aggregated by the CPC sketch are:
+
+* `TINYINT`, `SMALLINT`, `INTEGER`, `BIGINT`, `FLOAT`, `DOUBLE`, `UTINYINT`, `USMALLINT`, `UINTEGER`, `UBIGINT`, `VARCHAR`, `BLOB`
+
+The HLL sketch is returned as a type `sketch_hll` which is equal to a BLOB.
+
+##### Example
+
+```sql
+-- This table will contain the items where we are interested in knowing
+-- how many unique item id there are.
+CREATE TABLE items(id integer);
+
+-- Insert the same ids twice to demonstrate the sketch only counts distinct items.
+INSERT INTO items(id) select unnest(generate_series(1, 100000));
+INSERT INTO items(id) select unnest(generate_series(1, 100000));
+
+-- Create a sketch by aggregating id over the items table,
+-- use the smallest possible sketch by setting K to 8, better
+-- accuracy comes with larger values of K
+SELECT datasketch_hll_estimate(datasketch_hll(8, id)) from items;
+┌────────────────────────────────────────────────┐
+│ datasketch_hll_estimate(datasketch_hll(8, id)) │
+│                     double                     │
+├────────────────────────────────────────────────┤
+│                              99156.23039496985 │
+└────────────────────────────────────────────────┘
+
+-- The sketch can be persisted and updated later when more data
+-- arrives without having to rescan the previously aggregated data.
+SELECT datasketch_hll(8, id) from items;
+datasketch_hll(8, id) = \x0A\x01\x07\x08\x00\x10\x06\x02\x00\x00\x00\x00\x00\x00...
+```
+
+##### Aggregate Functions
+
+**`datasketch_hll(INTEGER, HLL_SUPPORTED_TYPE) -> sketch_hll`**
+
+The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the value to aggregate into the sketch.
+
+**`datasketch_hll_union(INTEGER, sketch_hll) -> sketch_hll`**
+
+The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the sketch to aggregate via a union operation.
+
+##### Scalar Functions
+
+**`datasketch_hll_estimate(sketch_hll) -> DOUBLE`**
+
+Get the estimated number of distinct elements seen by this sketch
+
+**`datasketch_hll_lower_bound(sketch_hll, integer) -> DOUBLE`**
+
+Returns the approximate lower error bound given the specified number of standard deviations.
+
+**`datasketch_hll_upper_bound(sketch_hll, integer) -> DOUBLE`**
+
+Returns the approximate lower error bound given the specified number of standard deviations.
+
+**`datasketch_hll_describe(sketch_hll) -> VARCHAR`**
+
+Returns a human readable summary of the sketch.
+
+**`datasketch_hll_is_empty(sketch_hll) -> BOOLEAN`**
+
+Returns if the sketch is empty.
+
+**`datasketch_hll_lg_config_k(sketch_hll) -> UTINYINT`**
+
+Returns the base two logarithm for the number of bins in the sketch.
 
 
 #### Compressed Probability Counting - "`CPC`"
 
-The is an implementations of [Kevin J. Lang’s CPC sketch1](https://arxiv.org/abs/1708.06839). The stored CPC sketch can consume about 40% less space than a HyperLogLog sketch of comparable accuracy. Nonetheless, the HLL and CPC sketches have been intentially designed to offer different tradeoffs so that, in fact, they complement each other in many ways.
+This is an implementations of [Kevin J. Lang’s CPC sketch1](https://arxiv.org/abs/1708.06839). The stored CPC sketch can consume about 40% less space than a HyperLogLog sketch of comparable accuracy. Nonetheless, the HLL and CPC sketches have been intentially designed to offer different tradeoffs so that, in fact, they complement each other in many ways.
 
 The CPC sketch has better accuracy for a given stored size then HyperLogLog, HyperLogLog has faster serialization and deserialization times than CPC.
 
 Similar to the HyperLogLog sketch, the primary use-case for the CPC sketch is for counting distinct values as a stream, and then merging multiple sketches together for a total distinct count
 
-Neither HLL nor CPC sketches provide means for set intersections or set differences
+Neither HLL nor CPC sketches provide means for set intersections or set differences.
 
 The values that can be aggregated by the CPC sketch are:
 
@@ -36,7 +111,7 @@ The CPC sketch is returned as a type `sketch_cpc` which is equal to a BLOB.
 ##### Example
 
 ```sql
--- This table will contain the items where we are intersted in knowing
+-- This table will contain the items where we are interested in knowing
 -- how many unique item id there are.
 CREATE TABLE items(id integer);
 
