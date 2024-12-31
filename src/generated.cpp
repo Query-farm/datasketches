@@ -80,19 +80,18 @@ static std::string toLowerCase(const std::string& input) {
     
     static LogicalType CreateQuantilesSketchType(DatabaseInstance &instance, LogicalType embedded_type)
     {
-        LogicalType new_type = LogicalType::BLOB;
+        auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto type_suffix = toLowerCase(embedded_type.ToString());
         auto new_type_name = "sketch_quantiles_" + type_suffix;
-        auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
+        new_type.SetAlias(new_type_name);
+        auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
-        new_type.SetAlias(new_type_name);
         auto &system_catalog = Catalog::GetSystemCatalog(instance);
         auto data = CatalogTransaction::GetSystemTransaction(instance);
         system_catalog.CreateType(data, type_info);
 	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
         ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
-
         return new_type;
     }
     
@@ -147,19 +146,18 @@ static std::string toLowerCase(const std::string& input) {
     
     static LogicalType CreateKLLSketchType(DatabaseInstance &instance, LogicalType embedded_type)
     {
-        LogicalType new_type = LogicalType::BLOB;
+        auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto type_suffix = toLowerCase(embedded_type.ToString());
         auto new_type_name = "sketch_kll_" + type_suffix;
-        auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
+        new_type.SetAlias(new_type_name);
+        auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
-        new_type.SetAlias(new_type_name);
         auto &system_catalog = Catalog::GetSystemCatalog(instance);
         auto data = CatalogTransaction::GetSystemTransaction(instance);
         system_catalog.CreateType(data, type_info);
 	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
         ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
-
         return new_type;
     }
     
@@ -214,19 +212,18 @@ static std::string toLowerCase(const std::string& input) {
     
     static LogicalType CreateREQSketchType(DatabaseInstance &instance, LogicalType embedded_type)
     {
-        LogicalType new_type = LogicalType::BLOB;
+        auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto type_suffix = toLowerCase(embedded_type.ToString());
         auto new_type_name = "sketch_req_" + type_suffix;
-        auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
+        new_type.SetAlias(new_type_name);
+        auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
-        new_type.SetAlias(new_type_name);
         auto &system_catalog = Catalog::GetSystemCatalog(instance);
         auto data = CatalogTransaction::GetSystemTransaction(instance);
         system_catalog.CreateType(data, type_info);
 	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
         ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
-
         return new_type;
     }
     
@@ -279,19 +276,18 @@ static std::string toLowerCase(const std::string& input) {
     
     static LogicalType CreateTDigestSketchType(DatabaseInstance &instance, LogicalType embedded_type)
     {
-        LogicalType new_type = LogicalType::BLOB;
+        auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto type_suffix = toLowerCase(embedded_type.ToString());
         auto new_type_name = "sketch_tdigest_" + type_suffix;
-        auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
+        new_type.SetAlias(new_type_name);
+        auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
-        new_type.SetAlias(new_type_name);
         auto &system_catalog = Catalog::GetSystemCatalog(instance);
         auto data = CatalogTransaction::GetSystemTransaction(instance);
         system_catalog.CreateType(data, type_info);
 	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
         ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
-
         return new_type;
     }
     
@@ -342,7 +338,7 @@ static std::string toLowerCase(const std::string& input) {
     
     static LogicalType CreateHLLCountingSketchType(DatabaseInstance &instance)
     {
-        LogicalType new_type = LogicalType::BLOB;
+        auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto new_type_name = "sketch_hll";
         auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
         type_info.temporary = false;
@@ -351,8 +347,8 @@ static std::string toLowerCase(const std::string& input) {
         auto &system_catalog = Catalog::GetSystemCatalog(instance);
         auto data = CatalogTransaction::GetSystemTransaction(instance);
         system_catalog.CreateType(data, type_info);
-	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 2);
-        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 2);
+	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
         return new_type;
     }
     
@@ -403,7 +399,7 @@ static std::string toLowerCase(const std::string& input) {
     
     static LogicalType CreateCPCCountingSketchType(DatabaseInstance &instance)
     {
-        LogicalType new_type = LogicalType::BLOB;
+        auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto new_type_name = "sketch_cpc";
         auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
         type_info.temporary = false;
@@ -412,8 +408,8 @@ static std::string toLowerCase(const std::string& input) {
         auto &system_catalog = Catalog::GetSystemCatalog(instance);
         auto data = CatalogTransaction::GetSystemTransaction(instance);
         system_catalog.CreateType(data, type_info);
-	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 2);
-        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 2);
+	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
         return new_type;
     }
     

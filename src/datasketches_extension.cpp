@@ -38,11 +38,7 @@ namespace duckdb
 
     std::string DatasketchesExtension::Version() const
     {
-#ifdef EXT_VERSION_DATASKETCHES
-        return EXT_VERSION_DATASKETCHES;
-#else
-        return "";
-#endif
+        return "0.0.1";
     }
 
 } // namespace duckdb

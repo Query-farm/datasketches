@@ -4,7 +4,7 @@ The DuckDB DataSketches Extension is a plugin for [DuckDB](https://duckdb.org) t
 
 ## Why use this extension?
 
-DuckDB already has great implementations of HyperLogLog  via `approx_count_distinct(x)`  and TDigest via `approx_quantile(x, pos)`, but it doesn't expose the internal state of the aggregates nor allow the the user to tune all of the parameters of the sketches.  This extension allows data sketches to be serialized as `BLOB`s which can be stored and shared across different systems, processes, and environments without loss of fidelity. This makes data sketches highly useful in distributed data processing pipelines.
+DuckDB already has great implementations of [HyperLogLog](https://en.wikipedia.org/wiki/HyperLogLog)  via `approx_count_distinct(x)`  and [TDigest](https://arxiv.org/abs/1902.04023) via `approx_quantile(x, pos)`, but it doesn't expose the internal state of the aggregates nor allow the the user to tune all of the parameters of the sketches.  This extension allows data sketches to be serialized as `BLOB`s which can be stored and shared across different systems, processes, and environments without loss of fidelity. This makes data sketches highly useful in distributed data processing pipelines.
 
 This extension has implemented these sketches from Apache DataSketches.
 
@@ -119,7 +119,7 @@ one more value that is always 1.
 
 -----
 
-**`datasketch_tdigest_get_k(sketch_tdigest) -> USMALLINT`**
+**`datasketch_tdigest_k(sketch_tdigest) -> USMALLINT`**
 
 Return the value of K for the passed sketch.
 

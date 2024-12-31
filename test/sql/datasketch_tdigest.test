@@ -1,0 +1,56 @@
+# name: test/sql/datasketch_tdigest.test
+# description: test datasketch TDigest sketches
+# group: [datasketches]
+
+# Before we load the extension, this will fail
+statement error
+SELECT datasketch_tdigest_is_empty(''::blob);
+----
+Catalog Error: Scalar Function with name datasketch_tdigest_is_empty does not exist!
+
+# Require statement will ensure this test is run with this extension loaded
+require datasketches
+
+query I
+SELECT datasketch_tdigest(10, 5);
+----
+\x01\x01\x14\x0A\x00\x06\x00\x00\x00\x00\x00\x00\x00\x00\x14@
+
+query I
+SELECT datasketch_tdigest_is_empty('\x01\x01\x14\x0A\x00\x06\x00\x00\x00\x00\x00\x00\x00\x00\x14@'::sketch_tdigest_float);
+----
+false
+
+# Do some tests with integers.
+
+statement ok
+CREATE TABLE readings(temp double)
+
+statement ok
+INSERT INTO readings(temp) select unnest(generate_series(1, 1000))::double;
+
+query I
+SELECT datasketch_tdigest_rank(datasketch_tdigest(10, temp), 500.0) from readings
+----
+0.4995
+
+query I
+SELECT datasketch_tdigest_quantile(datasketch_tdigest(10, temp), 0.5) from readings
+----
+400
+
+query I
+SELECT datasketch_tdigest_cdf(datasketch_tdigest(10, temp), [100, 200, 500]) from readings
+----
+[0.0995, 0.1995, 0.4995, 1.0]
+
+query I
+SELECT datasketch_tdigest_pmf(datasketch_tdigest(10, temp), [100, 200, 500]) from readings
+----
+[0.0995, 0.1, 0.3, 0.5005]
+
+
+query I
+SELECT datasketch_tdigest_k(datasketch_tdigest(10, temp)) from readings
+----
+10

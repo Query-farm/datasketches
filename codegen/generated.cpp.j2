@@ -115,25 +115,8 @@ static std::string toLowerCase(const std::string& input) {
     {% if sketch_type in counting_sketch_names %}
     static LogicalType Create{{sketch_type}}CountingSketchType(DatabaseInstance &instance)
     {
-        LogicalType new_type = LogicalType::BLOB;
+        auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto new_type_name = "sketch_{{sketch_type|lower}}";
-        auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
-        type_info.temporary = false;
-        type_info.internal = true;
-        new_type.SetAlias(new_type_name);
-        auto &system_catalog = Catalog::GetSystemCatalog(instance);
-        auto data = CatalogTransaction::GetSystemTransaction(instance);
-        system_catalog.CreateType(data, type_info);
-	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 2);
-        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 2);
-        return new_type;
-    }
-    {% else %}
-    static LogicalType Create{{sketch_type}}SketchType(DatabaseInstance &instance, LogicalType embedded_type)
-    {
-        LogicalType new_type = LogicalType::BLOB;
-        auto type_suffix = toLowerCase(embedded_type.ToString());
-        auto new_type_name = "sketch_{{sketch_type|lower}}_" + type_suffix;
         auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
         type_info.temporary = false;
         type_info.internal = true;
@@ -143,7 +126,23 @@ static std::string toLowerCase(const std::string& input) {
         system_catalog.CreateType(data, type_info);
 	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
         ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
-
+        return new_type;
+    }
+    {% else %}
+    static LogicalType Create{{sketch_type}}SketchType(DatabaseInstance &instance, LogicalType embedded_type)
+    {
+        auto new_type = LogicalType(LogicalTypeId::BLOB);
+        auto type_suffix = toLowerCase(embedded_type.ToString());
+        auto new_type_name = "sketch_{{sketch_type|lower}}_" + type_suffix;
+        new_type.SetAlias(new_type_name);
+        auto type_info = CreateTypeInfo(new_type_name, new_type);
+        type_info.temporary = false;
+        type_info.internal = true;
+        auto &system_catalog = Catalog::GetSystemCatalog(instance);
+        auto data = CatalogTransaction::GetSystemTransaction(instance);
+        system_catalog.CreateType(data, type_info);
+	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
         return new_type;
     }
     {% endif %}
