@@ -31,58 +31,41 @@ The values that can be aggregated by the CPC sketch are:
 
 * `TINYINT`, `SMALLINT`, `INTEGER`, `BIGINT`, `FLOAT`, `DOUBLE`, `UTINYINT`, `USMALLINT`, `UINTEGER`, `UBIGINT`, `VARCHAR`, `BLOB`
 
+The CPC sketch is returned as a type `sketch_cpc` which is equal to a BLOB.
+
 ##### Aggregate Functions
 
-`datasketch_cpc(k, value) -> sketch_cpc`
+**`datasketch_cpc(INTEGER, CPC_SUPPORTED_TYPE) -> sketch_cpc`**
 
-###### Arguments:
+The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the value to aggregate into the sketch.
 
-| Argument | Type | Description |
-|---------------|------|-------------|
-| `k` | INTEGER | The K parameter for the sketch, determines the amount of memory the sketch will use |
-| `value` | CPC_SUPPORTED_TYPE | The value to aggregate into the sketch |
+**`datasketch_cpc_union(INTEGER, sketch_cpc) -> sketch_cpc`**
 
-###### Return type:
-
-`sketch_cpc` a CPC sketch which is a logical BLOB type.
-
-`datasketch_cpc_union(k, value) -> sketch_cpc`
-
-###### Arguments:
-
-| Argument | Type | Description |
-|---------------|------|-------------|
-| `k` | INTEGER | The K parameter for the sketch, determines the amount of memory the sketch will use |
-| `value` | `sketch_cpc` | The CPC sketch to combine togehter |
-
-###### Return type:
-
-`sketch_cpc` a CPC sketch that is the union of all aggregated CPC sketches
+The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the sketch to aggregate via a union operation.
 
 ##### Scalar Functions
 
-`datasketch_cpc_estimate(sketch_cpc) -> DOUBLE`
+**`datasketch_cpc_estimate(sketch_cpc) -> DOUBLE`**
 
 Get the estimated number of distinct elements seen by this sketch
 
-`datasketch_cpc_lower_bound(sketch_cpc, integer kappa) -> DOUBLE`
+**`datasketch_cpc_lower_bound(sketch_cpc, integer kappa) -> DOUBLE`**
 
 Returns the approximate lower error bound given a parameter kappa (1, 2 or 3).
 This parameter is similar to the number of standard deviations of the normal distribution and corresponds to approximately 67%, 95% and 99% confidence intervals.
 
-`datasketch_cpc_upper_bound(sketch_cpc, integer kappa) -> DOUBLE`
+**`datasketch_cpc_upper_bound(sketch_cpc, integer kappa) -> DOUBLE`**
 
 Returns the approximate upper error bound given a parameter kappa (1, 2 or 3).
 This parameter is similar to the number of standard deviations of the normal distribution and corresponds to approximately 67%, 95% and 99% confidence intervals.
 
-`datasketch_cpc_describe(sketch_cpc) -> VARCHAR`
+**`datasketch_cpc_describe(sketch_cpc) -> VARCHAR`**
 
 Returns a human readable summary of the sketch.
 
 **`datasketch_cpc_is_empty(sketch_cpc) -> BOOLEAN`**
 
 Returns if the sketch is empty.
-
 
 
 ## Building
