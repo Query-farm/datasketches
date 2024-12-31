@@ -40,6 +40,9 @@ CREATE TABLE items(id integer);
 -- insert the same ids twice to demonstrate the sketch only counts distinct items.
 INSERT INTO items(id) select unnest(generate_series(1, 100000));
 INSERT INTO items(id) select unnest(generate_series(1, 100000));
+-- Create a sketch by aggregating id over the items table,
+-- use the smallest possible sketch by setting K to 4, better
+-- accuracy comes with larger values of K
 SELECT datasketch_cpc_estimate(datasketch_cpc(4, id)) from items;
 ┌────────────────────────────────────────────────┐
 │ datasketch_cpc_estimate(datasketch_cpc(4, id)) │
@@ -56,7 +59,6 @@ SELECT datasketch_cpc(4, id) from items;
 │ \x04\x01\x10\x04\x0A\x12\xCC\x93\xD0\x00\x00\x00\x03\x00\x00\x00\x0C]\xAD\x019\x9B\xFA\x04+\x00\x00\x00 │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
-
 
 ##### Aggregate Functions
 
