@@ -1,5 +1,5 @@
 # name: test/sql/datasketch_kll.test
-# description: test datasketch Quantiles sketches
+# description: test datasketch KLL sketches
 # group: [datasketches]
 
 # Before we load the extension, this will fail

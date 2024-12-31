@@ -1,0 +1,98 @@
+# name: test/sql/datasketch_req.test
+# description: test datasketch REQ sketches
+# group: [datasketches]
+
+# Before we load the extension, this will fail
+statement error
+SELECT datasketch_req_is_empty(''::blob);
+----
+Catalog Error: Scalar Function with name datasketch_req_is_empty does not exist!
+
+# Require statement will ensure this test is run with this extension loaded
+require datasketches
+
+query I
+SELECT datasketch_req(16, 5.0::float);
+----
+\x02\x01\x118\x10\x00\x01\x01\x00\x00\xA0@
+
+query I
+SELECT datasketch_req_is_empty('\x02\x01\x118\x10\x00\x01\x01\x00\x00\xA0@'::sketch_req_float);
+----
+false
+
+# Do some tests with integers.
+
+statement ok
+CREATE TABLE readings(temp double)
+
+statement ok
+INSERT INTO readings(temp) select unnest(generate_series(1, 1000))::double;
+
+query I
+SELECT datasketch_req_rank(datasketch_req(16, temp), 500.0, true) between 0.40 and 0.60 from readings
+----
+True
+
+query I
+SELECT datasketch_req_quantile(datasketch_req(16, temp), 0.5, true) between 400 and 600 from readings
+----
+True
+
+# Can't save results on these because they are random
+
+statement ok
+SELECT datasketch_req_cdf(datasketch_req(16, temp), [100, 200, 500], true) from readings
+
+statement ok
+SELECT datasketch_req_pmf(datasketch_req(16, temp), [100, 200, 500], true) from readings
+
+query I
+SELECT datasketch_req_k(datasketch_req(16, temp)) from readings
+----
+16
+
+statement ok
+CREATE TABLE sketches (sketch sketch_req_double)
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_req(16, temp) from readings where mod(temp::int, 3) == 0
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_req(16, temp) from readings where mod(temp::int, 3) == 1
+
+statement ok
+INSERT INTO sketches (sketch) select datasketch_req(16, temp) from readings where mod(temp::int, 3) == 2
+
+query I
+select datasketch_req_is_empty(datasketch_req(16, sketch)) from sketches
+----
+False
+
+statement ok
+select datasketch_req_quantile(datasketch_req(16, sketch), 0.5, true)::int from sketches
+
+query I
+select datasketch_req_n(datasketch_req(16, sketch)) from sketches
+----
+1000
+
+query I
+select datasketch_req_is_estimation_mode(datasketch_req(16, sketch)) from sketches
+----
+1
+
+query I
+select datasketch_req_num_retained(datasketch_req(16, sketch)) from sketches
+----
+298
+
+query I
+select datasketch_req_min_item(datasketch_req(16, sketch)) from sketches
+----
+1.0
+
+query I
+select datasketch_req_max_item(datasketch_req(16, sketch)) from sketches
+----
+1000.0
