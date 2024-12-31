@@ -603,7 +603,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
       {% else %}
         std::unordered_map<LogicalTypeId, LogicalType> sketch_map_types;
         {% for logical_type in logical_type_to_cplusplus_type(sketch_type).keys() %}
-            sketch_map_types.insert({ {{to_type_id(logical_type)}}, Create{{sketch_type}}SketchType(instance, LogicalType({{logical_type}}))});
+            sketch_map_types.insert({ {{to_type_id(logical_type)}}, Create{{sketch_type}}SketchType(instance, LogicalType({{to_type_id(logical_type)}}))});
         {%- endfor %}
       {% endif %}
 

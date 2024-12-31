@@ -1071,16 +1071,16 @@ namespace duckdb_datasketches
 
         std::unordered_map<LogicalTypeId, LogicalType> sketch_map_types;
 
-        sketch_map_types.insert({LogicalTypeId::TINYINT, CreateQuantilesSketchType(instance, LogicalType(LogicalType::TINYINT))});
-        sketch_map_types.insert({LogicalTypeId::SMALLINT, CreateQuantilesSketchType(instance, LogicalType(LogicalType::SMALLINT))});
-        sketch_map_types.insert({LogicalTypeId::INTEGER, CreateQuantilesSketchType(instance, LogicalType(LogicalType::INTEGER))});
-        sketch_map_types.insert({LogicalTypeId::BIGINT, CreateQuantilesSketchType(instance, LogicalType(LogicalType::BIGINT))});
-        sketch_map_types.insert({LogicalTypeId::FLOAT, CreateQuantilesSketchType(instance, LogicalType(LogicalType::FLOAT))});
-        sketch_map_types.insert({LogicalTypeId::DOUBLE, CreateQuantilesSketchType(instance, LogicalType(LogicalType::DOUBLE))});
-        sketch_map_types.insert({LogicalTypeId::UTINYINT, CreateQuantilesSketchType(instance, LogicalType(LogicalType::UTINYINT))});
-        sketch_map_types.insert({LogicalTypeId::USMALLINT, CreateQuantilesSketchType(instance, LogicalType(LogicalType::USMALLINT))});
-        sketch_map_types.insert({LogicalTypeId::UINTEGER, CreateQuantilesSketchType(instance, LogicalType(LogicalType::UINTEGER))});
-        sketch_map_types.insert({LogicalTypeId::UBIGINT, CreateQuantilesSketchType(instance, LogicalType(LogicalType::UBIGINT))});
+        sketch_map_types.insert({LogicalTypeId::TINYINT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::TINYINT))});
+        sketch_map_types.insert({LogicalTypeId::SMALLINT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::SMALLINT))});
+        sketch_map_types.insert({LogicalTypeId::INTEGER, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::INTEGER))});
+        sketch_map_types.insert({LogicalTypeId::BIGINT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::BIGINT))});
+        sketch_map_types.insert({LogicalTypeId::FLOAT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::FLOAT))});
+        sketch_map_types.insert({LogicalTypeId::DOUBLE, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::DOUBLE))});
+        sketch_map_types.insert({LogicalTypeId::UTINYINT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::UTINYINT))});
+        sketch_map_types.insert({LogicalTypeId::USMALLINT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::USMALLINT))});
+        sketch_map_types.insert({LogicalTypeId::UINTEGER, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::UINTEGER))});
+        sketch_map_types.insert({LogicalTypeId::UBIGINT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::UBIGINT))});
 
         {
             ScalarFunctionSet fs("datasketch_quantiles_is_empty");
@@ -1801,16 +1801,16 @@ namespace duckdb_datasketches
 
         std::unordered_map<LogicalTypeId, LogicalType> sketch_map_types;
 
-        sketch_map_types.insert({LogicalTypeId::TINYINT, CreateKLLSketchType(instance, LogicalType(LogicalType::TINYINT))});
-        sketch_map_types.insert({LogicalTypeId::SMALLINT, CreateKLLSketchType(instance, LogicalType(LogicalType::SMALLINT))});
-        sketch_map_types.insert({LogicalTypeId::INTEGER, CreateKLLSketchType(instance, LogicalType(LogicalType::INTEGER))});
-        sketch_map_types.insert({LogicalTypeId::BIGINT, CreateKLLSketchType(instance, LogicalType(LogicalType::BIGINT))});
-        sketch_map_types.insert({LogicalTypeId::FLOAT, CreateKLLSketchType(instance, LogicalType(LogicalType::FLOAT))});
-        sketch_map_types.insert({LogicalTypeId::DOUBLE, CreateKLLSketchType(instance, LogicalType(LogicalType::DOUBLE))});
-        sketch_map_types.insert({LogicalTypeId::UTINYINT, CreateKLLSketchType(instance, LogicalType(LogicalType::UTINYINT))});
-        sketch_map_types.insert({LogicalTypeId::USMALLINT, CreateKLLSketchType(instance, LogicalType(LogicalType::USMALLINT))});
-        sketch_map_types.insert({LogicalTypeId::UINTEGER, CreateKLLSketchType(instance, LogicalType(LogicalType::UINTEGER))});
-        sketch_map_types.insert({LogicalTypeId::UBIGINT, CreateKLLSketchType(instance, LogicalType(LogicalType::UBIGINT))});
+        sketch_map_types.insert({LogicalTypeId::TINYINT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::TINYINT))});
+        sketch_map_types.insert({LogicalTypeId::SMALLINT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::SMALLINT))});
+        sketch_map_types.insert({LogicalTypeId::INTEGER, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::INTEGER))});
+        sketch_map_types.insert({LogicalTypeId::BIGINT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::BIGINT))});
+        sketch_map_types.insert({LogicalTypeId::FLOAT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::FLOAT))});
+        sketch_map_types.insert({LogicalTypeId::DOUBLE, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::DOUBLE))});
+        sketch_map_types.insert({LogicalTypeId::UTINYINT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::UTINYINT))});
+        sketch_map_types.insert({LogicalTypeId::USMALLINT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::USMALLINT))});
+        sketch_map_types.insert({LogicalTypeId::UINTEGER, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::UINTEGER))});
+        sketch_map_types.insert({LogicalTypeId::UBIGINT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::UBIGINT))});
 
         {
             ScalarFunctionSet fs("datasketch_kll_is_empty");
@@ -2512,16 +2512,16 @@ namespace duckdb_datasketches
 
         std::unordered_map<LogicalTypeId, LogicalType> sketch_map_types;
 
-        sketch_map_types.insert({LogicalTypeId::TINYINT, CreateREQSketchType(instance, LogicalType(LogicalType::TINYINT))});
-        sketch_map_types.insert({LogicalTypeId::SMALLINT, CreateREQSketchType(instance, LogicalType(LogicalType::SMALLINT))});
-        sketch_map_types.insert({LogicalTypeId::INTEGER, CreateREQSketchType(instance, LogicalType(LogicalType::INTEGER))});
-        sketch_map_types.insert({LogicalTypeId::BIGINT, CreateREQSketchType(instance, LogicalType(LogicalType::BIGINT))});
-        sketch_map_types.insert({LogicalTypeId::FLOAT, CreateREQSketchType(instance, LogicalType(LogicalType::FLOAT))});
-        sketch_map_types.insert({LogicalTypeId::DOUBLE, CreateREQSketchType(instance, LogicalType(LogicalType::DOUBLE))});
-        sketch_map_types.insert({LogicalTypeId::UTINYINT, CreateREQSketchType(instance, LogicalType(LogicalType::UTINYINT))});
-        sketch_map_types.insert({LogicalTypeId::USMALLINT, CreateREQSketchType(instance, LogicalType(LogicalType::USMALLINT))});
-        sketch_map_types.insert({LogicalTypeId::UINTEGER, CreateREQSketchType(instance, LogicalType(LogicalType::UINTEGER))});
-        sketch_map_types.insert({LogicalTypeId::UBIGINT, CreateREQSketchType(instance, LogicalType(LogicalType::UBIGINT))});
+        sketch_map_types.insert({LogicalTypeId::TINYINT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::TINYINT))});
+        sketch_map_types.insert({LogicalTypeId::SMALLINT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::SMALLINT))});
+        sketch_map_types.insert({LogicalTypeId::INTEGER, CreateREQSketchType(instance, LogicalType(LogicalTypeId::INTEGER))});
+        sketch_map_types.insert({LogicalTypeId::BIGINT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::BIGINT))});
+        sketch_map_types.insert({LogicalTypeId::FLOAT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::FLOAT))});
+        sketch_map_types.insert({LogicalTypeId::DOUBLE, CreateREQSketchType(instance, LogicalType(LogicalTypeId::DOUBLE))});
+        sketch_map_types.insert({LogicalTypeId::UTINYINT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::UTINYINT))});
+        sketch_map_types.insert({LogicalTypeId::USMALLINT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::USMALLINT))});
+        sketch_map_types.insert({LogicalTypeId::UINTEGER, CreateREQSketchType(instance, LogicalType(LogicalTypeId::UINTEGER))});
+        sketch_map_types.insert({LogicalTypeId::UBIGINT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::UBIGINT))});
 
         {
             ScalarFunctionSet fs("datasketch_req_is_empty");
@@ -3120,8 +3120,8 @@ namespace duckdb_datasketches
 
         std::unordered_map<LogicalTypeId, LogicalType> sketch_map_types;
 
-        sketch_map_types.insert({LogicalTypeId::FLOAT, CreateTDigestSketchType(instance, LogicalType(LogicalType::FLOAT))});
-        sketch_map_types.insert({LogicalTypeId::DOUBLE, CreateTDigestSketchType(instance, LogicalType(LogicalType::DOUBLE))});
+        sketch_map_types.insert({LogicalTypeId::FLOAT, CreateTDigestSketchType(instance, LogicalType(LogicalTypeId::FLOAT))});
+        sketch_map_types.insert({LogicalTypeId::DOUBLE, CreateTDigestSketchType(instance, LogicalType(LogicalTypeId::DOUBLE))});
 
         {
             ScalarFunctionSet fs("datasketch_tdigest_is_empty");
