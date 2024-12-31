@@ -1,10 +1,10 @@
-# Datasketches for DuckDB
+# Apache DataSketches for DuckDB
 
 The DuckDB DataSketches Extension is a plugin for [DuckDB](https://duckdb.org) that provides an interface to the [Apache DataSketches](https://datasketches.apache.org/) library. This extension enables users to efficiently compute approximate results for large datasets directly within DuckDB, using state-of-the-art streaming algorithms for distinct counting, quantile estimation, and more.
 
 ## Why use this extension?
 
-DuckDB already has great implementations of HyperLogLog (`approx_count_distinct(x)`) and TDigest (`approx_quantile(x, pos)`), but it doesn't expose the internal state of the aggregates.  Serialized data sketches as `BLOB`s can be stored and shared across different systems, processes, and environments without loss of fidelity. This makes data sketches highly useful in distributed data processing pipelines.
+DuckDB already has great implementations of HyperLogLog  via `approx_count_distinct(x)`  and TDigest via `approx_quantile(x, pos)`, but it doesn't expose the internal state of the aggregates nor allow the the user to tune all of the parameters of the sketches.  This extension allows data sketches to be serialized as `BLOB`s which can be stored and shared across different systems, processes, and environments without loss of fidelity. This makes data sketches highly useful in distributed data processing pipelines.
 
 This extension has implemented these sketches from Apache DataSketches.
 
@@ -16,7 +16,6 @@ This extension has implemented these sketches from Apache DataSketches.
 - Approximate Distinct Count
   - [Compressed Probability Counting (CPC)](https://datasketches.apache.org/docs/CPC/CpcSketches.html)
   - [HyperLogLog (HLL)](https://datasketches.apache.org/docs/HLL/HllSketches.html)
-
 
 
 ## Features
