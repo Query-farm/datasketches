@@ -17,6 +17,7 @@ using namespace duckdb;
 namespace duckdb_datasketches
 {
 
+
 static std::string toLowerCase(const std::string& input) {
     std::string result = input;
     std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
@@ -117,6 +118,7 @@ static std::string toLowerCase(const std::string& input) {
         auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
         type_info.temporary = false;
         type_info.internal = true;
+        type_info.comment = "Sketch type for {{sketch_type}} sketch";
         new_type.SetAlias(new_type_name);
         auto &system_catalog = Catalog::GetSystemCatalog(instance);
         auto data = CatalogTransaction::GetSystemTransaction(instance);
@@ -135,6 +137,7 @@ static std::string toLowerCase(const std::string& input) {
         auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
+        type_info.comment = "Sketch type for {{sketch_type}} sketch with embedded type " + embedded_type.ToString();
         auto &system_catalog = Catalog::GetSystemCatalog(instance);
         auto data = CatalogTransaction::GetSystemTransaction(instance);
         system_catalog.CreateType(data, type_info);
@@ -607,7 +610,6 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         {%- endfor %}
       {% endif %}
 
-
       {% for unary_function in functions_per_sketch_type(sketch_type) %}
       {
         ScalarFunctionSet fs("datasketch_{{sketch_type|lower}}_{{unary_function.name|lower}}");
@@ -622,7 +624,14 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
                 ,    DS{{sketch_type}}{{unary_function.name}}<{{cpp_type}}>));
             {%- endfor %}
         {% endif %}
-        ExtensionUtil::RegisterFunction(instance, fs);
+
+        CreateScalarFunctionInfo info(std::move(fs));
+        info.description = "{{unary_function.description}}";
+        info.example = "{{unary_function.example}}";
+
+	    system_catalog.CreateFunction(data, info);
+
+
       }
       {%- endfor %}
 
@@ -638,6 +647,8 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         {% endif %}
       {%- endfor %}
       CreateAggregateFunctionInfo sketch_info(sketch);
+      sketch_info.description = "Creates a sketch_{{sketch_type|lower}} data sketch by aggregating values or by aggregating other {{sketch_type}} data sketches";
+      sketch_info.example = "datasketch_{{sketch_type|lower}}(k, data)";
       system_catalog.CreateFunction(data, sketch_info);
       }
 
@@ -648,6 +659,8 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
       AggregateFunctionSet sketch("datasketch_{{sketch_type|lower}}_union");
       sketch.AddFunction(DS{{sketch_type}}MergeAggregate(sketch_type));
       CreateAggregateFunctionInfo sketch_info(sketch);
+      sketch_info.description = "Creates a sketch_{{sketch_type}} data sketch by aggregating other {{sketch_type}} data sketches";
+      sketch_info.comment = "datasketch_{{sketch_type|lower}}_union(k, data)";
       system_catalog.CreateFunction(data, sketch_info);
       }
       {% endif %}

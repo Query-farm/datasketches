@@ -119,6 +119,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
         {
             "method": "return sketch.is_empty();",
             "name": "is_empty",
+            "description": "Return a boolean indicating if the sketch is empty",
+            "example": f"datasketch_{sketch_type.lower()}_is_empty(sketch)",
             "arguments": [
                 sketch_argument,
             ],
@@ -133,10 +135,16 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "method": "return sketch.get_k();",
                     "arguments": [sketch_argument],
                     "name": "k",
+                    "description": "Return the value of K for this sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_k(sketch)",
                     "return_type": "LogicalType::USMALLINT",
                 },
                 {
                     "name": "cdf",
+                    "description": "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
+                    "example": f"datasketch_{sketch_type.lower()}_cdf(sketch, points, inclusive)"
+                    if sketch_type != "TDigest"
+                    else f"datasketch_{sketch_type.lower()}_cdf(sketch, points)",
                     "method": (
                         "auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclusive_data);"
                         if sketch_type != "TDigest"
@@ -175,6 +183,10 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "name": "pmf",
+                    "description": "Return the Probability Mass Function (PMF) of the sketch for a series of points",
+                    "example": f"datasketch_{sketch_type.lower()}_pmf(sketch, points, inclusive)"
+                    if sketch_type != "TDigest"
+                    else f"datasketch_{sketch_type.lower()}_pmf(sketch, points)",
                     "method": (
                         "auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclusive_data);"
                         if sketch_type != "TDigest"
@@ -220,6 +232,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
             [
                 {
                     "method": "return StringVector::AddString(result, sketch.to_string(summary_data, detail_data, false, false));",
+                    "description": "Return a string representation of the sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_describe(sketch, include_summary, include_detail)",
                     "arguments": [
                         sketch_argument,
                         {
@@ -236,6 +250,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "method": "return sketch.get_lg_config_k();",
+                    "description": "Return the value of log base 2 K for this sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_lg_config_k(sketch)",
                     "arguments": [
                         sketch_argument,
                     ],
@@ -244,6 +260,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "method": "return sketch.is_compact();",
+                    "description": "Return whether the sketch is in compact form",
+                    "example": f"datasketch_{sketch_type.lower()}_is_compact(sketch)",
                     "arguments": [
                         sketch_argument,
                     ],
@@ -257,6 +275,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
         result.append(
             {
                 "method": "return StringVector::AddString(result, sketch.to_string());",
+                "description": "Return a string representation of the sketch",
+                "example": f"datasketch_{sketch_type.lower()}_describe(sketch)",
                 "arguments": [
                     sketch_argument,
                 ],
@@ -270,6 +290,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
             [
                 {
                     "method": "return sketch.get_estimate();",
+                    "description": "Return the estimate of the number of distinct items seen by the sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_estimate(sketch)",
                     "arguments": [
                         sketch_argument,
                     ],
@@ -277,6 +299,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "return_type": "LogicalType::DOUBLE",
                 },
                 {
+                    "description": "Return the lower bound of the number of distinct items seen by the sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_lower_bound(sketch, std_dev)",
                     "method": "return sketch.get_lower_bound(std_dev_data);",
                     "arguments": [
                         sketch_argument,
@@ -289,6 +313,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "return_type": "LogicalType::DOUBLE",
                 },
                 {
+                    "description": "Return the upper bound of the number of distinct items seen by the sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_upper_bound(sketch, std_dev)",
                     "method": "return sketch.get_upper_bound(std_dev_data);",
                     "arguments": [
                         sketch_argument,
@@ -307,6 +333,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
         result.extend(
             [
                 {
+                    "description": "Return a description of this sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_describe(sketch, include_centroids)",
                     "method": "return StringVector::AddString(result, sketch.to_string(include_centroids_data));",
                     "arguments": [
                         sketch_argument,
@@ -319,6 +347,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "return_type": "LogicalType::VARCHAR",
                 },
                 {
+                    "description": "Return the rank of an item in the sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_rank(sketch, item)",
                     "method": "return sketch.get_rank(item_data);",
                     "name": "rank",
                     "arguments": [
@@ -331,6 +361,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "return_type": "LogicalType::DOUBLE",
                 },
                 {
+                    "description": "Return the total weight of this sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_total_weight(sketch)",
                     "method": "return sketch.get_total_weight();",
                     "name": "total_weight",
                     "arguments": [
@@ -339,6 +371,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "return_type": "LogicalType::UBIGINT",
                 },
                 {
+                    "description": "Return the quantile of a rank in the sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_quantile(sketch, rank)",
                     "method": "return sketch.get_quantile(rank_data);",
                     "name": "quantile",
                     "arguments": [
@@ -357,6 +391,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
         result.extend(
             [
                 {
+                    "description": "Return the normalized rank error of the sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_normalized_rank_error(sketch, is_pmf)",
                     "method": "return sketch.get_normalized_rank_error(is_pmf_data);",
                     "name": "normalized_rank_error",
                     "arguments": [
@@ -375,6 +411,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
         result.extend(
             [
                 {
+                    "description": "Return a description of this sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_describe(sketch, include_levels, include_items)",
                     "method": "return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));",
                     "arguments": [
                         sketch_argument,
@@ -391,6 +429,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "return_type": "LogicalType::VARCHAR",
                 },
                 {
+                    "description": "Return the rank of an item in the sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_rank(sketch, item, inclusive)",
                     "method": "return sketch.get_rank(item_data, inclusive_data);",
                     "name": "rank",
                     "arguments": [
@@ -407,6 +447,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "return_type": "LogicalType::DOUBLE",
                 },
                 {
+                    "description": "Return the quantile of a rank in the sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_rank(sketch, rank, inclusive)",
                     "method": "return sketch.get_quantile(rank_data, inclusive_data);",
                     "name": "quantile",
                     "arguments": [
@@ -423,6 +465,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "dynamic_return_type": True,
                 },
                 {
+                    "description": "Return the number of items contained in the sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_rank(sketch)",
                     "method": "return sketch.get_n();",
                     "name": "n",
                     "arguments": [
@@ -431,6 +475,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "return_type": "LogicalType::UBIGINT",
                 },
                 {
+                    "description": "Return a boolean indicating if the sketch is in estimation mode",
+                    "example": f"datasketch_{sketch_type.lower()}_is_estimation_mode(sketch)",
                     "method": "return sketch.is_estimation_mode();",
                     "name": "is_estimation_mode",
                     "arguments": [
@@ -439,6 +485,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "return_type": "LogicalType::BOOLEAN",
                 },
                 {
+                    "description": "Return the number of retained items in the sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_num_retained(sketch)",
                     "method": "return sketch.get_num_retained();",
                     "name": "num_retained",
                     "arguments": [
@@ -447,6 +495,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "return_type": "LogicalType::UBIGINT",
                 },
                 {
+                    "description": "Return the minimum item in the sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_min_item(sketch)",
                     "method": "return sketch.get_min_item();",
                     "name": "min_item",
                     "arguments": [
@@ -455,6 +505,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "dynamic_return_type": True,
                 },
                 {
+                    "description": "Return the maxium item in the sketch",
+                    "example": f"datasketch_{sketch_type.lower()}_max_item(sketch)",
                     "method": "return sketch.get_max_item();",
                     "name": "max_item",
                     "arguments": [sketch_argument],
