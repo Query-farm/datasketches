@@ -898,6 +898,7 @@ static inline void DSQuantilescdf(DataChunk &args, ExpressionState &state, Vecto
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclusive_data);
+                duckdb_free(passing_points);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -915,7 +916,6 @@ auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclu
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, cdf_result.size()};
                 
-duckdb_free(passing_points);
         });
 
 }
@@ -965,6 +965,8 @@ static inline void DSQuantilespmf(DataChunk &args, ExpressionState &state, Vecto
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclusive_data);
+                duckdb_free(passing_points);
+
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -982,7 +984,6 @@ auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclu
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, pmf_result.size()};
                 
-duckdb_free(passing_points);
         });
 
 }
@@ -1920,6 +1921,7 @@ static inline void DSKLLcdf(DataChunk &args, ExpressionState &state, Vector &res
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclusive_data);
+                duckdb_free(passing_points);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -1937,7 +1939,6 @@ auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclu
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, cdf_result.size()};
                 
-duckdb_free(passing_points);
         });
 
 }
@@ -1987,6 +1988,8 @@ static inline void DSKLLpmf(DataChunk &args, ExpressionState &state, Vector &res
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclusive_data);
+                duckdb_free(passing_points);
+
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -2004,7 +2007,6 @@ auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclu
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, pmf_result.size()};
                 
-duckdb_free(passing_points);
         });
 
 }
@@ -2942,6 +2944,7 @@ static inline void DSREQcdf(DataChunk &args, ExpressionState &state, Vector &res
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclusive_data);
+                duckdb_free(passing_points);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -2959,7 +2962,6 @@ auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclu
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, cdf_result.size()};
                 
-duckdb_free(passing_points);
         });
 
 }
@@ -3009,6 +3011,8 @@ static inline void DSREQpmf(DataChunk &args, ExpressionState &state, Vector &res
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclusive_data);
+                duckdb_free(passing_points);
+
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -3026,7 +3030,6 @@ auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclu
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, pmf_result.size()};
                 
-duckdb_free(passing_points);
         });
 
 }
@@ -3898,6 +3901,7 @@ static inline void DSTDigestcdf(DataChunk &args, ExpressionState &state, Vector 
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length);
+                duckdb_free(passing_points);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -3915,7 +3919,6 @@ auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length);
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, cdf_result.size()};
                 
-duckdb_free(passing_points);
         });
 
 }
@@ -3964,6 +3967,8 @@ static inline void DSTDigestpmf(DataChunk &args, ExpressionState &state, Vector 
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length);
+                duckdb_free(passing_points);
+
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -3981,7 +3986,6 @@ auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length);
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, pmf_result.size()};
                 
-duckdb_free(passing_points);
         });
 
 }

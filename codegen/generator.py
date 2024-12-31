@@ -112,7 +112,6 @@ def unary_functions_per_sketch_type(sketch_type: str):
                         passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                     }
                     """,
-        "cleanup": "duckdb_free(passing_points);",
     }
     pmf_points_argument = cdf_points_argument
 
@@ -144,6 +143,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                         else "auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length);"
                     )
                     + """
+                duckdb_free(passing_points);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -181,6 +181,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                         else "auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length);"
                     )
                     + """
+                duckdb_free(passing_points);
+
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -520,7 +522,6 @@ def get_function_block(function_info: Any) -> str:
     executor_args = []
     lambda_args = []
     lambda_lines = []
-    lambda_cleanup_lines = []
     pre_executor_lines = []
 
     for argument in function_info["arguments"]:
@@ -534,9 +535,6 @@ def get_function_block(function_info: Any) -> str:
         if "process" in argument:
             lambda_lines.append(argument["process"])
 
-        if "cleanup" in argument:
-            lambda_cleanup_lines.append(argument["cleanup"])
-
         if "pre_executor" in argument:
             pre_executor_lines.append(argument["pre_executor"])
 
@@ -547,8 +545,6 @@ def get_function_block(function_info: Any) -> str:
     joined_lambda_args = ",".join(lambda_args)
 
     lambda_lines.append(function_info["method"])
-
-    lambda_lines.extend(lambda_cleanup_lines)
 
     lambda_body = "\n".join(lambda_lines)
     pre_executor_body = "\n".join(pre_executor_lines)
@@ -567,7 +563,6 @@ def get_function_block(function_info: Any) -> str:
     return result
 
 
-print("Got stuff")
 # Data to render the template
 data = {
     "sketch_class_name": get_sketch_class_name,
