@@ -37,9 +37,11 @@ The CPC sketch is returned as a type `sketch_cpc` which is equal to a BLOB.
 
 ```sql
 CREATE TABLE items(id integer);
+
 -- insert the same ids twice to demonstrate the sketch only counts distinct items.
 INSERT INTO items(id) select unnest(generate_series(1, 100000));
 INSERT INTO items(id) select unnest(generate_series(1, 100000));
+
 -- Create a sketch by aggregating id over the items table,
 -- use the smallest possible sketch by setting K to 4, better
 -- accuracy comes with larger values of K
@@ -50,14 +52,11 @@ SELECT datasketch_cpc_estimate(datasketch_cpc(4, id)) from items;
 ├────────────────────────────────────────────────┤
 │                             104074.26344655872 │
 └────────────────────────────────────────────────┘
--- The sketch can be persisted and updated later.
+
+-- The sketch can be persisted and updated later when more data
+-- arrives without having to rescan the previously aggregated data.
 SELECT datasketch_cpc(4, id) from items;
-┌─────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                          datasketch_cpc(4, id)                                          │
-│                                               sketch_cpc                                                │
-├─────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ \x04\x01\x10\x04\x0A\x12\xCC\x93\xD0\x00\x00\x00\x03\x00\x00\x00\x0C]\xAD\x019\x9B\xFA\x04+\x00\x00\x00 │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+datasketch_cpc(4, id) = \x04\x01\x10\x04\x0A\x12\xCC\x93\xD0\x00\x00\x00\x03\x00\x00\x00\x0C]\xAD\x019\x9B\xFA\x04+\x00\x00\x00
 ```
 
 ##### Aggregate Functions
