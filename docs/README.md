@@ -36,9 +36,11 @@ The CPC sketch is returned as a type `sketch_cpc` which is equal to a BLOB.
 ##### Example
 
 ```sql
+-- This table will contain the items where we are intersted in knowing
+-- how many unique item id there are.
 CREATE TABLE items(id integer);
 
--- insert the same ids twice to demonstrate the sketch only counts distinct items.
+-- Insert the same ids twice to demonstrate the sketch only counts distinct items.
 INSERT INTO items(id) select unnest(generate_series(1, 100000));
 INSERT INTO items(id) select unnest(generate_series(1, 100000));
 
