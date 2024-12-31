@@ -94,11 +94,16 @@ Returns an approximation to the Cumulative Distribution Function (CDF), which is
 
 The second argument is a list of of <i>m</i> unique, monotonically increasing values that divide the input domain into <i>m+1</i> consecutive disjoint intervals.
 
-The returned value is a list of <i>m</i>+1 doubles, which are a consecutive approximation to the CDF of the input stream given the split_points. The value at array position j of the returned CDF array is the sum of the returned values in positions 0 through j of the returned PMF array. This can be viewed as array of ranks of the given split points plus one more value that is always 1.
+The returned value is a list of <i>m</i>+1 doubles, which are a consecutive approximation to the CDF of the input stream given the split_points. The value at array position j of the returned CDF array is the sum of the returned values in positions 0 through j of the returned PMF array. This can be viewed as array of ranks of the given split points plus
+one more value that is always 1.
+
+-----
 
 **`datasketch_tdigest_get_k(sketch_tdigest) -> USMALLINT`**
 
 Return the value of K for the passed sketch.
+
+-----
 
 **`datasketch_tdigest_is_empty(sketch_tdigest) -> BOOLEAN`**
 
