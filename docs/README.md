@@ -1,5 +1,4 @@
-# datasketches
-
+# Datasketches for DuckDB
 
 The DuckDB DataSketches Extension is a plugin for [DuckDB](https://duckdb.org) that provides an interface to the [Apache DataSketches](https://datasketches.apache.org/) library. This extension enables users to efficiently compute approximate results for large datasets directly within DuckDB, using state-of-the-art streaming algorithms for distinct counting, quantile estimation, and more.
 
@@ -64,12 +63,50 @@ SELECT datasketch_tdigest(10, temp) from readings;
 datasketch_tdigest(10, "temp") = \x02\x01\x14\x0A\x00\x04\x00...
 ```
 
+##### Aggregate Functions
+
+**`datasketch_tdigest(INTEGER, DOUBLE | FLOAT | sketch_tdigest) -> sketch_tdigest_float | sketch_tdigest_double`**
+
+The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the value to aggregate into the sketch.
+
+This same aggregate function can perform a union of multiple sketches.
+
+##### Scalar Functions
+
+**`datasketch_tdigest_rank(sketch_tdigest, value) -> DOUBLE`**
+
+Compute approximate normalized rank of the given value.
+
+**`datasketch_tdigest_quantile(sketch_tdigest, DOUBLE) -> DOUBLE`**
+
+Compute approximate quantile value corresponding to the given normalized rank
 
 
+**`datasketch_tdigest_pmf(sketch_tdigest, value[]) -> double[]`**
+
+Returns an approximation to the Probability Mass Function (PMF) of the input stream given a set of split points.
+
+The returned value is a list of <i>m</i>+1 doubles each of which is an approximation to the fraction of the input stream values (the mass) that fall into one of those intervals.
+
+**`datasketch_tdigest_cdf(sketch_tdigest, value[]) -> double[]`**
+
+Returns an approximation to the Cumulative Distribution Function (CDF), which is the cumulative analog of the PMF, of the input stream given a set of split points.
+
+The second argument is a list of of <i>m</i> unique, monotonically increasing values that divide the input domain into <i>m+1</i> consecutive disjoint intervals.
+
+The returned value is a list of <i>m</i>+1 doubles, which are a consecutive approximation to the CDF of the input stream given the split_points. The value at array position j of the returned CDF array is the sum of the returned values in positions 0 through j of the returned PMF array. This can be viewed as array of ranks of the given split points plus one more value that is always 1.
+
+**`datasketch_tdigest_get_k(sketch_tdigest) -> USMALLINT`**
+
+Return the value of K for the passed sketch.
+
+**`datasketch_tdigest_is_empty(sketch_tdigest) -> BOOLEAN`**
+
+Returns if the sketch is empty.
 
 ### Approximate Distinct Count
 
-These sketche type provide fast and memory-efficient cardinality estimation.
+These sketch type provide fast and memory-efficient cardinality estimation.
 
 #### HyperLogLog - "`hll`"
 
