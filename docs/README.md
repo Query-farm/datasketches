@@ -17,6 +17,16 @@ This extension has implemented these sketches from Apache DataSketches.
   - [Compressed Probability Counting (CPC)](https://datasketches.apache.org/docs/CPC/CpcSketches.html)
   - [HyperLogLog (HLL)](https://datasketches.apache.org/docs/HLL/HllSketches.html)
 
+Additional sketch types can be implemented as needed.
+
+## Installation
+
+You can install this extension by executing this SQL:
+
+```sql
+install datasketches from community;
+load datasketches;
+```
 
 ## Features
 
