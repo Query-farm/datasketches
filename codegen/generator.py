@@ -627,6 +627,15 @@ data = {
     "get_scalar_function_args": get_scalar_function_args,
     "logical_type_mapping": logical_type_mapping,
     "to_type_id": lambda v: v.replace("LogicalType", "LogicalTypeId"),
+    "sketch_k_cpp_type": {
+        "Quantiles": "int32_t",
+        "KLL": "int32_t",
+        "REQ": "int32_t",
+        "TDigest": "int32_t",
+        "HLL": "int32_t",
+        "CPC": "int32_t",
+    },
+    "cpp_type_mapping": cpp_type_mapping,
 }
 
 

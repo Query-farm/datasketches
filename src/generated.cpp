@@ -24,6 +24,52 @@ namespace duckdb_datasketches
         return result;
     }
 
+    struct DSQuantilesBindData : public FunctionData
+    {
+        DSQuantilesBindData()
+        {
+        }
+        explicit DSQuantilesBindData(int32_t k) : k(k)
+        {
+        }
+
+        unique_ptr<FunctionData> Copy() const override
+        {
+            return make_uniq<DSQuantilesBindData>(k);
+        }
+
+        bool Equals(const FunctionData &other_p) const override
+        {
+            auto &other = other_p.Cast<DSQuantilesBindData>();
+            return k == other.k;
+        }
+
+        int32_t k;
+    };
+
+    unique_ptr<FunctionData> DSQuantilesBind(ClientContext &context, AggregateFunction &function,
+                                             vector<unique_ptr<Expression>> &arguments)
+    {
+        if (arguments[0]->HasParameter())
+        {
+            throw ParameterNotResolvedException();
+        }
+        if (!arguments[0]->IsFoldable())
+        {
+            throw BinderException("Quantiles can only take a constant K value");
+        }
+        Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
+        if (k_val.IsNull())
+        {
+            throw BinderException("Quantiles K value cannot be NULL");
+        }
+
+        auto actual_k = k_val.GetValue<int32_t>();
+
+        Function::EraseArgument(function, arguments, 0);
+        return make_uniq<DSQuantilesBindData>(actual_k);
+    }
+
     template <class T>
 
     struct DSQuantilesState
@@ -78,6 +124,52 @@ namespace duckdb_datasketches
         ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
         ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
         return new_type;
+    }
+
+    struct DSKLLBindData : public FunctionData
+    {
+        DSKLLBindData()
+        {
+        }
+        explicit DSKLLBindData(int32_t k) : k(k)
+        {
+        }
+
+        unique_ptr<FunctionData> Copy() const override
+        {
+            return make_uniq<DSKLLBindData>(k);
+        }
+
+        bool Equals(const FunctionData &other_p) const override
+        {
+            auto &other = other_p.Cast<DSKLLBindData>();
+            return k == other.k;
+        }
+
+        int32_t k;
+    };
+
+    unique_ptr<FunctionData> DSKLLBind(ClientContext &context, AggregateFunction &function,
+                                       vector<unique_ptr<Expression>> &arguments)
+    {
+        if (arguments[0]->HasParameter())
+        {
+            throw ParameterNotResolvedException();
+        }
+        if (!arguments[0]->IsFoldable())
+        {
+            throw BinderException("KLL can only take a constant K value");
+        }
+        Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
+        if (k_val.IsNull())
+        {
+            throw BinderException("KLL K value cannot be NULL");
+        }
+
+        auto actual_k = k_val.GetValue<int32_t>();
+
+        Function::EraseArgument(function, arguments, 0);
+        return make_uniq<DSKLLBindData>(actual_k);
     }
 
     template <class T>
@@ -136,6 +228,52 @@ namespace duckdb_datasketches
         return new_type;
     }
 
+    struct DSREQBindData : public FunctionData
+    {
+        DSREQBindData()
+        {
+        }
+        explicit DSREQBindData(int32_t k) : k(k)
+        {
+        }
+
+        unique_ptr<FunctionData> Copy() const override
+        {
+            return make_uniq<DSREQBindData>(k);
+        }
+
+        bool Equals(const FunctionData &other_p) const override
+        {
+            auto &other = other_p.Cast<DSREQBindData>();
+            return k == other.k;
+        }
+
+        int32_t k;
+    };
+
+    unique_ptr<FunctionData> DSREQBind(ClientContext &context, AggregateFunction &function,
+                                       vector<unique_ptr<Expression>> &arguments)
+    {
+        if (arguments[0]->HasParameter())
+        {
+            throw ParameterNotResolvedException();
+        }
+        if (!arguments[0]->IsFoldable())
+        {
+            throw BinderException("REQ can only take a constant K value");
+        }
+        Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
+        if (k_val.IsNull())
+        {
+            throw BinderException("REQ K value cannot be NULL");
+        }
+
+        auto actual_k = k_val.GetValue<int32_t>();
+
+        Function::EraseArgument(function, arguments, 0);
+        return make_uniq<DSREQBindData>(actual_k);
+    }
+
     template <class T>
 
     struct DSREQState
@@ -192,6 +330,52 @@ namespace duckdb_datasketches
         return new_type;
     }
 
+    struct DSTDigestBindData : public FunctionData
+    {
+        DSTDigestBindData()
+        {
+        }
+        explicit DSTDigestBindData(int32_t k) : k(k)
+        {
+        }
+
+        unique_ptr<FunctionData> Copy() const override
+        {
+            return make_uniq<DSTDigestBindData>(k);
+        }
+
+        bool Equals(const FunctionData &other_p) const override
+        {
+            auto &other = other_p.Cast<DSTDigestBindData>();
+            return k == other.k;
+        }
+
+        int32_t k;
+    };
+
+    unique_ptr<FunctionData> DSTDigestBind(ClientContext &context, AggregateFunction &function,
+                                           vector<unique_ptr<Expression>> &arguments)
+    {
+        if (arguments[0]->HasParameter())
+        {
+            throw ParameterNotResolvedException();
+        }
+        if (!arguments[0]->IsFoldable())
+        {
+            throw BinderException("TDigest can only take a constant K value");
+        }
+        Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
+        if (k_val.IsNull())
+        {
+            throw BinderException("TDigest K value cannot be NULL");
+        }
+
+        auto actual_k = k_val.GetValue<int32_t>();
+
+        Function::EraseArgument(function, arguments, 0);
+        return make_uniq<DSTDigestBindData>(actual_k);
+    }
+
     template <class T>
 
     struct DSTDigestState
@@ -246,6 +430,52 @@ namespace duckdb_datasketches
         return new_type;
     }
 
+    struct DSHLLBindData : public FunctionData
+    {
+        DSHLLBindData()
+        {
+        }
+        explicit DSHLLBindData(int32_t k) : k(k)
+        {
+        }
+
+        unique_ptr<FunctionData> Copy() const override
+        {
+            return make_uniq<DSHLLBindData>(k);
+        }
+
+        bool Equals(const FunctionData &other_p) const override
+        {
+            auto &other = other_p.Cast<DSHLLBindData>();
+            return k == other.k;
+        }
+
+        int32_t k;
+    };
+
+    unique_ptr<FunctionData> DSHLLBind(ClientContext &context, AggregateFunction &function,
+                                       vector<unique_ptr<Expression>> &arguments)
+    {
+        if (arguments[0]->HasParameter())
+        {
+            throw ParameterNotResolvedException();
+        }
+        if (!arguments[0]->IsFoldable())
+        {
+            throw BinderException("HLL can only take a constant K value");
+        }
+        Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
+        if (k_val.IsNull())
+        {
+            throw BinderException("HLL K value cannot be NULL");
+        }
+
+        auto actual_k = k_val.GetValue<int32_t>();
+
+        Function::EraseArgument(function, arguments, 0);
+        return make_uniq<DSHLLBindData>(actual_k);
+    }
+
     struct DSHLLState
     {
 
@@ -295,6 +525,52 @@ namespace duckdb_datasketches
         ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
         ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
         return new_type;
+    }
+
+    struct DSCPCBindData : public FunctionData
+    {
+        DSCPCBindData()
+        {
+        }
+        explicit DSCPCBindData(int32_t k) : k(k)
+        {
+        }
+
+        unique_ptr<FunctionData> Copy() const override
+        {
+            return make_uniq<DSCPCBindData>(k);
+        }
+
+        bool Equals(const FunctionData &other_p) const override
+        {
+            auto &other = other_p.Cast<DSCPCBindData>();
+            return k == other.k;
+        }
+
+        int32_t k;
+    };
+
+    unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &function,
+                                       vector<unique_ptr<Expression>> &arguments)
+    {
+        if (arguments[0]->HasParameter())
+        {
+            throw ParameterNotResolvedException();
+        }
+        if (!arguments[0]->IsFoldable())
+        {
+            throw BinderException("CPC can only take a constant K value");
+        }
+        Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
+        if (k_val.IsNull())
+        {
+            throw BinderException("CPC K value cannot be NULL");
+        }
+
+        auto actual_k = k_val.GetValue<int32_t>();
+
+        Function::EraseArgument(function, arguments, 0);
+        return make_uniq<DSCPCBindData>(actual_k);
     }
 
     struct DSCPCState
@@ -348,7 +624,7 @@ namespace duckdb_datasketches
         return new_type;
     }
 
-    struct DSQuantilesMergeOperation
+    struct DSSketchOperationBase
     {
         template <class STATE>
         static void Initialize(STATE &state)
@@ -356,19 +632,45 @@ namespace duckdb_datasketches
             state.sketch = nullptr;
         }
 
-        template <class A_TYPE, class B_TYPE, class STATE, class OP>
+        template <class STATE>
+        static void Destroy(STATE &state, AggregateInputData &aggr_input_data)
+        {
+            if (state.sketch)
+            {
+                delete state.sketch;
+                state.sketch = nullptr;
+            }
+        }
+
+        static bool IgnoreNull() { return true; }
+    };
+
+    template <class BIND_DATA_TYPE>
+    struct DSQuantilesMergeOperation : DSSketchOperationBase
+    {
+        template <class A_TYPE, class STATE, class OP>
         static void Operation(STATE &state,
                               const A_TYPE &a_data,
-                              const B_TYPE &b_data,
-                              AggregateBinaryInput &idata)
+                              AggregateUnaryInput &idata)
         {
             if (!state.sketch)
             {
-                state.CreateSketch(a_data);
+                auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
+                state.CreateSketch(bind_data.k);
             }
 
             // this is a sketch in b_data, so we need to deserialize it.
-            state.sketch->merge(state.deserialize_sketch(b_data));
+            state.sketch->merge(state.deserialize_sketch(a_data));
+        }
+
+        template <class INPUT_TYPE, class STATE, class OP>
+        static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
+                                      idx_t count)
+        {
+            for (idx_t i = 0; i < count; i++)
+            {
+                Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
+            }
         }
 
         template <class STATE, class OP>
@@ -397,36 +699,36 @@ namespace duckdb_datasketches
             {
                 auto serialized_data = state.sketch->serialize();
                 auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
-                delete state.sketch;
-                state.sketch = nullptr;
-
                 target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
             }
         }
-
-        static bool IgnoreNull() { return true; }
     };
 
-    struct DSQuantilesCreateOperation
+    template <class BIND_DATA_TYPE>
+    struct DSQuantilesCreateOperation : DSSketchOperationBase
     {
-        template <class STATE>
-        static void Initialize(STATE &state)
-        {
-            state.sketch = nullptr;
-        }
-
-        template <class A_TYPE, class B_TYPE, class STATE, class OP>
+        template <class A_TYPE, class STATE, class OP>
         static void Operation(STATE &state,
                               const A_TYPE &a_data,
-                              const B_TYPE &b_data,
-                              AggregateBinaryInput &idata)
+                              AggregateUnaryInput &idata)
         {
             if (!state.sketch)
             {
-                state.CreateSketch(a_data);
+                auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
+                state.CreateSketch(bind_data.k);
             }
 
-            state.sketch->update(b_data);
+            state.sketch->update(a_data);
+        }
+
+        template <class INPUT_TYPE, class STATE, class OP>
+        static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
+                                      idx_t count)
+        {
+            for (idx_t i = 0; i < count; i++)
+            {
+                Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
+            }
         }
 
         template <class STATE, class OP>
@@ -455,42 +757,42 @@ namespace duckdb_datasketches
             {
                 auto serialized_data = state.sketch->serialize();
                 auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
-                delete state.sketch;
-                state.sketch = nullptr;
-
                 target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
             }
         }
-
-        static bool IgnoreNull() { return true; }
     };
 
-    struct DSHLLCreateOperation
+    template <class BIND_DATA_TYPE>
+    struct DSHLLCreateOperation : DSSketchOperationBase
     {
-        template <class STATE>
-        static void Initialize(STATE &state)
-        {
-            state.sketch = nullptr;
-        }
-
-        template <class A_TYPE, class B_TYPE, class STATE, class OP>
+        template <class A_TYPE, class STATE, class OP>
         static void Operation(STATE &state,
                               const A_TYPE &a_data,
-                              const B_TYPE &b_data,
-                              AggregateBinaryInput &idata)
+                              AggregateUnaryInput &idata)
         {
             if (!state.sketch)
             {
-                state.CreateSketch(a_data);
+                auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
+                state.CreateSketch(bind_data.k);
             }
 
-            if constexpr (std::is_same_v<B_TYPE, duckdb::string_t>)
+            if constexpr (std::is_same_v<A_TYPE, duckdb::string_t>)
             {
-                state.sketch->update(b_data.GetData(), b_data.GetSize());
+                state.sketch->update(a_data.GetData(), a_data.GetSize());
             }
             else
             {
-                state.sketch->update(b_data);
+                state.sketch->update(a_data);
+            }
+        }
+
+        template <class INPUT_TYPE, class STATE, class OP>
+        static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
+                                      idx_t count)
+        {
+            for (idx_t i = 0; i < count; i++)
+            {
+                Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
             }
         }
 
@@ -507,7 +809,6 @@ namespace duckdb_datasketches
                 datasketches::hll_union u(target.sketch->get_lg_config_k());
                 u.update(*target.sketch);
                 u.update(*source.sketch);
-
                 *target.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
             }
         }
@@ -524,44 +825,46 @@ namespace duckdb_datasketches
             {
                 auto serialized_data = state.sketch->serialize_updatable();
                 auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
-                delete state.sketch;
-                state.sketch = nullptr;
-
                 target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
             }
         }
-
-        static bool IgnoreNull() { return true; }
     };
 
-    struct DSHLLMergeOperation
+    template <class BIND_DATA_TYPE>
+    struct DSHLLMergeOperation : DSSketchOperationBase
     {
-        template <class STATE>
-        static void Initialize(STATE &state)
-        {
-            state.sketch = nullptr;
-        }
 
-        template <class A_TYPE, class B_TYPE, class STATE, class OP>
+        template <class A_TYPE, class STATE, class OP>
         static void Operation(STATE &state,
                               const A_TYPE &a_data,
-                              const B_TYPE &b_data,
-                              AggregateBinaryInput &idata)
+                              AggregateUnaryInput &idata)
         {
+            auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
+
             if (!state.sketch)
             {
-                state.CreateSketch(a_data);
+                state.CreateSketch(bind_data.k);
             }
 
-            auto b_sketch = state.deserialize_sketch(b_data);
+            auto a_sketch = state.deserialize_sketch(a_data);
 
-            datasketches::hll_union u(a_data);
+            datasketches::hll_union u(bind_data.k);
             u.update(*state.sketch);
-            u.update(b_sketch);
+            u.update(a_sketch);
 
             *state.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
         }
 
+        template <class INPUT_TYPE, class STATE, class OP>
+        static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
+                                      idx_t count)
+        {
+            for (idx_t i = 0; i < count; i++)
+            {
+                Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
+            }
+        }
+
         template <class STATE, class OP>
         static void Combine(const STATE &source, STATE &target,
                             AggregateInputData &aggr_input_data)
@@ -593,43 +896,44 @@ namespace duckdb_datasketches
             {
                 auto serialized_data = state.sketch->serialize_updatable();
                 auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
-                delete state.sketch;
-                state.sketch = nullptr;
                 target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
             }
         }
-
-        static bool IgnoreNull() { return true; }
     };
 
-    struct DSCPCMergeOperation
+    template <class BIND_DATA_TYPE>
+    struct DSCPCMergeOperation : DSSketchOperationBase
     {
-        template <class STATE>
-        static void Initialize(STATE &state)
-        {
-            state.sketch = nullptr;
-        }
-
-        template <class A_TYPE, class B_TYPE, class STATE, class OP>
+        template <class A_TYPE, class STATE, class OP>
         static void Operation(STATE &state,
                               const A_TYPE &a_data,
-                              const B_TYPE &b_data,
-                              AggregateBinaryInput &idata)
+                              AggregateUnaryInput &idata)
         {
+            auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
+
             if (!state.sketch)
             {
-                state.CreateSketch(a_data);
+                state.CreateSketch(bind_data.k);
             }
 
-            auto b_sketch = state.deserialize_sketch(b_data);
-
-            datasketches::cpc_union u(a_data);
+            auto a_sketch = state.deserialize_sketch(a_data);
+            datasketches::cpc_union u(bind_data.k);
             u.update(*state.sketch);
-            u.update(b_sketch);
+            u.update(a_sketch);
 
             *state.sketch = u.get_result();
         }
 
+        template <class INPUT_TYPE, class STATE, class OP>
+        static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
+                                      idx_t count)
+        {
+            for (idx_t i = 0; i < count; i++)
+            {
+                Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
+            }
+        }
+
         template <class STATE, class OP>
         static void Combine(const STATE &source, STATE &target,
                             AggregateInputData &aggr_input_data)
@@ -659,41 +963,42 @@ namespace duckdb_datasketches
             {
                 auto serialized_data = state.sketch->serialize();
                 auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
-                delete state.sketch;
-                state.sketch = nullptr;
                 target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
             }
         }
-
-        static bool IgnoreNull() { return true; }
     };
 
-    struct DSCPCCreateOperation
+    template <class BIND_DATA_TYPE>
+    struct DSCPCCreateOperation : DSSketchOperationBase
     {
-        template <class STATE>
-        static void Initialize(STATE &state)
-        {
-            state.sketch = nullptr;
-        }
-
-        template <class A_TYPE, class B_TYPE, class STATE, class OP>
+        template <class A_TYPE, class STATE, class OP>
         static void Operation(STATE &state,
                               const A_TYPE &a_data,
-                              const B_TYPE &b_data,
-                              AggregateBinaryInput &idata)
+                              AggregateUnaryInput &idata)
         {
             if (!state.sketch)
             {
-                state.CreateSketch(a_data);
+                auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
+                state.CreateSketch(bind_data.k);
             }
 
-            if constexpr (std::is_same_v<B_TYPE, duckdb::string_t>)
+            if constexpr (std::is_same_v<A_TYPE, duckdb::string_t>)
             {
-                state.sketch->update(b_data.GetData(), b_data.GetSize());
+                state.sketch->update(a_data.GetData(), a_data.GetSize());
             }
             else
             {
-                state.sketch->update(b_data);
+                state.sketch->update(a_data);
+            }
+        }
+
+        template <class INPUT_TYPE, class STATE, class OP>
+        static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
+                                      idx_t count)
+        {
+            for (idx_t i = 0; i < count; i++)
+            {
+                Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
             }
         }
 
@@ -726,14 +1031,9 @@ namespace duckdb_datasketches
             {
                 auto serialized_data = state.sketch->serialize();
                 auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
-                delete state.sketch;
-                state.sketch = nullptr;
-
                 target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
             }
         }
-
-        static bool IgnoreNull() { return true; }
     };
 
     template <class T>
@@ -1061,16 +1361,16 @@ namespace duckdb_datasketches
 
     {
 
-        return AggregateFunction::BinaryAggregate<DSQuantilesState<T>, int32_t, string_t, string_t, DSQuantilesMergeOperation>(
-            LogicalType::INTEGER, result_type, result_type);
+        return AggregateFunction::UnaryAggregateDestructor<DSQuantilesState<T>, string_t, string_t, DSQuantilesMergeOperation<DSQuantilesBindData>>(
+            result_type, result_type);
     }
 
     template <typename T>
     auto static DSQuantilesCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
 
-        return AggregateFunction::BinaryAggregate<DSQuantilesState<T>, int32_t, T, string_t, DSQuantilesCreateOperation>(
-            LogicalType::INTEGER, type, result_type);
+        return AggregateFunction::UnaryAggregateDestructor<DSQuantilesState<T>, T, string_t, DSQuantilesCreateOperation<DSQuantilesBindData>>(
+            type, result_type);
     }
 
     void LoadQuantilesSketch(DatabaseInstance &instance)
@@ -1486,35 +1786,155 @@ namespace duckdb_datasketches
         {
             AggregateFunctionSet sketch("datasketch_quantiles");
 
-            sketch.AddFunction(DSQuantilesCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
-            sketch.AddFunction(DSQuantilesMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
+            {
+                auto fun = DSQuantilesCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
+            {
+                auto fun = DSQuantilesMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
 
-            sketch.AddFunction(DSQuantilesCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
-            sketch.AddFunction(DSQuantilesMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
+            {
+                auto fun = DSQuantilesCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
+            {
+                auto fun = DSQuantilesMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
 
-            sketch.AddFunction(DSQuantilesCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
-            sketch.AddFunction(DSQuantilesMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
+            {
+                auto fun = DSQuantilesCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
+            {
+                auto fun = DSQuantilesMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
 
-            sketch.AddFunction(DSQuantilesCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
-            sketch.AddFunction(DSQuantilesMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
+            {
+                auto fun = DSQuantilesCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
+            {
+                auto fun = DSQuantilesMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
 
-            sketch.AddFunction(DSQuantilesCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
-            sketch.AddFunction(DSQuantilesMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
+            {
+                auto fun = DSQuantilesCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
+            {
+                auto fun = DSQuantilesMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
 
-            sketch.AddFunction(DSQuantilesCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
-            sketch.AddFunction(DSQuantilesMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
+            {
+                auto fun = DSQuantilesCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
+            {
+                auto fun = DSQuantilesMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
 
-            sketch.AddFunction(DSQuantilesCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
-            sketch.AddFunction(DSQuantilesMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
+            {
+                auto fun = DSQuantilesCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
+            {
+                auto fun = DSQuantilesMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
 
-            sketch.AddFunction(DSQuantilesCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
-            sketch.AddFunction(DSQuantilesMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
+            {
+                auto fun = DSQuantilesCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
+            {
+                auto fun = DSQuantilesMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
 
-            sketch.AddFunction(DSQuantilesCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
-            sketch.AddFunction(DSQuantilesMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
+            {
+                auto fun = DSQuantilesCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
+            {
+                auto fun = DSQuantilesMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
 
-            sketch.AddFunction(DSQuantilesCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
-            sketch.AddFunction(DSQuantilesMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
+            {
+                auto fun = DSQuantilesCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
+            {
+                auto fun = DSQuantilesMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
+                fun.bind = DSQuantilesBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSQuantilesMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
 
             CreateAggregateFunctionInfo sketch_info(sketch);
             sketch_info.description = "Creates a sketch_quantiles data sketch by aggregating values or by aggregating other Quantiles data sketches";
@@ -1848,16 +2268,16 @@ namespace duckdb_datasketches
 
     {
 
-        return AggregateFunction::BinaryAggregate<DSKLLState<T>, int32_t, string_t, string_t, DSQuantilesMergeOperation>(
-            LogicalType::INTEGER, result_type, result_type);
+        return AggregateFunction::UnaryAggregateDestructor<DSKLLState<T>, string_t, string_t, DSQuantilesMergeOperation<DSKLLBindData>>(
+            result_type, result_type);
     }
 
     template <typename T>
     auto static DSKLLCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
 
-        return AggregateFunction::BinaryAggregate<DSKLLState<T>, int32_t, T, string_t, DSQuantilesCreateOperation>(
-            LogicalType::INTEGER, type, result_type);
+        return AggregateFunction::UnaryAggregateDestructor<DSKLLState<T>, T, string_t, DSQuantilesCreateOperation<DSKLLBindData>>(
+            type, result_type);
     }
 
     void LoadKLLSketch(DatabaseInstance &instance)
@@ -2273,35 +2693,155 @@ namespace duckdb_datasketches
         {
             AggregateFunctionSet sketch("datasketch_kll");
 
-            sketch.AddFunction(DSKLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
-            sketch.AddFunction(DSKLLMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
+            {
+                auto fun = DSKLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
+            {
+                auto fun = DSKLLMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
 
-            sketch.AddFunction(DSKLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
-            sketch.AddFunction(DSKLLMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
+            {
+                auto fun = DSKLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
+            {
+                auto fun = DSKLLMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
 
-            sketch.AddFunction(DSKLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
-            sketch.AddFunction(DSKLLMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
+            {
+                auto fun = DSKLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
+            {
+                auto fun = DSKLLMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
 
-            sketch.AddFunction(DSKLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
-            sketch.AddFunction(DSKLLMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
+            {
+                auto fun = DSKLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
+            {
+                auto fun = DSKLLMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
 
-            sketch.AddFunction(DSKLLCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
-            sketch.AddFunction(DSKLLMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
+            {
+                auto fun = DSKLLCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
+            {
+                auto fun = DSKLLMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
 
-            sketch.AddFunction(DSKLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
-            sketch.AddFunction(DSKLLMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
+            {
+                auto fun = DSKLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
+            {
+                auto fun = DSKLLMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
 
-            sketch.AddFunction(DSKLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
-            sketch.AddFunction(DSKLLMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
+            {
+                auto fun = DSKLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
+            {
+                auto fun = DSKLLMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
 
-            sketch.AddFunction(DSKLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
-            sketch.AddFunction(DSKLLMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
+            {
+                auto fun = DSKLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
+            {
+                auto fun = DSKLLMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
 
-            sketch.AddFunction(DSKLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
-            sketch.AddFunction(DSKLLMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
+            {
+                auto fun = DSKLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
+            {
+                auto fun = DSKLLMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
 
-            sketch.AddFunction(DSKLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
-            sketch.AddFunction(DSKLLMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
+            {
+                auto fun = DSKLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
+            {
+                auto fun = DSKLLMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
+                fun.bind = DSKLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSKLLMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
 
             CreateAggregateFunctionInfo sketch_info(sketch);
             sketch_info.description = "Creates a sketch_kll data sketch by aggregating values or by aggregating other KLL data sketches";
@@ -2616,16 +3156,16 @@ namespace duckdb_datasketches
 
     {
 
-        return AggregateFunction::BinaryAggregate<DSREQState<T>, int32_t, string_t, string_t, DSQuantilesMergeOperation>(
-            LogicalType::INTEGER, result_type, result_type);
+        return AggregateFunction::UnaryAggregateDestructor<DSREQState<T>, string_t, string_t, DSQuantilesMergeOperation<DSREQBindData>>(
+            result_type, result_type);
     }
 
     template <typename T>
     auto static DSREQCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
 
-        return AggregateFunction::BinaryAggregate<DSREQState<T>, int32_t, T, string_t, DSQuantilesCreateOperation>(
-            LogicalType::INTEGER, type, result_type);
+        return AggregateFunction::UnaryAggregateDestructor<DSREQState<T>, T, string_t, DSQuantilesCreateOperation<DSREQBindData>>(
+            type, result_type);
     }
 
     void LoadREQSketch(DatabaseInstance &instance)
@@ -3011,35 +3551,155 @@ namespace duckdb_datasketches
         {
             AggregateFunctionSet sketch("datasketch_req");
 
-            sketch.AddFunction(DSREQCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
-            sketch.AddFunction(DSREQMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
+            {
+                auto fun = DSREQCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
+            {
+                auto fun = DSREQMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
 
-            sketch.AddFunction(DSREQCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
-            sketch.AddFunction(DSREQMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
+            {
+                auto fun = DSREQCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
+            {
+                auto fun = DSREQMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
 
-            sketch.AddFunction(DSREQCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
-            sketch.AddFunction(DSREQMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
+            {
+                auto fun = DSREQCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
+            {
+                auto fun = DSREQMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
 
-            sketch.AddFunction(DSREQCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
-            sketch.AddFunction(DSREQMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
+            {
+                auto fun = DSREQCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
+            {
+                auto fun = DSREQMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
 
-            sketch.AddFunction(DSREQCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
-            sketch.AddFunction(DSREQMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
+            {
+                auto fun = DSREQCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
+            {
+                auto fun = DSREQMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
 
-            sketch.AddFunction(DSREQCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
-            sketch.AddFunction(DSREQMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
+            {
+                auto fun = DSREQCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
+            {
+                auto fun = DSREQMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
 
-            sketch.AddFunction(DSREQCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
-            sketch.AddFunction(DSREQMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
+            {
+                auto fun = DSREQCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
+            {
+                auto fun = DSREQMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
 
-            sketch.AddFunction(DSREQCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
-            sketch.AddFunction(DSREQMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
+            {
+                auto fun = DSREQCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
+            {
+                auto fun = DSREQMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
 
-            sketch.AddFunction(DSREQCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
-            sketch.AddFunction(DSREQMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
+            {
+                auto fun = DSREQCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
+            {
+                auto fun = DSREQMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
 
-            sketch.AddFunction(DSREQCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
-            sketch.AddFunction(DSREQMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
+            {
+                auto fun = DSREQCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
+            {
+                auto fun = DSREQMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
+                fun.bind = DSREQBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSREQMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
 
             CreateAggregateFunctionInfo sketch_info(sketch);
             sketch_info.description = "Creates a sketch_req data sketch by aggregating values or by aggregating other REQ data sketches";
@@ -3277,16 +3937,16 @@ namespace duckdb_datasketches
 
     {
 
-        return AggregateFunction::BinaryAggregate<DSTDigestState<T>, int32_t, string_t, string_t, DSQuantilesMergeOperation>(
-            LogicalType::INTEGER, result_type, result_type);
+        return AggregateFunction::UnaryAggregateDestructor<DSTDigestState<T>, string_t, string_t, DSQuantilesMergeOperation<DSTDigestBindData>>(
+            result_type, result_type);
     }
 
     template <typename T>
     auto static DSTDigestCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
 
-        return AggregateFunction::BinaryAggregate<DSTDigestState<T>, int32_t, T, string_t, DSQuantilesCreateOperation>(
-            LogicalType::INTEGER, type, result_type);
+        return AggregateFunction::UnaryAggregateDestructor<DSTDigestState<T>, T, string_t, DSQuantilesCreateOperation<DSTDigestBindData>>(
+            type, result_type);
     }
 
     void LoadTDigestSketch(DatabaseInstance &instance)
@@ -3416,11 +4076,35 @@ namespace duckdb_datasketches
         {
             AggregateFunctionSet sketch("datasketch_tdigest");
 
-            sketch.AddFunction(DSTDigestCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
-            sketch.AddFunction(DSTDigestMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
+            {
+                auto fun = DSTDigestCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
+                fun.bind = DSTDigestBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSTDigestCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
+            {
+                auto fun = DSTDigestMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
+                fun.bind = DSTDigestBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSTDigestMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
 
-            sketch.AddFunction(DSTDigestCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
-            sketch.AddFunction(DSTDigestMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
+            {
+                auto fun = DSTDigestCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
+                fun.bind = DSTDigestBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSTDigestCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
+            {
+                auto fun = DSTDigestMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
+                fun.bind = DSTDigestBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
+            // sketch.AddFunction(DSTDigestMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
 
             CreateAggregateFunctionInfo sketch_info(sketch);
             sketch_info.description = "Creates a sketch_tdigest data sketch by aggregating values or by aggregating other TDigest data sketches";
@@ -3549,16 +4233,16 @@ namespace duckdb_datasketches
 
     {
 
-        return AggregateFunction::BinaryAggregate<DSHLLState, int32_t, string_t, string_t, DSHLLMergeOperation>(
-            LogicalType::INTEGER, result_type, result_type);
+        return AggregateFunction::UnaryAggregateDestructor<DSHLLState, string_t, string_t, DSHLLMergeOperation<DSHLLBindData>>(
+            result_type, result_type);
     }
 
     template <typename T>
     auto static DSHLLCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
 
-        return AggregateFunction::BinaryAggregate<DSHLLState, int32_t, T, string_t, DSHLLCreateOperation>(
-            LogicalType::INTEGER, type, result_type);
+        return AggregateFunction::UnaryAggregateDestructor<DSHLLState, T, string_t, DSHLLCreateOperation<DSHLLBindData>>(
+            type, result_type);
     }
 
     void LoadHLLSketch(DatabaseInstance &instance)
@@ -3657,29 +4341,89 @@ namespace duckdb_datasketches
         {
             AggregateFunctionSet sketch("datasketch_hll");
 
-            sketch.AddFunction(DSHLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_type));
+            {
+                auto fun = DSHLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSHLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_type));
+            {
+                auto fun = DSHLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSHLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_type));
+            {
+                auto fun = DSHLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSHLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_type));
+            {
+                auto fun = DSHLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSHLLCreateAggregate<float>(LogicalType::FLOAT, sketch_type));
+            {
+                auto fun = DSHLLCreateAggregate<float>(LogicalType::FLOAT, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSHLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_type));
+            {
+                auto fun = DSHLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSHLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_type));
+            {
+                auto fun = DSHLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSHLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_type));
+            {
+                auto fun = DSHLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSHLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_type));
+            {
+                auto fun = DSHLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSHLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_type));
+            {
+                auto fun = DSHLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSHLLCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_type));
+            {
+                auto fun = DSHLLCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSHLLCreateAggregate<string_t>(LogicalType::BLOB, sketch_type));
+            {
+                auto fun = DSHLLCreateAggregate<string_t>(LogicalType::BLOB, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
             CreateAggregateFunctionInfo sketch_info(sketch);
             sketch_info.description = "Creates a sketch_hll data sketch by aggregating values or by aggregating other HLL data sketches";
@@ -3689,7 +4433,10 @@ namespace duckdb_datasketches
 
         {
             AggregateFunctionSet sketch("datasketch_hll_union");
-            sketch.AddFunction(DSHLLMergeAggregate(sketch_type));
+            auto fun = DSHLLMergeAggregate(sketch_type);
+            fun.bind = DSHLLBind;
+            fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+            sketch.AddFunction(fun);
             CreateAggregateFunctionInfo sketch_info(sketch);
             sketch_info.description = "Creates a sketch_HLL data sketch by aggregating other HLL data sketches";
             sketch_info.comment = "datasketch_hll_union(k, data)";
@@ -3783,16 +4530,16 @@ namespace duckdb_datasketches
 
     {
 
-        return AggregateFunction::BinaryAggregate<DSCPCState, int32_t, string_t, string_t, DSCPCMergeOperation>(
-            LogicalType::INTEGER, result_type, result_type);
+        return AggregateFunction::UnaryAggregateDestructor<DSCPCState, string_t, string_t, DSCPCMergeOperation<DSCPCBindData>>(
+            result_type, result_type);
     }
 
     template <typename T>
     auto static DSCPCCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
 
-        return AggregateFunction::BinaryAggregate<DSCPCState, int32_t, T, string_t, DSCPCCreateOperation>(
-            LogicalType::INTEGER, type, result_type);
+        return AggregateFunction::UnaryAggregateDestructor<DSCPCState, T, string_t, DSCPCCreateOperation<DSCPCBindData>>(
+            type, result_type);
     }
 
     void LoadCPCSketch(DatabaseInstance &instance)
@@ -3867,29 +4614,89 @@ namespace duckdb_datasketches
         {
             AggregateFunctionSet sketch("datasketch_cpc");
 
-            sketch.AddFunction(DSCPCCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_type));
+            {
+                auto fun = DSCPCCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSCPCCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_type));
+            {
+                auto fun = DSCPCCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSCPCCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_type));
+            {
+                auto fun = DSCPCCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSCPCCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_type));
+            {
+                auto fun = DSCPCCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSCPCCreateAggregate<float>(LogicalType::FLOAT, sketch_type));
+            {
+                auto fun = DSCPCCreateAggregate<float>(LogicalType::FLOAT, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSCPCCreateAggregate<double>(LogicalType::DOUBLE, sketch_type));
+            {
+                auto fun = DSCPCCreateAggregate<double>(LogicalType::DOUBLE, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSCPCCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_type));
+            {
+                auto fun = DSCPCCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSCPCCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_type));
+            {
+                auto fun = DSCPCCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSCPCCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_type));
+            {
+                auto fun = DSCPCCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSCPCCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_type));
+            {
+                auto fun = DSCPCCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSCPCCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_type));
+            {
+                auto fun = DSCPCCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
-            sketch.AddFunction(DSCPCCreateAggregate<string_t>(LogicalType::BLOB, sketch_type));
+            {
+                auto fun = DSCPCCreateAggregate<string_t>(LogicalType::BLOB, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+            }
 
             CreateAggregateFunctionInfo sketch_info(sketch);
             sketch_info.description = "Creates a sketch_cpc data sketch by aggregating values or by aggregating other CPC data sketches";
@@ -3899,7 +4706,10 @@ namespace duckdb_datasketches
 
         {
             AggregateFunctionSet sketch("datasketch_cpc_union");
-            sketch.AddFunction(DSCPCMergeAggregate(sketch_type));
+            auto fun = DSCPCMergeAggregate(sketch_type);
+            fun.bind = DSCPCBind;
+            fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+            sketch.AddFunction(fun);
             CreateAggregateFunctionInfo sketch_info(sketch);
             sketch_info.description = "Creates a sketch_CPC data sketch by aggregating other CPC data sketches";
             sketch_info.comment = "datasketch_cpc_union(k, data)";
