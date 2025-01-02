@@ -1,5 +1,7 @@
 # Apache DataSketches for DuckDB
 
+![Ducks creating sketches](./duck-sketches-2.jpg)
+
 The DuckDB DataSketches Extension is an extension for [DuckDB](https://duckdb.org) that provides an interface to the [Apache DataSketches](https://datasketches.apache.org/) library. This extension enables users to efficiently compute approximate results for large datasets directly within DuckDB, using state-of-the-art streaming algorithms for distinct counting, quantile estimation, and more.
 
 ## Why use this extension?
