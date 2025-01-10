@@ -1361,7 +1361,7 @@ namespace duckdb_datasketches
 
     {
 
-        return AggregateFunction::UnaryAggregateDestructor<DSQuantilesState<T>, string_t, string_t, DSQuantilesMergeOperation<DSQuantilesBindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DSQuantilesState<T>, string_t, string_t, DSQuantilesMergeOperation<DSQuantilesBindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
     }
 
@@ -1369,7 +1369,7 @@ namespace duckdb_datasketches
     auto static DSQuantilesCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
 
-        return AggregateFunction::UnaryAggregateDestructor<DSQuantilesState<T>, T, string_t, DSQuantilesCreateOperation<DSQuantilesBindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DSQuantilesState<T>, T, string_t, DSQuantilesCreateOperation<DSQuantilesBindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
     }
 
@@ -1416,8 +1416,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::BOOLEAN, DSQuantilesis_empty<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a boolean indicating if the sketch is empty";
-            info.example = "datasketch_quantiles_is_empty(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a boolean indicating if the sketch is empty";
+                desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -1446,8 +1451,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::USMALLINT, DSQuantilesk<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the value of K for this sketch";
-            info.example = "datasketch_quantiles_k(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the value of K for this sketch";
+                desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -1476,8 +1486,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN}, LogicalType::LIST(LogicalType::UBIGINT), DSQuantilescdf<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-            info.example = "datasketch_quantiles_cdf(sketch, points, inclusive)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -1506,8 +1521,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN}, LogicalType::LIST(LogicalType::UBIGINT), DSQuantilespmf<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-            info.example = "datasketch_quantiles_pmf(sketch, points, inclusive)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -1536,8 +1556,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::BOOLEAN}, LogicalType::DOUBLE, DSQuantilesnormalized_rank_error<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the normalized rank error of the sketch";
-            info.example = "datasketch_quantiles_normalized_rank_error(sketch, is_pmf)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the normalized rank error of the sketch";
+                desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -1566,8 +1591,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN}, LogicalType::VARCHAR, DSQuantilesdescribe<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a description of this sketch";
-            info.example = "datasketch_quantiles_describe(sketch, include_levels, include_items)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a description of this sketch";
+                desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -1596,8 +1626,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::UBIGINT, LogicalType::BOOLEAN}, LogicalType::DOUBLE, DSQuantilesrank<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the rank of an item in the sketch";
-            info.example = "datasketch_quantiles_rank(sketch, item, inclusive)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the rank of an item in the sketch";
+                desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -1626,8 +1661,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::DOUBLE, LogicalType::BOOLEAN}, LogicalType::UBIGINT, DSQuantilesquantile<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the quantile of a rank in the sketch";
-            info.example = "datasketch_quantiles_rank(sketch, rank, inclusive)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the quantile of a rank in the sketch";
+                desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -1656,8 +1696,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::UBIGINT, DSQuantilesn<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the number of items contained in the sketch";
-            info.example = "datasketch_quantiles_rank(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the number of items contained in the sketch";
+                desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -1686,8 +1731,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::BOOLEAN, DSQuantilesis_estimation_mode<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a boolean indicating if the sketch is in estimation mode";
-            info.example = "datasketch_quantiles_is_estimation_mode(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -1716,8 +1766,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::UBIGINT, DSQuantilesnum_retained<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the number of retained items in the sketch";
-            info.example = "datasketch_quantiles_num_retained(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the number of retained items in the sketch";
+                desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -1746,8 +1801,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::UBIGINT, DSQuantilesmin_item<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the minimum item in the sketch";
-            info.example = "datasketch_quantiles_min_item(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the minimum item in the sketch";
+                desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -1776,8 +1836,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::UBIGINT, DSQuantilesmax_item<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the maxium item in the sketch";
-            info.example = "datasketch_quantiles_max_item(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the maxium item in the sketch";
+                desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -1937,8 +2002,14 @@ namespace duckdb_datasketches
             // sketch.AddFunction(DSQuantilesMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
 
             CreateAggregateFunctionInfo sketch_info(sketch);
-            sketch_info.description = "Creates a sketch_quantiles data sketch by aggregating values or by aggregating other Quantiles data sketches";
-            sketch_info.example = "datasketch_quantiles(k, data)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by aggregating values or by aggregating other Quantiles data sketches";
+                desc.examples.push_back("datasketch_quantiles(k, data)");
+                sketch_info.descriptions.push_back(desc);
+            }
+
             system_catalog.CreateFunction(data, sketch_info);
         }
     }
@@ -2268,7 +2339,7 @@ namespace duckdb_datasketches
 
     {
 
-        return AggregateFunction::UnaryAggregateDestructor<DSKLLState<T>, string_t, string_t, DSQuantilesMergeOperation<DSKLLBindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DSKLLState<T>, string_t, string_t, DSQuantilesMergeOperation<DSKLLBindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
     }
 
@@ -2276,7 +2347,7 @@ namespace duckdb_datasketches
     auto static DSKLLCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
 
-        return AggregateFunction::UnaryAggregateDestructor<DSKLLState<T>, T, string_t, DSQuantilesCreateOperation<DSKLLBindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DSKLLState<T>, T, string_t, DSQuantilesCreateOperation<DSKLLBindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
     }
 
@@ -2323,8 +2394,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::BOOLEAN, DSKLLis_empty<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a boolean indicating if the sketch is empty";
-            info.example = "datasketch_kll_is_empty(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a boolean indicating if the sketch is empty";
+                desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -2353,8 +2429,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::USMALLINT, DSKLLk<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the value of K for this sketch";
-            info.example = "datasketch_kll_k(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the value of K for this sketch";
+                desc.examples.push_back("datasketch_kll_k(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -2383,8 +2464,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN}, LogicalType::LIST(LogicalType::UBIGINT), DSKLLcdf<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-            info.example = "datasketch_kll_cdf(sketch, points, inclusive)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -2413,8 +2499,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN}, LogicalType::LIST(LogicalType::UBIGINT), DSKLLpmf<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-            info.example = "datasketch_kll_pmf(sketch, points, inclusive)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -2443,8 +2534,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::BOOLEAN}, LogicalType::DOUBLE, DSKLLnormalized_rank_error<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the normalized rank error of the sketch";
-            info.example = "datasketch_kll_normalized_rank_error(sketch, is_pmf)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the normalized rank error of the sketch";
+                desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -2473,8 +2569,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN}, LogicalType::VARCHAR, DSKLLdescribe<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a description of this sketch";
-            info.example = "datasketch_kll_describe(sketch, include_levels, include_items)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a description of this sketch";
+                desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -2503,8 +2604,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::UBIGINT, LogicalType::BOOLEAN}, LogicalType::DOUBLE, DSKLLrank<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the rank of an item in the sketch";
-            info.example = "datasketch_kll_rank(sketch, item, inclusive)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the rank of an item in the sketch";
+                desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -2533,8 +2639,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::DOUBLE, LogicalType::BOOLEAN}, LogicalType::UBIGINT, DSKLLquantile<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the quantile of a rank in the sketch";
-            info.example = "datasketch_kll_rank(sketch, rank, inclusive)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the quantile of a rank in the sketch";
+                desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -2563,8 +2674,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::UBIGINT, DSKLLn<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the number of items contained in the sketch";
-            info.example = "datasketch_kll_rank(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the number of items contained in the sketch";
+                desc.examples.push_back("datasketch_kll_rank(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -2593,8 +2709,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::BOOLEAN, DSKLLis_estimation_mode<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a boolean indicating if the sketch is in estimation mode";
-            info.example = "datasketch_kll_is_estimation_mode(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -2623,8 +2744,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::UBIGINT, DSKLLnum_retained<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the number of retained items in the sketch";
-            info.example = "datasketch_kll_num_retained(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the number of retained items in the sketch";
+                desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -2653,8 +2779,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::UBIGINT, DSKLLmin_item<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the minimum item in the sketch";
-            info.example = "datasketch_kll_min_item(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the minimum item in the sketch";
+                desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -2683,8 +2814,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::UBIGINT, DSKLLmax_item<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the maxium item in the sketch";
-            info.example = "datasketch_kll_max_item(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the maxium item in the sketch";
+                desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -2844,8 +2980,14 @@ namespace duckdb_datasketches
             // sketch.AddFunction(DSKLLMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
 
             CreateAggregateFunctionInfo sketch_info(sketch);
-            sketch_info.description = "Creates a sketch_kll data sketch by aggregating values or by aggregating other KLL data sketches";
-            sketch_info.example = "datasketch_kll(k, data)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by aggregating values or by aggregating other KLL data sketches";
+                desc.examples.push_back("datasketch_kll(k, data)");
+                sketch_info.descriptions.push_back(desc);
+            }
+
             system_catalog.CreateFunction(data, sketch_info);
         }
     }
@@ -3156,7 +3298,7 @@ namespace duckdb_datasketches
 
     {
 
-        return AggregateFunction::UnaryAggregateDestructor<DSREQState<T>, string_t, string_t, DSQuantilesMergeOperation<DSREQBindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DSREQState<T>, string_t, string_t, DSQuantilesMergeOperation<DSREQBindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
     }
 
@@ -3164,7 +3306,7 @@ namespace duckdb_datasketches
     auto static DSREQCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
 
-        return AggregateFunction::UnaryAggregateDestructor<DSREQState<T>, T, string_t, DSQuantilesCreateOperation<DSREQBindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DSREQState<T>, T, string_t, DSQuantilesCreateOperation<DSREQBindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
     }
 
@@ -3211,8 +3353,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::BOOLEAN, DSREQis_empty<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a boolean indicating if the sketch is empty";
-            info.example = "datasketch_req_is_empty(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a boolean indicating if the sketch is empty";
+                desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3241,8 +3388,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::USMALLINT, DSREQk<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the value of K for this sketch";
-            info.example = "datasketch_req_k(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the value of K for this sketch";
+                desc.examples.push_back("datasketch_req_k(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3271,8 +3423,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN}, LogicalType::LIST(LogicalType::UBIGINT), DSREQcdf<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-            info.example = "datasketch_req_cdf(sketch, points, inclusive)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3301,8 +3458,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN}, LogicalType::LIST(LogicalType::UBIGINT), DSREQpmf<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-            info.example = "datasketch_req_pmf(sketch, points, inclusive)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3331,8 +3493,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN}, LogicalType::VARCHAR, DSREQdescribe<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a description of this sketch";
-            info.example = "datasketch_req_describe(sketch, include_levels, include_items)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a description of this sketch";
+                desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3361,8 +3528,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::UBIGINT, LogicalType::BOOLEAN}, LogicalType::DOUBLE, DSREQrank<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the rank of an item in the sketch";
-            info.example = "datasketch_req_rank(sketch, item, inclusive)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the rank of an item in the sketch";
+                desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3391,8 +3563,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::DOUBLE, LogicalType::BOOLEAN}, LogicalType::UBIGINT, DSREQquantile<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the quantile of a rank in the sketch";
-            info.example = "datasketch_req_rank(sketch, rank, inclusive)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the quantile of a rank in the sketch";
+                desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3421,8 +3598,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::UBIGINT, DSREQn<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the number of items contained in the sketch";
-            info.example = "datasketch_req_rank(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the number of items contained in the sketch";
+                desc.examples.push_back("datasketch_req_rank(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3451,8 +3633,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::BOOLEAN, DSREQis_estimation_mode<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a boolean indicating if the sketch is in estimation mode";
-            info.example = "datasketch_req_is_estimation_mode(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3481,8 +3668,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::UBIGINT, DSREQnum_retained<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the number of retained items in the sketch";
-            info.example = "datasketch_req_num_retained(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the number of retained items in the sketch";
+                desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3511,8 +3703,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::UBIGINT, DSREQmin_item<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the minimum item in the sketch";
-            info.example = "datasketch_req_min_item(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the minimum item in the sketch";
+                desc.examples.push_back("datasketch_req_min_item(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3541,8 +3738,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::UBIGINT]}, LogicalType::UBIGINT, DSREQmax_item<uint64_t>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the maxium item in the sketch";
-            info.example = "datasketch_req_max_item(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the maxium item in the sketch";
+                desc.examples.push_back("datasketch_req_max_item(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3702,8 +3904,14 @@ namespace duckdb_datasketches
             // sketch.AddFunction(DSREQMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
 
             CreateAggregateFunctionInfo sketch_info(sketch);
-            sketch_info.description = "Creates a sketch_req data sketch by aggregating values or by aggregating other REQ data sketches";
-            sketch_info.example = "datasketch_req(k, data)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values or by aggregating other REQ data sketches";
+                desc.examples.push_back("datasketch_req(k, data)");
+                sketch_info.descriptions.push_back(desc);
+            }
+
             system_catalog.CreateFunction(data, sketch_info);
         }
     }
@@ -3937,7 +4145,7 @@ namespace duckdb_datasketches
 
     {
 
-        return AggregateFunction::UnaryAggregateDestructor<DSTDigestState<T>, string_t, string_t, DSQuantilesMergeOperation<DSTDigestBindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DSTDigestState<T>, string_t, string_t, DSQuantilesMergeOperation<DSTDigestBindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
     }
 
@@ -3945,7 +4153,7 @@ namespace duckdb_datasketches
     auto static DSTDigestCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
 
-        return AggregateFunction::UnaryAggregateDestructor<DSTDigestState<T>, T, string_t, DSQuantilesCreateOperation<DSTDigestBindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DSTDigestState<T>, T, string_t, DSQuantilesCreateOperation<DSTDigestBindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
     }
 
@@ -3968,8 +4176,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::DOUBLE]}, LogicalType::BOOLEAN, DSTDigestis_empty<double>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a boolean indicating if the sketch is empty";
-            info.example = "datasketch_tdigest_is_empty(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a boolean indicating if the sketch is empty";
+                desc.examples.push_back("datasketch_tdigest_is_empty(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3982,8 +4195,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::DOUBLE]}, LogicalType::USMALLINT, DSTDigestk<double>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the value of K for this sketch";
-            info.example = "datasketch_tdigest_k(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the value of K for this sketch";
+                desc.examples.push_back("datasketch_tdigest_k(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -3996,8 +4214,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE)}, LogicalType::LIST(LogicalType::DOUBLE), DSTDigestcdf<double>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-            info.example = "datasketch_tdigest_cdf(sketch, points)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                desc.examples.push_back("datasketch_tdigest_cdf(sketch, points)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4010,8 +4233,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE)}, LogicalType::LIST(LogicalType::DOUBLE), DSTDigestpmf<double>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-            info.example = "datasketch_tdigest_pmf(sketch, points)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                desc.examples.push_back("datasketch_tdigest_pmf(sketch, points)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4024,8 +4252,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::BOOLEAN}, LogicalType::VARCHAR, DSTDigestdescribe<double>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a description of this sketch";
-            info.example = "datasketch_tdigest_describe(sketch, include_centroids)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a description of this sketch";
+                desc.examples.push_back("datasketch_tdigest_describe(sketch, include_centroids)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4038,8 +4271,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::DOUBLE}, LogicalType::DOUBLE, DSTDigestrank<double>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the rank of an item in the sketch";
-            info.example = "datasketch_tdigest_rank(sketch, item)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the rank of an item in the sketch";
+                desc.examples.push_back("datasketch_tdigest_rank(sketch, item)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4052,8 +4290,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::DOUBLE]}, LogicalType::UBIGINT, DSTDigesttotal_weight<double>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the total weight of this sketch";
-            info.example = "datasketch_tdigest_total_weight(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the total weight of this sketch";
+                desc.examples.push_back("datasketch_tdigest_total_weight(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4066,8 +4309,13 @@ namespace duckdb_datasketches
                 {sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::DOUBLE}, LogicalType::DOUBLE, DSTDigestquantile<double>));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the quantile of a rank in the sketch";
-            info.example = "datasketch_tdigest_quantile(sketch, rank)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the quantile of a rank in the sketch";
+                desc.examples.push_back("datasketch_tdigest_quantile(sketch, rank)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4107,8 +4355,14 @@ namespace duckdb_datasketches
             // sketch.AddFunction(DSTDigestMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
 
             CreateAggregateFunctionInfo sketch_info(sketch);
-            sketch_info.description = "Creates a sketch_tdigest data sketch by aggregating values or by aggregating other TDigest data sketches";
-            sketch_info.example = "datasketch_tdigest(k, data)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_tdigest data sketch by aggregating values or by aggregating other TDigest data sketches";
+                desc.examples.push_back("datasketch_tdigest(k, data)");
+                sketch_info.descriptions.push_back(desc);
+            }
+
             system_catalog.CreateFunction(data, sketch_info);
         }
     }
@@ -4233,7 +4487,7 @@ namespace duckdb_datasketches
 
     {
 
-        return AggregateFunction::UnaryAggregateDestructor<DSHLLState, string_t, string_t, DSHLLMergeOperation<DSHLLBindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DSHLLState, string_t, string_t, DSHLLMergeOperation<DSHLLBindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
     }
 
@@ -4241,7 +4495,7 @@ namespace duckdb_datasketches
     auto static DSHLLCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
 
-        return AggregateFunction::UnaryAggregateDestructor<DSHLLState, T, string_t, DSHLLCreateOperation<DSHLLBindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DSHLLState, T, string_t, DSHLLCreateOperation<DSHLLBindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
     }
 
@@ -4259,8 +4513,13 @@ namespace duckdb_datasketches
                 {sketch_type}, LogicalType::BOOLEAN, DSHLLis_empty));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a boolean indicating if the sketch is empty";
-            info.example = "datasketch_hll_is_empty(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a boolean indicating if the sketch is empty";
+                desc.examples.push_back("datasketch_hll_is_empty(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4271,8 +4530,13 @@ namespace duckdb_datasketches
                 {sketch_type, LogicalType::BOOLEAN, LogicalType::BOOLEAN}, LogicalType::VARCHAR, DSHLLdescribe));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a string representation of the sketch";
-            info.example = "datasketch_hll_describe(sketch, include_summary, include_detail)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a string representation of the sketch";
+                desc.examples.push_back("datasketch_hll_describe(sketch, include_summary, include_detail)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4283,8 +4547,13 @@ namespace duckdb_datasketches
                 {sketch_type}, LogicalType::UTINYINT, DSHLLlg_config_k));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the value of log base 2 K for this sketch";
-            info.example = "datasketch_hll_lg_config_k(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the value of log base 2 K for this sketch";
+                desc.examples.push_back("datasketch_hll_lg_config_k(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4295,8 +4564,13 @@ namespace duckdb_datasketches
                 {sketch_type}, LogicalType::BOOLEAN, DSHLLis_compact));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return whether the sketch is in compact form";
-            info.example = "datasketch_hll_is_compact(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return whether the sketch is in compact form";
+                desc.examples.push_back("datasketch_hll_is_compact(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4307,8 +4581,13 @@ namespace duckdb_datasketches
                 {sketch_type}, LogicalType::DOUBLE, DSHLLestimate));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the estimate of the number of distinct items seen by the sketch";
-            info.example = "datasketch_hll_estimate(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the estimate of the number of distinct items seen by the sketch";
+                desc.examples.push_back("datasketch_hll_estimate(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4319,8 +4598,13 @@ namespace duckdb_datasketches
                 {sketch_type, LogicalType::UTINYINT}, LogicalType::DOUBLE, DSHLLlower_bound));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the lower bound of the number of distinct items seen by the sketch";
-            info.example = "datasketch_hll_lower_bound(sketch, std_dev)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the lower bound of the number of distinct items seen by the sketch";
+                desc.examples.push_back("datasketch_hll_lower_bound(sketch, std_dev)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4331,8 +4615,13 @@ namespace duckdb_datasketches
                 {sketch_type, LogicalType::UTINYINT}, LogicalType::DOUBLE, DSHLLupper_bound));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the upper bound of the number of distinct items seen by the sketch";
-            info.example = "datasketch_hll_upper_bound(sketch, std_dev)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the upper bound of the number of distinct items seen by the sketch";
+                desc.examples.push_back("datasketch_hll_upper_bound(sketch, std_dev)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4426,8 +4715,14 @@ namespace duckdb_datasketches
             }
 
             CreateAggregateFunctionInfo sketch_info(sketch);
-            sketch_info.description = "Creates a sketch_hll data sketch by aggregating values or by aggregating other HLL data sketches";
-            sketch_info.example = "datasketch_hll(k, data)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values or by aggregating other HLL data sketches";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                sketch_info.descriptions.push_back(desc);
+            }
+
             system_catalog.CreateFunction(data, sketch_info);
         }
 
@@ -4438,8 +4733,14 @@ namespace duckdb_datasketches
             fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
             sketch.AddFunction(fun);
             CreateAggregateFunctionInfo sketch_info(sketch);
-            sketch_info.description = "Creates a sketch_HLL data sketch by aggregating other HLL data sketches";
-            sketch_info.comment = "datasketch_hll_union(k, data)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_HLL data sketch by aggregating other HLL data sketches";
+                desc.examples.push_back("datasketch_hll_union(k, data)");
+                sketch_info.descriptions.push_back(desc);
+            }
+
             system_catalog.CreateFunction(data, sketch_info);
         }
     }
@@ -4530,7 +4831,7 @@ namespace duckdb_datasketches
 
     {
 
-        return AggregateFunction::UnaryAggregateDestructor<DSCPCState, string_t, string_t, DSCPCMergeOperation<DSCPCBindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DSCPCState, string_t, string_t, DSCPCMergeOperation<DSCPCBindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
     }
 
@@ -4538,7 +4839,7 @@ namespace duckdb_datasketches
     auto static DSCPCCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
 
-        return AggregateFunction::UnaryAggregateDestructor<DSCPCState, T, string_t, DSCPCCreateOperation<DSCPCBindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DSCPCState, T, string_t, DSCPCCreateOperation<DSCPCBindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
     }
 
@@ -4556,8 +4857,13 @@ namespace duckdb_datasketches
                 {sketch_type}, LogicalType::BOOLEAN, DSCPCis_empty));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a boolean indicating if the sketch is empty";
-            info.example = "datasketch_cpc_is_empty(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a boolean indicating if the sketch is empty";
+                desc.examples.push_back("datasketch_cpc_is_empty(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4568,8 +4874,13 @@ namespace duckdb_datasketches
                 {sketch_type}, LogicalType::VARCHAR, DSCPCdescribe));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return a string representation of the sketch";
-            info.example = "datasketch_cpc_describe(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return a string representation of the sketch";
+                desc.examples.push_back("datasketch_cpc_describe(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4580,8 +4891,13 @@ namespace duckdb_datasketches
                 {sketch_type}, LogicalType::DOUBLE, DSCPCestimate));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the estimate of the number of distinct items seen by the sketch";
-            info.example = "datasketch_cpc_estimate(sketch)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the estimate of the number of distinct items seen by the sketch";
+                desc.examples.push_back("datasketch_cpc_estimate(sketch)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4592,8 +4908,13 @@ namespace duckdb_datasketches
                 {sketch_type, LogicalType::UTINYINT}, LogicalType::DOUBLE, DSCPClower_bound));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the lower bound of the number of distinct items seen by the sketch";
-            info.example = "datasketch_cpc_lower_bound(sketch, std_dev)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the lower bound of the number of distinct items seen by the sketch";
+                desc.examples.push_back("datasketch_cpc_lower_bound(sketch, std_dev)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4604,8 +4925,13 @@ namespace duckdb_datasketches
                 {sketch_type, LogicalType::UTINYINT}, LogicalType::DOUBLE, DSCPCupper_bound));
 
             CreateScalarFunctionInfo info(std::move(fs));
-            info.description = "Return the upper bound of the number of distinct items seen by the sketch";
-            info.example = "datasketch_cpc_upper_bound(sketch, std_dev)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Return the upper bound of the number of distinct items seen by the sketch";
+                desc.examples.push_back("datasketch_cpc_upper_bound(sketch, std_dev)");
+                info.descriptions.push_back(desc);
+            }
 
             system_catalog.CreateFunction(data, info);
         }
@@ -4699,8 +5025,14 @@ namespace duckdb_datasketches
             }
 
             CreateAggregateFunctionInfo sketch_info(sketch);
-            sketch_info.description = "Creates a sketch_cpc data sketch by aggregating values or by aggregating other CPC data sketches";
-            sketch_info.example = "datasketch_cpc(k, data)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values or by aggregating other CPC data sketches";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                sketch_info.descriptions.push_back(desc);
+            }
+
             system_catalog.CreateFunction(data, sketch_info);
         }
 
@@ -4711,8 +5043,14 @@ namespace duckdb_datasketches
             fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
             sketch.AddFunction(fun);
             CreateAggregateFunctionInfo sketch_info(sketch);
-            sketch_info.description = "Creates a sketch_CPC data sketch by aggregating other CPC data sketches";
-            sketch_info.comment = "datasketch_cpc_union(k, data)";
+
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_CPC data sketch by aggregating other CPC data sketches";
+                desc.examples.push_back("datasketch_cpc_union(k, data)");
+                sketch_info.descriptions.push_back(desc);
+            }
+
             system_catalog.CreateFunction(data, sketch_info);
         }
     }

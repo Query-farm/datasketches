@@ -616,13 +616,13 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     {% endif %}
     {
         {% if sketch_type == "HLL" %}
-        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, string_t, string_t, DSHLLMergeOperation<DS{{sketch_type}}BindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, string_t, string_t, DSHLLMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
         {% elif sketch_type == "CPC" %}
-        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, string_t, string_t, DSCPCMergeOperation<DS{{sketch_type}}BindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, string_t, string_t, DSCPCMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
         {% else %}
-        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State<T>, string_t, string_t, DSQuantilesMergeOperation<DS{{sketch_type}}BindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State<T>, string_t, string_t, DSQuantilesMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
         {% endif %}
     }
@@ -633,13 +633,13 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     auto static DS{{sketch_type}}CreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         {% if sketch_type == 'HLL' %}
-        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, T, string_t, DSHLLCreateOperation<DS{{sketch_type}}BindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, T, string_t, DSHLLCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
         {% elif sketch_type == 'CPC' %}
-        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, T, string_t, DSCPCCreateOperation<DS{{sketch_type}}BindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, T, string_t, DSCPCCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
         {% else %}
-        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State<T>, T, string_t, DSQuantilesCreateOperation<DS{{sketch_type}}BindData>>(
+        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State<T>, T, string_t, DSQuantilesCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
         {% endif %}
     }
@@ -675,8 +675,13 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         {% endif %}
 
         CreateScalarFunctionInfo info(std::move(fs));
-        info.description = "{{unary_function.description}}";
-        info.example = "{{unary_function.example}}";
+
+        {
+            FunctionDescription desc;
+            desc.description = "{{unary_function.description}}";
+            desc.examples.push_back("{{unary_function.example}}");
+            info.descriptions.push_back(desc);
+        }
 
 	    system_catalog.CreateFunction(data, info);
 
@@ -713,8 +718,15 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         {% endif %}
       {%- endfor %}
       CreateAggregateFunctionInfo sketch_info(sketch);
-      sketch_info.description = "Creates a sketch_{{sketch_type|lower}} data sketch by aggregating values or by aggregating other {{sketch_type}} data sketches";
-      sketch_info.example = "datasketch_{{sketch_type|lower}}(k, data)";
+
+
+    {
+        FunctionDescription desc;
+        desc.description = "Creates a sketch_{{sketch_type|lower}} data sketch by aggregating values or by aggregating other {{sketch_type}} data sketches";
+        desc.examples.push_back("datasketch_{{sketch_type|lower}}(k, data)");
+        sketch_info.descriptions.push_back(desc);
+    }
+
       system_catalog.CreateFunction(data, sketch_info);
       }
 
@@ -728,8 +740,14 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
       fun.arguments.insert(fun.arguments.begin(), {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
       sketch.AddFunction(fun);
       CreateAggregateFunctionInfo sketch_info(sketch);
-      sketch_info.description = "Creates a sketch_{{sketch_type}} data sketch by aggregating other {{sketch_type}} data sketches";
-      sketch_info.comment = "datasketch_{{sketch_type|lower}}_union(k, data)";
+
+    {
+        FunctionDescription desc;
+        desc.description = "Creates a sketch_{{sketch_type}} data sketch by aggregating other {{sketch_type}} data sketches";
+        desc.examples.push_back("datasketch_{{sketch_type|lower}}_union(k, data)");
+        sketch_info.descriptions.push_back(desc);
+    }
+
       system_catalog.CreateFunction(data, sketch_info);
       }
       {% endif %}
