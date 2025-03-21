@@ -27,3 +27,4 @@ jobs:
       duckdb_version: v1.2.1
       ci_tools_version: main
       extension_name: datasketches
+      exclude_archs: "windows_amd64_rtools"
