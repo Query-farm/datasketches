@@ -1102,14 +1102,14 @@ namespace duckdb_datasketches
             {
                 auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
 
-                T *passing_points = (T *)duckdb_malloc(sizeof(T) * split_points_data.length);
+                T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                 for (idx_t i = 0; i < split_points_data.length; i++)
                 {
                     passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                 }
 
                 auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclusive_data);
-                duckdb_free(passing_points);
+                free(passing_points);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -1159,14 +1159,14 @@ namespace duckdb_datasketches
             {
                 auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
 
-                T *passing_points = (T *)duckdb_malloc(sizeof(T) * split_points_data.length);
+                T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                 for (idx_t i = 0; i < split_points_data.length; i++)
                 {
                     passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                 }
 
                 auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclusive_data);
-                duckdb_free(passing_points);
+                free(passing_points);
 
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
@@ -2080,14 +2080,14 @@ namespace duckdb_datasketches
             {
                 auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
 
-                T *passing_points = (T *)duckdb_malloc(sizeof(T) * split_points_data.length);
+                T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                 for (idx_t i = 0; i < split_points_data.length; i++)
                 {
                     passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                 }
 
                 auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclusive_data);
-                duckdb_free(passing_points);
+                free(passing_points);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -2137,14 +2137,14 @@ namespace duckdb_datasketches
             {
                 auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
 
-                T *passing_points = (T *)duckdb_malloc(sizeof(T) * split_points_data.length);
+                T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                 for (idx_t i = 0; i < split_points_data.length; i++)
                 {
                     passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                 }
 
                 auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclusive_data);
-                duckdb_free(passing_points);
+                free(passing_points);
 
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
@@ -3058,14 +3058,14 @@ namespace duckdb_datasketches
             {
                 auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
 
-                T *passing_points = (T *)duckdb_malloc(sizeof(T) * split_points_data.length);
+                T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                 for (idx_t i = 0; i < split_points_data.length; i++)
                 {
                     passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                 }
 
                 auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclusive_data);
-                duckdb_free(passing_points);
+                free(passing_points);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -3115,14 +3115,14 @@ namespace duckdb_datasketches
             {
                 auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
 
-                T *passing_points = (T *)duckdb_malloc(sizeof(T) * split_points_data.length);
+                T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                 for (idx_t i = 0; i < split_points_data.length; i++)
                 {
                     passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                 }
 
                 auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclusive_data);
-                duckdb_free(passing_points);
+                free(passing_points);
 
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
@@ -3981,14 +3981,14 @@ namespace duckdb_datasketches
             {
                 auto sketch = datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
 
-                T *passing_points = (T *)duckdb_malloc(sizeof(T) * split_points_data.length);
+                T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                 for (idx_t i = 0; i < split_points_data.length; i++)
                 {
                     passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                 }
 
                 auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length);
-                duckdb_free(passing_points);
+                free(passing_points);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -4037,14 +4037,14 @@ namespace duckdb_datasketches
             {
                 auto sketch = datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
 
-                T *passing_points = (T *)duckdb_malloc(sizeof(T) * split_points_data.length);
+                T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                 for (idx_t i = 0; i < split_points_data.length; i++)
                 {
                     passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                 }
 
                 auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length);
-                duckdb_free(passing_points);
+                free(passing_points);
 
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();

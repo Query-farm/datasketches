@@ -82,7 +82,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
     else:
         sketch_argument = {
             "cpp_type": "string_t",
-            "duckdb_type": lambda contained_type: f"sketch_map_types[{contained_type.replace("LogicalType", "LogicalTypeId")}]",
+            "duckdb_type": lambda contained_type: f"sketch_map_types[{contained_type.replace('LogicalType', 'LogicalTypeId')}]",
             "name": "sketch",
             "process": deserialize_sketch,
         }
@@ -106,7 +106,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     const T *split_points_list_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
                     """,
         "process": """
-                    T *passing_points = (T *)duckdb_malloc(sizeof(T) * split_points_data.length);
+                    T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
                         passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
@@ -151,7 +151,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                         else "auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length);"
                     )
                     + """
-                duckdb_free(passing_points);
+                free(passing_points);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -193,7 +193,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                         else "auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length);"
                     )
                     + """
-                duckdb_free(passing_points);
+                free(passing_points);
 
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
@@ -603,7 +603,7 @@ def get_function_block(function_info: Any) -> str:
 
     result = f"""
         {pre_executor_body}
-        {get_executor_name(function_info['arguments'])}::Execute
+        {get_executor_name(function_info["arguments"])}::Execute
         <{joined_cpp_types}>
         (
         {joined_executor_args},
