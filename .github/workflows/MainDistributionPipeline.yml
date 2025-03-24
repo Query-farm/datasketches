@@ -30,4 +30,4 @@ jobs:
       duckdb_version: main
       ci_tools_version: main
       extension_name: datasketches
-      exclude_archs: "windows_amd64_rtools;windows_amd64_mingw"
+      exclude_archs: "windows_amd64_rtools"
