@@ -808,7 +808,10 @@ namespace duckdb_datasketches
             {
                 datasketches::hll_union u(target.sketch->get_lg_config_k());
                 u.update(*target.sketch);
-                u.update(*source.sketch);
+                if (source.sketch)
+                {
+                    u.update(*source.sketch);
+                }
                 *target.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
             }
         }
@@ -849,7 +852,10 @@ namespace duckdb_datasketches
             auto a_sketch = state.deserialize_sketch(a_data);
 
             datasketches::hll_union u(bind_data.k);
-            u.update(*state.sketch);
+            if (state.sketch)
+            {
+                u.update(*state.sketch);
+            }
             u.update(a_sketch);
 
             *state.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
@@ -876,8 +882,10 @@ namespace duckdb_datasketches
             else
             {
                 datasketches::hll_union u(target.sketch->get_lg_config_k());
-
-                u.update(*source.sketch);
+                if (source.sketch)
+                {
+                    u.update(*source.sketch);
+                }
                 u.update(*target.sketch);
 
                 *target.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
@@ -918,7 +926,10 @@ namespace duckdb_datasketches
 
             auto a_sketch = state.deserialize_sketch(a_data);
             datasketches::cpc_union u(bind_data.k);
-            u.update(*state.sketch);
+            if (state.sketch)
+            {
+                u.update(*state.sketch);
+            }
             u.update(a_sketch);
 
             *state.sketch = u.get_result();
@@ -945,7 +956,10 @@ namespace duckdb_datasketches
             else
             {
                 datasketches::cpc_union u(target.sketch->get_lg_k());
-                u.update(*source.sketch);
+                if (source.sketch)
+                {
+                    u.update(*source.sketch);
+                }
                 u.update(*target.sketch);
                 *target.sketch = u.get_result();
             }
@@ -1014,7 +1028,10 @@ namespace duckdb_datasketches
             {
                 datasketches::cpc_union u(target.sketch->get_lg_k());
                 u.update(*target.sketch);
-                u.update(*source.sketch);
+                if (source.sketch)
+                {
+                    u.update(*source.sketch);
+                }
                 *target.sketch = u.get_result();
             }
         }
