@@ -94,6 +94,13 @@ SELECT datasketch_hll_estimate(datasketch_hll(4, name))::int from employees
 ----
 11
 
+query II
+select count(distinct x) as exact_count, datasketch_hll_estimate(datasketch_hll(14, x))::int as approx_count from unnest(range(100)) t(x) group by x % 2
+----
+50
+50
+50
+50
 
 statement ok
 CREATE TABLE sketches (sketch sketch_hll)
