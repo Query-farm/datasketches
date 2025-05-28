@@ -1,9 +1,9 @@
 name: Scheduled Trigger for 1.2
 
-on:
-  schedule:
-    - cron: '0 12 * * *'  # Runs at 12:00 UTC every day
-  workflow_dispatch:  # Allows manual trigger
+# on:
+#   schedule:
+#     - cron: '0 12 * * *'  # Runs at 12:00 UTC every day
+#   workflow_dispatch:  # Allows manual trigger
 
 jobs:
   trigger:
