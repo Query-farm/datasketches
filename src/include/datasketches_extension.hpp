@@ -1,7 +1,6 @@
 #pragma once
 
 #include "duckdb.hpp"
-#include "duckdb/main/extension_util.hpp"
 
 namespace duckdb
 {
@@ -9,9 +8,8 @@ namespace duckdb
 	class DatasketchesExtension : public Extension
 	{
 	public:
-		void Load(DuckDB &db) override;
+		void Load(ExtensionLoader &loader) override;
 		std::string Name() override;
-		std::string Version() const override;
 	};
 
 } // namespace duckdb

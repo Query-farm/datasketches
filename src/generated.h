@@ -5,10 +5,10 @@
 using namespace duckdb;
 namespace duckdb_datasketches
 {
-  void LoadQuantilesSketch(DatabaseInstance &instance);
-  void LoadKLLSketch(DatabaseInstance &instance);
-  void LoadREQSketch(DatabaseInstance &instance);
-  void LoadTDigestSketch(DatabaseInstance &instance);
-  void LoadHLLSketch(DatabaseInstance &instance);
-  void LoadCPCSketch(DatabaseInstance &instance);
+  void LoadQuantilesSketch(ExtensionLoader &loader);
+  void LoadKLLSketch(ExtensionLoader &loader);
+  void LoadREQSketch(ExtensionLoader &loader);
+  void LoadTDigestSketch(ExtensionLoader &loader);
+  void LoadHLLSketch(ExtensionLoader &loader);
+  void LoadCPCSketch(ExtensionLoader &loader);
 }

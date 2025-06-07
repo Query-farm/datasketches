@@ -151,7 +151,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
 
 
     {% if sketch_type in counting_sketch_names %}
-    static LogicalType Create{{sketch_type}}CountingSketchType(DatabaseInstance &instance)
+    static LogicalType Create{{sketch_type}}CountingSketchType(ExtensionLoader &loader)
     {
         auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto new_type_name = "sketch_{{sketch_type|lower}}";
@@ -160,29 +160,31 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
         type_info.internal = true;
         type_info.comment = "Sketch type for {{sketch_type}} sketch";
         new_type.SetAlias(new_type_name);
-        auto &system_catalog = Catalog::GetSystemCatalog(instance);
-        auto data = CatalogTransaction::GetSystemTransaction(instance);
+        auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
+        auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
-	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
-        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
+	    loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
         return new_type;
     }
     {% else %}
-    static LogicalType Create{{sketch_type}}SketchType(DatabaseInstance &instance, LogicalType embedded_type)
+    static LogicalType Create{{sketch_type}}SketchType(ExtensionLoader &loader, LogicalType embedded_type)
     {
         auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto type_suffix = toLowerCase(embedded_type.ToString());
         auto new_type_name = "sketch_{{sketch_type|lower}}_" + type_suffix;
+
+
         new_type.SetAlias(new_type_name);
         auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
         type_info.comment = "Sketch type for {{sketch_type}} sketch with embedded type " + embedded_type.ToString();
-        auto &system_catalog = Catalog::GetSystemCatalog(instance);
-        auto data = CatalogTransaction::GetSystemTransaction(instance);
+        auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
+        auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
-	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
-        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
+	    loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
         return new_type;
     }
     {% endif %}
@@ -656,17 +658,15 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     }
 
 
-  void Load{{sketch_type}}Sketch(DatabaseInstance &instance) {
-      auto &system_catalog = Catalog::GetSystemCatalog(instance);
-      auto data = CatalogTransaction::GetSystemTransaction(instance);
+  void Load{{sketch_type}}Sketch(ExtensionLoader &loader) {
 
 
       {% if sketch_type in counting_sketch_names %}
-        auto sketch_type = Create{{sketch_type}}CountingSketchType(instance);
+        auto sketch_type = Create{{sketch_type}}CountingSketchType(loader);
       {% else %}
         std::unordered_map<LogicalTypeId, LogicalType> sketch_map_types;
         {% for logical_type in logical_type_to_cplusplus_type(sketch_type).keys() %}
-            sketch_map_types.insert({ {{to_type_id(logical_type)}}, Create{{sketch_type}}SketchType(instance, LogicalType({{to_type_id(logical_type)}}))});
+            sketch_map_types.insert({ {{to_type_id(logical_type)}}, Create{{sketch_type}}SketchType(loader, LogicalType({{to_type_id(logical_type)}}))});
         {%- endfor %}
       {% endif %}
 
@@ -694,7 +694,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -738,7 +738,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         sketch_info.descriptions.push_back(desc);
     }
 
-      system_catalog.CreateFunction(data, sketch_info);
+      loader.RegisterFunction(sketch_info);
       }
 
 
@@ -759,7 +759,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         sketch_info.descriptions.push_back(desc);
     }
 
-      system_catalog.CreateFunction(data, sketch_info);
+      loader.RegisterFunction(sketch_info);
       }
       {% endif %}
 

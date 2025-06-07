@@ -116,21 +116,23 @@ unique_ptr<FunctionData> DSQuantilesBind(ClientContext &context, AggregateFuncti
 
 
     
-    static LogicalType CreateQuantilesSketchType(DatabaseInstance &instance, LogicalType embedded_type)
+    static LogicalType CreateQuantilesSketchType(ExtensionLoader &loader, LogicalType embedded_type)
     {
         auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto type_suffix = toLowerCase(embedded_type.ToString());
         auto new_type_name = "sketch_quantiles_" + type_suffix;
+
+
         new_type.SetAlias(new_type_name);
         auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
         type_info.comment = "Sketch type for Quantiles sketch with embedded type " + embedded_type.ToString();
-        auto &system_catalog = Catalog::GetSystemCatalog(instance);
-        auto data = CatalogTransaction::GetSystemTransaction(instance);
+        auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
+        auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
-	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
-        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
+	    loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
         return new_type;
     }
     
@@ -223,21 +225,23 @@ unique_ptr<FunctionData> DSKLLBind(ClientContext &context, AggregateFunction &fu
 
 
     
-    static LogicalType CreateKLLSketchType(DatabaseInstance &instance, LogicalType embedded_type)
+    static LogicalType CreateKLLSketchType(ExtensionLoader &loader, LogicalType embedded_type)
     {
         auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto type_suffix = toLowerCase(embedded_type.ToString());
         auto new_type_name = "sketch_kll_" + type_suffix;
+
+
         new_type.SetAlias(new_type_name);
         auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
         type_info.comment = "Sketch type for KLL sketch with embedded type " + embedded_type.ToString();
-        auto &system_catalog = Catalog::GetSystemCatalog(instance);
-        auto data = CatalogTransaction::GetSystemTransaction(instance);
+        auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
+        auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
-	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
-        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
+	    loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
         return new_type;
     }
     
@@ -330,21 +334,23 @@ unique_ptr<FunctionData> DSREQBind(ClientContext &context, AggregateFunction &fu
 
 
     
-    static LogicalType CreateREQSketchType(DatabaseInstance &instance, LogicalType embedded_type)
+    static LogicalType CreateREQSketchType(ExtensionLoader &loader, LogicalType embedded_type)
     {
         auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto type_suffix = toLowerCase(embedded_type.ToString());
         auto new_type_name = "sketch_req_" + type_suffix;
+
+
         new_type.SetAlias(new_type_name);
         auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
         type_info.comment = "Sketch type for REQ sketch with embedded type " + embedded_type.ToString();
-        auto &system_catalog = Catalog::GetSystemCatalog(instance);
-        auto data = CatalogTransaction::GetSystemTransaction(instance);
+        auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
+        auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
-	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
-        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
+	    loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
         return new_type;
     }
     
@@ -435,21 +441,23 @@ unique_ptr<FunctionData> DSTDigestBind(ClientContext &context, AggregateFunction
 
 
     
-    static LogicalType CreateTDigestSketchType(DatabaseInstance &instance, LogicalType embedded_type)
+    static LogicalType CreateTDigestSketchType(ExtensionLoader &loader, LogicalType embedded_type)
     {
         auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto type_suffix = toLowerCase(embedded_type.ToString());
         auto new_type_name = "sketch_tdigest_" + type_suffix;
+
+
         new_type.SetAlias(new_type_name);
         auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
         type_info.comment = "Sketch type for TDigest sketch with embedded type " + embedded_type.ToString();
-        auto &system_catalog = Catalog::GetSystemCatalog(instance);
-        auto data = CatalogTransaction::GetSystemTransaction(instance);
+        auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
+        auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
-	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
-        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
+	    loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
         return new_type;
     }
     
@@ -538,7 +546,7 @@ unique_ptr<FunctionData> DSHLLBind(ClientContext &context, AggregateFunction &fu
 
 
     
-    static LogicalType CreateHLLCountingSketchType(DatabaseInstance &instance)
+    static LogicalType CreateHLLCountingSketchType(ExtensionLoader &loader)
     {
         auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto new_type_name = "sketch_hll";
@@ -547,11 +555,11 @@ unique_ptr<FunctionData> DSHLLBind(ClientContext &context, AggregateFunction &fu
         type_info.internal = true;
         type_info.comment = "Sketch type for HLL sketch";
         new_type.SetAlias(new_type_name);
-        auto &system_catalog = Catalog::GetSystemCatalog(instance);
-        auto data = CatalogTransaction::GetSystemTransaction(instance);
+        auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
+        auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
-	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
-        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
+	    loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
         return new_type;
     }
     
@@ -640,7 +648,7 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
 
 
     
-    static LogicalType CreateCPCCountingSketchType(DatabaseInstance &instance)
+    static LogicalType CreateCPCCountingSketchType(ExtensionLoader &loader)
     {
         auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto new_type_name = "sketch_cpc";
@@ -649,11 +657,11 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
         type_info.internal = true;
         type_info.comment = "Sketch type for CPC sketch";
         new_type.SetAlias(new_type_name);
-        auto &system_catalog = Catalog::GetSystemCatalog(instance);
-        auto data = CatalogTransaction::GetSystemTransaction(instance);
+        auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
+        auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
-	    ExtensionUtil::RegisterCastFunction(instance, LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
-        ExtensionUtil::RegisterCastFunction(instance, new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
+	    loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+        loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
         return new_type;
     }
     
@@ -1531,24 +1539,22 @@ return sketch.get_max_item();
     }
 
 
-  void LoadQuantilesSketch(DatabaseInstance &instance) {
-      auto &system_catalog = Catalog::GetSystemCatalog(instance);
-      auto data = CatalogTransaction::GetSystemTransaction(instance);
+  void LoadQuantilesSketch(ExtensionLoader &loader) {
 
 
       
         std::unordered_map<LogicalTypeId, LogicalType> sketch_map_types;
         
-            sketch_map_types.insert({ LogicalTypeId::TINYINT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::TINYINT))});
-            sketch_map_types.insert({ LogicalTypeId::SMALLINT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::SMALLINT))});
-            sketch_map_types.insert({ LogicalTypeId::INTEGER, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::INTEGER))});
-            sketch_map_types.insert({ LogicalTypeId::BIGINT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::BIGINT))});
-            sketch_map_types.insert({ LogicalTypeId::FLOAT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::FLOAT))});
-            sketch_map_types.insert({ LogicalTypeId::DOUBLE, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::DOUBLE))});
-            sketch_map_types.insert({ LogicalTypeId::UTINYINT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::UTINYINT))});
-            sketch_map_types.insert({ LogicalTypeId::USMALLINT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::USMALLINT))});
-            sketch_map_types.insert({ LogicalTypeId::UINTEGER, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::UINTEGER))});
-            sketch_map_types.insert({ LogicalTypeId::UBIGINT, CreateQuantilesSketchType(instance, LogicalType(LogicalTypeId::UBIGINT))});
+            sketch_map_types.insert({ LogicalTypeId::TINYINT, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::TINYINT))});
+            sketch_map_types.insert({ LogicalTypeId::SMALLINT, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::SMALLINT))});
+            sketch_map_types.insert({ LogicalTypeId::INTEGER, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::INTEGER))});
+            sketch_map_types.insert({ LogicalTypeId::BIGINT, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::BIGINT))});
+            sketch_map_types.insert({ LogicalTypeId::FLOAT, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::FLOAT))});
+            sketch_map_types.insert({ LogicalTypeId::DOUBLE, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::DOUBLE))});
+            sketch_map_types.insert({ LogicalTypeId::UTINYINT, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::UTINYINT))});
+            sketch_map_types.insert({ LogicalTypeId::USMALLINT, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::USMALLINT))});
+            sketch_map_types.insert({ LogicalTypeId::UINTEGER, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::UINTEGER))});
+            sketch_map_types.insert({ LogicalTypeId::UBIGINT, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::UBIGINT))});
       
 
       
@@ -1597,7 +1603,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -1646,7 +1652,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -1695,7 +1701,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -1744,7 +1750,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -1793,7 +1799,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -1842,7 +1848,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -1891,7 +1897,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -1940,7 +1946,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -1989,7 +1995,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -2038,7 +2044,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -2087,7 +2093,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -2136,7 +2142,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -2185,7 +2191,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -2364,7 +2370,7 @@ return sketch.get_max_item();
         sketch_info.descriptions.push_back(desc);
     }
 
-      system_catalog.CreateFunction(data, sketch_info);
+      loader.RegisterFunction(sketch_info);
       }
 
 
@@ -2838,24 +2844,22 @@ return sketch.get_max_item();
     }
 
 
-  void LoadKLLSketch(DatabaseInstance &instance) {
-      auto &system_catalog = Catalog::GetSystemCatalog(instance);
-      auto data = CatalogTransaction::GetSystemTransaction(instance);
+  void LoadKLLSketch(ExtensionLoader &loader) {
 
 
       
         std::unordered_map<LogicalTypeId, LogicalType> sketch_map_types;
         
-            sketch_map_types.insert({ LogicalTypeId::TINYINT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::TINYINT))});
-            sketch_map_types.insert({ LogicalTypeId::SMALLINT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::SMALLINT))});
-            sketch_map_types.insert({ LogicalTypeId::INTEGER, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::INTEGER))});
-            sketch_map_types.insert({ LogicalTypeId::BIGINT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::BIGINT))});
-            sketch_map_types.insert({ LogicalTypeId::FLOAT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::FLOAT))});
-            sketch_map_types.insert({ LogicalTypeId::DOUBLE, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::DOUBLE))});
-            sketch_map_types.insert({ LogicalTypeId::UTINYINT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::UTINYINT))});
-            sketch_map_types.insert({ LogicalTypeId::USMALLINT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::USMALLINT))});
-            sketch_map_types.insert({ LogicalTypeId::UINTEGER, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::UINTEGER))});
-            sketch_map_types.insert({ LogicalTypeId::UBIGINT, CreateKLLSketchType(instance, LogicalType(LogicalTypeId::UBIGINT))});
+            sketch_map_types.insert({ LogicalTypeId::TINYINT, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::TINYINT))});
+            sketch_map_types.insert({ LogicalTypeId::SMALLINT, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::SMALLINT))});
+            sketch_map_types.insert({ LogicalTypeId::INTEGER, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::INTEGER))});
+            sketch_map_types.insert({ LogicalTypeId::BIGINT, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::BIGINT))});
+            sketch_map_types.insert({ LogicalTypeId::FLOAT, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::FLOAT))});
+            sketch_map_types.insert({ LogicalTypeId::DOUBLE, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::DOUBLE))});
+            sketch_map_types.insert({ LogicalTypeId::UTINYINT, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::UTINYINT))});
+            sketch_map_types.insert({ LogicalTypeId::USMALLINT, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::USMALLINT))});
+            sketch_map_types.insert({ LogicalTypeId::UINTEGER, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::UINTEGER))});
+            sketch_map_types.insert({ LogicalTypeId::UBIGINT, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::UBIGINT))});
       
 
       
@@ -2904,7 +2908,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -2953,7 +2957,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -3002,7 +3006,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -3051,7 +3055,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -3100,7 +3104,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -3149,7 +3153,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -3198,7 +3202,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -3247,7 +3251,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -3296,7 +3300,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -3345,7 +3349,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -3394,7 +3398,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -3443,7 +3447,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -3492,7 +3496,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -3671,7 +3675,7 @@ return sketch.get_max_item();
         sketch_info.descriptions.push_back(desc);
     }
 
-      system_catalog.CreateFunction(data, sketch_info);
+      loader.RegisterFunction(sketch_info);
       }
 
 
@@ -4117,24 +4121,22 @@ return sketch.get_max_item();
     }
 
 
-  void LoadREQSketch(DatabaseInstance &instance) {
-      auto &system_catalog = Catalog::GetSystemCatalog(instance);
-      auto data = CatalogTransaction::GetSystemTransaction(instance);
+  void LoadREQSketch(ExtensionLoader &loader) {
 
 
       
         std::unordered_map<LogicalTypeId, LogicalType> sketch_map_types;
         
-            sketch_map_types.insert({ LogicalTypeId::TINYINT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::TINYINT))});
-            sketch_map_types.insert({ LogicalTypeId::SMALLINT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::SMALLINT))});
-            sketch_map_types.insert({ LogicalTypeId::INTEGER, CreateREQSketchType(instance, LogicalType(LogicalTypeId::INTEGER))});
-            sketch_map_types.insert({ LogicalTypeId::BIGINT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::BIGINT))});
-            sketch_map_types.insert({ LogicalTypeId::FLOAT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::FLOAT))});
-            sketch_map_types.insert({ LogicalTypeId::DOUBLE, CreateREQSketchType(instance, LogicalType(LogicalTypeId::DOUBLE))});
-            sketch_map_types.insert({ LogicalTypeId::UTINYINT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::UTINYINT))});
-            sketch_map_types.insert({ LogicalTypeId::USMALLINT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::USMALLINT))});
-            sketch_map_types.insert({ LogicalTypeId::UINTEGER, CreateREQSketchType(instance, LogicalType(LogicalTypeId::UINTEGER))});
-            sketch_map_types.insert({ LogicalTypeId::UBIGINT, CreateREQSketchType(instance, LogicalType(LogicalTypeId::UBIGINT))});
+            sketch_map_types.insert({ LogicalTypeId::TINYINT, CreateREQSketchType(loader, LogicalType(LogicalTypeId::TINYINT))});
+            sketch_map_types.insert({ LogicalTypeId::SMALLINT, CreateREQSketchType(loader, LogicalType(LogicalTypeId::SMALLINT))});
+            sketch_map_types.insert({ LogicalTypeId::INTEGER, CreateREQSketchType(loader, LogicalType(LogicalTypeId::INTEGER))});
+            sketch_map_types.insert({ LogicalTypeId::BIGINT, CreateREQSketchType(loader, LogicalType(LogicalTypeId::BIGINT))});
+            sketch_map_types.insert({ LogicalTypeId::FLOAT, CreateREQSketchType(loader, LogicalType(LogicalTypeId::FLOAT))});
+            sketch_map_types.insert({ LogicalTypeId::DOUBLE, CreateREQSketchType(loader, LogicalType(LogicalTypeId::DOUBLE))});
+            sketch_map_types.insert({ LogicalTypeId::UTINYINT, CreateREQSketchType(loader, LogicalType(LogicalTypeId::UTINYINT))});
+            sketch_map_types.insert({ LogicalTypeId::USMALLINT, CreateREQSketchType(loader, LogicalType(LogicalTypeId::USMALLINT))});
+            sketch_map_types.insert({ LogicalTypeId::UINTEGER, CreateREQSketchType(loader, LogicalType(LogicalTypeId::UINTEGER))});
+            sketch_map_types.insert({ LogicalTypeId::UBIGINT, CreateREQSketchType(loader, LogicalType(LogicalTypeId::UBIGINT))});
       
 
       
@@ -4183,7 +4185,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -4232,7 +4234,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -4281,7 +4283,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -4330,7 +4332,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -4379,7 +4381,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -4428,7 +4430,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -4477,7 +4479,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -4526,7 +4528,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -4575,7 +4577,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -4624,7 +4626,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -4673,7 +4675,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -4722,7 +4724,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -4901,7 +4903,7 @@ return sketch.get_max_item();
         sketch_info.descriptions.push_back(desc);
     }
 
-      system_catalog.CreateFunction(data, sketch_info);
+      loader.RegisterFunction(sketch_info);
       }
 
 
@@ -5234,16 +5236,14 @@ return sketch.get_quantile(rank_data);
     }
 
 
-  void LoadTDigestSketch(DatabaseInstance &instance) {
-      auto &system_catalog = Catalog::GetSystemCatalog(instance);
-      auto data = CatalogTransaction::GetSystemTransaction(instance);
+  void LoadTDigestSketch(ExtensionLoader &loader) {
 
 
       
         std::unordered_map<LogicalTypeId, LogicalType> sketch_map_types;
         
-            sketch_map_types.insert({ LogicalTypeId::FLOAT, CreateTDigestSketchType(instance, LogicalType(LogicalTypeId::FLOAT))});
-            sketch_map_types.insert({ LogicalTypeId::DOUBLE, CreateTDigestSketchType(instance, LogicalType(LogicalTypeId::DOUBLE))});
+            sketch_map_types.insert({ LogicalTypeId::FLOAT, CreateTDigestSketchType(loader, LogicalType(LogicalTypeId::FLOAT))});
+            sketch_map_types.insert({ LogicalTypeId::DOUBLE, CreateTDigestSketchType(loader, LogicalType(LogicalTypeId::DOUBLE))});
       
 
       
@@ -5268,7 +5268,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5293,7 +5293,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5318,7 +5318,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5343,7 +5343,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5368,7 +5368,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5393,7 +5393,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5418,7 +5418,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5443,7 +5443,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5494,7 +5494,7 @@ return sketch.get_quantile(rank_data);
         sketch_info.descriptions.push_back(desc);
     }
 
-      system_catalog.CreateFunction(data, sketch_info);
+      loader.RegisterFunction(sketch_info);
       }
 
 
@@ -5707,13 +5707,11 @@ return sketch.get_upper_bound(std_dev_data);
     }
 
 
-  void LoadHLLSketch(DatabaseInstance &instance) {
-      auto &system_catalog = Catalog::GetSystemCatalog(instance);
-      auto data = CatalogTransaction::GetSystemTransaction(instance);
+  void LoadHLLSketch(ExtensionLoader &loader) {
 
 
       
-        auto sketch_type = CreateHLLCountingSketchType(instance);
+        auto sketch_type = CreateHLLCountingSketchType(loader);
       
 
       
@@ -5734,7 +5732,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5755,7 +5753,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5776,7 +5774,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5797,7 +5795,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5818,7 +5816,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5839,7 +5837,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5860,7 +5858,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -5975,7 +5973,7 @@ return sketch.get_upper_bound(std_dev_data);
         sketch_info.descriptions.push_back(desc);
     }
 
-      system_catalog.CreateFunction(data, sketch_info);
+      loader.RegisterFunction(sketch_info);
       }
 
 
@@ -5996,7 +5994,7 @@ return sketch.get_upper_bound(std_dev_data);
         sketch_info.descriptions.push_back(desc);
     }
 
-      system_catalog.CreateFunction(data, sketch_info);
+      loader.RegisterFunction(sketch_info);
       }
       
 
@@ -6154,13 +6152,11 @@ return sketch.get_upper_bound(std_dev_data);
     }
 
 
-  void LoadCPCSketch(DatabaseInstance &instance) {
-      auto &system_catalog = Catalog::GetSystemCatalog(instance);
-      auto data = CatalogTransaction::GetSystemTransaction(instance);
+  void LoadCPCSketch(ExtensionLoader &loader) {
 
 
       
-        auto sketch_type = CreateCPCCountingSketchType(instance);
+        auto sketch_type = CreateCPCCountingSketchType(loader);
       
 
       
@@ -6181,7 +6177,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -6202,7 +6198,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -6223,7 +6219,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -6244,7 +6240,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -6265,7 +6261,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(desc);
         }
 
-	    system_catalog.CreateFunction(data, info);
+        loader.RegisterFunction(info);
 
 
       }
@@ -6380,7 +6376,7 @@ return sketch.get_upper_bound(std_dev_data);
         sketch_info.descriptions.push_back(desc);
     }
 
-      system_catalog.CreateFunction(data, sketch_info);
+      loader.RegisterFunction(sketch_info);
       }
 
 
@@ -6401,7 +6397,7 @@ return sketch.get_upper_bound(std_dev_data);
         sketch_info.descriptions.push_back(desc);
     }
 
-      system_catalog.CreateFunction(data, sketch_info);
+      loader.RegisterFunction(sketch_info);
       }
       
 

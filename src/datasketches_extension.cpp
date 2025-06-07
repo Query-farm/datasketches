@@ -6,7 +6,6 @@
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/common/extra_type_info.hpp"
 #include "duckdb/function/scalar_function.hpp"
-#include "duckdb/main/extension_util.hpp"
 #include <duckdb/parser/parsed_data/create_scalar_function_info.hpp>
 #include <duckdb/parser/parsed_data/create_aggregate_function_info.hpp>
 
@@ -17,47 +16,31 @@
 namespace duckdb
 {
 
-    static void LoadInternal(DatabaseInstance &instance)
+    static void LoadInternal(ExtensionLoader &loader)
     {
-        duckdb_datasketches::LoadQuantilesSketch(instance);
-        duckdb_datasketches::LoadKLLSketch(instance);
-        duckdb_datasketches::LoadREQSketch(instance);
-        duckdb_datasketches::LoadTDigestSketch(instance);
-        duckdb_datasketches::LoadHLLSketch(instance);
-        duckdb_datasketches::LoadCPCSketch(instance);
+        duckdb_datasketches::LoadQuantilesSketch(loader);
+        duckdb_datasketches::LoadKLLSketch(loader);
+        duckdb_datasketches::LoadREQSketch(loader);
+        duckdb_datasketches::LoadTDigestSketch(loader);
+        duckdb_datasketches::LoadHLLSketch(loader);
+        duckdb_datasketches::LoadCPCSketch(loader);
     }
 
-    void DatasketchesExtension::Load(DuckDB &db)
+    void DatasketchesExtension::Load(ExtensionLoader &loader)
     {
-        LoadInternal(*db.instance);
+        LoadInternal(loader);
     }
     std::string DatasketchesExtension::Name()
     {
         return "datasketches";
     }
 
-    std::string DatasketchesExtension::Version() const
-    {
-        return "0.0.2";
-    }
-
 } // namespace duckdb
 
 extern "C"
 {
-
-    DUCKDB_EXTENSION_API void datasketches_init(duckdb::DatabaseInstance &db)
+    DUCKDB_CPP_EXTENSION_ENTRY(datasketches, loader)
     {
-        duckdb::DuckDB db_wrapper(db);
-        db_wrapper.LoadExtension<duckdb::DatasketchesExtension>();
-    }
-
-    DUCKDB_EXTENSION_API const char *datasketches_version()
-    {
-        return duckdb::DuckDB::LibraryVersion();
+        duckdb::LoadInternal(loader);
     }
 }
-
-#ifndef DUCKDB_EXTENSION_MAIN
-#error DUCKDB_EXTENSION_MAIN not defined
-#endif
