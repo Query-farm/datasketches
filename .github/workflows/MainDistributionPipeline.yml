@@ -22,6 +22,7 @@ jobs:
       ci_tools_version: main
       extension_name: datasketches
       exclude_archs: "windows_amd64_rtools"
+      vcpkg_binary_sources: ${{ vars.VCPKG_BINARY_SOURCES }}
     secrets:
       VCPKG_CACHING_AWS_ACCESS_KEY_ID: ${{ secrets.VCPKG_CACHING_AWS_ACCESS_KEY_ID }}
       VCPKG_CACHING_AWS_SECRET_ACCESS_KEY: ${{ secrets.VCPKG_CACHING_AWS_SECRET_ACCESS_KEY }}
