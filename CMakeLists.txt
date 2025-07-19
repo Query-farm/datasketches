@@ -5,6 +5,11 @@ set(TARGET_NAME datasketches)
 
 set(CMAKE_CXX_STANDARD 17)
 
+
+if (WIN32)
+  add_compile_options(/bigobj)
+endif()
+
 # DuckDB's extension distribution supports vcpkg. As such, dependencies can be added in ./vcpkg.json and then
 # used in cmake with find_package. Feel free to remove or replace with other dependencies.
 # Note that it should also be removed from vcpkg.json to prevent needlessly installing it..
