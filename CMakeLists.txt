@@ -6,7 +6,7 @@ set(TARGET_NAME datasketches)
 set(CMAKE_CXX_STANDARD 17)
 
 
-if (WIN32)
+if (WIN32 AND MSVC)
   add_compile_options(/bigobj)
 endif()
 
