@@ -13,6 +13,8 @@
 
 #include "generated.h"
 
+#include "query_farm_telemetry.hpp"
+
 namespace duckdb
 {
 
@@ -24,6 +26,8 @@ namespace duckdb
         duckdb_datasketches::LoadTDigestSketch(loader);
         duckdb_datasketches::LoadHLLSketch(loader);
         duckdb_datasketches::LoadCPCSketch(loader);
+
+        QueryFarmSendTelemetry(loader, loader.GetDatabaseInstance().shared_from_this(), "datasketches", "2025092301");
     }
 
     void DatasketchesExtension::Load(ExtensionLoader &loader)
