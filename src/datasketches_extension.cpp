@@ -27,7 +27,7 @@ namespace duckdb
         duckdb_datasketches::LoadHLLSketch(loader);
         duckdb_datasketches::LoadCPCSketch(loader);
 
-        QueryFarmSendTelemetry(loader, "datasketches", "2025092301");
+        QueryFarmSendTelemetry(loader, "datasketches", "2025100901");
     }
 
     void DatasketchesExtension::Load(ExtensionLoader &loader)
