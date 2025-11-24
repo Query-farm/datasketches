@@ -708,6 +708,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
             {
                 auto fun = DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_type);
                 fun.bind = DS{{sketch_type}}Bind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
                 sketch.AddFunction(fun);
             }
@@ -715,6 +716,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
             {
                 auto fun = DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]);
                 fun.bind = DS{{sketch_type}}Bind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
                 sketch.AddFunction(fun);
             }
@@ -722,6 +724,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
             {
                 auto fun = DS{{sketch_type}}MergeAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]);
                 fun.bind = DS{{sketch_type}}Bind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
                 sketch.AddFunction(fun);
             }
@@ -748,6 +751,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
       AggregateFunctionSet sketch("datasketch_{{sketch_type|lower}}_union");
       auto fun = DS{{sketch_type}}MergeAggregate(sketch_type);
       fun.bind = DS{{sketch_type}}Bind;
+      fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
       fun.arguments.insert(fun.arguments.begin(), {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
       sketch.AddFunction(fun);
       CreateAggregateFunctionInfo sketch_info(sketch);
