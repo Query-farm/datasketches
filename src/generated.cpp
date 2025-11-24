@@ -2204,6 +2204,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2211,6 +2212,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2220,6 +2222,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2227,6 +2230,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2236,6 +2240,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2243,6 +2248,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2252,6 +2258,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2259,6 +2266,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2268,6 +2276,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2275,6 +2284,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2284,6 +2294,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2291,6 +2302,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2300,6 +2312,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2307,6 +2320,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2316,6 +2330,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2323,6 +2338,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2332,6 +2348,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2339,6 +2356,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2348,6 +2366,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -2355,6 +2374,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSQuantilesMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
                 fun.bind = DSQuantilesBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3509,6 +3529,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3516,6 +3537,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3525,6 +3547,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3532,6 +3555,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3541,6 +3565,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3548,6 +3573,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3557,6 +3583,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3564,6 +3591,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3573,6 +3601,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3580,6 +3609,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3589,6 +3619,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3596,6 +3627,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3605,6 +3637,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3612,6 +3645,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3621,6 +3655,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3628,6 +3663,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3637,6 +3673,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3644,6 +3681,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3653,6 +3691,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -3660,6 +3699,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSKLLMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
                 fun.bind = DSKLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4737,6 +4777,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4744,6 +4785,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4753,6 +4795,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4760,6 +4803,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4769,6 +4813,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4776,6 +4821,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4785,6 +4831,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4792,6 +4839,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4801,6 +4849,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4808,6 +4857,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4817,6 +4867,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4824,6 +4875,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4833,6 +4885,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4840,6 +4893,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4849,6 +4903,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4856,6 +4911,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4865,6 +4921,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4872,6 +4929,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4881,6 +4939,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -4888,6 +4947,7 @@ return sketch.get_max_item();
             {
                 auto fun = DSREQMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
                 fun.bind = DSREQBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5456,6 +5516,7 @@ return sketch.get_quantile(rank_data);
             {
                 auto fun = DSTDigestCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.bind = DSTDigestBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5463,6 +5524,7 @@ return sketch.get_quantile(rank_data);
             {
                 auto fun = DSTDigestMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.bind = DSTDigestBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5472,6 +5534,7 @@ return sketch.get_quantile(rank_data);
             {
                 auto fun = DSTDigestCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.bind = DSTDigestBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5479,6 +5542,7 @@ return sketch.get_quantile(rank_data);
             {
                 auto fun = DSTDigestMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.bind = DSTDigestBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5871,6 +5935,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSHLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_type);
                 fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5879,6 +5944,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSHLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_type);
                 fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5887,6 +5953,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSHLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_type);
                 fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5895,6 +5962,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSHLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_type);
                 fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5903,6 +5971,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSHLLCreateAggregate<float>(LogicalType::FLOAT, sketch_type);
                 fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5911,6 +5980,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSHLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_type);
                 fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5919,6 +5989,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSHLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_type);
                 fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5927,6 +5998,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSHLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_type);
                 fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5935,6 +6007,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSHLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_type);
                 fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5943,6 +6016,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSHLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_type);
                 fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5951,6 +6025,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSHLLCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_type);
                 fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5959,6 +6034,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSHLLCreateAggregate<string_t>(LogicalType::BLOB, sketch_type);
                 fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -5983,6 +6059,7 @@ return sketch.get_upper_bound(std_dev_data);
       AggregateFunctionSet sketch("datasketch_hll_union");
       auto fun = DSHLLMergeAggregate(sketch_type);
       fun.bind = DSHLLBind;
+      fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
       fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
       sketch.AddFunction(fun);
       CreateAggregateFunctionInfo sketch_info(sketch);
@@ -6274,6 +6351,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSCPCCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_type);
                 fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -6282,6 +6360,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSCPCCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_type);
                 fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -6290,6 +6369,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSCPCCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_type);
                 fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -6298,6 +6378,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSCPCCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_type);
                 fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -6306,6 +6387,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSCPCCreateAggregate<float>(LogicalType::FLOAT, sketch_type);
                 fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -6314,6 +6396,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSCPCCreateAggregate<double>(LogicalType::DOUBLE, sketch_type);
                 fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -6322,6 +6405,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSCPCCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_type);
                 fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -6330,6 +6414,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSCPCCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_type);
                 fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -6338,6 +6423,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSCPCCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_type);
                 fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -6346,6 +6432,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSCPCCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_type);
                 fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -6354,6 +6441,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSCPCCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_type);
                 fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -6362,6 +6450,7 @@ return sketch.get_upper_bound(std_dev_data);
             {
                 auto fun = DSCPCCreateAggregate<string_t>(LogicalType::BLOB, sketch_type);
                 fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
             }
@@ -6386,6 +6475,7 @@ return sketch.get_upper_bound(std_dev_data);
       AggregateFunctionSet sketch("datasketch_cpc_union");
       auto fun = DSCPCMergeAggregate(sketch_type);
       fun.bind = DSCPCBind;
+      fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
       fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
       sketch.AddFunction(fun);
       CreateAggregateFunctionInfo sketch_info(sketch);
