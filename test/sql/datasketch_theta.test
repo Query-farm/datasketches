@@ -1,0 +1,153 @@
+# name: test/sql/datasketch_theta.test
+# description: test datasketch Theta sketches
+# group: [datasketches]
+
+# Ensure the extension is loaded
+require datasketches
+
+# -------------------------------------------------------------------
+# 1. Basic Build and Estimate
+# -------------------------------------------------------------------
+
+# Test constant inputs
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(1));
+----
+1
+
+# Test basic distinct count with small data
+statement ok
+CREATE TABLE simple_items(id INTEGER);
+
+statement ok
+INSERT INTO simple_items VALUES (1), (2), (3), (3), (4), (5);
+
+# Should count 5 distinct items
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(id))::int FROM simple_items;
+----
+5
+
+# -------------------------------------------------------------------
+# 2. Large Data Accuracy (Standard Error)
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE large_data AS SELECT * FROM range(0, 100000) t(i);
+
+# Duplicate the data to ensure distinct counting works
+statement ok
+INSERT INTO large_data SELECT * FROM range(0, 100000) t(i);
+
+# Check estimate (Standard Theta K=4096 has error ~1.5-2%)
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(i))::int BETWEEN 98000 AND 102000 FROM large_data;
+----
+true
+
+# Check Lower/Upper bounds (Standard Deviation)
+# Note: We didn't strictly implement lower/upper bound scalar functions in the C++ code 
+# provided in previous steps, but if you did, add tests here. 
+# If only 'estimate' was implemented, skip this.
+
+# -------------------------------------------------------------------
+# 3. Set Operations: Intersection & Difference
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE set_a AS SELECT * FROM range(1, 6) t(i); -- {1, 2, 3, 4, 5}
+
+statement ok
+CREATE TABLE set_b AS SELECT * FROM range(4, 9) t(i); -- {4, 5, 6, 7, 8}
+
+# Create a table to hold the sketches
+statement ok
+CREATE TABLE sketches (name VARCHAR, data sketch_theta);
+
+# Build sketches for A and B
+statement ok
+INSERT INTO sketches VALUES 
+('A', (SELECT datasketch_theta(i) FROM set_a)),
+('B', (SELECT datasketch_theta(i) FROM set_b));
+
+# --- INTERSECTION Test ---
+# Intersection of {1,2,3,4,5} and {4,5,6,7,8} is {4,5} -> Count: 2
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_intersect(s1.data, s2.data)
+)::int
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'B';
+----
+2
+
+# --- A NOT B Test ---
+# {1,2,3,4,5} NOT {4,5,6,7,8} is {1,2,3} -> Count: 3
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_a_not_b(s1.data, s2.data)
+)::int
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'B';
+----
+3
+
+# --- B NOT A Test ---
+# {4,5,6,7,8} NOT {1,2,3,4,5} is {6,7,8} -> Count: 3
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_a_not_b(s2.data, s1.data)
+)::int
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'B';
+----
+3
+
+# -------------------------------------------------------------------
+# 4. String Types
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE strings(s VARCHAR);
+
+statement ok
+INSERT INTO strings VALUES ('apple'), ('banana'), ('apple'), ('cherry');
+
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(s))::int FROM strings;
+----
+3
+
+# -------------------------------------------------------------------
+# 5. Configuration (Log K)
+# -------------------------------------------------------------------
+
+# Test creating a sketch with a smaller K (Low accuracy) vs Large K
+# We verify the blobs are different sizes using octet_length.
+# NOTE: Minimum lg_k allowed by DataSketches is 5.
+query I
+SELECT octet_length(datasketch_theta(5, i)::BLOB) < octet_length(datasketch_theta(12, i)::BLOB) 
+FROM range(0, 1000) t(i);
+----
+true
+
+# -------------------------------------------------------------------
+# 6. Bounds and Describe
+# -------------------------------------------------------------------
+
+query I
+SELECT datasketch_theta_describe(datasketch_theta(1)) LIKE '%Theta sketch summary%';
+----
+true
+
+# Check lower bound for 2 standard deviations (approx 95% confidence)
+query I
+SELECT datasketch_theta_lower_bound(datasketch_theta(i), 2) <= 100000 FROM range(0, 100000) t(i);
+----
+true
+
+# Check upper bound
+query I
+SELECT datasketch_theta_upper_bound(datasketch_theta(i), 2) >= 100000 FROM range(0, 100000) t(i);
+----
+true

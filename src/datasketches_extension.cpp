@@ -26,6 +26,7 @@ namespace duckdb
         duckdb_datasketches::LoadTDigestSketch(loader);
         duckdb_datasketches::LoadHLLSketch(loader);
         duckdb_datasketches::LoadCPCSketch(loader);
+		duckdb_datasketches::LoadThetaSketch(loader);
 
         QueryFarmSendTelemetry(loader, "datasketches", "2025100901");
     }
