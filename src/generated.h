@@ -11,5 +11,4 @@ namespace duckdb_datasketches
   void LoadTDigestSketch(ExtensionLoader &loader);
   void LoadHLLSketch(ExtensionLoader &loader);
   void LoadCPCSketch(ExtensionLoader &loader);
-  void LoadThetaSketch(ExtensionLoader &loader);
 }

@@ -18,9 +18,9 @@ namespace duckdb
         ::duckdb_datasketches::LoadTDigestSketch(loader);
         ::duckdb_datasketches::LoadHLLSketch(loader);
         ::duckdb_datasketches::LoadCPCSketch(loader);
-        ::duckdb_datasketches::LoadThetaSketch(loader);
 
-        // Load the new sketch
+        // Load the new sketches
+        ::duckdb_datasketches::LoadThetaSketch(loader);
         ::duckdb_datasketches::LoadFrequentItemsSketch(loader);
 
         QueryFarmSendTelemetry(loader, "datasketches", "2025100901");

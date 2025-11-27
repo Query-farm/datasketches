@@ -245,7 +245,7 @@ static void DSThetaDescribe(DataChunk &args, ExpressionState &state, Vector &res
         });
 }
 
-// --- METADATA FUNCTIONS (REQUIRED FOR YOUR TEST) ---
+// --- METADATA FUNCTIONS
 
 static void DSThetaIsEmpty(DataChunk &args, ExpressionState &state, Vector &result) {
     UnaryExecutor::Execute<string_t, bool>(args.data[0], result, args.size(),
@@ -310,11 +310,13 @@ static void RegisterThetaAggregates(AggregateFunctionSet &set, const LogicalType
     auto fun_default = AggregateFunction::UnaryAggregateDestructor<DSThetaState, T, string_t, DSThetaCreateOperation, AggregateDestructorType::LEGACY>(
         input_type, result_type);
     fun_default.bind = DSThetaBindDefault;
+	fun_default.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
     set.AddFunction(fun_default);
 
     auto fun_with_k = AggregateFunction::UnaryAggregateDestructor<DSThetaState, T, string_t, DSThetaCreateOperation, AggregateDestructorType::LEGACY>(
         input_type, result_type);
     fun_with_k.bind = DSThetaBindWithK;
+	fun_with_k.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
     fun_with_k.arguments.insert(fun_with_k.arguments.begin(), LogicalType::INTEGER);
     set.AddFunction(fun_with_k);
 }
