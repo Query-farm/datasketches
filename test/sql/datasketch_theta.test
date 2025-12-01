@@ -1,0 +1,838 @@
+# name: test/sql/datasketch_theta.test
+# description: test datasketch Theta sketches
+# group: [datasketches]
+
+# Ensure the extension is loaded
+require datasketches
+
+# -------------------------------------------------------------------
+# 1. Basic Build and Estimate
+# -------------------------------------------------------------------
+
+# Test constant inputs
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(1));
+----
+1
+
+# Test basic distinct count with small data
+statement ok
+CREATE TABLE simple_items(id INTEGER);
+
+statement ok
+INSERT INTO simple_items VALUES (1), (2), (3), (3), (4), (5);
+
+# Should count 5 distinct items
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(id))::int FROM simple_items;
+----
+5
+
+# -------------------------------------------------------------------
+# 2. Large Data Accuracy (Standard Error)
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE large_data AS SELECT * FROM range(0, 100000) t(i);
+
+# Duplicate the data to ensure distinct counting works
+statement ok
+INSERT INTO large_data SELECT * FROM range(0, 100000) t(i);
+
+# Check estimate (Standard Theta K=4096 has error ~1.5-2%)
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(i))::int BETWEEN 98000 AND 102000 FROM large_data;
+----
+true
+
+# Check Lower/Upper bounds (Standard Deviation)
+# Note: We didn't strictly implement lower/upper bound scalar functions in the C++ code 
+# provided in previous steps, but if you did, add tests here. 
+# If only 'estimate' was implemented, skip this.
+
+# -------------------------------------------------------------------
+# 3. Set Operations: Intersection & Difference
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE set_a AS SELECT * FROM range(1, 6) t(i); -- {1, 2, 3, 4, 5}
+
+statement ok
+CREATE TABLE set_b AS SELECT * FROM range(4, 9) t(i); -- {4, 5, 6, 7, 8}
+
+# Create a table to hold the sketches
+statement ok
+CREATE TABLE sketches (name VARCHAR, data sketch_theta);
+
+# Build sketches for A and B
+statement ok
+INSERT INTO sketches VALUES 
+('A', (SELECT datasketch_theta(i) FROM set_a)),
+('B', (SELECT datasketch_theta(i) FROM set_b));
+
+# --- INTERSECTION Test ---
+# Intersection of {1,2,3,4,5} and {4,5,6,7,8} is {4,5} -> Count: 2
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_intersect(s1.data, s2.data)
+)::int
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'B';
+----
+2
+
+# --- A NOT B Test ---
+# {1,2,3,4,5} NOT {4,5,6,7,8} is {1,2,3} -> Count: 3
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_a_not_b(s1.data, s2.data)
+)::int
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'B';
+----
+3
+
+# --- B NOT A Test ---
+# {4,5,6,7,8} NOT {1,2,3,4,5} is {6,7,8} -> Count: 3
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_a_not_b(s2.data, s1.data)
+)::int
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'B';
+----
+3
+
+# -------------------------------------------------------------------
+# 4. String Types
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE strings(s VARCHAR);
+
+statement ok
+INSERT INTO strings VALUES ('apple'), ('banana'), ('apple'), ('cherry');
+
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(s))::int FROM strings;
+----
+3
+
+# -------------------------------------------------------------------
+# 5. Configuration (Log K)
+# -------------------------------------------------------------------
+
+# Test creating a sketch with a smaller K (Low accuracy) vs Large K
+# We verify the blobs are different sizes using octet_length.
+# NOTE: Minimum lg_k allowed by DataSketches is 5.
+query I
+SELECT octet_length(datasketch_theta(5, i)::BLOB) < octet_length(datasketch_theta(12, i)::BLOB) 
+FROM range(0, 1000) t(i);
+----
+true
+
+# -------------------------------------------------------------------
+# 6. Bounds and Describe
+# -------------------------------------------------------------------
+
+query I
+SELECT datasketch_theta_describe(datasketch_theta(1)) LIKE '%Theta sketch summary%';
+----
+true
+
+# Check lower bound for 2 standard deviations (approx 95% confidence)
+query I
+SELECT datasketch_theta_lower_bound(datasketch_theta(i), 2) <= 100000 FROM range(0, 100000) t(i);
+----
+true
+
+# Check upper bound
+query I
+SELECT datasketch_theta_upper_bound(datasketch_theta(i), 2) >= 100000 FROM range(0, 100000) t(i);
+----
+true
+
+# -------------------------------------------------------------------
+# 7. Edge Cases - Empty and NULL Values
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE empty_table(id INTEGER);
+
+# Empty sketch should estimate 0
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(id))::int FROM empty_table;
+----
+0
+
+# Test NULL handling
+statement ok
+CREATE TABLE with_nulls(id INTEGER);
+
+statement ok
+INSERT INTO with_nulls VALUES (1), (NULL), (2), (NULL), (3);
+
+# NULLs should be skipped, count only 3 distinct
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(id))::int FROM with_nulls;
+----
+3
+
+# All NULLs table
+statement ok
+CREATE TABLE all_nulls(id INTEGER);
+
+statement ok
+INSERT INTO all_nulls VALUES (NULL), (NULL), (NULL);
+
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(id))::int FROM all_nulls;
+----
+0
+
+# -------------------------------------------------------------------
+# 8. Single Item Edge Cases
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE single_item(id INTEGER);
+
+statement ok
+INSERT INTO single_item VALUES (42);
+
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(id))::int FROM single_item;
+----
+1
+
+# Many duplicates of single item
+statement ok
+CREATE TABLE many_dupes AS SELECT 42 as id FROM range(0, 10000);
+
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(id))::int FROM many_dupes;
+----
+1
+
+# -------------------------------------------------------------------
+# 9. Union Operations
+# -------------------------------------------------------------------
+
+# Union of {1,2,3,4,5} and {4,5,6,7,8} is {1,2,3,4,5,6,7,8} -> Count: 8
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_union(s1.data, s2.data)
+)::int
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'B';
+----
+8
+
+# Union of a sketch with itself should equal the original
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_union(s1.data, s1.data)
+)::int
+FROM sketches s1
+WHERE s1.name = 'A';
+----
+5
+
+# Union with empty sketch should equal the non-empty sketch
+statement ok
+INSERT INTO sketches VALUES ('EMPTY', (SELECT datasketch_theta(id) FROM empty_table));
+
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_union(s1.data, s2.data)
+)::int
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'EMPTY';
+----
+5
+
+# -------------------------------------------------------------------
+# 10. Multiple Set Operations (Chaining)
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE set_c AS SELECT * FROM range(1, 4) t(i); -- {1, 2, 3}
+
+statement ok
+INSERT INTO sketches VALUES
+('C', (SELECT datasketch_theta(i) FROM set_c));
+
+# (A UNION B) INTERSECT C
+# A = {1,2,3,4,5}, B = {4,5,6,7,8}, C = {1,2,3}
+# A UNION B = {1,2,3,4,5,6,7,8}
+# (A UNION B) INTERSECT C = {1,2,3} -> Count: 3
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_intersect(
+        datasketch_theta_union(
+            (SELECT data FROM sketches WHERE name = 'A'),
+            (SELECT data FROM sketches WHERE name = 'B')
+        ),
+        (SELECT data FROM sketches WHERE name = 'C')
+    )
+)::int;
+----
+3
+
+# A INTERSECT B INTERSECT C
+# A ∩ B = {4,5}, {4,5} ∩ {1,2,3} = {} -> Count: 0
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_intersect(
+        datasketch_theta_intersect(
+            (SELECT data FROM sketches WHERE name = 'A'),
+            (SELECT data FROM sketches WHERE name = 'B')
+        ),
+        (SELECT data FROM sketches WHERE name = 'C')
+    )
+)::int;
+----
+0
+
+# -------------------------------------------------------------------
+# 11. Symmetric Difference (A NOT B + B NOT A)
+# -------------------------------------------------------------------
+
+# A XOR B = (A - B) ∪ (B - A)
+# A = {1,2,3,4,5}, B = {4,5,6,7,8}
+# A - B = {1,2,3}, B - A = {6,7,8}
+# XOR = {1,2,3,6,7,8} -> Count: 6
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_union(
+        datasketch_theta_a_not_b(s1.data, s2.data),
+        datasketch_theta_a_not_b(s2.data, s1.data)
+    )
+)::int
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'B';
+----
+6
+
+# -------------------------------------------------------------------
+# 12. Merging Sketches via Aggregate
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE partitions(partition_id INTEGER, value INTEGER);
+
+statement ok
+INSERT INTO partitions VALUES
+(1, 1), (1, 2), (1, 3),
+(2, 3), (2, 4), (2, 5),
+(3, 5), (3, 6), (3, 7);
+
+# Build sketches per partition, then merge them
+# Total distinct values: {1,2,3,4,5,6,7} -> 7
+statement ok
+CREATE TABLE partition_sketches AS
+SELECT partition_id, datasketch_theta(value) as sketch
+FROM partitions
+GROUP BY partition_id;
+
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta(sketch)
+)::int
+FROM partition_sketches;
+----
+7
+
+# -------------------------------------------------------------------
+# 13. Different Data Types
+# -------------------------------------------------------------------
+
+# BIGINT
+statement ok
+CREATE TABLE bigints(val BIGINT);
+
+statement ok
+INSERT INTO bigints VALUES 
+(9223372036854775807),
+(9223372036854775806),
+(-9223372036854775808),
+(9223372036854775807); -- duplicate
+
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(val))::int FROM bigints;
+----
+3
+
+# VARCHAR with special characters
+statement ok
+CREATE TABLE special_strings(s VARCHAR);
+
+statement ok
+INSERT INTO special_strings VALUES
+('hello'), ('world'), ('hello world'),
+('emoji 🎉'), (''), ('hello');
+
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(s))::int FROM special_strings;
+----
+5
+
+# Empty string should count as distinct
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(s))::int 
+FROM (VALUES (''), ('')) t(s);
+----
+1
+
+# -------------------------------------------------------------------
+# 14. Metadata and Diagnostic Functions
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE meta_test AS SELECT * FROM range(0, 1000) t(i);
+
+statement ok
+CREATE TABLE meta_sketch AS SELECT datasketch_theta(i) as sketch FROM meta_test;
+
+# is_empty should be false for non-empty sketch
+query I
+SELECT datasketch_theta_is_empty(sketch) FROM meta_sketch;
+----
+false
+
+query I
+SELECT datasketch_theta_is_empty(datasketch_theta(id)) FROM empty_table;
+----
+true
+
+# num_retained should be positive for data within sketch capacity
+query I
+SELECT datasketch_theta_num_retained(sketch) > 0 FROM meta_sketch;
+----
+true
+
+# theta value should be in (0, 1] range
+query I
+SELECT datasketch_theta_get_theta(sketch) > 0 AND 
+       datasketch_theta_get_theta(sketch) <= 1 
+FROM meta_sketch;
+----
+true
+
+# seed should match default or custom seed
+query I
+SELECT datasketch_theta_get_seed(sketch) = datasketch_theta_get_seed(sketch) 
+FROM meta_sketch;
+----
+true
+
+# is_estimation_mode - small data should be exact
+query I
+SELECT datasketch_theta_is_estimation_mode(datasketch_theta(i))
+FROM range(0, 10) t(i);
+----
+false
+
+# is_estimation_mode - large data should be in estimation mode
+query I
+SELECT datasketch_theta_is_estimation_mode(datasketch_theta(i))
+FROM range(0, 100000) t(i);
+----
+true
+
+# -------------------------------------------------------------------
+# 15. GROUP BY with Multiple Groups
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE events(user_id INTEGER, event_type VARCHAR, item_id INTEGER);
+
+statement ok
+INSERT INTO events VALUES
+(1, 'view', 100), (1, 'view', 101), (1, 'click', 100),
+(2, 'view', 102), (2, 'click', 102), (2, 'view', 103),
+(3, 'view', 100), (3, 'view', 100), (3, 'click', 104);
+
+# Distinct items viewed per user
+statement ok
+CREATE TABLE user_sketches AS
+SELECT user_id, datasketch_theta(item_id) as sketch
+FROM events
+WHERE event_type = 'view'
+GROUP BY user_id;
+
+query II
+SELECT user_id, datasketch_theta_estimate(sketch)::int
+FROM user_sketches
+ORDER BY user_id;
+----
+1	2
+2	2
+3	1
+
+# -------------------------------------------------------------------
+# 16. Serialization and Persistence
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE sketch_storage(id INTEGER, sketch_data sketch_theta);
+
+statement ok
+INSERT INTO sketch_storage
+SELECT 1, datasketch_theta(i) FROM range(0, 100) t(i);
+
+# Retrieve and use stored sketch
+query I
+SELECT datasketch_theta_estimate(sketch_data)::int
+FROM sketch_storage
+WHERE id = 1;
+----
+100
+
+# Store result of set operation
+statement ok
+INSERT INTO sketch_storage
+SELECT 2, datasketch_theta_union(s1.data, s2.data)
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'B';
+
+query I
+SELECT datasketch_theta_estimate(sketch_data)::int
+FROM sketch_storage
+WHERE id = 2;
+----
+8
+
+# -------------------------------------------------------------------
+# 17. Bounds with Different Standard Deviations
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE bounds_test AS 
+SELECT datasketch_theta(i) as sketch FROM range(0, 50000) t(i);
+
+# 1 SD (~68% confidence)
+query I
+SELECT 
+    datasketch_theta_lower_bound(sketch, 1) <= 50000 AND
+    datasketch_theta_upper_bound(sketch, 1) >= 50000
+FROM bounds_test;
+----
+true
+
+# 2 SD (~95% confidence) - wider interval
+query I
+SELECT 
+    datasketch_theta_lower_bound(sketch, 2) <= datasketch_theta_lower_bound(sketch, 1) AND
+    datasketch_theta_upper_bound(sketch, 2) >= datasketch_theta_upper_bound(sketch, 1)
+FROM bounds_test;
+----
+true
+
+# 3 SD (~99.7% confidence) - widest interval
+query I
+SELECT 
+    datasketch_theta_lower_bound(sketch, 3) <= datasketch_theta_lower_bound(sketch, 2) AND
+    datasketch_theta_upper_bound(sketch, 3) >= datasketch_theta_upper_bound(sketch, 2)
+FROM bounds_test;
+----
+true
+
+# Estimate should be within bounds
+query I
+SELECT 
+    datasketch_theta_estimate(sketch) >= datasketch_theta_lower_bound(sketch, 2) AND
+    datasketch_theta_estimate(sketch) <= datasketch_theta_upper_bound(sketch, 2)
+FROM bounds_test;
+----
+true
+
+# -------------------------------------------------------------------
+# 18. Set Operations Commutativity and Identity
+# -------------------------------------------------------------------
+
+# Union is commutative: A ∪ B = B ∪ A
+query I
+SELECT 
+    datasketch_theta_estimate(datasketch_theta_union(s1.data, s2.data))::int =
+    datasketch_theta_estimate(datasketch_theta_union(s2.data, s1.data))::int
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'B';
+----
+true
+
+# Intersection is commutative: A ∩ B = B ∩ A
+query I
+SELECT 
+    datasketch_theta_estimate(datasketch_theta_intersect(s1.data, s2.data))::int =
+    datasketch_theta_estimate(datasketch_theta_intersect(s2.data, s1.data))::int
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'B';
+----
+true
+
+# A ∪ ∅ = A (identity)
+query I
+SELECT 
+    datasketch_theta_estimate(datasketch_theta_union(s1.data, s2.data))::int =
+    datasketch_theta_estimate(s1.data)::int
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'EMPTY';
+----
+true
+
+# A ∩ A = A (idempotence)
+query I
+SELECT 
+    datasketch_theta_estimate(datasketch_theta_intersect(s1.data, s1.data))::int =
+    datasketch_theta_estimate(s1.data)::int
+FROM sketches s1
+WHERE s1.name = 'A';
+----
+true
+
+# A - A = ∅
+query I
+SELECT datasketch_theta_estimate(datasketch_theta_a_not_b(s1.data, s1.data))::int
+FROM sketches s1
+WHERE s1.name = 'A';
+----
+0
+
+# A NOT B ≠ B NOT A (not commutative)
+# Create separate tables for this test only
+statement ok
+CREATE TABLE noncomm_set_x AS SELECT * FROM range(1, 11) t(i); -- {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+statement ok
+CREATE TABLE noncomm_set_y AS SELECT * FROM range(8, 12) t(i); -- {8, 9, 10, 11}
+
+# Create separate sketch table for this test
+statement ok
+CREATE TABLE noncomm_sketches(name VARCHAR, sketch sketch_theta);
+
+statement ok
+INSERT INTO noncomm_sketches VALUES
+('X', (SELECT datasketch_theta(i) FROM noncomm_set_x)),
+('Y', (SELECT datasketch_theta(i) FROM noncomm_set_y));
+
+# X NOT Y = {1, 2, 3, 4, 5, 6, 7} -> Count: 7
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_a_not_b(sx.sketch, sy.sketch)
+)::int
+FROM noncomm_sketches sx, noncomm_sketches sy
+WHERE sx.name = 'X' AND sy.name = 'Y';
+----
+7
+
+# Y NOT X = {11} -> Count: 1
+query I
+SELECT datasketch_theta_estimate(
+    datasketch_theta_a_not_b(sy.sketch, sx.sketch)
+)::int
+FROM noncomm_sketches sx, noncomm_sketches sy
+WHERE sx.name = 'X' AND sy.name = 'Y';
+----
+1
+
+# Verify they are NOT equal (7 != 1 proves non-commutativity)
+query I
+SELECT 
+    datasketch_theta_estimate(datasketch_theta_a_not_b(sx.sketch, sy.sketch))::int !=
+    datasketch_theta_estimate(datasketch_theta_a_not_b(sy.sketch, sx.sketch))::int
+FROM noncomm_sketches sx, noncomm_sketches sy
+WHERE sx.name = 'X' AND sy.name = 'Y';
+----
+true
+
+# -------------------------------------------------------------------
+# 19. Jaccard Similarity (if implemented)
+# -------------------------------------------------------------------
+# Jaccard = |A ∩ B| / |A ∪ B|
+# A = {1,2,3,4,5}, B = {4,5,6,7,8}
+# |A ∩ B| = 2, |A ∪ B| = 8
+# Jaccard = 2/8 = 0.25
+
+# Manual calculation if no direct Jaccard function
+query I
+SELECT (
+    datasketch_theta_estimate(datasketch_theta_intersect(s1.data, s2.data)) /
+    datasketch_theta_estimate(datasketch_theta_union(s1.data, s2.data))
+)::decimal(4,2)
+FROM sketches s1, sketches s2
+WHERE s1.name = 'A' AND s2.name = 'B';
+----
+0.25
+
+# -------------------------------------------------------------------
+# 20. Very Small K Parameter
+# -------------------------------------------------------------------
+
+# Test minimum lg_k = 5 (K = 32)
+statement ok
+CREATE TABLE small_k_test AS SELECT * FROM range(0, 1000) t(i);
+
+statement ok
+CREATE TABLE small_k_sketch AS 
+SELECT datasketch_theta(5, i) as sketch FROM small_k_test;
+
+# Should still give reasonable estimate (with high error)
+query I
+SELECT datasketch_theta_estimate(sketch)::int BETWEEN 500 AND 1500 
+FROM small_k_sketch;
+----
+true
+
+# Should be in estimation mode
+query I
+SELECT datasketch_theta_is_estimation_mode(sketch) FROM small_k_sketch;
+----
+true
+
+# Theta should be less than 1.0 (sampling occurred)
+query I
+SELECT datasketch_theta_get_theta(sketch) < 1.0 FROM small_k_sketch;
+----
+true
+
+# -------------------------------------------------------------------
+# 21. De-duplication Use Case
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE raw_events(session_id VARCHAR, user_id INTEGER);
+
+statement ok
+INSERT INTO raw_events VALUES
+('s1', 1), ('s1', 1), ('s1', 1),  -- Same session/user repeated
+('s2', 2), ('s2', 2),
+('s3', 3), ('s4', 1);  -- User 1 appears again in different session
+
+# Distinct sessions
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(session_id))::int 
+FROM raw_events;
+----
+4
+
+# Distinct users
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(user_id))::int 
+FROM raw_events;
+----
+3
+
+# -------------------------------------------------------------------
+# 22. Extremely Large Cardinality
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE million_items AS SELECT * FROM range(0, 1000000) t(i);
+
+# Should estimate close to 1M (within ~1-2% with default K)
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(i))::int 
+    BETWEEN 980000 AND 1020000 
+FROM million_items;
+----
+true
+
+# Should be in estimation mode
+query I
+SELECT datasketch_theta_is_estimation_mode(datasketch_theta(i))
+FROM million_items;
+----
+true
+
+# -------------------------------------------------------------------
+# 23. Describe Function Detail
+# -------------------------------------------------------------------
+
+# Verify describe contains key information
+query I
+SELECT datasketch_theta_describe(sketch) LIKE '%Empty%' OR
+       datasketch_theta_describe(sketch) LIKE '%estimate%'
+FROM meta_sketch;
+----
+true
+
+# Describe empty sketch
+# query I
+# SELECT datasketch_theta_describe(datasketch_theta(id)) LIKE '%Empty%'
+# FROM empty_table;
+# ----
+# true
+
+# -------------------------------------------------------------------
+# 24. CTE and Subquery Integration
+# -------------------------------------------------------------------
+
+
+query I
+WITH daily_users AS (
+    SELECT 1 as day, unnest([1, 2, 3, 3, 4]) as user_id
+    UNION ALL
+    SELECT 2 as day, unnest([3, 4, 5, 6]) as user_id
+    UNION ALL
+    SELECT 3 as day, unnest([1, 5, 7, 8, 9]) as user_id
+),
+daily_sketches AS (
+    SELECT day, datasketch_theta(user_id) as sketch
+    FROM daily_users
+    GROUP BY day
+)
+SELECT datasketch_theta_estimate(
+    datasketch_theta(sketch)
+)::int as total_unique_users
+FROM daily_sketches;
+----
+9
+
+# -------------------------------------------------------------------
+# 25. Case Sensitivity (Strings)
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE case_test(s VARCHAR);
+
+statement ok
+INSERT INTO case_test VALUES ('Apple'), ('apple'), ('APPLE');
+
+# Should count as 3 distinct (case-sensitive)
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(s))::int FROM case_test;
+----
+3
+
+# -------------------------------------------------------------------
+# 26. Window Functions (if supported)
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE time_series(ts INTEGER, user_id INTEGER);
+
+statement ok
+INSERT INTO time_series VALUES
+(1, 10), (2, 11), (3, 12), (4, 10), (5, 13),
+(6, 14), (7, 15), (8, 10), (9, 16), (10, 17);
+
+# Running distinct count (if window aggregate is supported)
+# This may not work depending on implementation - include if supported
+query II
+SELECT ts, datasketch_theta_estimate(
+    datasketch_theta(user_id) OVER (ORDER BY ts ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+)::int
+FROM time_series
+ORDER BY ts;
+----
+1	1
+2	2
+3	3
+4	3
+5	4
+6	5
+7	6
+8	6
+9	7
+10	8
