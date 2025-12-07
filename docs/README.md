@@ -460,7 +460,7 @@ The third argument if true means the weight of the given item is included into t
 
 -----
 
-**`datasketch_kll_kll(sketch_kll, DOUBLE) -> DOUBLE`**
+**`datasketch_kll_quantile(sketch_kll, DOUBLE, BOOLEAN) -> value`**
 
 Returns an approximation to the data item associated with the given rank
 of a hypothetical sorted version of the input stream so far.

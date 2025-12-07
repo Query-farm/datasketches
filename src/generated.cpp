@@ -63,6 +63,13 @@ unique_ptr<FunctionData> DSQuantilesBind(ClientContext &context, AggregateFuncti
 
 	auto actual_k = k_val.GetValue<int32_t>();
 
+	
+	// Validate K parameter: must be in range (0, 32768]
+	if (actual_k <= 0 || actual_k > 32768) {
+		throw BinderException("Quantiles K value must be between 1 and 32768, got: " + std::to_string(actual_k));
+	}
+	
+
 	Function::EraseArgument(function, arguments, 0);
 	return make_uniq<DSQuantilesBindData>(actual_k);
 }
@@ -171,6 +178,13 @@ unique_ptr<FunctionData> DSKLLBind(ClientContext &context, AggregateFunction &fu
 	}
 
 	auto actual_k = k_val.GetValue<int32_t>();
+
+	
+	// Validate K parameter: must be in range (0, 32768]
+	if (actual_k <= 0 || actual_k > 32768) {
+		throw BinderException("KLL K value must be between 1 and 32768, got: " + std::to_string(actual_k));
+	}
+	
 
 	Function::EraseArgument(function, arguments, 0);
 	return make_uniq<DSKLLBindData>(actual_k);
@@ -281,6 +295,13 @@ unique_ptr<FunctionData> DSREQBind(ClientContext &context, AggregateFunction &fu
 
 	auto actual_k = k_val.GetValue<int32_t>();
 
+	
+	// Validate K parameter: must be in range [4, 1024]
+	if (actual_k < 4 || actual_k > 1024) {
+		throw BinderException("REQ K value must be between 4 and 1024, got: " + std::to_string(actual_k));
+	}
+	
+
 	Function::EraseArgument(function, arguments, 0);
 	return make_uniq<DSREQBindData>(actual_k);
 }
@@ -390,6 +411,13 @@ unique_ptr<FunctionData> DSTDigestBind(ClientContext &context, AggregateFunction
 
 	auto actual_k = k_val.GetValue<int32_t>();
 
+	
+	// Validate K parameter: must be positive (TDigest compression parameter)
+	if (actual_k <= 0) {
+		throw BinderException("TDigest K (compression) value must be positive, got: " + std::to_string(actual_k));
+	}
+	
+
 	Function::EraseArgument(function, arguments, 0);
 	return make_uniq<DSTDigestBindData>(actual_k);
 }
@@ -497,6 +525,13 @@ unique_ptr<FunctionData> DSHLLBind(ClientContext &context, AggregateFunction &fu
 
 	auto actual_k = k_val.GetValue<int32_t>();
 
+	
+	// Validate K parameter: lg_k must be in range [4, 21] for HLL
+	if (actual_k < 4 || actual_k > 21) {
+		throw BinderException("HLL K (lg_k) value must be between 4 and 21, got: " + std::to_string(actual_k));
+	}
+	
+
 	Function::EraseArgument(function, arguments, 0);
 	return make_uniq<DSHLLBindData>(actual_k);
 }
@@ -598,6 +633,13 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
 	}
 
 	auto actual_k = k_val.GetValue<int32_t>();
+
+	
+	// Validate K parameter: lg_k must be in range [4, 26] for CPC
+	if (actual_k < 4 || actual_k > 26) {
+		throw BinderException("CPC K (lg_k) value must be between 4 and 26, got: " + std::to_string(actual_k));
+	}
+	
 
 	Function::EraseArgument(function, arguments, 0);
 	return make_uniq<DSCPCBindData>(actual_k);
