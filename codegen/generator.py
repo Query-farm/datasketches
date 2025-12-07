@@ -68,9 +68,23 @@ def get_sketch_class_name(sketch_type: str):
 
 def unary_functions_per_sketch_type(sketch_type: str):
     if sketch_type not in counting_sketch_names:
-        deserialize_sketch = f"auto sketch = {get_sketch_class_name(sketch_type)}<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());"
+        deserialize_sketch = f"""
+            auto sketch = [&]() {{
+                try {{
+                    return {get_sketch_class_name(sketch_type)}<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                }} catch (const std::exception &e) {{
+                    throw InvalidInputException("Failed to deserialize {sketch_type} sketch: %s", e.what());
+                }}
+            }}();"""
     else:
-        deserialize_sketch = f"auto sketch = {get_sketch_class_name(sketch_type)}::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());"
+        deserialize_sketch = f"""
+            auto sketch = [&]() {{
+                try {{
+                    return {get_sketch_class_name(sketch_type)}::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                }} catch (const std::exception &e) {{
+                    throw InvalidInputException("Failed to deserialize {sketch_type} sketch: %s", e.what());
+                }}
+            }}();"""
 
     if sketch_type in counting_sketch_names:
         sketch_argument = {

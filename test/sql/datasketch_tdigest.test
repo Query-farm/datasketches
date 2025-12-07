@@ -76,3 +76,20 @@ select datasketch_tdigest_quantile(datasketch_tdigest(12, sketch), 0.5)::int bet
 ----
 true
 
+# Test error handling for invalid/corrupted sketch data
+statement error
+SELECT datasketch_tdigest_is_empty('\x00\x01\x02'::sketch_tdigest_float);
+----
+Invalid Input Error: Failed to deserialize TDigest sketch
+
+statement error
+SELECT datasketch_tdigest_k('\xDE\xAD\xBE\xEF'::sketch_tdigest_double);
+----
+Invalid Input Error: Failed to deserialize TDigest sketch
+
+# Test with empty blob
+statement error
+SELECT datasketch_tdigest_is_empty(''::sketch_tdigest_double);
+----
+Invalid Input Error: Failed to deserialize TDigest sketch
+

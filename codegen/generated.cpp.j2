@@ -165,12 +165,20 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
         {% if sketch_type not in counting_sketch_names %}
         {{sketch_class_name(sketch_type)}}<T> deserialize_sketch(const string_t &data)
         {
-            return {{sketch_class_name(sketch_type)}}<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+            try {
+                return {{sketch_class_name(sketch_type)}}<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+            } catch (const std::exception &e) {
+                throw InvalidInputException("Failed to deserialize {{sketch_type}} sketch: %s", e.what());
+            }
         }
         {% else %}
         {{sketch_class_name(sketch_type)}} deserialize_sketch(const string_t &data)
         {
-            return {{sketch_class_name(sketch_type)}}::deserialize(data.GetDataUnsafe(), data.GetSize());
+            try {
+                return {{sketch_class_name(sketch_type)}}::deserialize(data.GetDataUnsafe(), data.GetSize());
+            } catch (const std::exception &e) {
+                throw InvalidInputException("Failed to deserialize {{sketch_type}} sketch: %s", e.what());
+            }
         }
         {% endif %}
     };
