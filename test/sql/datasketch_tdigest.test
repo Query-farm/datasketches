@@ -93,3 +93,153 @@ SELECT datasketch_tdigest_is_empty(''::sketch_tdigest_double);
 ----
 Invalid Input Error: Failed to deserialize TDigest sketch
 
+# =============================================================================
+# COMPREHENSIVE UNION/MERGE TESTS
+# =============================================================================
+
+# Test merging multiple sketches from partitioned data
+statement ok
+CREATE TABLE merge_data(value double, partition_id int)
+
+statement ok
+INSERT INTO merge_data SELECT unnest(generate_series(1, 300))::double, 1
+
+statement ok
+INSERT INTO merge_data SELECT unnest(generate_series(301, 600))::double, 2
+
+statement ok
+INSERT INTO merge_data SELECT unnest(generate_series(601, 900))::double, 3
+
+# Create sketches per partition
+statement ok
+CREATE TABLE partition_sketches AS
+SELECT partition_id, datasketch_tdigest(100, value) as sketch
+FROM merge_data
+GROUP BY partition_id
+
+# Verify we have 3 partition sketches
+query I
+SELECT count(*) FROM partition_sketches
+----
+3
+
+# Merge all partition sketches and verify total weight
+query I
+SELECT datasketch_tdigest_total_weight(datasketch_tdigest(100, sketch)) FROM partition_sketches
+----
+900
+
+# Verify merged sketch is not empty
+query I
+SELECT datasketch_tdigest_is_empty(datasketch_tdigest(100, sketch)) FROM partition_sketches
+----
+False
+
+# Verify merged sketch median is approximately in the middle
+query I
+SELECT datasketch_tdigest_quantile(datasketch_tdigest(100, sketch), 0.5) between 400 and 500 FROM partition_sketches
+----
+true
+
+# Test merging sketches with overlapping data ranges
+statement ok
+CREATE TABLE overlap_data(value double, group_id int)
+
+statement ok
+INSERT INTO overlap_data SELECT unnest(generate_series(1, 500))::double, 1
+
+statement ok
+INSERT INTO overlap_data SELECT unnest(generate_series(250, 750))::double, 2
+
+statement ok
+CREATE TABLE overlap_sketches AS
+SELECT group_id, datasketch_tdigest(100, value) as sketch
+FROM overlap_data
+GROUP BY group_id
+
+# Merged sketch should have correct total weight (500 + 501 = 1001)
+query I
+SELECT datasketch_tdigest_total_weight(datasketch_tdigest(100, sketch)) FROM overlap_sketches
+----
+1001
+
+# Verify merged sketch is not empty
+query I
+SELECT datasketch_tdigest_is_empty(datasketch_tdigest(100, sketch)) FROM overlap_sketches
+----
+False
+
+# Test merge with different K values - merged sketch should use the K from bind
+statement ok
+CREATE TABLE k_test_sketches AS
+SELECT datasketch_tdigest(50, value) as sketch FROM merge_data WHERE partition_id = 1
+UNION ALL
+SELECT datasketch_tdigest(200, value) as sketch FROM merge_data WHERE partition_id = 2
+
+query I
+SELECT datasketch_tdigest_k(datasketch_tdigest(100, sketch)) FROM k_test_sketches
+----
+100
+
+# Test merging a single sketch (edge case)
+query I
+SELECT datasketch_tdigest_total_weight(datasketch_tdigest(50, sketch))
+FROM (SELECT datasketch_tdigest(50, value) as sketch FROM merge_data WHERE partition_id = 1) single_sketch
+----
+300
+
+# Test CDF on merged sketch
+statement ok
+SELECT datasketch_tdigest_cdf(datasketch_tdigest(100, sketch), [300, 600]) FROM partition_sketches
+
+# Test PMF on merged sketch
+statement ok
+SELECT datasketch_tdigest_pmf(datasketch_tdigest(100, sketch), [300, 600]) FROM partition_sketches
+
+# Test rank query on merged sketch - rank of 450 should be approximately 0.5
+query I
+SELECT datasketch_tdigest_rank(datasketch_tdigest(100, sketch), 450.0) between 0.45 and 0.55 FROM partition_sketches
+----
+true
+
+# Test merging sketches created with GROUP BY
+statement ok
+CREATE TABLE grouped_data(category varchar, value double)
+
+statement ok
+INSERT INTO grouped_data
+SELECT 'A', unnest(generate_series(1, 100))::double
+UNION ALL
+SELECT 'B', unnest(generate_series(101, 200))::double
+UNION ALL
+SELECT 'C', unnest(generate_series(201, 300))::double
+
+statement ok
+CREATE TABLE category_sketches AS
+SELECT category, datasketch_tdigest(50, value) as sketch
+FROM grouped_data
+GROUP BY category
+
+# Merge all category sketches
+query I
+SELECT datasketch_tdigest_total_weight(datasketch_tdigest(50, sketch)) FROM category_sketches
+----
+300
+
+# Verify merged quantiles span all categories
+query I
+SELECT datasketch_tdigest_quantile(datasketch_tdigest(50, sketch), 0.0) between 1 and 5 FROM category_sketches
+----
+true
+
+query I
+SELECT datasketch_tdigest_quantile(datasketch_tdigest(50, sketch), 1.0) between 295 and 300 FROM category_sketches
+----
+true
+
+# Test total_weight matches n for merged sketch
+query I
+SELECT datasketch_tdigest_total_weight(datasketch_tdigest(100, sketch)) FROM partition_sketches
+----
+900.0
+

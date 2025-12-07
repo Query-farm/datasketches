@@ -112,3 +112,165 @@ statement error
 SELECT datasketch_quantiles_is_empty(''::sketch_quantiles_integer);
 ----
 Invalid Input Error: Failed to deserialize Quantiles sketch
+
+# =============================================================================
+# COMPREHENSIVE UNION/MERGE TESTS
+# =============================================================================
+
+# Test merging multiple sketches from partitioned data
+statement ok
+CREATE TABLE merge_data(value double, partition_id int)
+
+statement ok
+INSERT INTO merge_data SELECT unnest(generate_series(1, 300))::double, 1
+
+statement ok
+INSERT INTO merge_data SELECT unnest(generate_series(301, 600))::double, 2
+
+statement ok
+INSERT INTO merge_data SELECT unnest(generate_series(601, 900))::double, 3
+
+# Create sketches per partition
+statement ok
+CREATE TABLE partition_sketches AS
+SELECT partition_id, datasketch_quantiles(32, value) as sketch
+FROM merge_data
+GROUP BY partition_id
+
+# Verify we have 3 partition sketches
+query I
+SELECT count(*) FROM partition_sketches
+----
+3
+
+# Merge all partition sketches and verify total count
+query I
+SELECT datasketch_quantiles_n(datasketch_quantiles(32, sketch)) FROM partition_sketches
+----
+900
+
+# Verify merged sketch has correct min value
+query I
+SELECT datasketch_quantiles_min_item(datasketch_quantiles(32, sketch)) FROM partition_sketches
+----
+1.0
+
+# Verify merged sketch has correct max value
+query I
+SELECT datasketch_quantiles_max_item(datasketch_quantiles(32, sketch)) FROM partition_sketches
+----
+900.0
+
+# Verify merged sketch median is approximately in the middle
+query I
+SELECT datasketch_quantiles_quantile(datasketch_quantiles(32, sketch), 0.5, true) between 400 and 500 FROM partition_sketches
+----
+True
+
+# Test merging sketches with overlapping data ranges
+statement ok
+CREATE TABLE overlap_data(value double, group_id int)
+
+statement ok
+INSERT INTO overlap_data SELECT unnest(generate_series(1, 500))::double, 1
+
+statement ok
+INSERT INTO overlap_data SELECT unnest(generate_series(250, 750))::double, 2
+
+statement ok
+CREATE TABLE overlap_sketches AS
+SELECT group_id, datasketch_quantiles(64, value) as sketch
+FROM overlap_data
+GROUP BY group_id
+
+# Merged sketch should have correct total count (500 + 501 = 1001, even with overlap since we count all items)
+query I
+SELECT datasketch_quantiles_n(datasketch_quantiles(64, sketch)) FROM overlap_sketches
+----
+1001
+
+# Verify min/max of merged overlapping sketches
+query I
+SELECT datasketch_quantiles_min_item(datasketch_quantiles(64, sketch)) FROM overlap_sketches
+----
+1.0
+
+query I
+SELECT datasketch_quantiles_max_item(datasketch_quantiles(64, sketch)) FROM overlap_sketches
+----
+750.0
+
+# Test merge with different K values
+statement ok
+CREATE TABLE k_test_sketches AS
+SELECT datasketch_quantiles(16, value) as sketch FROM merge_data WHERE partition_id = 1
+UNION ALL
+SELECT datasketch_quantiles(64, value) as sketch FROM merge_data WHERE partition_id = 2
+
+# Verify merge works with different K values and produces correct count
+query I
+SELECT datasketch_quantiles_n(datasketch_quantiles(32, sketch)) FROM k_test_sketches
+----
+600
+
+# Test merging a single sketch (edge case)
+query I
+SELECT datasketch_quantiles_n(datasketch_quantiles(16, sketch))
+FROM (SELECT datasketch_quantiles(16, value) as sketch FROM merge_data WHERE partition_id = 1) single_sketch
+----
+300
+
+# Test merge preserves estimation mode status
+query I
+SELECT datasketch_quantiles_is_estimation_mode(datasketch_quantiles(8, sketch)) FROM partition_sketches
+----
+1
+
+# Test CDF on merged sketch
+statement ok
+SELECT datasketch_quantiles_cdf(datasketch_quantiles(32, sketch), [300, 600], true) FROM partition_sketches
+
+# Test PMF on merged sketch
+statement ok
+SELECT datasketch_quantiles_pmf(datasketch_quantiles(32, sketch), [300, 600], true) FROM partition_sketches
+
+# Test rank query on merged sketch - rank of 450 should be approximately 0.5
+query I
+SELECT datasketch_quantiles_rank(datasketch_quantiles(32, sketch), 450.0, true) between 0.45 and 0.55 FROM partition_sketches
+----
+True
+
+# Test merging sketches created with GROUP BY
+statement ok
+CREATE TABLE grouped_data(category varchar, value double)
+
+statement ok
+INSERT INTO grouped_data
+SELECT 'A', unnest(generate_series(1, 100))::double
+UNION ALL
+SELECT 'B', unnest(generate_series(101, 200))::double
+UNION ALL
+SELECT 'C', unnest(generate_series(201, 300))::double
+
+statement ok
+CREATE TABLE category_sketches AS
+SELECT category, datasketch_quantiles(16, value) as sketch
+FROM grouped_data
+GROUP BY category
+
+# Merge all category sketches
+query I
+SELECT datasketch_quantiles_n(datasketch_quantiles(16, sketch)) FROM category_sketches
+----
+300
+
+# Verify merged sketch min and max span all categories
+query I
+SELECT datasketch_quantiles_min_item(datasketch_quantiles(16, sketch)) FROM category_sketches
+----
+1.0
+
+query I
+SELECT datasketch_quantiles_max_item(datasketch_quantiles(16, sketch)) FROM category_sketches
+----
+300.0

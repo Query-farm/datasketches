@@ -94,3 +94,164 @@ SELECT datasketch_cpc_estimate(''::blob);
 ----
 Invalid Input Error: Failed to deserialize CPC sketch
 
+# =============================================================================
+# COMPREHENSIVE UNION TESTS
+# =============================================================================
+
+# Test union of multiple sketches from partitioned data with non-overlapping values
+statement ok
+CREATE TABLE union_data(value int, partition_id int)
+
+statement ok
+INSERT INTO union_data SELECT unnest(generate_series(1, 10000)), 1
+
+statement ok
+INSERT INTO union_data SELECT unnest(generate_series(10001, 20000)), 2
+
+statement ok
+INSERT INTO union_data SELECT unnest(generate_series(20001, 30000)), 3
+
+# Create sketches per partition
+statement ok
+CREATE TABLE partition_sketches AS
+SELECT partition_id, datasketch_cpc(12, value) as sketch
+FROM union_data
+GROUP BY partition_id
+
+# Verify we have 3 partition sketches
+query I
+SELECT count(*) FROM partition_sketches
+----
+3
+
+# Each partition has 10000 distinct values
+query I
+SELECT datasketch_cpc_estimate(sketch)::int between 9500 and 10500 FROM partition_sketches ORDER BY partition_id LIMIT 1
+----
+true
+
+# Union all partition sketches - should have ~30000 distinct values
+query I
+SELECT datasketch_cpc_estimate(datasketch_cpc_union(12, sketch))::int between 28500 and 31500 FROM partition_sketches
+----
+true
+
+# Verify union is not empty
+query I
+SELECT datasketch_cpc_is_empty(datasketch_cpc_union(12, sketch)) FROM partition_sketches
+----
+False
+
+# Verify union is not empty (already tested above, but confirms consistency)
+query I
+SELECT datasketch_cpc_estimate(datasketch_cpc_union(12, sketch))::int > 0 FROM partition_sketches
+----
+true
+
+# Test union with overlapping data
+statement ok
+CREATE TABLE overlap_union_data(value int, group_id int)
+
+statement ok
+INSERT INTO overlap_union_data SELECT unnest(generate_series(1, 50000)), 1
+
+statement ok
+INSERT INTO overlap_union_data SELECT unnest(generate_series(25000, 75000)), 2
+
+statement ok
+CREATE TABLE overlap_union_sketches AS
+SELECT group_id, datasketch_cpc(14, value) as sketch
+FROM overlap_union_data
+GROUP BY group_id
+
+# Group 1 has 50000 distinct, Group 2 has 50001 distinct
+# Union should have 75000 distinct (1-75000)
+query I
+SELECT datasketch_cpc_estimate(datasketch_cpc_union(14, sketch))::int between 72000 and 78000 FROM overlap_union_sketches
+----
+true
+
+# Test union with different K values
+statement ok
+CREATE TABLE k_union_sketches AS
+SELECT datasketch_cpc(8, value) as sketch FROM union_data WHERE partition_id = 1
+UNION ALL
+SELECT datasketch_cpc(14, value) as sketch FROM union_data WHERE partition_id = 2
+
+# Verify union works with different K values
+query I
+SELECT datasketch_cpc_estimate(datasketch_cpc_union(10, sketch))::int between 18000 and 22000 FROM k_union_sketches
+----
+true
+
+# Test union of single sketch (edge case)
+query I
+SELECT datasketch_cpc_estimate(datasketch_cpc_union(12, sketch))::int between 9500 and 10500
+FROM (SELECT datasketch_cpc(12, value) as sketch FROM union_data WHERE partition_id = 1) single_sketch
+----
+true
+
+# Test union preserves accuracy - lower_bound/upper_bound on union
+query I
+SELECT datasketch_cpc_lower_bound(datasketch_cpc_union(12, sketch), 1)::int between 27000 and 31000 FROM partition_sketches
+----
+true
+
+query I
+SELECT datasketch_cpc_upper_bound(datasketch_cpc_union(12, sketch), 1)::int between 29000 and 33000 FROM partition_sketches
+----
+true
+
+# Test union with string values
+statement ok
+CREATE TABLE string_union_data(name varchar, source_id int)
+
+statement ok
+INSERT INTO string_union_data
+SELECT 'user_' || x, 1 FROM generate_series(1, 1000) t(x)
+UNION ALL
+SELECT 'user_' || x, 2 FROM generate_series(500, 1500) t(x)
+
+statement ok
+CREATE TABLE string_union_sketches AS
+SELECT source_id, datasketch_cpc(10, name) as sketch
+FROM string_union_data
+GROUP BY source_id
+
+# Union should have ~1500 distinct strings (user_1 to user_1500)
+query I
+SELECT datasketch_cpc_estimate(datasketch_cpc_union(10, sketch))::int between 1400 and 1600 FROM string_union_sketches
+----
+true
+
+# Test union with GROUP BY categories
+statement ok
+CREATE TABLE category_union_data(category varchar, user_id int)
+
+statement ok
+INSERT INTO category_union_data
+SELECT 'electronics', unnest(generate_series(1, 5000))
+UNION ALL
+SELECT 'clothing', unnest(generate_series(2500, 7500))
+UNION ALL
+SELECT 'food', unnest(generate_series(5000, 10000))
+
+statement ok
+CREATE TABLE category_union_sketches AS
+SELECT category, datasketch_cpc(12, user_id) as sketch
+FROM category_union_data
+GROUP BY category
+
+# Each category has ~5000 distinct users
+# Union should have ~10000 distinct users (1-10000)
+query I
+SELECT datasketch_cpc_estimate(datasketch_cpc_union(12, sketch))::int between 9500 and 10500 FROM category_union_sketches
+----
+true
+
+# Test describe on union result
+query I
+SELECT datasketch_cpc_describe(datasketch_cpc_union(12, sketch)) like '%CPC sketch summary%' FROM partition_sketches
+----
+True
+
