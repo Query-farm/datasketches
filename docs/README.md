@@ -18,6 +18,9 @@ This extension has implemented these sketches from Apache DataSketches.
 - Approximate Distinct Count
   - [Compressed Probability Counting (CPC)](https://datasketches.apache.org/docs/CPC/CpcSketches.html)
   - [HyperLogLog (HLL)](https://datasketches.apache.org/docs/HLL/HllSketches.html)
+  - [Theta Sketch](https://datasketches.apache.org/docs/Theta/ThetaSketchFramework.html)
+- Frequent Items / Heavy Hitters
+  - [Frequent Items](https://datasketches.apache.org/docs/Frequency/FrequentItemsOverview.html)
 
 Additional sketch types can be implemented as needed.
 
@@ -941,6 +944,449 @@ Returns a human readable summary of the sketch.
 **`datasketch_cpc_is_empty(sketch_cpc) -> BOOLEAN`**
 
 Returns if the sketch is empty.
+
+
+#### **Theta Sketch \- "theta"**
+
+The Theta Sketch framework provides projections of a set of unique identifiers to a set of random values (theta) between 0 and 1\. These sketches allow for set operations (Union, Intersection, Difference) while maintaining high accuracy for distinct counting.
+
+The values that can be aggregated by the Theta sketch are:
+
+* INTEGER, BIGINT, VARCHAR, BLOB, and other standard types.
+
+The Theta sketch is returned as a type sketch\_theta which is equal to a BLOB.
+
+##### **Aggregate Functions**
+
+**datasketch\_theta(lg\_k, value) \-\> sketch\_theta**
+
+Builds a Theta sketch. The first argument (lg\_k) is the log base 2 of the nominal entries (e.g., 12 for 4096 entries). The second argument is the value to add.
+
+```sql
+
+-- Build a sketch from a range of numbers with 2^10 bins  
+SELECT datasketch_theta(10, i) FROM range(0, 100) t(i);
+
+┌────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                  datasketch_theta(10, i)                                   │
+│                                        sketch_theta                                        │
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│ \x02\x03\x03\x00\x00\x1A\xCC\x93d\x00\x00\x00\x00\x00\x00\x00\x0A\x22\xDB\xB7\x1C\x87_\x…  │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+```
+
+**datasketch\_theta\_union(sketch\_theta, sketch\_theta) \-\> sketch\_theta**
+
+Computes the union of two Theta sketches. This is an aggregate function that can also merge multiple sketches.
+
+```sql
+
+-- Union of {1,2,3} and {3,4,5} \-\> {1,2,3,4,5} (Count: 5\)  
+SELECT datasketch_theta_estimate(  
+    datasketch_theta_union(  
+        (SELECT datasketch_theta(10, i) FROM range(1, 4) t(i)),  
+        (SELECT datasketch_theta(10, i) FROM range(3, 6) t(i))  
+    )  
+);
+┌────────────────────────────────────────────────────────────────────────────────────────────┐
+│ datasketch_theta_estimate(datasketch_theta_union((SELECT datasketch_theta(10, i) FROM "r…  │
+│                                           double                                           │
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                            5.0                                             │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**datasketch\_theta\_intersect(sketch\_theta, sketch\_theta) \-\> sketch\_theta**
+
+Computes the intersection of two Theta sketches.
+
+```sql
+-- Intersection of {1,2,3} and {3,4,5} \-\> {3} (Count: 1\)  
+SELECT datasketch_theta_estimate(  
+    datasketch_theta_intersect(  
+        (SELECT datasketch_theta(10, i) FROM range(1, 4) t(i)),  
+        (SELECT datasketch_theta(10, i) FROM range(3, 6) t(i))  
+    )  
+);
+┌────────────────────────────────────────────────────────────────────────────────────────────┐
+│ datasketch_theta_estimate(datasketch_theta_intersect((SELECT datasketch_theta(10, i) FRO…  │
+│                                           double                                           │
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                            1.0                                             │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**datasketch\_theta\_a\_not\_b(sketch\_theta, sketch\_theta) \-\> sketch\_theta**
+
+Computes the set difference (A \\ B) of two Theta sketches. Note that this operation is not commutative.
+
+```sql
+
+-- {1,2,3} NOT {3,4,5} \-\> {1,2} (Count: 2\)  
+SELECT datasketch_theta_estimate(  
+    datasketch_theta_a_not_b(  
+        (SELECT datasketch_theta(10, i) FROM range(1, 4) t(i)),  
+        (SELECT datasketch_theta(10, i) FROM range(3, 6) t(i))  
+    )  
+);
+┌────────────────────────────────────────────────────────────────────────────────────────────┐
+│ datasketch_theta_estimate(datasketch_theta_a_not_b((SELECT datasketch_theta(10, i) FROM …  │
+│                                           double                                           │
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                            2.0                                             │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+
+
+##### **Scalar Functions**
+
+**datasketch\_theta\_estimate(sketch\_theta) \-\> DOUBLE**
+
+Get the estimated number of distinct elements seen by this sketch.
+
+```sql
+
+SELECT datasketch_theta_estimate(datasketch_theta(10, i))   
+FROM range(0, 1000) t(i);  
+┌────────────────────────────────────────────────────┐
+│ datasketch_theta_estimate(datasketch_theta(10, i)) │
+│                       double                       │
+├────────────────────────────────────────────────────┤
+│                       1000.0                       │
+└────────────────────────────────────────────────────┘
+```
+
+**datasketch\_theta\_lower\_bound(sketch\_theta, num\_std\_devs) \-\> DOUBLE**
+
+Returns the approximate lower error bound given the specified number of standard deviations (1, 2, or 3).
+
+```sql
+-- Get the lower bound with 2 standard deviations (approx 95% confidence)  
+SELECT datasketch_theta_lower_bound(sketch, 2)   
+FROM (SELECT datasketch_theta(10, i) as sketch FROM range(0, 1000) t(i));
+┌─────────────────────────────────────────┐
+│ datasketch_theta_lower_bound(sketch, 2) │
+│                 double                  │
+├─────────────────────────────────────────┤
+│                 1000.0                  │
+└─────────────────────────────────────────┘
+```
+
+**datasketch\_theta\_upper\_bound(sketch\_theta, num\_std\_devs) \-\> DOUBLE**
+
+Returns the approximate upper error bound given the specified number of standard deviations (1, 2, or 3).
+
+```sql
+-- Get the upper bound with 2 standard deviations  
+SELECT datasketch_theta_upper_bound(sketch, 2)   
+FROM (SELECT datasketch_theta(10, i) as sketch FROM range(0, 1000) t(i));
+┌─────────────────────────────────────────┐
+│ datasketch_theta_upper_bound(sketch, 2) │
+│                 double                  │
+├─────────────────────────────────────────┤
+│                 1000.0                  │
+└─────────────────────────────────────────┘
+```
+
+**datasketch\_theta\_get\_theta(sketch\_theta) \-\> DOUBLE**
+
+Returns theta (0.0 to 1.0), which acts as a sampling rate for the sketch. If the sketch is in exact mode, theta is 1.0. If it is in estimation mode, theta \< 1.0.
+
+```sql
+SELECT datasketch_theta_get_theta(datasketch_theta(5, i))   
+FROM range(0, 100) t(i);  
+-- Returns \< 1.0 because K=32 (2^5) is too small to hold 100 items exactly.
+┌────────────────────────────────────────────────────┐
+│ datasketch_theta_get_theta(datasketch_theta(5, i)) │
+│                       double                       │
+├────────────────────────────────────────────────────┤
+│                 0.2457577112224644                 │
+└────────────────────────────────────────────────────┘
+```
+
+**datasketch\_theta\_is\_empty(sketch\_theta) \-\> BOOLEAN**
+
+Returns true if the sketch is empty (has seen no items).
+
+```sql
+SELECT datasketch_theta_is_empty(datasketch_theta(10, i))   
+FROM (SELECT NULL as i WHERE 1=0) t;  
+┌────────────────────────────────────────────────────┐
+│ datasketch_theta_is_empty(datasketch_theta(10, i)) │
+│                      boolean                       │
+├────────────────────────────────────────────────────┤
+│ true                                               │
+└────────────────────────────────────────────────────┘
+```
+
+**datasketch\_theta\_is\_estimation\_mode(sketch\_theta) \-\> BOOLEAN**
+
+Returns true if the sketch is in estimation mode (has discarded some data to save space), false if it is exact.
+
+```sql
+SELECT datasketch_theta_is_estimation_mode(datasketch_theta(10, i))   
+FROM range(0, 5000) t(i);  
+-- Returns true (2^10 = 1024 bins, which is < 5000 items)
+┌──────────────────────────────────────────────────────────────┐
+│ datasketch_theta_is_estimation_mode(datasketch_theta(10, i)) │
+│                           boolean                            │
+├──────────────────────────────────────────────────────────────┤
+│ true                                                         │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**datasketch\_theta\_num\_retained(sketch\_theta) \-\> INTEGER**
+
+Returns the number of entries currently retained in the sketch.
+
+```sql
+SELECT datasketch_theta_num_retained(datasketch_theta(10, i))   
+FROM range(0, 50) t(i);  
+┌────────────────────────────────────────────────────────┐
+│ datasketch_theta_num_retained(datasketch_theta(10, i)) │
+│                         int64                          │
+├────────────────────────────────────────────────────────┤
+│                           50                           │
+└────────────────────────────────────────────────────────┘
+```
+
+**datasketch\_theta\_get\_seed(sketch\_theta) \-\> BIGINT**
+
+Returns the hash seed used for this sketch. Sketches must have the same seed to be merged or intersected.
+
+```sql
+SELECT datasketch_theta_get_seed(datasketch_theta(10, 1));
+┌────────────────────────────────────────────────────┐
+│ datasketch_theta_get_seed(datasketch_theta(10, 1)) │
+│                       int64                        │
+├────────────────────────────────────────────────────┤
+│                       37836                        │
+└────────────────────────────────────────────────────┘
+```
+
+**datasketch\_theta\_describe(sketch\_theta) \-\> VARCHAR**
+
+Returns a human-readable summary of the sketch, including internal parameters.
+
+```sql
+SELECT datasketch_theta_describe(datasketch_theta(10, i))   
+FROM range(0, 5) t(i);
+┌────────────────────────────────────────────────────────────────────────────────────────────┐
+│                     datasketch_theta_describe(datasketch_theta(10, i))                     │
+│                                          varchar                                           │
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│ ### Theta sketch summary:\n   num retained entries : 5\n   seed hash            : 37836\…  │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+
+
+
+### Frequent Items / Heavy Hitters
+
+These sketches identify the most frequent items in a data stream (the "Heavy Hitters").
+
+#### Frequent Items - "`frequent_items`"
+
+This is an implementation of the Frequent Items sketch, which finds items that occur more than a threshold frequency. It can operate in "Exact Mode" for small maps or "Approximate Mode" (using an epsilon error factor) for large datasets.
+
+The values that can be aggregated by this sketch are:
+
+  * `VARCHAR`, `INTEGER`, `BIGINT`.
+
+The Frequent Items sketch is returned as a type `sketch_frequent_items` which is equal to a BLOB.
+
+##### Example
+
+```sql
+-- Create a table with some heavy hitters
+CREATE TABLE stream(item VARCHAR);
+INSERT INTO stream SELECT 'heavy_hitter' FROM range(0, 100); -- Appears 100 times
+INSERT INTO stream SELECT 'rare_' || i::VARCHAR FROM range(0, 2000) t(i); -- Noise
+
+-- Create the sketch (lg_k = 6)
+-- We use UNNEST on the result of get_frequent to view the list of structs
+SELECT 
+    f.item, 
+    f.estimate, 
+    f.lower_bound, 
+    f.upper_bound 
+FROM (SELECT datasketch_frequent_items(6, item) as sketch FROM stream), 
+     UNNEST(datasketch_frequent_items_get_frequent(sketch, 'NO_FALSE_POSITIVES')) as t(f);
+┌──────────────┬──────────┬─────────────┬─────────────┐
+│     item     │ estimate │ lower_bound │ upper_bound │
+│   varchar    │  int64   │    int64    │    int64    │
+├──────────────┼──────────┼─────────────┼─────────────┤
+│ heavy_hitter │   100    │     59      │     100     │
+└──────────────┴──────────┴─────────────┴─────────────┘
+```
+
+##### Aggregate Functions
+
+**`datasketch_frequent_items(lg_k, value) -> sketch_frequent_items`**
+
+Builds a Frequent Items sketch. The first argument (`lg_k`) is the log base 2 of the map size. The second argument is the item to count.
+
+```sql
+-- Track frequent items in a stream of numbers (0 to 99)
+SELECT datasketch_frequent_items(6, i) FROM range(0, 100) t(i);
+┌────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              datasketch_frequent_items(6, i)                               │
+│                                   sketch_frequent_items                                    │
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│ \x04\x01\x0A\x06\x03\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00d\x00\x00\x00\x00\x00\x0…  │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+##### Scalar Functions
+
+**`datasketch_frequent_items_estimate(sketch, item) -> INT64`**
+
+Returns the estimated count for a specific item. If the item is not found or tracked, returns 0.
+
+```sql
+SELECT datasketch_frequent_items_estimate(
+    datasketch_frequent_items(10, 'apple'), 
+    'apple'
+);
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│ datasketch_frequent_items_estimate(datasketch_frequent_items(10, 'apple'), 'apple') │
+│                                        int64                                        │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                          1                                          │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+-----
+
+**`datasketch_frequent_items_get_frequent(sketch, error_type) -> LIST(STRUCT)`**
+
+Returns a list of structs containing the frequent items. The `error_type` argument must be either `'NO_FALSE_POSITIVES'` (returns items guaranteed to be heavy hitters) or `'NO_FALSE_NEGATIVES'` (returns all items that *might* be heavy hitters).
+The returned struct contains: `item`, `estimate`, `lower_bound`, and `upper_bound`.
+
+```sql
+-- Unnest the result to see items as a table
+SELECT f.item, f.estimate 
+FROM (SELECT datasketch_frequent_items(10, i) as sketch FROM range(0,100) t(i)),
+UNNEST(datasketch_frequent_items_get_frequent(sketch, 'NO_FALSE_POSITIVES')) as t(f);
+┌─────────┬──────────┐
+│  item   │ estimate │
+│ varchar │  int64   │
+├─────────┼──────────┤
+│ 61      │        1 │
+│ 58      │        1 │
+│ 47      │        1 │
+│ 81      │        1 │
+│ 73      │        1 │
+└─────────┴──────────┘
+```
+
+-----
+
+**`datasketch_frequent_items_lower_bound(sketch, item) -> INT64`**
+
+Returns the lower bound of the frequency estimate for a specific item.
+
+```sql
+SELECT datasketch_frequent_items_lower_bound(datasketch_frequent_items(10, 'apple'), 'apple');
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ datasketch_frequent_items_lower_bound(datasketch_frequent_items(10, 'apple'), 'apple') │
+│                                         int64                                          │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                                           1                                            │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+-----
+
+**`datasketch_frequent_items_upper_bound(sketch, item) -> INT64`**
+
+Returns the upper bound of the frequency estimate for a specific item.
+
+```sql
+SELECT datasketch_frequent_items_upper_bound(datasketch_frequent_items(10, 'apple'), 'apple');
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ datasketch_frequent_items_upper_bound(datasketch_frequent_items(10, 'apple'), 'apple') │
+│                                         int64                                          │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                                           1                                            │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+-----
+
+**`datasketch_frequent_items_epsilon(sketch) -> DOUBLE`**
+
+Returns epsilon, the maximum error width of the sketch. This is determined by the `lg_k` parameter used during creation.
+
+```sql
+SELECT datasketch_frequent_items_epsilon(datasketch_frequent_items(10, 1));
+┌─────────────────────────────────────────────────────────────────────┐
+│ datasketch_frequent_items_epsilon(datasketch_frequent_items(10, 1)) │
+│                               double                                │
+├─────────────────────────────────────────────────────────────────────┤
+│                            0.00341796875                            │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+-----
+
+**`datasketch_frequent_items_total_weight(sketch) -> INT64`**
+
+Returns the total count of all items inserted into the sketch.
+
+```sql
+SELECT datasketch_frequent_items_total_weight(datasketch_frequent_items(10, i)) 
+FROM range(0, 100) t(i);
+┌──────────────────────────────────────────────────────────────────────────┐
+│ datasketch_frequent_items_total_weight(datasketch_frequent_items(10, i)) │
+│                                  int64                                   │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                   100                                    │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+-----
+
+**`datasketch_frequent_items_num_active(sketch) -> INT64`**
+
+Returns the number of active items currently retained in the sketch.
+
+```sql
+SELECT datasketch_frequent_items_num_active(datasketch_frequent_items(10, i)) 
+FROM range(0, 5) t(i);
+-- Returns 5 (since 5 items fit easily in 2^10 map)
+┌────────────────────────────────────────────────────────────────────────┐
+│ datasketch_frequent_items_num_active(datasketch_frequent_items(10, i)) │
+│                                 int64                                  │
+├────────────────────────────────────────────────────────────────────────┤
+│                                   5                                    │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+-----
+
+**`datasketch_frequent_items_is_empty(sketch) -> BOOLEAN`**
+
+Returns true if the sketch is empty.
+
+```sql
+SELECT datasketch_frequent_items_is_empty(datasketch_frequent_items(10, NULL));
+┌─────────────────────────────────────────────────────────────────────────┐
+│ datasketch_frequent_items_is_empty(datasketch_frequent_items(10, NULL)) │
+│                                 boolean                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│ true                                                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+
+
+
+
 
 
 ## Building
