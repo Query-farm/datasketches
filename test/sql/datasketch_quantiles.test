@@ -95,3 +95,20 @@ query I
 select datasketch_quantiles_max_item(datasketch_quantiles(16, sketch)) from sketches
 ----
 1000.0
+
+# Test error handling for invalid/corrupted sketch data
+statement error
+SELECT datasketch_quantiles_is_empty('\x00\x01\x02'::sketch_quantiles_float);
+----
+Invalid Input Error: Failed to deserialize Quantiles sketch
+
+statement error
+SELECT datasketch_quantiles_k('\xDE\xAD\xBE\xEF'::sketch_quantiles_double);
+----
+Invalid Input Error: Failed to deserialize Quantiles sketch
+
+# Test with empty blob
+statement error
+SELECT datasketch_quantiles_is_empty(''::sketch_quantiles_integer);
+----
+Invalid Input Error: Failed to deserialize Quantiles sketch

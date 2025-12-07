@@ -127,3 +127,20 @@ False
 statement ok
 select datasketch_hll_estimate(datasketch_hll_union(12, sketch))::int from sketches
 
+# Test error handling for invalid/corrupted sketch data
+statement error
+SELECT datasketch_hll_estimate('\x00\x01\x02\x03'::blob);
+----
+Invalid Input Error: Failed to deserialize HLL sketch
+
+statement error
+SELECT datasketch_hll_is_empty('\xDE\xAD\xBE\xEF'::blob);
+----
+Invalid Input Error: Failed to deserialize HLL sketch
+
+# Test with empty blob
+statement error
+SELECT datasketch_hll_estimate(''::blob);
+----
+Invalid Input Error: Failed to deserialize HLL sketch
+

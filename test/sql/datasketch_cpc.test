@@ -77,3 +77,20 @@ select datasketch_cpc_is_empty(datasketch_cpc_union(12, sketch)) from sketches
 ----
 False
 
+# Test error handling for invalid/corrupted sketch data
+statement error
+SELECT datasketch_cpc_estimate('\x00\x01\x02\x03'::blob);
+----
+Invalid Input Error: Failed to deserialize CPC sketch
+
+statement error
+SELECT datasketch_cpc_is_empty('\xDE\xAD\xBE\xEF'::blob);
+----
+Invalid Input Error: Failed to deserialize CPC sketch
+
+# Test with empty blob
+statement error
+SELECT datasketch_cpc_estimate(''::blob);
+----
+Invalid Input Error: Failed to deserialize CPC sketch
+

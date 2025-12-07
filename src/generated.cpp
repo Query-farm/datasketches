@@ -115,7 +115,11 @@ unique_ptr<FunctionData> DSQuantilesBind(ClientContext &context, AggregateFuncti
         
         datasketches::quantiles_sketch<T> deserialize_sketch(const string_t &data)
         {
-            return datasketches::quantiles_sketch<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+            try {
+                return datasketches::quantiles_sketch<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+            } catch (const std::exception &e) {
+                throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+            }
         }
         
     };
@@ -231,7 +235,11 @@ unique_ptr<FunctionData> DSKLLBind(ClientContext &context, AggregateFunction &fu
         
         datasketches::kll_sketch<T> deserialize_sketch(const string_t &data)
         {
-            return datasketches::kll_sketch<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+            try {
+                return datasketches::kll_sketch<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+            } catch (const std::exception &e) {
+                throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+            }
         }
         
     };
@@ -347,7 +355,11 @@ unique_ptr<FunctionData> DSREQBind(ClientContext &context, AggregateFunction &fu
         
         datasketches::req_sketch<T> deserialize_sketch(const string_t &data)
         {
-            return datasketches::req_sketch<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+            try {
+                return datasketches::req_sketch<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+            } catch (const std::exception &e) {
+                throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+            }
         }
         
     };
@@ -461,7 +473,11 @@ unique_ptr<FunctionData> DSTDigestBind(ClientContext &context, AggregateFunction
         
         datasketches::tdigest<T> deserialize_sketch(const string_t &data)
         {
-            return datasketches::tdigest<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+            try {
+                return datasketches::tdigest<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+            } catch (const std::exception &e) {
+                throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
+            }
         }
         
     };
@@ -573,7 +589,11 @@ unique_ptr<FunctionData> DSHLLBind(ClientContext &context, AggregateFunction &fu
         
         datasketches::hll_sketch deserialize_sketch(const string_t &data)
         {
-            return datasketches::hll_sketch::deserialize(data.GetDataUnsafe(), data.GetSize());
+            try {
+                return datasketches::hll_sketch::deserialize(data.GetDataUnsafe(), data.GetSize());
+            } catch (const std::exception &e) {
+                throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
+            }
         }
         
     };
@@ -682,7 +702,11 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
         
         datasketches::cpc_sketch deserialize_sketch(const string_t &data)
         {
-            return datasketches::cpc_sketch::deserialize(data.GetDataUnsafe(), data.GetSize());
+            try {
+                return datasketches::cpc_sketch::deserialize(data.GetDataUnsafe(), data.GetSize());
+            } catch (const std::exception &e) {
+                throw InvalidInputException("Failed to deserialize CPC sketch: %s", e.what());
+            }
         }
         
     };
@@ -1137,7 +1161,14 @@ static inline void DSQuantilesis_empty(DataChunk &args, ExpressionState &state, 
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
 return sketch.is_empty();
         });
 
@@ -1164,7 +1195,14 @@ static inline void DSQuantilesk(DataChunk &args, ExpressionState &state, Vector 
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
 return sketch.get_k();
         });
 
@@ -1206,7 +1244,14 @@ static inline void DSQuantilescdf(DataChunk &args, ExpressionState &state, Vecto
         sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
 
-            auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
 
                     T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
@@ -1273,7 +1318,14 @@ static inline void DSQuantilespmf(DataChunk &args, ExpressionState &state, Vecto
         sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
 
-            auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
 
                     T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
@@ -1327,7 +1379,14 @@ static inline void DSQuantilesnormalized_rank_error(DataChunk &args, ExpressionS
         sketch_vector,is_pmf_vector,result,args.size(),
         [&](string_t sketch_data,bool is_pmf_data) {
 
-            auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
 return sketch.get_normalized_rank_error(is_pmf_data);
         });
 
@@ -1356,7 +1415,14 @@ static inline void DSQuantilesdescribe(DataChunk &args, ExpressionState &state, 
         sketch_vector,include_levels_vector,include_items_vector,result,args.size(),
         [&](string_t sketch_data,bool include_levels_data,bool include_items_data) {
 
-            auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
 return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));
         });
 
@@ -1385,7 +1451,14 @@ static inline void DSQuantilesrank(DataChunk &args, ExpressionState &state, Vect
         sketch_vector,item_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,T item_data,bool inclusive_data) {
 
-            auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
 return sketch.get_rank(item_data, inclusive_data);
         });
 
@@ -1414,7 +1487,14 @@ static inline void DSQuantilesquantile(DataChunk &args, ExpressionState &state, 
         sketch_vector,rank_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,double rank_data,bool inclusive_data) {
 
-            auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
 return sketch.get_quantile(rank_data, inclusive_data);
         });
 
@@ -1441,7 +1521,14 @@ static inline void DSQuantilesn(DataChunk &args, ExpressionState &state, Vector 
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
 return sketch.get_n();
         });
 
@@ -1468,7 +1555,14 @@ static inline void DSQuantilesis_estimation_mode(DataChunk &args, ExpressionStat
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
 return sketch.is_estimation_mode();
         });
 
@@ -1495,7 +1589,14 @@ static inline void DSQuantilesnum_retained(DataChunk &args, ExpressionState &sta
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
 return sketch.get_num_retained();
         });
 
@@ -1522,7 +1623,14 @@ static inline void DSQuantilesmin_item(DataChunk &args, ExpressionState &state, 
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
 return sketch.get_min_item();
         });
 
@@ -1549,7 +1657,14 @@ static inline void DSQuantilesmax_item(DataChunk &args, ExpressionState &state, 
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
 return sketch.get_max_item();
         });
 
@@ -2462,7 +2577,14 @@ static inline void DSKLLis_empty(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
 return sketch.is_empty();
         });
 
@@ -2489,7 +2611,14 @@ static inline void DSKLLk(DataChunk &args, ExpressionState &state, Vector &resul
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
 return sketch.get_k();
         });
 
@@ -2531,7 +2660,14 @@ static inline void DSKLLcdf(DataChunk &args, ExpressionState &state, Vector &res
         sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
 
-            auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
 
                     T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
@@ -2598,7 +2734,14 @@ static inline void DSKLLpmf(DataChunk &args, ExpressionState &state, Vector &res
         sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
 
-            auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
 
                     T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
@@ -2652,7 +2795,14 @@ static inline void DSKLLnormalized_rank_error(DataChunk &args, ExpressionState &
         sketch_vector,is_pmf_vector,result,args.size(),
         [&](string_t sketch_data,bool is_pmf_data) {
 
-            auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
 return sketch.get_normalized_rank_error(is_pmf_data);
         });
 
@@ -2681,7 +2831,14 @@ static inline void DSKLLdescribe(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,include_levels_vector,include_items_vector,result,args.size(),
         [&](string_t sketch_data,bool include_levels_data,bool include_items_data) {
 
-            auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
 return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));
         });
 
@@ -2710,7 +2867,14 @@ static inline void DSKLLrank(DataChunk &args, ExpressionState &state, Vector &re
         sketch_vector,item_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,T item_data,bool inclusive_data) {
 
-            auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
 return sketch.get_rank(item_data, inclusive_data);
         });
 
@@ -2739,7 +2903,14 @@ static inline void DSKLLquantile(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,rank_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,double rank_data,bool inclusive_data) {
 
-            auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
 return sketch.get_quantile(rank_data, inclusive_data);
         });
 
@@ -2766,7 +2937,14 @@ static inline void DSKLLn(DataChunk &args, ExpressionState &state, Vector &resul
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
 return sketch.get_n();
         });
 
@@ -2793,7 +2971,14 @@ static inline void DSKLLis_estimation_mode(DataChunk &args, ExpressionState &sta
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
 return sketch.is_estimation_mode();
         });
 
@@ -2820,7 +3005,14 @@ static inline void DSKLLnum_retained(DataChunk &args, ExpressionState &state, Ve
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
 return sketch.get_num_retained();
         });
 
@@ -2847,7 +3039,14 @@ static inline void DSKLLmin_item(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
 return sketch.get_min_item();
         });
 
@@ -2874,7 +3073,14 @@ static inline void DSKLLmax_item(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
 return sketch.get_max_item();
         });
 
@@ -3787,7 +3993,14 @@ static inline void DSREQis_empty(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
 return sketch.is_empty();
         });
 
@@ -3814,7 +4027,14 @@ static inline void DSREQk(DataChunk &args, ExpressionState &state, Vector &resul
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
 return sketch.get_k();
         });
 
@@ -3856,7 +4076,14 @@ static inline void DSREQcdf(DataChunk &args, ExpressionState &state, Vector &res
         sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
 
-            auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
 
                     T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
@@ -3923,7 +4150,14 @@ static inline void DSREQpmf(DataChunk &args, ExpressionState &state, Vector &res
         sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
 
-            auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
 
                     T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
@@ -3978,7 +4212,14 @@ static inline void DSREQdescribe(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,include_levels_vector,include_items_vector,result,args.size(),
         [&](string_t sketch_data,bool include_levels_data,bool include_items_data) {
 
-            auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
 return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));
         });
 
@@ -4007,7 +4248,14 @@ static inline void DSREQrank(DataChunk &args, ExpressionState &state, Vector &re
         sketch_vector,item_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,T item_data,bool inclusive_data) {
 
-            auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
 return sketch.get_rank(item_data, inclusive_data);
         });
 
@@ -4036,7 +4284,14 @@ static inline void DSREQquantile(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,rank_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,double rank_data,bool inclusive_data) {
 
-            auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
 return sketch.get_quantile(rank_data, inclusive_data);
         });
 
@@ -4063,7 +4318,14 @@ static inline void DSREQn(DataChunk &args, ExpressionState &state, Vector &resul
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
 return sketch.get_n();
         });
 
@@ -4090,7 +4352,14 @@ static inline void DSREQis_estimation_mode(DataChunk &args, ExpressionState &sta
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
 return sketch.is_estimation_mode();
         });
 
@@ -4117,7 +4386,14 @@ static inline void DSREQnum_retained(DataChunk &args, ExpressionState &state, Ve
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
 return sketch.get_num_retained();
         });
 
@@ -4144,7 +4420,14 @@ static inline void DSREQmin_item(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
 return sketch.get_min_item();
         });
 
@@ -4171,7 +4454,14 @@ static inline void DSREQmax_item(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
 return sketch.get_max_item();
         });
 
@@ -5035,7 +5325,14 @@ static inline void DSTDigestis_empty(DataChunk &args, ExpressionState &state, Ve
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
+                }
+            }();
 return sketch.is_empty();
         });
 
@@ -5062,7 +5359,14 @@ static inline void DSTDigestk(DataChunk &args, ExpressionState &state, Vector &r
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
+                }
+            }();
 return sketch.get_k();
         });
 
@@ -5103,7 +5407,14 @@ static inline void DSTDigestcdf(DataChunk &args, ExpressionState &state, Vector 
         sketch_vector,split_points_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data) {
 
-            auto sketch = datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
+                }
+            }();
 
                     T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
@@ -5169,7 +5480,14 @@ static inline void DSTDigestpmf(DataChunk &args, ExpressionState &state, Vector 
         sketch_vector,split_points_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data) {
 
-            auto sketch = datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
+                }
+            }();
 
                     T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
@@ -5223,7 +5541,14 @@ static inline void DSTDigestdescribe(DataChunk &args, ExpressionState &state, Ve
         sketch_vector,include_centroids_vector,result,args.size(),
         [&](string_t sketch_data,bool include_centroids_data) {
 
-            auto sketch = datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
+                }
+            }();
 return StringVector::AddString(result, sketch.to_string(include_centroids_data));
         });
 
@@ -5251,7 +5576,14 @@ static inline void DSTDigestrank(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,item_vector,result,args.size(),
         [&](string_t sketch_data,T item_data) {
 
-            auto sketch = datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
+                }
+            }();
 return sketch.get_rank(item_data);
         });
 
@@ -5278,7 +5610,14 @@ static inline void DSTDigesttotal_weight(DataChunk &args, ExpressionState &state
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
+                }
+            }();
 return sketch.get_total_weight();
         });
 
@@ -5306,7 +5645,14 @@ static inline void DSTDigestquantile(DataChunk &args, ExpressionState &state, Ve
         sketch_vector,rank_vector,result,args.size(),
         [&](string_t sketch_data,double rank_data) {
 
-            auto sketch = datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
+                }
+            }();
 return sketch.get_quantile(rank_data);
         });
 
@@ -5628,7 +5974,14 @@ static inline void DSHLLis_empty(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
+                }
+            }();
 return sketch.is_empty();
         });
 
@@ -5655,7 +6008,14 @@ static inline void DSHLLdescribe(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,summary_vector,detail_vector,result,args.size(),
         [&](string_t sketch_data,bool summary_data,bool detail_data) {
 
-            auto sketch = datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
+                }
+            }();
 return StringVector::AddString(result, sketch.to_string(summary_data, detail_data, false, false));
         });
 
@@ -5680,7 +6040,14 @@ static inline void DSHLLlg_config_k(DataChunk &args, ExpressionState &state, Vec
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
+                }
+            }();
 return sketch.get_lg_config_k();
         });
 
@@ -5705,7 +6072,14 @@ static inline void DSHLLis_compact(DataChunk &args, ExpressionState &state, Vect
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
+                }
+            }();
 return sketch.is_compact();
         });
 
@@ -5730,7 +6104,14 @@ static inline void DSHLLestimate(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
+                }
+            }();
 return sketch.get_estimate();
         });
 
@@ -5756,7 +6137,14 @@ static inline void DSHLLlower_bound(DataChunk &args, ExpressionState &state, Vec
         sketch_vector,std_dev_vector,result,args.size(),
         [&](string_t sketch_data,uint8_t std_dev_data) {
 
-            auto sketch = datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
+                }
+            }();
 return sketch.get_lower_bound(std_dev_data);
         });
 
@@ -5782,7 +6170,14 @@ static inline void DSHLLupper_bound(DataChunk &args, ExpressionState &state, Vec
         sketch_vector,std_dev_vector,result,args.size(),
         [&](string_t sketch_data,uint8_t std_dev_data) {
 
-            auto sketch = datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
+                }
+            }();
 return sketch.get_upper_bound(std_dev_data);
         });
 
@@ -6138,7 +6533,14 @@ static inline void DSCPCis_empty(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::cpc_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::cpc_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize CPC sketch: %s", e.what());
+                }
+            }();
 return sketch.is_empty();
         });
 
@@ -6163,7 +6565,14 @@ static inline void DSCPCdescribe(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::cpc_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::cpc_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize CPC sketch: %s", e.what());
+                }
+            }();
 return StringVector::AddString(result, sketch.to_string());
         });
 
@@ -6188,7 +6597,14 @@ static inline void DSCPCestimate(DataChunk &args, ExpressionState &state, Vector
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
 
-            auto sketch = datasketches::cpc_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::cpc_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize CPC sketch: %s", e.what());
+                }
+            }();
 return sketch.get_estimate();
         });
 
@@ -6214,7 +6630,14 @@ static inline void DSCPClower_bound(DataChunk &args, ExpressionState &state, Vec
         sketch_vector,std_dev_vector,result,args.size(),
         [&](string_t sketch_data,uint8_t std_dev_data) {
 
-            auto sketch = datasketches::cpc_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::cpc_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize CPC sketch: %s", e.what());
+                }
+            }();
 return sketch.get_lower_bound(std_dev_data);
         });
 
@@ -6240,7 +6663,14 @@ static inline void DSCPCupper_bound(DataChunk &args, ExpressionState &state, Vec
         sketch_vector,std_dev_vector,result,args.size(),
         [&](string_t sketch_data,uint8_t std_dev_data) {
 
-            auto sketch = datasketches::cpc_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::cpc_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize CPC sketch: %s", e.what());
+                }
+            }();
 return sketch.get_upper_bound(std_dev_data);
         });
 
