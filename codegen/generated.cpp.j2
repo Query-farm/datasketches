@@ -63,6 +63,33 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
 
 	auto actual_k = k_val.GetValue<{{sketch_k_cpp_type[sketch_type]}}>();
 
+	{% if sketch_type in ["Quantiles", "KLL"] %}
+	// Validate K parameter: must be in range (0, 32768]
+	if (actual_k <= 0 || actual_k > 32768) {
+		throw BinderException("{{sketch_type}} K value must be between 1 and 32768, got: " + std::to_string(actual_k));
+	}
+	{% elif sketch_type == "REQ" %}
+	// Validate K parameter: must be in range [4, 1024]
+	if (actual_k < 4 || actual_k > 1024) {
+		throw BinderException("REQ K value must be between 4 and 1024, got: " + std::to_string(actual_k));
+	}
+	{% elif sketch_type == "TDigest" %}
+	// Validate K parameter: must be positive (TDigest compression parameter)
+	if (actual_k <= 0) {
+		throw BinderException("TDigest K (compression) value must be positive, got: " + std::to_string(actual_k));
+	}
+	{% elif sketch_type == "HLL" %}
+	// Validate K parameter: lg_k must be in range [4, 21] for HLL
+	if (actual_k < 4 || actual_k > 21) {
+		throw BinderException("HLL K (lg_k) value must be between 4 and 21, got: " + std::to_string(actual_k));
+	}
+	{% elif sketch_type == "CPC" %}
+	// Validate K parameter: lg_k must be in range [4, 26] for CPC
+	if (actual_k < 4 || actual_k > 26) {
+		throw BinderException("CPC K (lg_k) value must be between 4 and 26, got: " + std::to_string(actual_k));
+	}
+	{% endif %}
+
 	Function::EraseArgument(function, arguments, 0);
 	return make_uniq<DS{{sketch_type}}BindData>(actual_k);
 }
