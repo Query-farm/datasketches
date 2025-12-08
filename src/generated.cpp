@@ -1253,14 +1253,13 @@ static inline void DSQuantilescdf(DataChunk &args, ExpressionState &state, Vecto
                 }
             }();
 
-                    T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
+                    std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
                         passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                     }
                     
-auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclusive_data);
-                free(passing_points);
+auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -1327,15 +1326,13 @@ static inline void DSQuantilespmf(DataChunk &args, ExpressionState &state, Vecto
                 }
             }();
 
-                    T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
+                    std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
                         passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                     }
                     
-auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclusive_data);
-                free(passing_points);
-
+auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -2669,14 +2666,13 @@ static inline void DSKLLcdf(DataChunk &args, ExpressionState &state, Vector &res
                 }
             }();
 
-                    T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
+                    std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
                         passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                     }
                     
-auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclusive_data);
-                free(passing_points);
+auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -2743,15 +2739,13 @@ static inline void DSKLLpmf(DataChunk &args, ExpressionState &state, Vector &res
                 }
             }();
 
-                    T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
+                    std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
                         passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                     }
                     
-auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclusive_data);
-                free(passing_points);
-
+auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -4085,14 +4079,13 @@ static inline void DSREQcdf(DataChunk &args, ExpressionState &state, Vector &res
                 }
             }();
 
-                    T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
+                    std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
                         passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                     }
                     
-auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclusive_data);
-                free(passing_points);
+auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -4159,15 +4152,13 @@ static inline void DSREQpmf(DataChunk &args, ExpressionState &state, Vector &res
                 }
             }();
 
-                    T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
+                    std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
                         passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                     }
                     
-auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclusive_data);
-                free(passing_points);
-
+auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -5416,14 +5407,13 @@ static inline void DSTDigestcdf(DataChunk &args, ExpressionState &state, Vector 
                 }
             }();
 
-                    T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
+                    std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
                         passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                     }
                     
-auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length);
-                free(passing_points);
+auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -5489,15 +5479,13 @@ static inline void DSTDigestpmf(DataChunk &args, ExpressionState &state, Vector 
                 }
             }();
 
-                    T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
+                    std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
                         passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
                     }
                     
-auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length);
-                free(passing_points);
-
+auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)

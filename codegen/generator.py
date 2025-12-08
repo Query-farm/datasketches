@@ -120,7 +120,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     const T *split_points_list_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
                     """,
         "process": """
-                    T *passing_points = (T *)malloc(sizeof(T) * split_points_data.length);
+                    std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
                         passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
@@ -160,12 +160,11 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     if sketch_type != "TDigest"
                     else f"datasketch_{sketch_type.lower()}_cdf(sketch, points)",
                     "method": (
-                        "auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length, inclusive_data);"
+                        "auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);"
                         if sketch_type != "TDigest"
-                        else "auto cdf_result = sketch.get_CDF(passing_points, split_points_data.length);"
+                        else "auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length);"
                     )
                     + """
-                free(passing_points);
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + cdf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
@@ -202,13 +201,11 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     if sketch_type != "TDigest"
                     else f"datasketch_{sketch_type.lower()}_pmf(sketch, points)",
                     "method": (
-                        "auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length, inclusive_data);"
+                        "auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);"
                         if sketch_type != "TDigest"
-                        else "auto pmf_result = sketch.get_PMF(passing_points, split_points_data.length);"
+                        else "auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length);"
                     )
                     + """
-                free(passing_points);
-
                 auto current_size = ListVector::GetListSize(result);
                 auto new_size = current_size + pmf_result.size();
                 if (ListVector::GetListCapacity(result) < new_size)
