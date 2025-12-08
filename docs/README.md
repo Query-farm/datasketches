@@ -30,11 +30,79 @@ install datasketches from community;
 load datasketches;
 ```
 
+## Which Sketch Should I Use?
+
+### Quantile Estimation
+
+| Sketch | Best For | K Range | Notes |
+|--------|----------|---------|-------|
+| **KLL** | General purpose | 1-32768 | Best balance of accuracy, speed, and size. Start here. |
+| **TDigest** | Extreme quantiles (p99, p999) | 10-1000 | More accurate at distribution tails. Only supports FLOAT/DOUBLE. |
+| **REQ** | Relative error guarantees | 4-1024 | Error relative to rank, not fixed. Good for skewed data. |
+| **Quantiles** | Compatibility | 1-32768 | Classic algorithm. Use KLL instead for new projects. |
+
+**Recommendation**: Use **KLL** unless you specifically need TDigest's tail accuracy or REQ's relative error guarantees.
+
+### Distinct Counting
+
+| Sketch | Best For | lg_k Range | Notes |
+|--------|----------|------------|-------|
+| **CPC** | Storage efficiency | 4-26 | ~40% smaller than HLL at same accuracy. Slower to serialize. |
+| **HLL** | Speed | 4-21 | Faster serialization/deserialization. Industry standard. |
+
+**Recommendation**: Use **CPC** if storage is a concern, **HLL** if you need faster operations or broader compatibility.
+
+## Quick Reference
+
+### Aggregate Functions
+
+| Function | Description |
+|----------|-------------|
+| `datasketch_tdigest(k, value)` | Create TDigest sketch from values |
+| `datasketch_quantiles(k, value)` | Create Quantiles sketch from values |
+| `datasketch_kll(k, value)` | Create KLL sketch from values |
+| `datasketch_req(k, value)` | Create REQ sketch from values |
+| `datasketch_hll(lg_k, value)` | Create HLL sketch from values |
+| `datasketch_hll_union(lg_k, sketch)` | Merge HLL sketches |
+| `datasketch_cpc(lg_k, value)` | Create CPC sketch from values |
+| `datasketch_cpc_union(lg_k, sketch)` | Merge CPC sketches |
+
+### Quantile Sketch Functions (TDigest, Quantiles, KLL, REQ)
+
+| Function | Description |
+|----------|-------------|
+| `datasketch_*_quantile(sketch, rank, ...)` | Get value at normalized rank (0-1) |
+| `datasketch_*_rank(sketch, value, ...)` | Get normalized rank of value |
+| `datasketch_*_cdf(sketch, split_points, ...)` | Cumulative distribution function |
+| `datasketch_*_pmf(sketch, split_points, ...)` | Probability mass function |
+| `datasketch_*_k(sketch)` | Get K parameter |
+| `datasketch_*_is_empty(sketch)` | Check if sketch is empty |
+| `datasketch_*_describe(sketch, ...)` | Human-readable summary |
+| `datasketch_*_n(sketch)` | Count of items (not TDigest) |
+| `datasketch_*_min_item(sketch)` | Minimum value (not TDigest) |
+| `datasketch_*_max_item(sketch)` | Maximum value (not TDigest) |
+| `datasketch_*_num_retained(sketch)` | Items retained in sketch (not TDigest) |
+| `datasketch_*_is_estimation_mode(sketch)` | Whether sketch is estimating (not TDigest) |
+| `datasketch_*_normalized_rank_error(sketch, is_pmf)` | Get error bound (Quantiles, KLL only) |
+| `datasketch_tdigest_total_weight(sketch)` | Total weight (TDigest only) |
+
+### Counting Sketch Functions (HLL, CPC)
+
+| Function | Description |
+|----------|-------------|
+| `datasketch_*_estimate(sketch)` | Get distinct count estimate |
+| `datasketch_*_lower_bound(sketch, std_dev)` | Lower confidence bound |
+| `datasketch_*_upper_bound(sketch, std_dev)` | Upper confidence bound |
+| `datasketch_*_is_empty(sketch)` | Check if sketch is empty |
+| `datasketch_*_describe(sketch, ...)` | Human-readable summary |
+| `datasketch_hll_lg_config_k(sketch)` | Get lg_k parameter (HLL only) |
+| `datasketch_hll_is_compact(sketch)` | Check if compact form (HLL only) |
+
 ## Features
 
 ### Quantile Estimation
 
-These sketches estimatate a specific quantile (or percentile) and ranks of a distribution or dataset while being memory-efficient.
+These sketches estimate a specific quantile (or percentile) and ranks of a distribution or dataset while being memory-efficient.
 
 #### TDigest - "`tdigest`"
 
@@ -93,7 +161,7 @@ datasketch_tdigest(10, "temp") = \x02\x01\x14\x0A\x00\x04\x00...
 
 **`datasketch_tdigest(INTEGER, DOUBLE | FLOAT | sketch_tdigest) -> sketch_tdigest_float | sketch_tdigest_double`**
 
-The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the value to aggregate into the sketch.
+The first argument is the compression parameter (K), which controls the tradeoff between accuracy and memory usage. Higher values provide better accuracy but use more memory. Typical values range from 100 to 300. The second parameter is the value to aggregate into the sketch.
 
 This same aggregate function can perform a union of multiple sketches.
 
@@ -140,6 +208,18 @@ Return the value of K for the passed sketch.
 **`datasketch_tdigest_is_empty(sketch_tdigest) -> BOOLEAN`**
 
 Returns if the sketch is empty.
+
+-----
+
+**`datasketch_tdigest_describe(sketch_tdigest, BOOLEAN) -> VARCHAR`**
+
+Returns a human-readable string representation of the sketch. The second argument controls whether to include centroid details in the output.
+
+-----
+
+**`datasketch_tdigest_total_weight(sketch_tdigest) -> UBIGINT`**
+
+Returns the total weight (number of items) that have been added to the sketch.
 
 
 #### Quantile - "`quantile`"
@@ -259,7 +339,7 @@ datasketch_quantiles(16, "temp") = \x02\x03\x08\x18\x10\x00\x00...
 
 **`datasketch_quantiles(INTEGER, DOUBLE | FLOAT | sketch_quantiles) -> sketch_quantiles_[type]`**
 
-The first argument is the the value of K for the sketch.
+The first argument is K, which controls the accuracy and size of the sketch. Valid range is 1 to 32768. A K of 128 yields about 1.7% normalized rank error. See the size/error table above for guidance. The second parameter is the value to aggregate into the sketch.
 
 This same aggregate function can perform a union of multiple sketches.
 
@@ -314,7 +394,7 @@ if the sketch contains items equal to a split point, then in PMF such items are
 included into the interval to the left of split point. Otherwise they are included into the interval
 to the right of split point.
 
-The reesult is an array of m+1 double values, which are a consecutive approximation to the CDF
+The result is an array of m+1 double values, which are a consecutive approximation to the CDF
 of the input stream given the split_points. The value at array position j of the returned
 CDF array is the sum of the returned values in positions 0 through j of the returned PMF
 array. This can be viewed as array of ranks of the given split points plus one more value
@@ -446,7 +526,7 @@ datasketch_kll(16, "temp") = \x05\x01\x0F\x00\x10\x00\x08\x00\x0E\x00\x00\x0
 
 **`datasketch_kll(INTEGER, DOUBLE | FLOAT | sketch_kll) -> sketch_kll_[type]`**
 
-The first argument is the the value of K for the sketch.
+The first argument is K, which controls the accuracy and size of the sketch. Valid range is 1 to 32768. A K of 200 yields about 1.33% single-sided or 1.65% double-sided (PMF) normalized rank error. The second parameter is the value to aggregate into the sketch.
 
 This same aggregate function can perform a union of multiple sketches.
 
@@ -501,7 +581,7 @@ if the sketch contains items equal to a split point, then in PMF such items are
 included into the interval to the left of split point. Otherwise they are included into the interval
 to the right of split point.
 
-The reesult is an array of m+1 double values, which are a consecutive approximation to the CDF
+The result is an array of m+1 double values, which are a consecutive approximation to the CDF
 of the input stream given the split_points. The value at array position j of the returned
 CDF array is the sum of the returned values in positions 0 through j of the returned PMF
 array. This can be viewed as array of ranks of the given split points plus one more value
@@ -647,7 +727,7 @@ datasketch_req(16, "temp") =  \x02\x01\x11\x08\x10\x00\x01\x00\x00\x00\x00\x00\x
 
 **`datasketch_req(INTEGER, DOUBLE | FLOAT | sketch_req) -> sketch_req_[type]`**
 
-The first argument is the the value of K for the sketch.
+The first argument is K, which controls the accuracy and size of the sketch. Must be even and in the range 4 to 1024. A K of 12 corresponds to about 1% relative error at 95% confidence. The second parameter is the value to aggregate into the sketch.
 
 This same aggregate function can perform a union of multiple sketches.
 
@@ -702,7 +782,7 @@ if the sketch contains items equal to a split point, then in PMF such items are
 included into the interval to the left of split point. Otherwise they are included into the interval
 to the right of split point.
 
-The reesult is an array of m+1 double values, which are a consecutive approximation to the CDF
+The result is an array of m+1 double values, which are a consecutive approximation to the CDF
 of the input stream given the split_points. The value at array position j of the returned
 CDF array is the sum of the returned values in positions 0 through j of the returned PMF
 array. This can be viewed as array of ranks of the given split points plus one more value
@@ -772,7 +852,7 @@ If the use case for sketching is primarily counting uniques and merging, the Hyp
 
 Neither HLL nor CPC sketches provide means for set intersections or set differences.
 
-The values that can be aggregated by the CPC sketch are:
+The values that can be aggregated by the HLL sketch are:
 
 * `TINYINT`, `SMALLINT`, `INTEGER`, `BIGINT`, `FLOAT`, `DOUBLE`, `UTINYINT`, `USMALLINT`, `UINTEGER`, `UBIGINT`, `VARCHAR`, `BLOB`
 
@@ -810,13 +890,13 @@ datasketch_hll(8, id) = \x0A\x01\x07\x08\x00\x10\x06\x02\x00\x00\x00\x00\x00\x00
 
 **`datasketch_hll(INTEGER, HLL_SUPPORTED_TYPE) -> sketch_hll`**
 
-The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the value to aggregate into the sketch.
+The first argument is lg_k (log base 2 of K), which controls the accuracy and size of the sketch. Valid range is 4 to 21. Higher values provide better accuracy but use more memory. A lg_k of 12 (4096 bins) is a common choice. The second parameter is the value to aggregate into the sketch.
 
 -----
 
 **`datasketch_hll_union(INTEGER, sketch_hll) -> sketch_hll`**
 
-The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the sketch to aggregate via a union operation.
+The first argument is lg_k (log base 2 of K). Valid range is 4 to 21. The second parameter is the sketch to aggregate via a union operation.
 
 ##### Scalar Functions
 
@@ -902,13 +982,13 @@ datasketch_cpc(4, id) = \x04\x01\x10\x04\x0A\x12\xCC\x93\xD0\x00\x00\x00\x03\x00
 
 **`datasketch_cpc(INTEGER, CPC_SUPPORTED_TYPE) -> sketch_cpc`**
 
-The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the value to aggregate into the sketch.
+The first argument is lg_k (log base 2 of K), which controls the accuracy and size of the sketch. Valid range is 4 to 26. Higher values provide better accuracy but use more memory. A lg_k of 11 is a common choice. The second parameter is the value to aggregate into the sketch.
 
 -----
 
 **`datasketch_cpc_union(INTEGER, sketch_cpc) -> sketch_cpc`**
 
-The first argument is the base two logarithm of the number of bins in the sketch, which affects memory used. The second parameter is the sketch to aggregate via a union operation.
+The first argument is lg_k (log base 2 of K). Valid range is 4 to 26. The second parameter is the sketch to aggregate via a union operation.
 
 ##### Scalar Functions
 
