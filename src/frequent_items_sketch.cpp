@@ -11,7 +11,7 @@
 #include <string>
 #include <type_traits>
 
-using namespace duckdb; 
+using namespace duckdb;
 
 namespace duckdb_datasketches {
 
@@ -21,7 +21,7 @@ namespace duckdb_datasketches {
     // 1. Helpers & Bind Data
     // ============================================================
     struct DSFreqItemsBindData : public FunctionData {
-        DSFreqItemsBindData() : lg_max_k(10) {} 
+        DSFreqItemsBindData() : lg_max_k(10) {}
         explicit DSFreqItemsBindData(uint8_t lg_max_k) : lg_max_k(lg_max_k) {}
         unique_ptr<FunctionData> Copy() const override { return make_uniq<DSFreqItemsBindData>(lg_max_k); }
         bool Equals(const FunctionData &other_p) const override {
@@ -51,7 +51,7 @@ namespace duckdb_datasketches {
         void Create(uint8_t lg_max_k) { if (!sketch) sketch = new FrequentItemsSketch(lg_max_k); }
     };
 
-    // Operation for RAW ITEMS (VARCHAR, INTEGER, BIGINT)
+    // Operation for RAW ITEMS (all supported types)
     struct DSFreqItemsOperation {
         template <class STATE> static void Initialize(STATE &state) { state.sketch = nullptr; }
         template <class STATE> static void Destroy(STATE &state, AggregateInputData &) { if (state.sketch) delete state.sketch; }
@@ -61,9 +61,12 @@ namespace duckdb_datasketches {
         static void Operation(STATE &state, const A_TYPE &input, AggregateUnaryInput &idata) {
             auto &bind_data = idata.input.bind_data->template Cast<DSFreqItemsBindData>();
             state.Create(bind_data.lg_max_k);
-            
+
             if constexpr (std::is_same_v<A_TYPE, string_t>) {
                 state.sketch->update(input.GetString(), 1);
+            } else if constexpr (std::is_same_v<A_TYPE, int8_t> || std::is_same_v<A_TYPE, uint8_t>) {
+                // Cast to int to avoid char interpretation by std::to_string
+                state.sketch->update(std::to_string(static_cast<int>(input)), 1);
             } else {
                 state.sketch->update(std::to_string(input), 1);
             }
@@ -100,7 +103,7 @@ namespace duckdb_datasketches {
         }
     };
 
-    // Operation for MERGING SKETCHES (BLOB)
+    // Operation for MERGING SKETCHES (sketch_type / BLOB)
     struct DSFreqItemsMergeOperation {
         template <class STATE> static void Initialize(STATE &state) { DSFreqItemsOperation::Initialize<STATE>(state); }
         template <class STATE> static void Destroy(STATE &state, AggregateInputData &aggr) { DSFreqItemsOperation::Destroy<STATE>(state, aggr); }
@@ -139,7 +142,7 @@ namespace duckdb_datasketches {
         return FrequentItemsSketch::deserialize(blob.GetDataUnsafe(), blob.GetSize());
     }
 
-    // --- TEMPLATED SCALAR FUNCTIONS (Support string_t, int32_t, int64_t) ---
+    // --- TEMPLATED SCALAR FUNCTIONS (Support all types) ---
 
     template<typename T>
     static void DSFreqItemsEstimate(DataChunk &args, ExpressionState &state, Vector &result) {
@@ -148,6 +151,8 @@ namespace duckdb_datasketches {
                 auto sketch = DeserializeSketch(sketch_blob);
                 if constexpr (std::is_same_v<T, string_t>) {
                     return (int64_t)sketch.get_estimate(item.GetString());
+                } else if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
+                    return (int64_t)sketch.get_estimate(std::to_string(static_cast<int>(item)));
                 } else {
                     return (int64_t)sketch.get_estimate(std::to_string(item));
                 }
@@ -161,6 +166,8 @@ namespace duckdb_datasketches {
                 auto sketch = DeserializeSketch(sketch_blob);
                 if constexpr (std::is_same_v<T, string_t>) {
                     return (int64_t)sketch.get_lower_bound(item.GetString());
+                } else if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
+                    return (int64_t)sketch.get_lower_bound(std::to_string(static_cast<int>(item)));
                 } else {
                     return (int64_t)sketch.get_lower_bound(std::to_string(item));
                 }
@@ -174,6 +181,8 @@ namespace duckdb_datasketches {
                 auto sketch = DeserializeSketch(sketch_blob);
                 if constexpr (std::is_same_v<T, string_t>) {
                     return (int64_t)sketch.get_upper_bound(item.GetString());
+                } else if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
+                    return (int64_t)sketch.get_upper_bound(std::to_string(static_cast<int>(item)));
                 } else {
                     return (int64_t)sketch.get_upper_bound(std::to_string(item));
                 }
@@ -200,7 +209,7 @@ namespace duckdb_datasketches {
                 return DeserializeSketch(sketch_blob).is_empty();
             });
     }
-    
+
     static void DSFreqItemsNumActive(DataChunk &args, ExpressionState &state, Vector &result) {
         UnaryExecutor::Execute<string_t, int64_t>(args.data[0], result, args.size(),
             [&](string_t sketch_blob) {
@@ -214,9 +223,9 @@ namespace duckdb_datasketches {
         args.data[0].ToUnifiedFormat(count, sketch_data);
         args.data[1].ToUnifiedFormat(count, type_data);
 
-        ListVector::Reserve(result, count * 5); 
+        ListVector::Reserve(result, count * 5);
         ListVector::SetListSize(result, 0);
-        
+
         auto &child_entry = ListVector::GetEntry(result);
         auto &struct_children = StructVector::GetEntries(child_entry);
         auto item_vec = struct_children[0].get();
@@ -236,7 +245,7 @@ namespace duckdb_datasketches {
             }
 
             string_t type_str = ((string_t*)type_data.data)[type_idx];
-            auto err_type = (type_str.GetString() == "NO_FALSE_NEGATIVES") ? 
+            auto err_type = (type_str.GetString() == "NO_FALSE_NEGATIVES") ?
                             datasketches::NO_FALSE_NEGATIVES : datasketches::NO_FALSE_POSITIVES;
 
             string_t sketch_blob = ((string_t*)sketch_data.data)[sketch_idx];
@@ -266,7 +275,7 @@ namespace duckdb_datasketches {
     static LogicalType CreateFrequentItemsSketchType(ExtensionLoader &loader) {
         auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto new_type_name = "sketch_frequent_items";
-        
+
         auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
         type_info.temporary = false;
         type_info.internal = true;
@@ -288,7 +297,7 @@ namespace duckdb_datasketches {
         auto fun = AggregateFunction::UnaryAggregateDestructor<DSFreqItemsState, T, string_t, DSFreqItemsOperation, AggregateDestructorType::LEGACY>(
             input_type, result_type);
         fun.bind = DSFreqItemsBind;
-        fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT; // Enable parallelism
+        fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
         fun.arguments = {input_type};
         set.AddFunction(fun);
         fun.arguments = {LogicalType::INTEGER, input_type};
@@ -302,64 +311,118 @@ namespace duckdb_datasketches {
         auto sketch_type = CreateFrequentItemsSketchType(loader);
 
         AggregateFunctionSet sketch_agg("datasketch_frequent_items");
-        
-        // --- 1. REGISTER SUPPORTED TYPES ---
-        RegisterFreqItems<string_t>(sketch_agg, LogicalType::VARCHAR, sketch_type);
+
+        // --- 1. REGISTER ALL SUPPORTED RAW INPUT TYPES ---
+        // NOTE: Do NOT work for BLOB - it conflicts with the sketch merge operation!
+
+        // Signed integers
+        RegisterFreqItems<int8_t>(sketch_agg, LogicalType::TINYINT, sketch_type);
+        RegisterFreqItems<int16_t>(sketch_agg, LogicalType::SMALLINT, sketch_type);
         RegisterFreqItems<int32_t>(sketch_agg, LogicalType::INTEGER, sketch_type);
         RegisterFreqItems<int64_t>(sketch_agg, LogicalType::BIGINT, sketch_type);
-        
-        // --- 2. MERGE SKETCHES ---
+
+        // Unsigned integers
+        RegisterFreqItems<uint8_t>(sketch_agg, LogicalType::UTINYINT, sketch_type);
+        RegisterFreqItems<uint16_t>(sketch_agg, LogicalType::USMALLINT, sketch_type);
+        RegisterFreqItems<uint32_t>(sketch_agg, LogicalType::UINTEGER, sketch_type);
+        RegisterFreqItems<uint64_t>(sketch_agg, LogicalType::UBIGINT, sketch_type);
+
+        // Floating point
+        RegisterFreqItems<float>(sketch_agg, LogicalType::FLOAT, sketch_type);
+        RegisterFreqItems<double>(sketch_agg, LogicalType::DOUBLE, sketch_type);
+
+        // String type - only VARCHAR, NOT BLOB!
+        RegisterFreqItems<string_t>(sketch_agg, LogicalType::VARCHAR, sketch_type);
+
+        // --- 2. MERGE SKETCHES (uses sketch_type which is aliased BLOB) ---
         auto fun_merge = AggregateFunction::UnaryAggregateDestructor<DSFreqItemsState, string_t, string_t, DSFreqItemsMergeOperation, AggregateDestructorType::LEGACY>(
             sketch_type, sketch_type);
         fun_merge.bind = DSFreqItemsBind;
-        fun_merge.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT; // Enable parallelism
+        fun_merge.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
         fun_merge.arguments = {sketch_type};
         sketch_agg.AddFunction(fun_merge);
         fun_merge.arguments = {LogicalType::INTEGER, sketch_type};
         sketch_agg.AddFunction(fun_merge);
-        
+
         loader.RegisterFunction(CreateAggregateFunctionInfo(sketch_agg));
 
         // --- SCALAR FUNCTIONS (ESTIMATES & BOUNDS) ---
-        
+        // NOTE: skip BLOB
+		//
         // ESTIMATE
         {
             ScalarFunctionSet set("datasketch_frequent_items_estimate");
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::VARCHAR}, LogicalType::BIGINT, DSFreqItemsEstimate<string_t>));
+            // Signed integers
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::TINYINT}, LogicalType::BIGINT, DSFreqItemsEstimate<int8_t>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::SMALLINT}, LogicalType::BIGINT, DSFreqItemsEstimate<int16_t>));
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::INTEGER}, LogicalType::BIGINT, DSFreqItemsEstimate<int32_t>));
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::BIGINT}, LogicalType::BIGINT, DSFreqItemsEstimate<int64_t>));
+            // Unsigned integers
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UTINYINT}, LogicalType::BIGINT, DSFreqItemsEstimate<uint8_t>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::USMALLINT}, LogicalType::BIGINT, DSFreqItemsEstimate<uint16_t>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UINTEGER}, LogicalType::BIGINT, DSFreqItemsEstimate<uint32_t>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UBIGINT}, LogicalType::BIGINT, DSFreqItemsEstimate<uint64_t>));
+            // Floating point
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::FLOAT}, LogicalType::BIGINT, DSFreqItemsEstimate<float>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::DOUBLE}, LogicalType::BIGINT, DSFreqItemsEstimate<double>));
+            // String type
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::VARCHAR}, LogicalType::BIGINT, DSFreqItemsEstimate<string_t>));
             loader.RegisterFunction(CreateScalarFunctionInfo(std::move(set)));
         }
 
         // LOWER BOUND
         {
             ScalarFunctionSet set("datasketch_frequent_items_lower_bound");
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::VARCHAR}, LogicalType::BIGINT, DSFreqItemsLowerBound<string_t>));
+            // Signed integers
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::TINYINT}, LogicalType::BIGINT, DSFreqItemsLowerBound<int8_t>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::SMALLINT}, LogicalType::BIGINT, DSFreqItemsLowerBound<int16_t>));
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::INTEGER}, LogicalType::BIGINT, DSFreqItemsLowerBound<int32_t>));
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::BIGINT}, LogicalType::BIGINT, DSFreqItemsLowerBound<int64_t>));
+            // Unsigned integers
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UTINYINT}, LogicalType::BIGINT, DSFreqItemsLowerBound<uint8_t>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::USMALLINT}, LogicalType::BIGINT, DSFreqItemsLowerBound<uint16_t>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UINTEGER}, LogicalType::BIGINT, DSFreqItemsLowerBound<uint32_t>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UBIGINT}, LogicalType::BIGINT, DSFreqItemsLowerBound<uint64_t>));
+            // Floating point
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::FLOAT}, LogicalType::BIGINT, DSFreqItemsLowerBound<float>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::DOUBLE}, LogicalType::BIGINT, DSFreqItemsLowerBound<double>));
+            // String type
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::VARCHAR}, LogicalType::BIGINT, DSFreqItemsLowerBound<string_t>));
             loader.RegisterFunction(CreateScalarFunctionInfo(std::move(set)));
         }
 
         // UPPER BOUND
         {
             ScalarFunctionSet set("datasketch_frequent_items_upper_bound");
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::VARCHAR}, LogicalType::BIGINT, DSFreqItemsUpperBound<string_t>));
+            // Signed integers
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::TINYINT}, LogicalType::BIGINT, DSFreqItemsUpperBound<int8_t>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::SMALLINT}, LogicalType::BIGINT, DSFreqItemsUpperBound<int16_t>));
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::INTEGER}, LogicalType::BIGINT, DSFreqItemsUpperBound<int32_t>));
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::BIGINT}, LogicalType::BIGINT, DSFreqItemsUpperBound<int64_t>));
+            // Unsigned integers
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UTINYINT}, LogicalType::BIGINT, DSFreqItemsUpperBound<uint8_t>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::USMALLINT}, LogicalType::BIGINT, DSFreqItemsUpperBound<uint16_t>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UINTEGER}, LogicalType::BIGINT, DSFreqItemsUpperBound<uint32_t>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UBIGINT}, LogicalType::BIGINT, DSFreqItemsUpperBound<uint64_t>));
+            // Floating point
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::FLOAT}, LogicalType::BIGINT, DSFreqItemsUpperBound<float>));
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::DOUBLE}, LogicalType::BIGINT, DSFreqItemsUpperBound<double>));
+            // String type
+            set.AddFunction(ScalarFunction({sketch_type, LogicalType::VARCHAR}, LogicalType::BIGINT, DSFreqItemsUpperBound<string_t>));
             loader.RegisterFunction(CreateScalarFunctionInfo(std::move(set)));
         }
 
         // --- METADATA FUNCTIONS ---
-        loader.RegisterFunction(CreateScalarFunctionInfo(ScalarFunction("datasketch_frequent_items_epsilon", 
+        loader.RegisterFunction(CreateScalarFunctionInfo(ScalarFunction("datasketch_frequent_items_epsilon",
             {sketch_type}, LogicalType::DOUBLE, DSFreqItemsEpsilon)));
-            
-        loader.RegisterFunction(CreateScalarFunctionInfo(ScalarFunction("datasketch_frequent_items_total_weight", 
+
+        loader.RegisterFunction(CreateScalarFunctionInfo(ScalarFunction("datasketch_frequent_items_total_weight",
             {sketch_type}, LogicalType::BIGINT, DSFreqItemsTotalWeight)));
 
-        loader.RegisterFunction(CreateScalarFunctionInfo(ScalarFunction("datasketch_frequent_items_is_empty", 
+        loader.RegisterFunction(CreateScalarFunctionInfo(ScalarFunction("datasketch_frequent_items_is_empty",
             {sketch_type}, LogicalType::BOOLEAN, DSFreqItemsIsEmpty)));
-            
-        loader.RegisterFunction(CreateScalarFunctionInfo(ScalarFunction("datasketch_frequent_items_num_active", 
+
+        loader.RegisterFunction(CreateScalarFunctionInfo(ScalarFunction("datasketch_frequent_items_num_active",
             {sketch_type}, LogicalType::BIGINT, DSFreqItemsNumActive)));
 
         // --- GET FREQUENT LIST ---
@@ -368,9 +431,10 @@ namespace duckdb_datasketches {
         struct_fields.push_back({"estimate", LogicalType::BIGINT});
         struct_fields.push_back({"lower_bound", LogicalType::BIGINT});
         struct_fields.push_back({"upper_bound", LogicalType::BIGINT});
-        
-        loader.RegisterFunction(CreateScalarFunctionInfo(ScalarFunction("datasketch_frequent_items_get_frequent", 
+
+        loader.RegisterFunction(CreateScalarFunctionInfo(ScalarFunction("datasketch_frequent_items_get_frequent",
             {sketch_type, LogicalType::VARCHAR}, LogicalType::LIST(LogicalType::STRUCT(struct_fields)), DSFreqItemsGetFrequent)));
     }
 
 } // namespace duckdb_datasketches
+

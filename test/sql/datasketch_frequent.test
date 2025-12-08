@@ -596,3 +596,233 @@ query I
 SELECT datasketch_frequent_items_estimate(sketch, -9223372036854775808) FROM bigint_sketch;
 ----
 1
+
+# -------------------------------------------------------------------
+# 21. TINYINT Support
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE tiny_vals(val TINYINT);
+
+statement ok
+INSERT INTO tiny_vals VALUES (1), (1), (1), (2), (2), (-128), (127);
+
+statement ok
+CREATE TABLE tiny_sketch AS SELECT datasketch_frequent_items(val) as sketch FROM tiny_vals;
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 1::TINYINT) FROM tiny_sketch;
+----
+3
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, (-128)::TINYINT) FROM tiny_sketch;
+----
+1
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 127::TINYINT) FROM tiny_sketch;
+----
+1
+
+# -------------------------------------------------------------------
+# 22. SMALLINT Support
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE small_vals(val SMALLINT);
+
+statement ok
+INSERT INTO small_vals VALUES (1000), (1000), (-32768), (32767);
+
+statement ok
+CREATE TABLE small_sketch AS SELECT datasketch_frequent_items(val) as sketch FROM small_vals;
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 1000::SMALLINT) FROM small_sketch;
+----
+2
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, (-32768)::SMALLINT) FROM small_sketch;
+----
+1
+
+# -------------------------------------------------------------------
+# 23. Unsigned Integer Types (UTINYINT, USMALLINT, UINTEGER, UBIGINT)
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE unsigned_vals(
+    ut UTINYINT, 
+    us USMALLINT, 
+    ui UINTEGER, 
+    ub UBIGINT
+);
+
+statement ok
+INSERT INTO unsigned_vals VALUES 
+(255, 65535, 4294967295, 18446744073709551615),
+(255, 65535, 4294967295, 18446744073709551615),
+(0, 0, 0, 0);
+
+# UTINYINT
+statement ok
+CREATE TABLE ut_sketch AS SELECT datasketch_frequent_items(ut) as sketch FROM unsigned_vals;
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 255::UTINYINT) FROM ut_sketch;
+----
+2
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 0::UTINYINT) FROM ut_sketch;
+----
+1
+
+# USMALLINT
+statement ok
+CREATE TABLE us_sketch AS SELECT datasketch_frequent_items(us) as sketch FROM unsigned_vals;
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 65535::USMALLINT) FROM us_sketch;
+----
+2
+
+# UINTEGER
+statement ok
+CREATE TABLE ui_sketch AS SELECT datasketch_frequent_items(ui) as sketch FROM unsigned_vals;
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 4294967295::UINTEGER) FROM ui_sketch;
+----
+2
+
+# UBIGINT
+statement ok
+CREATE TABLE ub_sketch AS SELECT datasketch_frequent_items(ub) as sketch FROM unsigned_vals;
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 18446744073709551615::UBIGINT) FROM ub_sketch;
+----
+2
+
+# -------------------------------------------------------------------
+# 24. FLOAT Support
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE float_vals(val FLOAT);
+
+statement ok
+INSERT INTO float_vals VALUES (3.14), (3.14), (3.14), (2.71), (-0.5);
+
+statement ok
+CREATE TABLE float_sketch AS SELECT datasketch_frequent_items(val) as sketch FROM float_vals;
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 3.14::FLOAT) FROM float_sketch;
+----
+3
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 2.71::FLOAT) FROM float_sketch;
+----
+1
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, (-0.5)::FLOAT) FROM float_sketch;
+----
+1
+
+# -------------------------------------------------------------------
+# 25. DOUBLE Support
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE double_vals(val DOUBLE);
+
+statement ok
+INSERT INTO double_vals VALUES 
+(3.141592653589793), 
+(3.141592653589793), 
+(2.718281828459045),
+(1.7976931348623157e+308);
+
+statement ok
+CREATE TABLE double_sketch AS SELECT datasketch_frequent_items(val) as sketch FROM double_vals;
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 3.141592653589793::DOUBLE) FROM double_sketch;
+----
+2
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 1.7976931348623157e+308::DOUBLE) FROM double_sketch;
+----
+1
+
+# -------------------------------------------------------------------
+# 26. Mixed Types in GROUP BY
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE mixed_events(category VARCHAR, count_val INTEGER, amount DOUBLE);
+
+statement ok
+INSERT INTO mixed_events VALUES
+('A', 100, 9.99), ('A', 100, 9.99), ('A', 200, 19.99),
+('B', 100, 9.99), ('B', 300, 29.99), ('B', 300, 29.99);
+
+# Integer sketch per category
+statement ok
+CREATE TABLE mixed_int_sketch AS 
+SELECT category, datasketch_frequent_items(count_val) as sketch 
+FROM mixed_events GROUP BY category;
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 100) 
+FROM mixed_int_sketch WHERE category = 'A';
+----
+2
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 300) 
+FROM mixed_int_sketch WHERE category = 'B';
+----
+2
+
+# Double sketch per category  
+statement ok
+CREATE TABLE mixed_dbl_sketch AS 
+SELECT category, datasketch_frequent_items(amount) as sketch 
+FROM mixed_events GROUP BY category;
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 9.99::DOUBLE) 
+FROM mixed_dbl_sketch WHERE category = 'A';
+----
+2
+
+# -------------------------------------------------------------------
+# 27. Bounds Work for All Types
+# -------------------------------------------------------------------
+
+query III
+SELECT 
+    datasketch_frequent_items_estimate(sketch, 255::UTINYINT),
+    datasketch_frequent_items_lower_bound(sketch, 255::UTINYINT),
+    datasketch_frequent_items_upper_bound(sketch, 255::UTINYINT)
+FROM ut_sketch;
+----
+2	2	2
+
+query III
+SELECT 
+    datasketch_frequent_items_estimate(sketch, 3.14::FLOAT),
+    datasketch_frequent_items_lower_bound(sketch, 3.14::FLOAT),
+    datasketch_frequent_items_upper_bound(sketch, 3.14::FLOAT)
+FROM float_sketch;
+----
+3	3	3
+

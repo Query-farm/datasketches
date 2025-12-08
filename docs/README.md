@@ -18,7 +18,7 @@ This extension has implemented these sketches from Apache DataSketches.
 - Approximate Distinct Count
   - [Compressed Probability Counting (CPC)](https://datasketches.apache.org/docs/CPC/CpcSketches.html)
   - [HyperLogLog (HLL)](https://datasketches.apache.org/docs/HLL/HllSketches.html)
-  - [Theta Sketch](https://datasketches.apache.org/docs/Theta/ThetaSketchFramework.html)
+  - [Theta Sketch](https://datasketches.apache.org/docs/Theta/ThetaSketches.html)
 - Frequent Items / Heavy Hitters
   - [Frequent Items](https://datasketches.apache.org/docs/Frequency/FrequentItemsOverview.html)
 
@@ -1185,6 +1185,9 @@ FROM range(0, 5) t(i);
 
 
 
+
+
+
 ### Frequent Items / Heavy Hitters
 
 These sketches identify the most frequent items in a data stream (the "Heavy Hitters").
@@ -1195,7 +1198,10 @@ This is an implementation of the Frequent Items sketch, which finds items that o
 
 The values that can be aggregated by this sketch are:
 
-  * `VARCHAR`, `INTEGER`, `BIGINT`.
+  * **Signed Integers:** `TINYINT`, `SMALLINT`, `INTEGER`, `BIGINT`
+  * **Unsigned Integers:** `UTINYINT`, `USMALLINT`, `UINTEGER`, `UBIGINT`
+  * **Floating Point:** `FLOAT`, `DOUBLE`
+  * **Strings:** `VARCHAR`
 
 The Frequent Items sketch is returned as a type `sketch_frequent_items` which is equal to a BLOB.
 
@@ -1216,6 +1222,11 @@ SELECT
     f.upper_bound 
 FROM (SELECT datasketch_frequent_items(6, item) as sketch FROM stream), 
      UNNEST(datasketch_frequent_items_get_frequent(sketch, 'NO_FALSE_POSITIVES')) as t(f);
+```
+
+
+
+```
 ┌──────────────┬──────────┬─────────────┬─────────────┐
 │     item     │ estimate │ lower_bound │ upper_bound │
 │   varchar    │  int64   │    int64    │    int64    │
@@ -1226,161 +1237,168 @@ FROM (SELECT datasketch_frequent_items(6, item) as sketch FROM stream),
 
 ##### Aggregate Functions
 
-**`datasketch_frequent_items(lg_k, value) -> sketch_frequent_items`**
+**`datasketch_frequent_items([lg_k,] value) -> sketch_frequent_items`**
 
-Builds a Frequent Items sketch. The first argument (`lg_k`) is the log base 2 of the map size. The second argument is the item to count.
+Builds a Frequent Items sketch. The optional first argument (`lg_k`) is the log base 2 of the map size (default: 10). The second argument is the item to count.
 
 ```sql
--- Track frequent items in a stream of numbers (0 to 99)
-SELECT datasketch_frequent_items(6, i) FROM range(0, 100) t(i);
-┌────────────────────────────────────────────────────────────────────────────────────────────┐
-│                              datasketch_frequent_items(6, i)                               │
-│                                   sketch_frequent_items                                    │
-├────────────────────────────────────────────────────────────────────────────────────────────┤
-│ \x04\x01\x0A\x06\x03\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00d\x00\x00\x00\x00\x00\x0…  │
-└────────────────────────────────────────────────────────────────────────────────────────────┘
+-- Track frequent strings
+SELECT datasketch_frequent_items(name) FROM customers;
+
+-- Track frequent integers with custom lg_k
+SELECT datasketch_frequent_items(6, user_id) FROM events;
+
+-- Track frequent floating point values
+SELECT datasketch_frequent_items(8, price) FROM transactions;
+```
+
+**Merging Sketches:**
+
+You can merge multiple sketches by passing a `sketch_frequent_items` column:
+
+```sql
+-- Create partial sketches per partition
+CREATE TABLE partial_sketches AS 
+SELECT region, datasketch_frequent_items(product_id) as sketch 
+FROM sales GROUP BY region;
+
+-- Merge all partial sketches into one
+SELECT datasketch_frequent_items(sketch) FROM partial_sketches;
 ```
 
 ##### Scalar Functions
 
-**`datasketch_frequent_items_estimate(sketch, item) -> INT64`**
+**`datasketch_frequent_items_estimate(sketch, item) -> BIGINT`**
 
 Returns the estimated count for a specific item. If the item is not found or tracked, returns 0.
 
 ```sql
-SELECT datasketch_frequent_items_estimate(
-    datasketch_frequent_items(10, 'apple'), 
-    'apple'
-);
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│ datasketch_frequent_items_estimate(datasketch_frequent_items(10, 'apple'), 'apple') │
-│                                        int64                                        │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│                                          1                                          │
-└─────────────────────────────────────────────────────────────────────────────────────┘
+-- Estimate for a string item
+SELECT datasketch_frequent_items_estimate(sketch, 'apple') FROM fruit_sketch;
+
+-- Estimate for an integer item
+SELECT datasketch_frequent_items_estimate(sketch, 101) FROM user_sketch;
+
+-- Estimate for a double item
+SELECT datasketch_frequent_items_estimate(sketch, 9.99) FROM price_sketch;
 ```
 
 -----
 
 **`datasketch_frequent_items_get_frequent(sketch, error_type) -> LIST(STRUCT)`**
 
-Returns a list of structs containing the frequent items. The `error_type` argument must be either `'NO_FALSE_POSITIVES'` (returns items guaranteed to be heavy hitters) or `'NO_FALSE_NEGATIVES'` (returns all items that *might* be heavy hitters).
-The returned struct contains: `item`, `estimate`, `lower_bound`, and `upper_bound`.
+Returns a list of structs containing the frequent items. The `error_type` argument must be either:
+- `'NO_FALSE_POSITIVES'`: Returns items guaranteed to be heavy hitters (stricter, fewer results)
+- `'NO_FALSE_NEGATIVES'`: Returns all items that *might* be heavy hitters (includes potential false positives)
+
+The returned struct contains: `item` (VARCHAR), `estimate` (BIGINT), `lower_bound` (BIGINT), and `upper_bound` (BIGINT).
+
+> **Note:** Items are always returned as VARCHAR strings, regardless of the original input type.
 
 ```sql
 -- Unnest the result to see items as a table
-SELECT f.item, f.estimate 
-FROM (SELECT datasketch_frequent_items(10, i) as sketch FROM range(0,100) t(i)),
-UNNEST(datasketch_frequent_items_get_frequent(sketch, 'NO_FALSE_POSITIVES')) as t(f);
-┌─────────┬──────────┐
-│  item   │ estimate │
-│ varchar │  int64   │
-├─────────┼──────────┤
-│ 61      │        1 │
-│ 58      │        1 │
-│ 47      │        1 │
-│ 81      │        1 │
-│ 73      │        1 │
-└─────────┴──────────┘
+SELECT f.item, f.estimate, f.lower_bound, f.upper_bound
+FROM my_sketch,
+     UNNEST(datasketch_frequent_items_get_frequent(sketch, 'NO_FALSE_POSITIVES')) as t(f)
+ORDER BY f.estimate DESC;
 ```
 
 -----
 
-**`datasketch_frequent_items_lower_bound(sketch, item) -> INT64`**
+**`datasketch_frequent_items_lower_bound(sketch, item) -> BIGINT`**
 
 Returns the lower bound of the frequency estimate for a specific item.
 
 ```sql
-SELECT datasketch_frequent_items_lower_bound(datasketch_frequent_items(10, 'apple'), 'apple');
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ datasketch_frequent_items_lower_bound(datasketch_frequent_items(10, 'apple'), 'apple') │
-│                                         int64                                          │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│                                           1                                            │
-└────────────────────────────────────────────────────────────────────────────────────────┘
+SELECT datasketch_frequent_items_lower_bound(sketch, 'apple') FROM fruit_sketch;
+SELECT datasketch_frequent_items_lower_bound(sketch, 101) FROM user_sketch;
 ```
 
 -----
 
-**`datasketch_frequent_items_upper_bound(sketch, item) -> INT64`**
+**`datasketch_frequent_items_upper_bound(sketch, item) -> BIGINT`**
 
 Returns the upper bound of the frequency estimate for a specific item.
 
 ```sql
-SELECT datasketch_frequent_items_upper_bound(datasketch_frequent_items(10, 'apple'), 'apple');
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ datasketch_frequent_items_upper_bound(datasketch_frequent_items(10, 'apple'), 'apple') │
-│                                         int64                                          │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│                                           1                                            │
-└────────────────────────────────────────────────────────────────────────────────────────┘
+SELECT datasketch_frequent_items_upper_bound(sketch, 'apple') FROM fruit_sketch;
+SELECT datasketch_frequent_items_upper_bound(sketch, 101) FROM user_sketch;
 ```
 
 -----
 
 **`datasketch_frequent_items_epsilon(sketch) -> DOUBLE`**
 
-Returns epsilon, the maximum error width of the sketch. This is determined by the `lg_k` parameter used during creation.
+Returns epsilon, the maximum error width of the sketch. This is determined by the `lg_k` parameter used during creation. Smaller epsilon means higher accuracy.
 
 ```sql
-SELECT datasketch_frequent_items_epsilon(datasketch_frequent_items(10, 1));
-┌─────────────────────────────────────────────────────────────────────┐
-│ datasketch_frequent_items_epsilon(datasketch_frequent_items(10, 1)) │
-│                               double                                │
-├─────────────────────────────────────────────────────────────────────┤
-│                            0.00341796875                            │
-└─────────────────────────────────────────────────────────────────────┘
+SELECT datasketch_frequent_items_epsilon(sketch) FROM my_sketch;
+-- Example output: 0.00341796875 (for lg_k=10)
 ```
 
 -----
 
-**`datasketch_frequent_items_total_weight(sketch) -> INT64`**
+**`datasketch_frequent_items_total_weight(sketch) -> BIGINT`**
 
 Returns the total count of all items inserted into the sketch.
 
 ```sql
-SELECT datasketch_frequent_items_total_weight(datasketch_frequent_items(10, i)) 
-FROM range(0, 100) t(i);
-┌──────────────────────────────────────────────────────────────────────────┐
-│ datasketch_frequent_items_total_weight(datasketch_frequent_items(10, i)) │
-│                                  int64                                   │
-├──────────────────────────────────────────────────────────────────────────┤
-│                                   100                                    │
-└──────────────────────────────────────────────────────────────────────────┘
+SELECT datasketch_frequent_items_total_weight(sketch) FROM my_sketch;
+-- Returns the number of items processed
 ```
 
 -----
 
-**`datasketch_frequent_items_num_active(sketch) -> INT64`**
+**`datasketch_frequent_items_num_active(sketch) -> BIGINT`**
 
-Returns the number of active items currently retained in the sketch.
+Returns the number of active (distinct) items currently retained in the sketch.
 
 ```sql
-SELECT datasketch_frequent_items_num_active(datasketch_frequent_items(10, i)) 
-FROM range(0, 5) t(i);
--- Returns 5 (since 5 items fit easily in 2^10 map)
-┌────────────────────────────────────────────────────────────────────────┐
-│ datasketch_frequent_items_num_active(datasketch_frequent_items(10, i)) │
-│                                 int64                                  │
-├────────────────────────────────────────────────────────────────────────┤
-│                                   5                                    │
-└────────────────────────────────────────────────────────────────────────┘
+SELECT datasketch_frequent_items_num_active(sketch) FROM my_sketch;
 ```
 
 -----
 
 **`datasketch_frequent_items_is_empty(sketch) -> BOOLEAN`**
 
-Returns true if the sketch is empty.
+Returns true if the sketch is empty (no items have been added).
 
 ```sql
-SELECT datasketch_frequent_items_is_empty(datasketch_frequent_items(10, NULL));
-┌─────────────────────────────────────────────────────────────────────────┐
-│ datasketch_frequent_items_is_empty(datasketch_frequent_items(10, NULL)) │
-│                                 boolean                                 │
-├─────────────────────────────────────────────────────────────────────────┤
-│ true                                                                    │
-└─────────────────────────────────────────────────────────────────────────┘
+SELECT datasketch_frequent_items_is_empty(sketch) FROM my_sketch;
+```
+
+##### Supported Type Examples
+
+```sql
+-- VARCHAR
+SELECT datasketch_frequent_items_estimate(
+    datasketch_frequent_items(name), 'Alice'
+) FROM users;
+
+-- INTEGER
+SELECT datasketch_frequent_items_estimate(
+    datasketch_frequent_items(age), 25
+) FROM users;
+
+-- BIGINT
+SELECT datasketch_frequent_items_estimate(
+    datasketch_frequent_items(big_id), 9223372036854775807
+) FROM large_ids;
+
+-- DOUBLE
+SELECT datasketch_frequent_items_estimate(
+    datasketch_frequent_items(price), 19.99
+) FROM products;
+
+-- TINYINT
+SELECT datasketch_frequent_items_estimate(
+    datasketch_frequent_items(status_code), 1::TINYINT
+) FROM events;
+
+-- Unsigned types work similarly
+SELECT datasketch_frequent_items_estimate(
+    datasketch_frequent_items(port), 443::USMALLINT
+) FROM network_logs;
 ```
 
 
