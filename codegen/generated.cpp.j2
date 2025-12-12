@@ -13,8 +13,7 @@
 #include <DataSketches/cpc_sketch.hpp>
 #include <DataSketches/cpc_union.hpp>
 
-using namespace duckdb;
-namespace duckdb_datasketches
+namespace duckdb
 {
 
 

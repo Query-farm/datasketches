@@ -18,16 +18,26 @@
 namespace duckdb
 {
 
+    void LoadQuantilesSketch(ExtensionLoader &loader);
+    void LoadKLLSketch(ExtensionLoader &loader);
+    void LoadREQSketch(ExtensionLoader &loader);
+    void LoadTDigestSketch(ExtensionLoader &loader);
+    void LoadHLLSketch(ExtensionLoader &loader);
+    void LoadCPCSketch(ExtensionLoader &loader);
+    void LoadThetaSketch(ExtensionLoader &loader);
+    void LoadFrequentItemsSketch(ExtensionLoader &loader);
+
     static void LoadInternal(ExtensionLoader &loader)
     {
-        duckdb_datasketches::LoadQuantilesSketch(loader);
-        duckdb_datasketches::LoadKLLSketch(loader);
-        duckdb_datasketches::LoadREQSketch(loader);
-        duckdb_datasketches::LoadTDigestSketch(loader);
-        duckdb_datasketches::LoadHLLSketch(loader);
-        duckdb_datasketches::LoadCPCSketch(loader);
-
-        QueryFarmSendTelemetry(loader, "datasketches", "2025100901");
+        LoadQuantilesSketch(loader);
+        LoadKLLSketch(loader);
+        LoadREQSketch(loader);
+        LoadTDigestSketch(loader);
+        LoadHLLSketch(loader);
+        LoadCPCSketch(loader);
+        LoadThetaSketch(loader);
+        LoadFrequentItemsSketch(loader);
+        QueryFarmSendTelemetry(loader, "datasketches", "2025121201");
     }
 
     void DatasketchesExtension::Load(ExtensionLoader &loader)
