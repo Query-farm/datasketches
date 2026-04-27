@@ -539,9 +539,9 @@ def get_executor_name(arguments: list) -> str:
         raise NotImplementedError(f"Unhandled number of arguments {len(arguments)}")
 
 
-def get_scalar_function_args(
+def get_scalar_parameter_types(
     function_info: Any, logical_type: str, cpp_type: str
-) -> str:
+) -> list:
     input_parameters = []
     for arg in function_info["arguments"]:
         if "duckdb_type" in arg:
@@ -550,6 +550,23 @@ def get_scalar_function_args(
             input_parameters.append(logical_type)
         else:
             input_parameters.append(cpp_type_mapping[arg["cpp_type"]])
+    return input_parameters
+
+
+def get_parameter_names(function_info: Any) -> str:
+    return ",".join(f'"{arg["name"]}"' for arg in function_info["arguments"])
+
+
+def get_parameter_types_str(
+    function_info: Any, logical_type: str, cpp_type: str
+) -> str:
+    return ",".join(get_scalar_parameter_types(function_info, logical_type, cpp_type))
+
+
+def get_scalar_function_args(
+    function_info: Any, logical_type: str, cpp_type: str
+) -> str:
+    input_parameters = get_scalar_parameter_types(function_info, logical_type, cpp_type)
 
     joined_input_parameters = ",".join(input_parameters)
 
@@ -636,6 +653,8 @@ data = {
     "functions_per_sketch_type": unary_functions_per_sketch_type,
     "get_function_block": get_function_block,
     "get_scalar_function_args": get_scalar_function_args,
+    "get_parameter_names": get_parameter_names,
+    "get_parameter_types_str": get_parameter_types_str,
     "logical_type_mapping": logical_type_mapping,
     "to_type_id": lambda v: v.replace("LogicalType", "LogicalTypeId"),
     "sketch_k_cpp_type": {

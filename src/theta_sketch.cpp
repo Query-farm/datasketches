@@ -377,13 +377,21 @@ namespace duckdb
         }
 
         template <typename T>
-        static void RegisterThetaAggregates(AggregateFunctionSet &set, const LogicalType &input_type, const LogicalType &result_type)
+        static void RegisterThetaAggregates(AggregateFunctionSet &set, std::vector<FunctionDescription> &descs, const LogicalType &input_type, const LogicalType &result_type)
         {
             auto fun_default = AggregateFunction::UnaryAggregateDestructor<DSThetaState, T, string_t, DSThetaCreateOperation, AggregateDestructorType::LEGACY>(
                 input_type, result_type);
             fun_default.bind = DSThetaBindDefault;
             fun_default.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
             set.AddFunction(fun_default);
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a Theta sketch for estimating set cardinality and performing set operations";
+                desc.examples.push_back("datasketch_theta(column)");
+                desc.parameter_names = {"data"};
+                desc.parameter_types = {input_type};
+                descs.push_back(std::move(desc));
+            }
 
             auto fun_with_k = AggregateFunction::UnaryAggregateDestructor<DSThetaState, T, string_t, DSThetaCreateOperation, AggregateDestructorType::LEGACY>(
                 input_type, result_type);
@@ -391,6 +399,14 @@ namespace duckdb
             fun_with_k.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
             fun_with_k.arguments.insert(fun_with_k.arguments.begin(), LogicalType::INTEGER);
             set.AddFunction(fun_with_k);
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a Theta sketch with the given log2 of nominal entries (k)";
+                desc.examples.push_back("datasketch_theta(12, column)");
+                desc.parameter_names = {"lg_k", "data"};
+                desc.parameter_types = {LogicalType::INTEGER, input_type};
+                descs.push_back(std::move(desc));
+            }
         }
     }
 
@@ -402,17 +418,18 @@ namespace duckdb
     {
         auto sketch_type = CreateThetaSketchType(loader);
         AggregateFunctionSet sketch_agg("datasketch_theta");
+        std::vector<FunctionDescription> agg_descs;
 
         // 1. RAW DATA - Register specific types
         // IMPORTANT: DO NOT register LogicalType::BLOB here!
         // If we do, it shadows the Merge operation for "sketch_theta".
-        RegisterThetaAggregates<int8_t>(sketch_agg, LogicalType::TINYINT, sketch_type);
-        RegisterThetaAggregates<int16_t>(sketch_agg, LogicalType::SMALLINT, sketch_type);
-        RegisterThetaAggregates<int32_t>(sketch_agg, LogicalType::INTEGER, sketch_type);
-        RegisterThetaAggregates<int64_t>(sketch_agg, LogicalType::BIGINT, sketch_type);
-        RegisterThetaAggregates<float>(sketch_agg, LogicalType::FLOAT, sketch_type);
-        RegisterThetaAggregates<double>(sketch_agg, LogicalType::DOUBLE, sketch_type);
-        RegisterThetaAggregates<string_t>(sketch_agg, LogicalType::VARCHAR, sketch_type);
+        RegisterThetaAggregates<int8_t>(sketch_agg, agg_descs, LogicalType::TINYINT, sketch_type);
+        RegisterThetaAggregates<int16_t>(sketch_agg, agg_descs, LogicalType::SMALLINT, sketch_type);
+        RegisterThetaAggregates<int32_t>(sketch_agg, agg_descs, LogicalType::INTEGER, sketch_type);
+        RegisterThetaAggregates<int64_t>(sketch_agg, agg_descs, LogicalType::BIGINT, sketch_type);
+        RegisterThetaAggregates<float>(sketch_agg, agg_descs, LogicalType::FLOAT, sketch_type);
+        RegisterThetaAggregates<double>(sketch_agg, agg_descs, LogicalType::DOUBLE, sketch_type);
+        RegisterThetaAggregates<string_t>(sketch_agg, agg_descs, LogicalType::VARCHAR, sketch_type);
 
         // 2. MERGE SKETCHES (sketch_theta / BLOB)
         auto fun_merge = AggregateFunction::UnaryAggregateDestructor<DSThetaState, string_t, string_t, DSThetaMergeOperation, AggregateDestructorType::LEGACY>(
@@ -420,20 +437,34 @@ namespace duckdb
         fun_merge.bind = DSThetaBindDefault;
         fun_merge.arguments = {sketch_type};
         sketch_agg.AddFunction(fun_merge);
+        {
+            FunctionDescription desc;
+            desc.description = "Merges existing Theta sketches into a single sketch";
+            desc.examples.push_back("datasketch_theta(sketch)");
+            desc.parameter_names = {"sketch"};
+            desc.parameter_types = {sketch_type};
+            agg_descs.push_back(std::move(desc));
+        }
 
         auto fun_merge_k = AggregateFunction::UnaryAggregateDestructor<DSThetaState, string_t, string_t, DSThetaMergeOperation, AggregateDestructorType::LEGACY>(
             sketch_type, sketch_type);
         fun_merge_k.bind = DSThetaBindWithK;
         fun_merge_k.arguments = {LogicalType::INTEGER, sketch_type};
         sketch_agg.AddFunction(fun_merge_k);
+        {
+            FunctionDescription desc;
+            desc.description = "Merges existing Theta sketches into a single sketch with the given log2 of nominal entries (k)";
+            desc.examples.push_back("datasketch_theta(12, sketch)");
+            desc.parameter_names = {"lg_k", "sketch"};
+            desc.parameter_types = {LogicalType::INTEGER, sketch_type};
+            agg_descs.push_back(std::move(desc));
+        }
 
         {
             CreateAggregateFunctionInfo info(sketch_agg);
-            FunctionDescription desc;
-            desc.description = "Creates a Theta sketch for estimating set cardinality and performing set operations";
-            desc.examples.push_back("datasketch_theta(column)");
-            desc.examples.push_back("datasketch_theta(12, column)");
-            info.descriptions.push_back(desc);
+            for (auto &d : agg_descs) {
+                info.descriptions.push_back(std::move(d));
+            }
             loader.RegisterFunction(info);
         }
 
@@ -442,7 +473,9 @@ namespace duckdb
             CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_intersect", {sketch_type, sketch_type}, sketch_type, DSThetaIntersect));
             FunctionDescription desc;
             desc.description = "Returns a new Theta sketch representing the intersection of two sketches";
-            desc.examples.push_back("datasketch_theta_intersect(sketch1, sketch2)");
+            desc.examples.push_back("datasketch_theta_intersect(sketch_a, sketch_b)");
+            desc.parameter_names = {"sketch_a", "sketch_b"};
+            desc.parameter_types = {sketch_type, sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -450,7 +483,9 @@ namespace duckdb
             CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_union", {sketch_type, sketch_type}, sketch_type, DSThetaUnion));
             FunctionDescription desc;
             desc.description = "Returns a new Theta sketch representing the union of two sketches";
-            desc.examples.push_back("datasketch_theta_union(sketch1, sketch2)");
+            desc.examples.push_back("datasketch_theta_union(sketch_a, sketch_b)");
+            desc.parameter_names = {"sketch_a", "sketch_b"};
+            desc.parameter_types = {sketch_type, sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -459,6 +494,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns a new Theta sketch representing elements in sketch A but not in sketch B (set difference)";
             desc.examples.push_back("datasketch_theta_a_not_b(sketch_a, sketch_b)");
+            desc.parameter_names = {"sketch_a", "sketch_b"};
+            desc.parameter_types = {sketch_type, sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -467,6 +504,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns the estimated number of distinct values in the Theta sketch";
             desc.examples.push_back("datasketch_theta_estimate(sketch)");
+            desc.parameter_names = {"sketch"};
+            desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -475,6 +514,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns the lower bound estimate at the given number of standard deviations (1, 2, or 3)";
             desc.examples.push_back("datasketch_theta_lower_bound(sketch, 2)");
+            desc.parameter_names = {"sketch", "num_std_devs"};
+            desc.parameter_types = {sketch_type, LogicalType::INTEGER};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -483,6 +524,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns the upper bound estimate at the given number of standard deviations (1, 2, or 3)";
             desc.examples.push_back("datasketch_theta_upper_bound(sketch, 2)");
+            desc.parameter_names = {"sketch", "num_std_devs"};
+            desc.parameter_types = {sketch_type, LogicalType::INTEGER};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -491,6 +534,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns a human-readable description of the Theta sketch";
             desc.examples.push_back("datasketch_theta_describe(sketch)");
+            desc.parameter_names = {"sketch"};
+            desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -501,6 +546,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns true if the Theta sketch is empty";
             desc.examples.push_back("datasketch_theta_is_empty(sketch)");
+            desc.parameter_names = {"sketch"};
+            desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -509,6 +556,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns true if the sketch is in estimation mode (has exceeded exact counting capacity)";
             desc.examples.push_back("datasketch_theta_is_estimation_mode(sketch)");
+            desc.parameter_names = {"sketch"};
+            desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -517,6 +566,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns the theta value of the sketch (sampling probability)";
             desc.examples.push_back("datasketch_theta_get_theta(sketch)");
+            desc.parameter_names = {"sketch"};
+            desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -525,6 +576,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns the number of hash values retained in the sketch";
             desc.examples.push_back("datasketch_theta_num_retained(sketch)");
+            desc.parameter_names = {"sketch"};
+            desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -533,6 +586,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns the seed hash used by the sketch";
             desc.examples.push_back("datasketch_theta_get_seed(sketch)");
+            desc.parameter_names = {"sketch"};
+            desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }

@@ -1713,47 +1713,124 @@ return sketch.get_max_item();
       
       {
         ScalarFunctionSet fs("datasketch_quantiles_is_empty");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_empty<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_empty<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_empty<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_empty<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_empty<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_empty<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_empty<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_empty<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_empty<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_empty<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a boolean indicating if the sketch is empty";
-            desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -1762,47 +1839,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_quantiles_k");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::USMALLINT
                 ,    DSQuantilesk<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::USMALLINT
                 ,    DSQuantilesk<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::USMALLINT
                 ,    DSQuantilesk<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::USMALLINT
                 ,    DSQuantilesk<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::USMALLINT
                 ,    DSQuantilesk<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::USMALLINT
                 ,    DSQuantilesk<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::USMALLINT
                 ,    DSQuantilesk<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::USMALLINT
                 ,    DSQuantilesk<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::USMALLINT
                 ,    DSQuantilesk<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::USMALLINT
                 ,    DSQuantilesk<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the value of K for this sketch";
-            desc.examples.push_back("datasketch_quantiles_k(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -1811,47 +1965,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_quantiles_cdf");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
                 ,    DSQuantilescdf<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
                 ,    DSQuantilescdf<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
                 ,    DSQuantilescdf<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
                 ,    DSQuantilescdf<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
                 ,    DSQuantilescdf<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilescdf<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
                 ,    DSQuantilescdf<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
                 ,    DSQuantilescdf<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
                 ,    DSQuantilescdf<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
                 ,    DSQuantilescdf<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-            desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -1860,47 +2091,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_quantiles_pmf");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
                 ,    DSQuantilespmf<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
                 ,    DSQuantilespmf<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
                 ,    DSQuantilespmf<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
                 ,    DSQuantilespmf<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
                 ,    DSQuantilespmf<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilespmf<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
                 ,    DSQuantilespmf<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
                 ,    DSQuantilespmf<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
                 ,    DSQuantilespmf<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
                 ,    DSQuantilespmf<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-            desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -1909,47 +2217,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_quantiles_normalized_rank_error");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesnormalized_rank_error<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesnormalized_rank_error<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesnormalized_rank_error<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesnormalized_rank_error<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesnormalized_rank_error<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesnormalized_rank_error<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesnormalized_rank_error<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesnormalized_rank_error<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesnormalized_rank_error<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesnormalized_rank_error<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the normalized rank error of the sketch";
-            desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -1958,47 +2343,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_quantiles_describe");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSQuantilesdescribe<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSQuantilesdescribe<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSQuantilesdescribe<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSQuantilesdescribe<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSQuantilesdescribe<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSQuantilesdescribe<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSQuantilesdescribe<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSQuantilesdescribe<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSQuantilesdescribe<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSQuantilesdescribe<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a description of this sketch";
-            desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -2007,47 +2469,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_quantiles_rank");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::TINYINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesrank<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::TINYINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::SMALLINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesrank<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::SMALLINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::INTEGER,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesrank<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::INTEGER,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BIGINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesrank<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BIGINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::FLOAT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesrank<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::FLOAT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesrank<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::UTINYINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesrank<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::UTINYINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::USMALLINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesrank<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::USMALLINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::UINTEGER,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesrank<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::UINTEGER,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::UBIGINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesrank<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::UBIGINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the rank of an item in the sketch";
-            desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -2056,47 +2595,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_quantiles_quantile");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::TINYINT
                 ,    DSQuantilesquantile<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::SMALLINT
                 ,    DSQuantilesquantile<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::INTEGER
                 ,    DSQuantilesquantile<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::BIGINT
                 ,    DSQuantilesquantile<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::FLOAT
                 ,    DSQuantilesquantile<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSQuantilesquantile<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::UTINYINT
                 ,    DSQuantilesquantile<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::USMALLINT
                 ,    DSQuantilesquantile<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::UINTEGER
                 ,    DSQuantilesquantile<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::UBIGINT
                 ,    DSQuantilesquantile<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the quantile of a rank in the sketch";
-            desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -2105,47 +2721,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_quantiles_n");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::UBIGINT
                 ,    DSQuantilesn<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::UBIGINT
                 ,    DSQuantilesn<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::UBIGINT
                 ,    DSQuantilesn<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::UBIGINT
                 ,    DSQuantilesn<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::UBIGINT
                 ,    DSQuantilesn<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::UBIGINT
                 ,    DSQuantilesn<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::UBIGINT
                 ,    DSQuantilesn<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::UBIGINT
                 ,    DSQuantilesn<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::UBIGINT
                 ,    DSQuantilesn<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::UBIGINT
                 ,    DSQuantilesn<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the number of items contained in the sketch";
-            desc.examples.push_back("datasketch_quantiles_rank(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -2154,47 +2847,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_quantiles_is_estimation_mode");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_estimation_mode<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_estimation_mode<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_estimation_mode<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_estimation_mode<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_estimation_mode<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_estimation_mode<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_estimation_mode<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_estimation_mode<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_estimation_mode<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::BOOLEAN
                 ,    DSQuantilesis_estimation_mode<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-            desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -2203,47 +2973,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_quantiles_num_retained");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::UBIGINT
                 ,    DSQuantilesnum_retained<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::UBIGINT
                 ,    DSQuantilesnum_retained<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::UBIGINT
                 ,    DSQuantilesnum_retained<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::UBIGINT
                 ,    DSQuantilesnum_retained<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::UBIGINT
                 ,    DSQuantilesnum_retained<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::UBIGINT
                 ,    DSQuantilesnum_retained<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::UBIGINT
                 ,    DSQuantilesnum_retained<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::UBIGINT
                 ,    DSQuantilesnum_retained<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::UBIGINT
                 ,    DSQuantilesnum_retained<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::UBIGINT
                 ,    DSQuantilesnum_retained<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the number of retained items in the sketch";
-            desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -2252,47 +3099,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_quantiles_min_item");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::TINYINT
                 ,    DSQuantilesmin_item<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::SMALLINT
                 ,    DSQuantilesmin_item<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::INTEGER
                 ,    DSQuantilesmin_item<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::BIGINT
                 ,    DSQuantilesmin_item<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::FLOAT
                 ,    DSQuantilesmin_item<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::DOUBLE
                 ,    DSQuantilesmin_item<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::UTINYINT
                 ,    DSQuantilesmin_item<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::USMALLINT
                 ,    DSQuantilesmin_item<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::UINTEGER
                 ,    DSQuantilesmin_item<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::UBIGINT
                 ,    DSQuantilesmin_item<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the minimum item in the sketch";
-            desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -2301,47 +3225,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_quantiles_max_item");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::TINYINT
                 ,    DSQuantilesmax_item<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::SMALLINT
                 ,    DSQuantilesmax_item<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::INTEGER
                 ,    DSQuantilesmax_item<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::BIGINT
                 ,    DSQuantilesmax_item<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::FLOAT
                 ,    DSQuantilesmax_item<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::DOUBLE
                 ,    DSQuantilesmax_item<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::UTINYINT
                 ,    DSQuantilesmax_item<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::USMALLINT
                 ,    DSQuantilesmax_item<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::UINTEGER
                 ,    DSQuantilesmax_item<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::UBIGINT
                 ,    DSQuantilesmax_item<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the maxium item in the sketch";
-            desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -2352,6 +3353,7 @@ return sketch.get_max_item();
       // This funciton creates the sketches.
       {
       AggregateFunctionSet sketch("datasketch_quantiles");
+      std::vector<FunctionDescription> agg_descs;
       
         
             {
@@ -2360,16 +3362,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
+                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
             {
                 auto fun = DSQuantilesMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
                 fun.bind = DSQuantilesBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
+                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::TINYINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
         
         
             {
@@ -2378,16 +3392,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
+                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
             {
                 auto fun = DSQuantilesMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
                 fun.bind = DSQuantilesBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
+                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::SMALLINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
         
         
             {
@@ -2396,16 +3422,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
+                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
             {
                 auto fun = DSQuantilesMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
                 fun.bind = DSQuantilesBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
+                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
         
         
             {
@@ -2414,16 +3452,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
+                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
             {
                 auto fun = DSQuantilesMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
                 fun.bind = DSQuantilesBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
+                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::BIGINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
         
         
             {
@@ -2432,16 +3482,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
+                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
             {
                 auto fun = DSQuantilesMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.bind = DSQuantilesBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
+                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::FLOAT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
         
         
             {
@@ -2450,16 +3512,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
+                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
             {
                 auto fun = DSQuantilesMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.bind = DSQuantilesBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
+                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::DOUBLE] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
         
         
             {
@@ -2468,16 +3542,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
+                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
             {
                 auto fun = DSQuantilesMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
                 fun.bind = DSQuantilesBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
+                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UTINYINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
         
         
             {
@@ -2486,16 +3572,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
+                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
             {
                 auto fun = DSQuantilesMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
                 fun.bind = DSQuantilesBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
+                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::USMALLINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
         
         
             {
@@ -2504,16 +3602,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
+                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
             {
                 auto fun = DSQuantilesMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
                 fun.bind = DSQuantilesBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
+                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UINTEGER] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
         
         
             {
@@ -2522,26 +3632,33 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
+                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
             {
                 auto fun = DSQuantilesMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
                 fun.bind = DSQuantilesBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
+                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UBIGINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSQuantilesMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
         
       CreateAggregateFunctionInfo sketch_info(sketch);
-
-
-    {
-        FunctionDescription desc;
-        desc.description = "Creates a sketch_quantiles data sketch by aggregating values or by aggregating other Quantiles data sketches";
-        desc.examples.push_back("datasketch_quantiles(k, data)");
-        sketch_info.descriptions.push_back(desc);
-    }
+      for (auto &d : agg_descs) {
+          sketch_info.descriptions.push_back(std::move(d));
+      }
 
       loader.RegisterFunction(sketch_info);
       }
@@ -3126,47 +4243,124 @@ return sketch.get_max_item();
       
       {
         ScalarFunctionSet fs("datasketch_kll_is_empty");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::BOOLEAN
                 ,    DSKLLis_empty<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::BOOLEAN
                 ,    DSKLLis_empty<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::BOOLEAN
                 ,    DSKLLis_empty<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::BOOLEAN
                 ,    DSKLLis_empty<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::BOOLEAN
                 ,    DSKLLis_empty<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::BOOLEAN
                 ,    DSKLLis_empty<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::BOOLEAN
                 ,    DSKLLis_empty<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::BOOLEAN
                 ,    DSKLLis_empty<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::BOOLEAN
                 ,    DSKLLis_empty<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::BOOLEAN
                 ,    DSKLLis_empty<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a boolean indicating if the sketch is empty";
-            desc.examples.push_back("datasketch_kll_is_empty(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -3175,47 +4369,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_kll_k");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::USMALLINT
                 ,    DSKLLk<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::USMALLINT
                 ,    DSKLLk<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::USMALLINT
                 ,    DSKLLk<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::USMALLINT
                 ,    DSKLLk<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::USMALLINT
                 ,    DSKLLk<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::USMALLINT
                 ,    DSKLLk<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::USMALLINT
                 ,    DSKLLk<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::USMALLINT
                 ,    DSKLLk<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::USMALLINT
                 ,    DSKLLk<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::USMALLINT
                 ,    DSKLLk<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the value of K for this sketch";
-            desc.examples.push_back("datasketch_kll_k(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -3224,47 +4495,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_kll_cdf");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
                 ,    DSKLLcdf<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
                 ,    DSKLLcdf<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
                 ,    DSKLLcdf<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
                 ,    DSKLLcdf<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
                 ,    DSKLLcdf<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLcdf<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
                 ,    DSKLLcdf<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
                 ,    DSKLLcdf<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
                 ,    DSKLLcdf<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
                 ,    DSKLLcdf<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-            desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -3273,47 +4621,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_kll_pmf");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
                 ,    DSKLLpmf<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
                 ,    DSKLLpmf<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
                 ,    DSKLLpmf<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
                 ,    DSKLLpmf<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
                 ,    DSKLLpmf<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLpmf<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
                 ,    DSKLLpmf<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
                 ,    DSKLLpmf<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
                 ,    DSKLLpmf<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
                 ,    DSKLLpmf<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-            desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -3322,47 +4747,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_kll_normalized_rank_error");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLnormalized_rank_error<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLnormalized_rank_error<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLnormalized_rank_error<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLnormalized_rank_error<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLnormalized_rank_error<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLnormalized_rank_error<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLnormalized_rank_error<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLnormalized_rank_error<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLnormalized_rank_error<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLnormalized_rank_error<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the normalized rank error of the sketch";
-            desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -3371,47 +4873,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_kll_describe");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSKLLdescribe<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSKLLdescribe<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSKLLdescribe<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSKLLdescribe<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSKLLdescribe<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSKLLdescribe<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSKLLdescribe<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSKLLdescribe<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSKLLdescribe<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSKLLdescribe<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a description of this sketch";
-            desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -3420,47 +4999,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_kll_rank");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::TINYINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLrank<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::TINYINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::SMALLINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLrank<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::SMALLINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::INTEGER,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLrank<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::INTEGER,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BIGINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLrank<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BIGINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::FLOAT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLrank<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::FLOAT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLrank<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::UTINYINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLrank<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::UTINYINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::USMALLINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLrank<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::USMALLINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::UINTEGER,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLrank<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::UINTEGER,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::UBIGINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLrank<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::UBIGINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the rank of an item in the sketch";
-            desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -3469,47 +5125,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_kll_quantile");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::TINYINT
                 ,    DSKLLquantile<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::SMALLINT
                 ,    DSKLLquantile<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::INTEGER
                 ,    DSKLLquantile<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::BIGINT
                 ,    DSKLLquantile<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::FLOAT
                 ,    DSKLLquantile<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSKLLquantile<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::UTINYINT
                 ,    DSKLLquantile<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::USMALLINT
                 ,    DSKLLquantile<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::UINTEGER
                 ,    DSKLLquantile<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::UBIGINT
                 ,    DSKLLquantile<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the quantile of a rank in the sketch";
-            desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -3518,47 +5251,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_kll_n");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::UBIGINT
                 ,    DSKLLn<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::UBIGINT
                 ,    DSKLLn<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::UBIGINT
                 ,    DSKLLn<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::UBIGINT
                 ,    DSKLLn<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::UBIGINT
                 ,    DSKLLn<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::UBIGINT
                 ,    DSKLLn<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::UBIGINT
                 ,    DSKLLn<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::UBIGINT
                 ,    DSKLLn<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::UBIGINT
                 ,    DSKLLn<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::UBIGINT
                 ,    DSKLLn<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the number of items contained in the sketch";
-            desc.examples.push_back("datasketch_kll_rank(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -3567,47 +5377,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_kll_is_estimation_mode");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::BOOLEAN
                 ,    DSKLLis_estimation_mode<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::BOOLEAN
                 ,    DSKLLis_estimation_mode<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::BOOLEAN
                 ,    DSKLLis_estimation_mode<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::BOOLEAN
                 ,    DSKLLis_estimation_mode<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::BOOLEAN
                 ,    DSKLLis_estimation_mode<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::BOOLEAN
                 ,    DSKLLis_estimation_mode<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::BOOLEAN
                 ,    DSKLLis_estimation_mode<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::BOOLEAN
                 ,    DSKLLis_estimation_mode<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::BOOLEAN
                 ,    DSKLLis_estimation_mode<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::BOOLEAN
                 ,    DSKLLis_estimation_mode<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-            desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -3616,47 +5503,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_kll_num_retained");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::UBIGINT
                 ,    DSKLLnum_retained<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::UBIGINT
                 ,    DSKLLnum_retained<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::UBIGINT
                 ,    DSKLLnum_retained<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::UBIGINT
                 ,    DSKLLnum_retained<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::UBIGINT
                 ,    DSKLLnum_retained<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::UBIGINT
                 ,    DSKLLnum_retained<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::UBIGINT
                 ,    DSKLLnum_retained<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::UBIGINT
                 ,    DSKLLnum_retained<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::UBIGINT
                 ,    DSKLLnum_retained<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::UBIGINT
                 ,    DSKLLnum_retained<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the number of retained items in the sketch";
-            desc.examples.push_back("datasketch_kll_num_retained(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -3665,47 +5629,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_kll_min_item");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::TINYINT
                 ,    DSKLLmin_item<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::SMALLINT
                 ,    DSKLLmin_item<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::INTEGER
                 ,    DSKLLmin_item<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::BIGINT
                 ,    DSKLLmin_item<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::FLOAT
                 ,    DSKLLmin_item<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::DOUBLE
                 ,    DSKLLmin_item<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::UTINYINT
                 ,    DSKLLmin_item<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::USMALLINT
                 ,    DSKLLmin_item<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::UINTEGER
                 ,    DSKLLmin_item<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::UBIGINT
                 ,    DSKLLmin_item<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the minimum item in the sketch";
-            desc.examples.push_back("datasketch_kll_min_item(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -3714,47 +5755,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_kll_max_item");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::TINYINT
                 ,    DSKLLmax_item<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::SMALLINT
                 ,    DSKLLmax_item<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::INTEGER
                 ,    DSKLLmax_item<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::BIGINT
                 ,    DSKLLmax_item<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::FLOAT
                 ,    DSKLLmax_item<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::DOUBLE
                 ,    DSKLLmax_item<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::UTINYINT
                 ,    DSKLLmax_item<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::USMALLINT
                 ,    DSKLLmax_item<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::UINTEGER
                 ,    DSKLLmax_item<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::UBIGINT
                 ,    DSKLLmax_item<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the maxium item in the sketch";
-            desc.examples.push_back("datasketch_kll_max_item(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -3765,6 +5883,7 @@ return sketch.get_max_item();
       // This funciton creates the sketches.
       {
       AggregateFunctionSet sketch("datasketch_kll");
+      std::vector<FunctionDescription> agg_descs;
       
         
             {
@@ -3773,16 +5892,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
             {
                 auto fun = DSKLLMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
                 fun.bind = DSKLLBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
+                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::TINYINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
         
         
             {
@@ -3791,16 +5922,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
             {
                 auto fun = DSKLLMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
                 fun.bind = DSKLLBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
+                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::SMALLINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
         
         
             {
@@ -3809,16 +5952,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
             {
                 auto fun = DSKLLMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
                 fun.bind = DSKLLBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
+                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
         
         
             {
@@ -3827,16 +5982,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
             {
                 auto fun = DSKLLMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
                 fun.bind = DSKLLBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
+                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::BIGINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
         
         
             {
@@ -3845,16 +6012,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
             {
                 auto fun = DSKLLMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.bind = DSKLLBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
+                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::FLOAT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
         
         
             {
@@ -3863,16 +6042,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
             {
                 auto fun = DSKLLMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.bind = DSKLLBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
+                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::DOUBLE] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
         
         
             {
@@ -3881,16 +6072,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
             {
                 auto fun = DSKLLMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
                 fun.bind = DSKLLBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
+                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UTINYINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
         
         
             {
@@ -3899,16 +6102,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
             {
                 auto fun = DSKLLMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
                 fun.bind = DSKLLBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
+                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::USMALLINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
         
         
             {
@@ -3917,16 +6132,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
             {
                 auto fun = DSKLLMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
                 fun.bind = DSKLLBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
+                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UINTEGER] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
         
         
             {
@@ -3935,26 +6162,33 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
             {
                 auto fun = DSKLLMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
                 fun.bind = DSKLLBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
+                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UBIGINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSKLLMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
         
       CreateAggregateFunctionInfo sketch_info(sketch);
-
-
-    {
-        FunctionDescription desc;
-        desc.description = "Creates a sketch_kll data sketch by aggregating values or by aggregating other KLL data sketches";
-        desc.examples.push_back("datasketch_kll(k, data)");
-        sketch_info.descriptions.push_back(desc);
-    }
+      for (auto &d : agg_descs) {
+          sketch_info.descriptions.push_back(std::move(d));
+      }
 
       loader.RegisterFunction(sketch_info);
       }
@@ -4504,47 +6738,124 @@ return sketch.get_max_item();
       
       {
         ScalarFunctionSet fs("datasketch_req_is_empty");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::BOOLEAN
                 ,    DSREQis_empty<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::BOOLEAN
                 ,    DSREQis_empty<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::BOOLEAN
                 ,    DSREQis_empty<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::BOOLEAN
                 ,    DSREQis_empty<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::BOOLEAN
                 ,    DSREQis_empty<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::BOOLEAN
                 ,    DSREQis_empty<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::BOOLEAN
                 ,    DSREQis_empty<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::BOOLEAN
                 ,    DSREQis_empty<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::BOOLEAN
                 ,    DSREQis_empty<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::BOOLEAN
                 ,    DSREQis_empty<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a boolean indicating if the sketch is empty";
-            desc.examples.push_back("datasketch_req_is_empty(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -4553,47 +6864,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_req_k");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::USMALLINT
                 ,    DSREQk<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::USMALLINT
                 ,    DSREQk<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::USMALLINT
                 ,    DSREQk<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::USMALLINT
                 ,    DSREQk<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::USMALLINT
                 ,    DSREQk<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::USMALLINT
                 ,    DSREQk<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::USMALLINT
                 ,    DSREQk<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::USMALLINT
                 ,    DSREQk<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::USMALLINT
                 ,    DSREQk<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::USMALLINT
                 ,    DSREQk<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the value of K for this sketch";
-            desc.examples.push_back("datasketch_req_k(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -4602,47 +6990,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_req_cdf");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
                 ,    DSREQcdf<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
                 ,    DSREQcdf<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
                 ,    DSREQcdf<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
                 ,    DSREQcdf<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
                 ,    DSREQcdf<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQcdf<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
                 ,    DSREQcdf<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
                 ,    DSREQcdf<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
                 ,    DSREQcdf<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
                 ,    DSREQcdf<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-            desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -4651,47 +7116,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_req_pmf");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
                 ,    DSREQpmf<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
                 ,    DSREQpmf<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
                 ,    DSREQpmf<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
                 ,    DSREQpmf<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
                 ,    DSREQpmf<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQpmf<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
                 ,    DSREQpmf<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
                 ,    DSREQpmf<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
                 ,    DSREQpmf<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
                 ,    DSREQpmf<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-            desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -4700,47 +7242,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_req_describe");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSREQdescribe<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSREQdescribe<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSREQdescribe<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSREQdescribe<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSREQdescribe<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSREQdescribe<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSREQdescribe<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSREQdescribe<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSREQdescribe<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSREQdescribe<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a description of this sketch";
-            desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -4749,47 +7368,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_req_rank");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::TINYINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSREQrank<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::TINYINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::SMALLINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSREQrank<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::SMALLINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::INTEGER,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSREQrank<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::INTEGER,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BIGINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSREQrank<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BIGINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::FLOAT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSREQrank<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::FLOAT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSREQrank<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::UTINYINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSREQrank<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::UTINYINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::USMALLINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSREQrank<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::USMALLINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::UINTEGER,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSREQrank<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::UINTEGER,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::UBIGINT,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSREQrank<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::UBIGINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the rank of an item in the sketch";
-            desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -4798,47 +7494,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_req_quantile");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::TINYINT
                 ,    DSREQquantile<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::SMALLINT
                 ,    DSREQquantile<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::INTEGER
                 ,    DSREQquantile<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::BIGINT
                 ,    DSREQquantile<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::FLOAT
                 ,    DSREQquantile<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::DOUBLE
                 ,    DSREQquantile<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::UTINYINT
                 ,    DSREQquantile<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::USMALLINT
                 ,    DSREQquantile<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::UINTEGER
                 ,    DSREQquantile<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::UBIGINT
                 ,    DSREQquantile<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the quantile of a rank in the sketch";
-            desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -4847,47 +7620,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_req_n");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::UBIGINT
                 ,    DSREQn<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::UBIGINT
                 ,    DSREQn<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::UBIGINT
                 ,    DSREQn<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::UBIGINT
                 ,    DSREQn<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::UBIGINT
                 ,    DSREQn<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::UBIGINT
                 ,    DSREQn<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::UBIGINT
                 ,    DSREQn<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::UBIGINT
                 ,    DSREQn<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::UBIGINT
                 ,    DSREQn<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::UBIGINT
                 ,    DSREQn<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the number of items contained in the sketch";
-            desc.examples.push_back("datasketch_req_rank(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -4896,47 +7746,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_req_is_estimation_mode");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::BOOLEAN
                 ,    DSREQis_estimation_mode<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::BOOLEAN
                 ,    DSREQis_estimation_mode<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::BOOLEAN
                 ,    DSREQis_estimation_mode<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::BOOLEAN
                 ,    DSREQis_estimation_mode<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::BOOLEAN
                 ,    DSREQis_estimation_mode<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::BOOLEAN
                 ,    DSREQis_estimation_mode<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::BOOLEAN
                 ,    DSREQis_estimation_mode<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::BOOLEAN
                 ,    DSREQis_estimation_mode<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::BOOLEAN
                 ,    DSREQis_estimation_mode<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::BOOLEAN
                 ,    DSREQis_estimation_mode<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-            desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -4945,47 +7872,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_req_num_retained");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::UBIGINT
                 ,    DSREQnum_retained<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::UBIGINT
                 ,    DSREQnum_retained<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::UBIGINT
                 ,    DSREQnum_retained<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::UBIGINT
                 ,    DSREQnum_retained<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::UBIGINT
                 ,    DSREQnum_retained<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::UBIGINT
                 ,    DSREQnum_retained<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::UBIGINT
                 ,    DSREQnum_retained<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::UBIGINT
                 ,    DSREQnum_retained<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::UBIGINT
                 ,    DSREQnum_retained<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::UBIGINT
                 ,    DSREQnum_retained<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the number of retained items in the sketch";
-            desc.examples.push_back("datasketch_req_num_retained(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -4994,47 +7998,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_req_min_item");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::TINYINT
                 ,    DSREQmin_item<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::SMALLINT
                 ,    DSREQmin_item<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::INTEGER
                 ,    DSREQmin_item<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::BIGINT
                 ,    DSREQmin_item<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::FLOAT
                 ,    DSREQmin_item<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::DOUBLE
                 ,    DSREQmin_item<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::UTINYINT
                 ,    DSREQmin_item<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::USMALLINT
                 ,    DSREQmin_item<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::UINTEGER
                 ,    DSREQmin_item<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::UBIGINT
                 ,    DSREQmin_item<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the minimum item in the sketch";
-            desc.examples.push_back("datasketch_req_min_item(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -5043,47 +8124,124 @@ return sketch.get_max_item();
       }
       {
         ScalarFunctionSet fs("datasketch_req_max_item");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::TINYINT
                 ,    DSREQmax_item<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::SMALLINT
                 ,    DSREQmax_item<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::INTEGER
                 ,    DSREQmax_item<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::BIGINT
                 ,    DSREQmax_item<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::FLOAT
                 ,    DSREQmax_item<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::DOUBLE
                 ,    DSREQmax_item<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::UTINYINT
                 ,    DSREQmax_item<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::USMALLINT
                 ,    DSREQmax_item<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::UINTEGER
                 ,    DSREQmax_item<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::UBIGINT
                 ,    DSREQmax_item<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maxium item in the sketch";
+                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the maxium item in the sketch";
-            desc.examples.push_back("datasketch_req_max_item(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -5094,6 +8252,7 @@ return sketch.get_max_item();
       // This funciton creates the sketches.
       {
       AggregateFunctionSet sketch("datasketch_req");
+      std::vector<FunctionDescription> agg_descs;
       
         
             {
@@ -5102,16 +8261,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values";
+                desc.examples.push_back("datasketch_req(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
             {
                 auto fun = DSREQMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
                 fun.bind = DSREQBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
+                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::TINYINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]));
         
         
             {
@@ -5120,16 +8291,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values";
+                desc.examples.push_back("datasketch_req(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
             {
                 auto fun = DSREQMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
                 fun.bind = DSREQBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
+                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::SMALLINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]));
         
         
             {
@@ -5138,16 +8321,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values";
+                desc.examples.push_back("datasketch_req(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
             {
                 auto fun = DSREQMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
                 fun.bind = DSREQBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
+                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]));
         
         
             {
@@ -5156,16 +8351,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values";
+                desc.examples.push_back("datasketch_req(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
             {
                 auto fun = DSREQMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
                 fun.bind = DSREQBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
+                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::BIGINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]));
         
         
             {
@@ -5174,16 +8381,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values";
+                desc.examples.push_back("datasketch_req(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
             {
                 auto fun = DSREQMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.bind = DSREQBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
+                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::FLOAT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
         
         
             {
@@ -5192,16 +8411,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values";
+                desc.examples.push_back("datasketch_req(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
             {
                 auto fun = DSREQMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.bind = DSREQBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
+                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::DOUBLE] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
         
         
             {
@@ -5210,16 +8441,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values";
+                desc.examples.push_back("datasketch_req(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
             {
                 auto fun = DSREQMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
                 fun.bind = DSREQBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
+                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UTINYINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]));
         
         
             {
@@ -5228,16 +8471,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values";
+                desc.examples.push_back("datasketch_req(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
             {
                 auto fun = DSREQMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
                 fun.bind = DSREQBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
+                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::USMALLINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]));
         
         
             {
@@ -5246,16 +8501,28 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values";
+                desc.examples.push_back("datasketch_req(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
             {
                 auto fun = DSREQMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
                 fun.bind = DSREQBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
+                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UINTEGER] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]));
         
         
             {
@@ -5264,26 +8531,33 @@ return sketch.get_max_item();
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values";
+                desc.examples.push_back("datasketch_req(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
             {
                 auto fun = DSREQMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
                 fun.bind = DSREQBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
+                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UBIGINT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSREQMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]));
         
       CreateAggregateFunctionInfo sketch_info(sketch);
-
-
-    {
-        FunctionDescription desc;
-        desc.description = "Creates a sketch_req data sketch by aggregating values or by aggregating other REQ data sketches";
-        desc.examples.push_back("datasketch_req(k, data)");
-        sketch_info.descriptions.push_back(desc);
-    }
+      for (auto &d : agg_descs) {
+          sketch_info.descriptions.push_back(std::move(d));
+      }
 
       loader.RegisterFunction(sketch_info);
       }
@@ -5684,23 +8958,36 @@ return sketch.get_quantile(rank_data);
       
       {
         ScalarFunctionSet fs("datasketch_tdigest_is_empty");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::BOOLEAN
                 ,    DSTDigestis_empty<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_tdigest_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::BOOLEAN
                 ,    DSTDigestis_empty<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_tdigest_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a boolean indicating if the sketch is empty";
-            desc.examples.push_back("datasketch_tdigest_is_empty(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -5709,23 +8996,36 @@ return sketch.get_quantile(rank_data);
       }
       {
         ScalarFunctionSet fs("datasketch_tdigest_k");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::USMALLINT
                 ,    DSTDigestk<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_tdigest_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::USMALLINT
                 ,    DSTDigestk<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_tdigest_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the value of K for this sketch";
-            desc.examples.push_back("datasketch_tdigest_k(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -5734,23 +9034,36 @@ return sketch.get_quantile(rank_data);
       }
       {
         ScalarFunctionSet fs("datasketch_tdigest_cdf");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT)},LogicalType::LIST(LogicalType::FLOAT)
                 ,    DSTDigestcdf<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_tdigest_cdf(sketch, points)");
+                    desc.parameter_names = { "sketch","split_points" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT) };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE)},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSTDigestcdf<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_tdigest_cdf(sketch, points)");
+                    desc.parameter_names = { "sketch","split_points" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE) };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-            desc.examples.push_back("datasketch_tdigest_cdf(sketch, points)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -5759,23 +9072,36 @@ return sketch.get_quantile(rank_data);
       }
       {
         ScalarFunctionSet fs("datasketch_tdigest_pmf");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT)},LogicalType::LIST(LogicalType::FLOAT)
                 ,    DSTDigestpmf<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_tdigest_pmf(sketch, points)");
+                    desc.parameter_names = { "sketch","split_points" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT) };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE)},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSTDigestpmf<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_tdigest_pmf(sketch, points)");
+                    desc.parameter_names = { "sketch","split_points" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE) };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-            desc.examples.push_back("datasketch_tdigest_pmf(sketch, points)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -5784,23 +9110,36 @@ return sketch.get_quantile(rank_data);
       }
       {
         ScalarFunctionSet fs("datasketch_tdigest_describe");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSTDigestdescribe<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_tdigest_describe(sketch, include_centroids)");
+                    desc.parameter_names = { "sketch","include_centroids" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSTDigestdescribe<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_tdigest_describe(sketch, include_centroids)");
+                    desc.parameter_names = { "sketch","include_centroids" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a description of this sketch";
-            desc.examples.push_back("datasketch_tdigest_describe(sketch, include_centroids)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -5809,23 +9148,36 @@ return sketch.get_quantile(rank_data);
       }
       {
         ScalarFunctionSet fs("datasketch_tdigest_rank");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::FLOAT},LogicalType::DOUBLE
                 ,    DSTDigestrank<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_tdigest_rank(sketch, item)");
+                    desc.parameter_names = { "sketch","item" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::FLOAT };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE},LogicalType::DOUBLE
                 ,    DSTDigestrank<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_tdigest_rank(sketch, item)");
+                    desc.parameter_names = { "sketch","item" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the rank of an item in the sketch";
-            desc.examples.push_back("datasketch_tdigest_rank(sketch, item)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -5834,23 +9186,36 @@ return sketch.get_quantile(rank_data);
       }
       {
         ScalarFunctionSet fs("datasketch_tdigest_total_weight");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::UBIGINT
                 ,    DSTDigesttotal_weight<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the total weight of this sketch";
+                    desc.examples.push_back("datasketch_tdigest_total_weight(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::UBIGINT
                 ,    DSTDigesttotal_weight<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the total weight of this sketch";
+                    desc.examples.push_back("datasketch_tdigest_total_weight(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the total weight of this sketch";
-            desc.examples.push_back("datasketch_tdigest_total_weight(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -5859,23 +9224,36 @@ return sketch.get_quantile(rank_data);
       }
       {
         ScalarFunctionSet fs("datasketch_tdigest_quantile");
+        std::vector<FunctionDescription> fn_descs;
         
             
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE},LogicalType::FLOAT
                 ,    DSTDigestquantile<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_tdigest_quantile(sketch, rank)");
+                    desc.parameter_names = { "sketch","rank" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE };
+                    fn_descs.push_back(std::move(desc));
+                }
                 fs.AddFunction(ScalarFunction(
                 {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE},LogicalType::DOUBLE
                 ,    DSTDigestquantile<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_tdigest_quantile(sketch, rank)");
+                    desc.parameter_names = { "sketch","rank" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the quantile of a rank in the sketch";
-            desc.examples.push_back("datasketch_tdigest_quantile(sketch, rank)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -5886,6 +9264,7 @@ return sketch.get_quantile(rank_data);
       // This funciton creates the sketches.
       {
       AggregateFunctionSet sketch("datasketch_tdigest");
+      std::vector<FunctionDescription> agg_descs;
       
         
             {
@@ -5894,16 +9273,28 @@ return sketch.get_quantile(rank_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_tdigest data sketch by aggregating values";
+                desc.examples.push_back("datasketch_tdigest(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSTDigestCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
             {
                 auto fun = DSTDigestMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.bind = DSTDigestBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_tdigest data sketch by merging other TDigest data sketches";
+                desc.examples.push_back("datasketch_tdigest(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::FLOAT] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSTDigestMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]));
         
         
             {
@@ -5912,26 +9303,33 @@ return sketch.get_quantile(rank_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_tdigest data sketch by aggregating values";
+                desc.examples.push_back("datasketch_tdigest(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSTDigestCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
             {
                 auto fun = DSTDigestMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.bind = DSTDigestBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_tdigest data sketch by merging other TDigest data sketches";
+                desc.examples.push_back("datasketch_tdigest(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::DOUBLE] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DSTDigestMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]));
         
       CreateAggregateFunctionInfo sketch_info(sketch);
-
-
-    {
-        FunctionDescription desc;
-        desc.description = "Creates a sketch_tdigest data sketch by aggregating values or by aggregating other TDigest data sketches";
-        desc.examples.push_back("datasketch_tdigest(k, data)");
-        sketch_info.descriptions.push_back(desc);
-    }
+      for (auto &d : agg_descs) {
+          sketch_info.descriptions.push_back(std::move(d));
+      }
 
       loader.RegisterFunction(sketch_info);
       }
@@ -6205,19 +9603,24 @@ return sketch.get_upper_bound(std_dev_data);
       
       {
         ScalarFunctionSet fs("datasketch_hll_is_empty");
+        std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
                 {sketch_type},LogicalType::BOOLEAN
                 ,    DSHLLis_empty));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_hll_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_type };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a boolean indicating if the sketch is empty";
-            desc.examples.push_back("datasketch_hll_is_empty(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -6226,19 +9629,24 @@ return sketch.get_upper_bound(std_dev_data);
       }
       {
         ScalarFunctionSet fs("datasketch_hll_describe");
+        std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
                 {sketch_type,LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
                 ,    DSHLLdescribe));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a string representation of the sketch";
+                    desc.examples.push_back("datasketch_hll_describe(sketch, include_summary, include_detail)");
+                    desc.parameter_names = { "sketch","summary","detail" };
+                    desc.parameter_types = { sketch_type,LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a string representation of the sketch";
-            desc.examples.push_back("datasketch_hll_describe(sketch, include_summary, include_detail)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -6247,19 +9655,24 @@ return sketch.get_upper_bound(std_dev_data);
       }
       {
         ScalarFunctionSet fs("datasketch_hll_lg_config_k");
+        std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
                 {sketch_type},LogicalType::UTINYINT
                 ,    DSHLLlg_config_k));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of log base 2 K for this sketch";
+                    desc.examples.push_back("datasketch_hll_lg_config_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_type };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the value of log base 2 K for this sketch";
-            desc.examples.push_back("datasketch_hll_lg_config_k(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -6268,19 +9681,24 @@ return sketch.get_upper_bound(std_dev_data);
       }
       {
         ScalarFunctionSet fs("datasketch_hll_is_compact");
+        std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
                 {sketch_type},LogicalType::BOOLEAN
                 ,    DSHLLis_compact));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return whether the sketch is in compact form";
+                    desc.examples.push_back("datasketch_hll_is_compact(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_type };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return whether the sketch is in compact form";
-            desc.examples.push_back("datasketch_hll_is_compact(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -6289,19 +9707,24 @@ return sketch.get_upper_bound(std_dev_data);
       }
       {
         ScalarFunctionSet fs("datasketch_hll_estimate");
+        std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
                 {sketch_type},LogicalType::DOUBLE
                 ,    DSHLLestimate));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the estimate of the number of distinct items seen by the sketch";
+                    desc.examples.push_back("datasketch_hll_estimate(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_type };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the estimate of the number of distinct items seen by the sketch";
-            desc.examples.push_back("datasketch_hll_estimate(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -6310,19 +9733,24 @@ return sketch.get_upper_bound(std_dev_data);
       }
       {
         ScalarFunctionSet fs("datasketch_hll_lower_bound");
+        std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
                 {sketch_type,LogicalType::UTINYINT},LogicalType::DOUBLE
                 ,    DSHLLlower_bound));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the lower bound of the number of distinct items seen by the sketch";
+                    desc.examples.push_back("datasketch_hll_lower_bound(sketch, std_dev)");
+                    desc.parameter_names = { "sketch","std_dev" };
+                    desc.parameter_types = { sketch_type,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the lower bound of the number of distinct items seen by the sketch";
-            desc.examples.push_back("datasketch_hll_lower_bound(sketch, std_dev)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -6331,19 +9759,24 @@ return sketch.get_upper_bound(std_dev_data);
       }
       {
         ScalarFunctionSet fs("datasketch_hll_upper_bound");
+        std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
                 {sketch_type,LogicalType::UTINYINT},LogicalType::DOUBLE
                 ,    DSHLLupper_bound));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the upper bound of the number of distinct items seen by the sketch";
+                    desc.examples.push_back("datasketch_hll_upper_bound(sketch, std_dev)");
+                    desc.parameter_names = { "sketch","std_dev" };
+                    desc.parameter_types = { sketch_type,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the upper bound of the number of distinct items seen by the sketch";
-            desc.examples.push_back("datasketch_hll_upper_bound(sketch, std_dev)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -6354,6 +9787,7 @@ return sketch.get_upper_bound(std_dev_data);
       // This funciton creates the sketches.
       {
       AggregateFunctionSet sketch("datasketch_hll");
+      std::vector<FunctionDescription> agg_descs;
       
         
             {
@@ -6362,6 +9796,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6371,6 +9812,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6380,6 +9828,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6389,6 +9844,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6398,6 +9860,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6407,6 +9876,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6416,6 +9892,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6425,6 +9908,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6434,6 +9924,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6443,6 +9940,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6452,6 +9956,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6461,17 +9972,19 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::BLOB };
+                agg_descs.push_back(std::move(desc));
             }
         
       CreateAggregateFunctionInfo sketch_info(sketch);
-
-
-    {
-        FunctionDescription desc;
-        desc.description = "Creates a sketch_hll data sketch by aggregating values or by aggregating other HLL data sketches";
-        desc.examples.push_back("datasketch_hll(k, data)");
-        sketch_info.descriptions.push_back(desc);
-    }
+      for (auto &d : agg_descs) {
+          sketch_info.descriptions.push_back(std::move(d));
+      }
 
       loader.RegisterFunction(sketch_info);
       }
@@ -6491,7 +10004,9 @@ return sketch.get_upper_bound(std_dev_data);
     {
         FunctionDescription desc;
         desc.description = "Creates a sketch_HLL data sketch by aggregating other HLL data sketches";
-        desc.examples.push_back("datasketch_hll_union(k, data)");
+        desc.examples.push_back("datasketch_hll_union(k, sketch)");
+        desc.parameter_names = {"k", "sketch"};
+        desc.parameter_types = { LogicalType::INTEGER, sketch_type };
         sketch_info.descriptions.push_back(desc);
     }
 
@@ -6698,19 +10213,24 @@ return sketch.get_upper_bound(std_dev_data);
       
       {
         ScalarFunctionSet fs("datasketch_cpc_is_empty");
+        std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
                 {sketch_type},LogicalType::BOOLEAN
                 ,    DSCPCis_empty));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_cpc_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_type };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a boolean indicating if the sketch is empty";
-            desc.examples.push_back("datasketch_cpc_is_empty(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -6719,19 +10239,24 @@ return sketch.get_upper_bound(std_dev_data);
       }
       {
         ScalarFunctionSet fs("datasketch_cpc_describe");
+        std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
                 {sketch_type},LogicalType::VARCHAR
                 ,    DSCPCdescribe));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a string representation of the sketch";
+                    desc.examples.push_back("datasketch_cpc_describe(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_type };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return a string representation of the sketch";
-            desc.examples.push_back("datasketch_cpc_describe(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -6740,19 +10265,24 @@ return sketch.get_upper_bound(std_dev_data);
       }
       {
         ScalarFunctionSet fs("datasketch_cpc_estimate");
+        std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
                 {sketch_type},LogicalType::DOUBLE
                 ,    DSCPCestimate));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the estimate of the number of distinct items seen by the sketch";
+                    desc.examples.push_back("datasketch_cpc_estimate(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_type };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the estimate of the number of distinct items seen by the sketch";
-            desc.examples.push_back("datasketch_cpc_estimate(sketch)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -6761,19 +10291,24 @@ return sketch.get_upper_bound(std_dev_data);
       }
       {
         ScalarFunctionSet fs("datasketch_cpc_lower_bound");
+        std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
                 {sketch_type,LogicalType::UTINYINT},LogicalType::DOUBLE
                 ,    DSCPClower_bound));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the lower bound of the number of distinct items seen by the sketch";
+                    desc.examples.push_back("datasketch_cpc_lower_bound(sketch, std_dev)");
+                    desc.parameter_names = { "sketch","std_dev" };
+                    desc.parameter_types = { sketch_type,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the lower bound of the number of distinct items seen by the sketch";
-            desc.examples.push_back("datasketch_cpc_lower_bound(sketch, std_dev)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -6782,19 +10317,24 @@ return sketch.get_upper_bound(std_dev_data);
       }
       {
         ScalarFunctionSet fs("datasketch_cpc_upper_bound");
+        std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
                 {sketch_type,LogicalType::UTINYINT},LogicalType::DOUBLE
                 ,    DSCPCupper_bound));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the upper bound of the number of distinct items seen by the sketch";
+                    desc.examples.push_back("datasketch_cpc_upper_bound(sketch, std_dev)");
+                    desc.parameter_names = { "sketch","std_dev" };
+                    desc.parameter_types = { sketch_type,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "Return the upper bound of the number of distinct items seen by the sketch";
-            desc.examples.push_back("datasketch_cpc_upper_bound(sketch, std_dev)");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -6805,6 +10345,7 @@ return sketch.get_upper_bound(std_dev_data);
       // This funciton creates the sketches.
       {
       AggregateFunctionSet sketch("datasketch_cpc");
+      std::vector<FunctionDescription> agg_descs;
       
         
             {
@@ -6813,6 +10354,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6822,6 +10370,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6831,6 +10386,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6840,6 +10402,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6849,6 +10418,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6858,6 +10434,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6867,6 +10450,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6876,6 +10466,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6885,6 +10482,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6894,6 +10498,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6903,6 +10514,13 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
             }
         
         
@@ -6912,17 +10530,19 @@ return sketch.get_upper_bound(std_dev_data);
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::BLOB };
+                agg_descs.push_back(std::move(desc));
             }
         
       CreateAggregateFunctionInfo sketch_info(sketch);
-
-
-    {
-        FunctionDescription desc;
-        desc.description = "Creates a sketch_cpc data sketch by aggregating values or by aggregating other CPC data sketches";
-        desc.examples.push_back("datasketch_cpc(k, data)");
-        sketch_info.descriptions.push_back(desc);
-    }
+      for (auto &d : agg_descs) {
+          sketch_info.descriptions.push_back(std::move(d));
+      }
 
       loader.RegisterFunction(sketch_info);
       }
@@ -6942,7 +10562,9 @@ return sketch.get_upper_bound(std_dev_data);
     {
         FunctionDescription desc;
         desc.description = "Creates a sketch_CPC data sketch by aggregating other CPC data sketches";
-        desc.examples.push_back("datasketch_cpc_union(k, data)");
+        desc.examples.push_back("datasketch_cpc_union(k, sketch)");
+        desc.parameter_names = {"k", "sketch"};
+        desc.parameter_types = { LogicalType::INTEGER, sketch_type };
         sketch_info.descriptions.push_back(desc);
     }
 
