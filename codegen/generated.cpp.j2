@@ -707,25 +707,38 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
       {% for unary_function in functions_per_sketch_type(sketch_type) %}
       {
         ScalarFunctionSet fs("datasketch_{{sketch_type|lower}}_{{unary_function.name|lower}}");
+        std::vector<FunctionDescription> fn_descs;
         {% if sketch_type in counting_sketch_names %}
                 fs.AddFunction(ScalarFunction(
                 {{get_scalar_function_args(unary_function, None, None)}}
                 ,    DS{{sketch_type}}{{unary_function.name}}));
+                {
+                    FunctionDescription desc;
+                    desc.description = "{{unary_function.description}}";
+                    desc.examples.push_back("{{unary_function.example}}");
+                    desc.parameter_names = { {{get_parameter_names(unary_function)}} };
+                    desc.parameter_types = { {{get_parameter_types_str(unary_function, None, None)}} };
+                    fn_descs.push_back(std::move(desc));
+                }
         {% else %}
             {% for logical_type, cpp_type in logical_type_to_cplusplus_type(sketch_type).items() %}
                 fs.AddFunction(ScalarFunction(
                 {{get_scalar_function_args(unary_function, logical_type, cpp_type)}}
                 ,    DS{{sketch_type}}{{unary_function.name}}<{{cpp_type}}>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "{{unary_function.description}}";
+                    desc.examples.push_back("{{unary_function.example}}");
+                    desc.parameter_names = { {{get_parameter_names(unary_function)}} };
+                    desc.parameter_types = { {{get_parameter_types_str(unary_function, logical_type, cpp_type)}} };
+                    fn_descs.push_back(std::move(desc));
+                }
             {%- endfor %}
         {% endif %}
 
         CreateScalarFunctionInfo info(std::move(fs));
-
-        {
-            FunctionDescription desc;
-            desc.description = "{{unary_function.description}}";
-            desc.examples.push_back("{{unary_function.example}}");
-            info.descriptions.push_back(desc);
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
         }
 
         loader.RegisterFunction(info);
@@ -737,6 +750,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
       // This funciton creates the sketches.
       {
       AggregateFunctionSet sketch("datasketch_{{sketch_type|lower}}");
+      std::vector<FunctionDescription> agg_descs;
       {% for logical_type, cpp_type in logical_type_to_cplusplus_type(sketch_type).items() %}
         {% if sketch_type in counting_sketch_names %}
             {
@@ -745,6 +759,13 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_{{sketch_type|lower}} data sketch by aggregating values";
+                desc.examples.push_back("datasketch_{{sketch_type|lower}}(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}} };
+                agg_descs.push_back(std::move(desc));
             }
         {% else %}
             {
@@ -753,27 +774,34 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_{{sketch_type|lower}} data sketch by aggregating values";
+                desc.examples.push_back("datasketch_{{sketch_type|lower}}(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}} };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]));
             {
                 auto fun = DS{{sketch_type}}MergeAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]);
                 fun.bind = DS{{sketch_type}}Bind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
                 fun.arguments.insert(fun.arguments.begin(), {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
                 sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_{{sketch_type|lower}} data sketch by merging other {{sketch_type}} data sketches";
+                desc.examples.push_back("datasketch_{{sketch_type|lower}}(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, sketch_map_types[{{to_type_id(logical_type)}}] };
+                agg_descs.push_back(std::move(desc));
             }
-            //sketch.AddFunction(DS{{sketch_type}}MergeAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]));
         {% endif %}
       {%- endfor %}
       CreateAggregateFunctionInfo sketch_info(sketch);
-
-
-    {
-        FunctionDescription desc;
-        desc.description = "Creates a sketch_{{sketch_type|lower}} data sketch by aggregating values or by aggregating other {{sketch_type}} data sketches";
-        desc.examples.push_back("datasketch_{{sketch_type|lower}}(k, data)");
-        sketch_info.descriptions.push_back(desc);
-    }
+      for (auto &d : agg_descs) {
+          sketch_info.descriptions.push_back(std::move(d));
+      }
 
       loader.RegisterFunction(sketch_info);
       }
@@ -793,7 +821,9 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     {
         FunctionDescription desc;
         desc.description = "Creates a sketch_{{sketch_type}} data sketch by aggregating other {{sketch_type}} data sketches";
-        desc.examples.push_back("datasketch_{{sketch_type|lower}}_union(k, data)");
+        desc.examples.push_back("datasketch_{{sketch_type|lower}}_union(k, sketch)");
+        desc.parameter_names = {"k", "sketch"};
+        desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, sketch_type };
         sketch_info.descriptions.push_back(desc);
     }
 
