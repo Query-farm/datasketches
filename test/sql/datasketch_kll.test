@@ -32,12 +32,12 @@ INSERT INTO readings(temp) select unnest(generate_series(1, 1000))::double;
 query I
 SELECT datasketch_kll_rank(datasketch_kll(16, temp), 500.0, true) between 0.40 and 0.60 from readings
 ----
-True
+true
 
 query I
 SELECT datasketch_kll_quantile(datasketch_kll(16, temp), 0.5, true) between 400 and 600 from readings
 ----
-True
+true
 
 # Can't save results on these because they are random
 
@@ -67,7 +67,7 @@ INSERT INTO sketches (sketch) select datasketch_kll(16, temp) from readings wher
 query I
 select datasketch_kll_is_empty(datasketch_kll(16, sketch)) from sketches
 ----
-False
+false
 
 statement ok
 select datasketch_kll_quantile(datasketch_kll(16, sketch), 0.5, true)::int from sketches
@@ -165,7 +165,7 @@ SELECT datasketch_kll_max_item(datasketch_kll(32, sketch)) FROM partition_sketch
 query I
 SELECT datasketch_kll_quantile(datasketch_kll(32, sketch), 0.5, true) between 400 and 500 FROM partition_sketches
 ----
-True
+true
 
 # Test merging sketches with overlapping data ranges
 statement ok
@@ -238,7 +238,7 @@ SELECT datasketch_kll_pmf(datasketch_kll(32, sketch), [300, 600], true) FROM par
 query I
 SELECT datasketch_kll_rank(datasketch_kll(32, sketch), 450.0, true) between 0.45 and 0.55 FROM partition_sketches
 ----
-True
+true
 
 # Test merging sketches created with GROUP BY
 statement ok

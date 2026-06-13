@@ -37,13 +37,13 @@ INSERT INTO items(id) select unnest(generate_series(1, 100000)) order by random(
 query I
 SELECT datasketch_cpc_is_empty(datasketch_cpc(12, id)) from items
 ----
-False
+false
 
 
 query I
 SELECT datasketch_cpc_describe(datasketch_cpc(4, id)) like '%CPC sketch summary%' from items
 ----
-True
+true
 
 # Test with strings
 
@@ -75,7 +75,7 @@ INSERT INTO sketches (sketch) select datasketch_cpc(12, id) from items where mod
 query I
 select datasketch_cpc_is_empty(datasketch_cpc_union(12, sketch)) from sketches
 ----
-False
+false
 
 # Test error handling for invalid/corrupted sketch data
 statement error
@@ -140,7 +140,7 @@ true
 query I
 SELECT datasketch_cpc_is_empty(datasketch_cpc_union(12, sketch)) FROM partition_sketches
 ----
-False
+false
 
 # Verify union is not empty (already tested above, but confirms consistency)
 query I
@@ -253,5 +253,5 @@ true
 query I
 SELECT datasketch_cpc_describe(datasketch_cpc_union(12, sketch)) like '%CPC sketch summary%' FROM partition_sketches
 ----
-True
+true
 

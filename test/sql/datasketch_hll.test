@@ -55,7 +55,7 @@ true
 query I
 SELECT datasketch_hll_is_empty(datasketch_hll(12, id)) from items
 ----
-False
+false
 
 # Lower bound should be less than true count but reasonable
 query I
@@ -77,13 +77,13 @@ SELECT datasketch_hll_lg_config_k(datasketch_hll(12, id)) from items
 query I
 SELECT datasketch_hll_is_compact(datasketch_hll(12, id)) from items
 ----
-False
+false
 
 
 query I
 SELECT datasketch_hll_describe(datasketch_hll(4, id), true, false) like '%HLL sketch summary%' from items
 ----
-True
+true
 
 # Test with strings
 
@@ -122,7 +122,7 @@ INSERT INTO sketches (sketch) select datasketch_hll(12, id) from items where mod
 query I
 select datasketch_hll_is_empty(datasketch_hll_union(12, sketch)) from sketches
 ----
-False
+false
 
 statement ok
 select datasketch_hll_estimate(datasketch_hll_union(12, sketch))::int from sketches
@@ -190,7 +190,7 @@ true
 query I
 SELECT datasketch_hll_is_empty(datasketch_hll_union(12, sketch)) FROM partition_sketches
 ----
-False
+false
 
 # Union should have lg_config_k from the bind parameter
 query I
@@ -303,11 +303,11 @@ true
 query I
 SELECT datasketch_hll_describe(datasketch_hll_union(12, sketch), true, false) like '%HLL sketch summary%' FROM partition_sketches
 ----
-True
+true
 
 # Test is_compact on union result
 query I
 SELECT datasketch_hll_is_compact(datasketch_hll_union(12, sketch)) FROM partition_sketches
 ----
-False
+false
 
