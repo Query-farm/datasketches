@@ -779,6 +779,13 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
         static void Combine(const STATE &source, STATE &target,
                             AggregateInputData &aggr_input_data)
         {
+            // A source partial that received no tuples has a null sketch
+            // (e.g. an empty worker partition under parallel aggregation),
+            // so there is nothing to merge.
+            if (!source.sketch)
+            {
+                return;
+            }
             if (!target.sketch)
             {
                 target.CreateSketch(source);
@@ -835,6 +842,13 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
         static void Combine(const STATE &source, STATE &target,
                             AggregateInputData &aggr_input_data)
         {
+            // A source partial that received no tuples has a null sketch
+            // (e.g. an empty worker partition under parallel aggregation),
+            // so there is nothing to merge.
+            if (!source.sketch)
+            {
+                return;
+            }
             if (!target.sketch)
             {
                 target.CreateSketch(source);

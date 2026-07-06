@@ -274,3 +274,26 @@ query I
 SELECT datasketch_kll_max_item(datasketch_kll(16, sketch)) FROM category_sketches
 ----
 300.0
+
+# Regression test for issue #8: merging serialized sketches by re-aggregating
+# them under parallel aggregation must not segfault when a worker partition
+# receives zero tuples and contributes an empty (null-sketch) partial to
+# Combine. The two-level aggregate pipeline (create-per-bucket, then merge)
+# spreads few groups across many partitions, producing empty partials.
+statement ok
+SET threads = 8;
+
+query I
+WITH raw(v, bucket_id) AS (
+  VALUES (1.0, 1), (2.0, 1), (100.0, 2), (200.0, 2)
+),
+bucketed AS (
+  SELECT bucket_id, datasketch_kll(200, CAST(v AS DOUBLE)) AS sketch
+  FROM raw GROUP BY bucket_id
+),
+merged AS (
+  SELECT datasketch_kll(200, sketch) AS sketch FROM bucketed
+)
+SELECT datasketch_kll_quantile(sketch, 0.5, true) AS p50 FROM merged;
+----
+2.0
