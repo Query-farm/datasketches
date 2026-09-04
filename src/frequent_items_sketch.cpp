@@ -372,7 +372,7 @@ namespace duckdb
         }
 
         template <typename T>
-        void RegisterFreqItems(AggregateFunctionSet &set, LogicalType input_type, LogicalType result_type)
+        void RegisterFreqItems(AggregateFunctionSet &set, std::vector<FunctionDescription> &descs, LogicalType input_type, LogicalType result_type)
         {
             auto fun = AggregateFunction::UnaryAggregateDestructor<DSFreqItemsState, T, string_t, DSFreqItemsOperation, AggregateDestructorType::LEGACY>(
                 input_type, result_type);
@@ -380,8 +380,24 @@ namespace duckdb
             fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
             fun.arguments = {input_type};
             set.AddFunction(fun);
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a Frequent Items sketch to find heavy hitters in a data stream";
+                desc.examples.push_back("datasketch_frequent_items(column)");
+                desc.parameter_names = {"data"};
+                desc.parameter_types = {input_type};
+                descs.push_back(std::move(desc));
+            }
             fun.arguments = {LogicalType::INTEGER, input_type};
             set.AddFunction(fun);
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a Frequent Items sketch with the given log2 of max map size (lg_max_k)";
+                desc.examples.push_back("datasketch_frequent_items(10, column)");
+                desc.parameter_names = {"lg_max_k", "data"};
+                desc.parameter_types = {LogicalType::INTEGER, input_type};
+                descs.push_back(std::move(desc));
+            }
         }
     }
 
@@ -393,28 +409,29 @@ namespace duckdb
         auto sketch_type = CreateFrequentItemsSketchType(loader);
 
         AggregateFunctionSet sketch_agg("datasketch_frequent_items");
+        std::vector<FunctionDescription> agg_descs;
 
         // --- 1. REGISTER ALL SUPPORTED RAW INPUT TYPES ---
         // NOTE: Do NOT work for BLOB - it conflicts with the sketch merge operation!
 
         // Signed integers
-        RegisterFreqItems<int8_t>(sketch_agg, LogicalType::TINYINT, sketch_type);
-        RegisterFreqItems<int16_t>(sketch_agg, LogicalType::SMALLINT, sketch_type);
-        RegisterFreqItems<int32_t>(sketch_agg, LogicalType::INTEGER, sketch_type);
-        RegisterFreqItems<int64_t>(sketch_agg, LogicalType::BIGINT, sketch_type);
+        RegisterFreqItems<int8_t>(sketch_agg, agg_descs, LogicalType::TINYINT, sketch_type);
+        RegisterFreqItems<int16_t>(sketch_agg, agg_descs, LogicalType::SMALLINT, sketch_type);
+        RegisterFreqItems<int32_t>(sketch_agg, agg_descs, LogicalType::INTEGER, sketch_type);
+        RegisterFreqItems<int64_t>(sketch_agg, agg_descs, LogicalType::BIGINT, sketch_type);
 
         // Unsigned integers
-        RegisterFreqItems<uint8_t>(sketch_agg, LogicalType::UTINYINT, sketch_type);
-        RegisterFreqItems<uint16_t>(sketch_agg, LogicalType::USMALLINT, sketch_type);
-        RegisterFreqItems<uint32_t>(sketch_agg, LogicalType::UINTEGER, sketch_type);
-        RegisterFreqItems<uint64_t>(sketch_agg, LogicalType::UBIGINT, sketch_type);
+        RegisterFreqItems<uint8_t>(sketch_agg, agg_descs, LogicalType::UTINYINT, sketch_type);
+        RegisterFreqItems<uint16_t>(sketch_agg, agg_descs, LogicalType::USMALLINT, sketch_type);
+        RegisterFreqItems<uint32_t>(sketch_agg, agg_descs, LogicalType::UINTEGER, sketch_type);
+        RegisterFreqItems<uint64_t>(sketch_agg, agg_descs, LogicalType::UBIGINT, sketch_type);
 
         // Floating point
-        RegisterFreqItems<float>(sketch_agg, LogicalType::FLOAT, sketch_type);
-        RegisterFreqItems<double>(sketch_agg, LogicalType::DOUBLE, sketch_type);
+        RegisterFreqItems<float>(sketch_agg, agg_descs, LogicalType::FLOAT, sketch_type);
+        RegisterFreqItems<double>(sketch_agg, agg_descs, LogicalType::DOUBLE, sketch_type);
 
         // String type - only VARCHAR, NOT BLOB!
-        RegisterFreqItems<string_t>(sketch_agg, LogicalType::VARCHAR, sketch_type);
+        RegisterFreqItems<string_t>(sketch_agg, agg_descs, LogicalType::VARCHAR, sketch_type);
 
         // --- 2. MERGE SKETCHES (uses sketch_type which is aliased BLOB) ---
         auto fun_merge = AggregateFunction::UnaryAggregateDestructor<DSFreqItemsState, string_t, string_t, DSFreqItemsMergeOperation, AggregateDestructorType::LEGACY>(
@@ -423,20 +440,55 @@ namespace duckdb
         fun_merge.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
         fun_merge.arguments = {sketch_type};
         sketch_agg.AddFunction(fun_merge);
+        {
+            FunctionDescription desc;
+            desc.description = "Merges existing Frequent Items sketches into a single sketch";
+            desc.examples.push_back("datasketch_frequent_items(sketch)");
+            desc.parameter_names = {"sketch"};
+            desc.parameter_types = {sketch_type};
+            agg_descs.push_back(std::move(desc));
+        }
         fun_merge.arguments = {LogicalType::INTEGER, sketch_type};
         sketch_agg.AddFunction(fun_merge);
+        {
+            FunctionDescription desc;
+            desc.description = "Merges existing Frequent Items sketches into a single sketch with the given log2 of max map size (lg_max_k)";
+            desc.examples.push_back("datasketch_frequent_items(10, sketch)");
+            desc.parameter_names = {"lg_max_k", "sketch"};
+            desc.parameter_types = {LogicalType::INTEGER, sketch_type};
+            agg_descs.push_back(std::move(desc));
+        }
 
         {
             CreateAggregateFunctionInfo info(sketch_agg);
-            FunctionDescription desc;
-            desc.description = "Creates a Frequent Items sketch to find heavy hitters in a data stream";
-            desc.examples.push_back("datasketch_frequent_items(column)");
-            desc.examples.push_back("datasketch_frequent_items(10, column)");
-            info.descriptions.push_back(desc);
+            for (auto &d : agg_descs) {
+                info.descriptions.push_back(std::move(d));
+            }
             loader.RegisterFunction(info);
         }
 
         // --- SCALAR FUNCTIONS (ESTIMATES & BOUNDS) ---
+        auto register_freq_items_scalar_set = [&](const char *name, const char *description,
+                                                   ScalarFunctionSet &&set,
+                                                   const std::vector<LogicalType> &item_types) {
+            CreateScalarFunctionInfo info(std::move(set));
+            for (const auto &item_type : item_types) {
+                FunctionDescription desc;
+                desc.description = description;
+                desc.examples.push_back(std::string(name) + "(sketch, item)");
+                desc.parameter_names = {"sketch", "item"};
+                desc.parameter_types = {sketch_type, item_type};
+                info.descriptions.push_back(std::move(desc));
+            }
+            loader.RegisterFunction(info);
+        };
+
+        const std::vector<LogicalType> item_types = {
+            LogicalType::TINYINT, LogicalType::SMALLINT, LogicalType::INTEGER, LogicalType::BIGINT,
+            LogicalType::UTINYINT, LogicalType::USMALLINT, LogicalType::UINTEGER, LogicalType::UBIGINT,
+            LogicalType::FLOAT, LogicalType::DOUBLE, LogicalType::VARCHAR
+        };
+
         // ESTIMATE
         {
             ScalarFunctionSet set("datasketch_frequent_items_estimate");
@@ -451,12 +503,9 @@ namespace duckdb
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::FLOAT}, LogicalType::BIGINT, DSFreqItemsEstimate<float>));
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::DOUBLE}, LogicalType::BIGINT, DSFreqItemsEstimate<double>));
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::VARCHAR}, LogicalType::BIGINT, DSFreqItemsEstimate<string_t>));
-            CreateScalarFunctionInfo info(std::move(set));
-            FunctionDescription desc;
-            desc.description = "Returns the estimated frequency count for a specific item";
-            desc.examples.push_back("datasketch_frequent_items_estimate(sketch, 'item')");
-            info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            register_freq_items_scalar_set("datasketch_frequent_items_estimate",
+                "Returns the estimated frequency count for a specific item",
+                std::move(set), item_types);
         }
 
         // LOWER BOUND
@@ -473,12 +522,9 @@ namespace duckdb
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::FLOAT}, LogicalType::BIGINT, DSFreqItemsLowerBound<float>));
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::DOUBLE}, LogicalType::BIGINT, DSFreqItemsLowerBound<double>));
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::VARCHAR}, LogicalType::BIGINT, DSFreqItemsLowerBound<string_t>));
-            CreateScalarFunctionInfo info(std::move(set));
-            FunctionDescription desc;
-            desc.description = "Returns the lower bound frequency estimate for a specific item";
-            desc.examples.push_back("datasketch_frequent_items_lower_bound(sketch, 'item')");
-            info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            register_freq_items_scalar_set("datasketch_frequent_items_lower_bound",
+                "Returns the lower bound frequency estimate for a specific item",
+                std::move(set), item_types);
         }
 
         // UPPER BOUND
@@ -495,12 +541,9 @@ namespace duckdb
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::FLOAT}, LogicalType::BIGINT, DSFreqItemsUpperBound<float>));
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::DOUBLE}, LogicalType::BIGINT, DSFreqItemsUpperBound<double>));
             set.AddFunction(ScalarFunction({sketch_type, LogicalType::VARCHAR}, LogicalType::BIGINT, DSFreqItemsUpperBound<string_t>));
-            CreateScalarFunctionInfo info(std::move(set));
-            FunctionDescription desc;
-            desc.description = "Returns the upper bound frequency estimate for a specific item";
-            desc.examples.push_back("datasketch_frequent_items_upper_bound(sketch, 'item')");
-            info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            register_freq_items_scalar_set("datasketch_frequent_items_upper_bound",
+                "Returns the upper bound frequency estimate for a specific item",
+                std::move(set), item_types);
         }
 
         // --- METADATA FUNCTIONS ---
@@ -510,6 +553,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns the epsilon value (relative error) of the sketch";
             desc.examples.push_back("datasketch_frequent_items_epsilon(sketch)");
+            desc.parameter_names = {"sketch"};
+            desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -519,6 +564,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns the total weight (sum of all item counts) processed by the sketch";
             desc.examples.push_back("datasketch_frequent_items_total_weight(sketch)");
+            desc.parameter_names = {"sketch"};
+            desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -528,6 +575,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns true if the sketch is empty";
             desc.examples.push_back("datasketch_frequent_items_is_empty(sketch)");
+            desc.parameter_names = {"sketch"};
+            desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -537,6 +586,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns the number of active items currently tracked by the sketch";
             desc.examples.push_back("datasketch_frequent_items_num_active(sketch)");
+            desc.parameter_names = {"sketch"};
+            desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
@@ -556,6 +607,8 @@ namespace duckdb
             FunctionDescription desc;
             desc.description = "Returns a list of frequent items with their estimates and bounds. Use 'NO_FALSE_POSITIVES' or 'NO_FALSE_NEGATIVES' for error type";
             desc.examples.push_back("datasketch_frequent_items_get_frequent(sketch, 'NO_FALSE_POSITIVES')");
+            desc.parameter_names = {"sketch", "error_type"};
+            desc.parameter_types = {sketch_type, LogicalType::VARCHAR};
             info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }

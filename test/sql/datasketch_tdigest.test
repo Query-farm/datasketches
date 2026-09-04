@@ -68,7 +68,7 @@ INSERT INTO sketches (sketch) select datasketch_tdigest(12, temp) from readings 
 query I
 select datasketch_tdigest_is_empty(datasketch_tdigest(12, sketch)) from sketches
 ----
-False
+false
 
 # Merged sketch median should be close to 500
 query I
@@ -133,7 +133,7 @@ SELECT datasketch_tdigest_total_weight(datasketch_tdigest(100, sketch)) FROM par
 query I
 SELECT datasketch_tdigest_is_empty(datasketch_tdigest(100, sketch)) FROM partition_sketches
 ----
-False
+false
 
 # Verify merged sketch median is approximately in the middle
 query I
@@ -167,7 +167,7 @@ SELECT datasketch_tdigest_total_weight(datasketch_tdigest(100, sketch)) FROM ove
 query I
 SELECT datasketch_tdigest_is_empty(datasketch_tdigest(100, sketch)) FROM overlap_sketches
 ----
-False
+false
 
 # Test merge with different K values - merged sketch should use the K from bind
 statement ok
