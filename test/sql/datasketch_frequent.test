@@ -216,7 +216,68 @@ SELECT datasketch_frequent_items_estimate(sketch, 'banana') FROM nulls_sketch;
 1
 
 # -------------------------------------------------------------------
-# 8. Metadata Functions
+# 8. Weighted Items
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE weighted_items(item_name VARCHAR, metric_value BIGINT);
+
+statement ok
+INSERT INTO weighted_items VALUES
+('item_a', 120),
+('item_b', 15),
+('item_a', 80),
+('item_c', 3);
+
+statement ok
+CREATE TABLE weighted_item_sketch AS
+SELECT datasketch_frequent_items_weighted(10, item_name, metric_value) AS sketch
+FROM weighted_items;
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 'item_a') FROM weighted_item_sketch;
+----
+200
+
+query I
+SELECT datasketch_frequent_items_estimate(sketch, 'item_b') FROM weighted_item_sketch;
+----
+15
+
+query I
+SELECT datasketch_frequent_items_total_weight(sketch) FROM weighted_item_sketch;
+----
+218
+
+query I
+SELECT datasketch_frequent_items_estimate(
+    datasketch_frequent_items_weighted(item_name, metric_value),
+    'item_a'
+) FROM weighted_items;
+----
+200
+
+query ITII
+SELECT
+    f.item,
+    f.estimate,
+    f.lower_bound,
+    f.upper_bound
+FROM weighted_item_sketch,
+     UNNEST(datasketch_frequent_items_get_frequent(sketch, 'NO_FALSE_POSITIVES')) as t(f)
+ORDER BY f.estimate DESC;
+----
+item_a	200	200	200
+item_b	15	15	15
+item_c	3	3	3
+
+statement error
+SELECT datasketch_frequent_items_weighted(10, item_name, -1::BIGINT) FROM weighted_items;
+----
+Invalid Input Error: Frequent Items weight must be non-negative
+
+# -------------------------------------------------------------------
+# 9. Metadata Functions
 # -------------------------------------------------------------------
 
 # Test epsilon (error bound) - should be related to map size
@@ -825,4 +886,3 @@ SELECT
 FROM float_sketch;
 ----
 3	3	3
-
