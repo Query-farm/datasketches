@@ -4,6 +4,7 @@
 #include "duckdb/parser/parsed_data/create_aggregate_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_type_info.hpp"
 #include "duckdb/catalog/catalog.hpp"
+#include "duckdb/common/exception.hpp"
 #include "duckdb/common/types/vector.hpp"
 #include "duckdb/common/vector_operations/vector_operations.hpp"
 
@@ -37,6 +38,22 @@ namespace duckdb
         {
             uint8_t lg_max_k = 10;
             if (arguments.size() == 2)
+            {
+                if (!arguments[0]->IsFoldable())
+                    throw BinderException("Frequent Items lg_max_k must be constant");
+                Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
+                if (!k_val.IsNull())
+                    lg_max_k = (uint8_t)k_val.GetValue<int32_t>();
+                Function::EraseArgument(function, arguments, 0);
+            }
+            return make_uniq<DSFreqItemsBindData>(lg_max_k);
+        }
+
+        unique_ptr<FunctionData> DSFreqItemsWeightedBind(ClientContext &context, AggregateFunction &function,
+                                                         vector<unique_ptr<Expression>> &arguments)
+        {
+            uint8_t lg_max_k = 10;
+            if (arguments.size() == 3)
             {
                 if (!arguments[0]->IsFoldable())
                     throw BinderException("Frequent Items lg_max_k must be constant");
@@ -140,6 +157,36 @@ namespace duckdb
             }
         };
 
+        template <typename T>
+        static std::string DSFreqItemsToString(const T &input)
+        {
+            if constexpr (std::is_same_v<T, string_t>)
+            {
+                return input.GetString();
+            }
+            else if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>)
+            {
+                return std::to_string(static_cast<int>(input));
+            }
+            else
+            {
+                return std::to_string(input);
+            }
+        }
+
+        template <typename T>
+        static uint64_t DSFreqItemsToWeight(const T &weight)
+        {
+            if constexpr (std::is_signed_v<T>)
+            {
+                if (weight < 0)
+                {
+                    throw InvalidInputException("Frequent Items weight must be non-negative");
+                }
+            }
+            return static_cast<uint64_t>(weight);
+        }
+
         // Operation for MERGING SKETCHES (sketch_type / BLOB)
         struct DSFreqItemsMergeOperation
         {
@@ -165,6 +212,37 @@ namespace duckdb
                 {
                     Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
                 }
+            }
+
+            template <class STATE, class OP>
+            static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr)
+            {
+                DSFreqItemsOperation::Combine<STATE, OP>(source, target, aggr);
+            }
+
+            template <class T, class STATE>
+            static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize)
+            {
+                DSFreqItemsOperation::Finalize<T, STATE>(state, target, finalize);
+            }
+        };
+
+        // Operation for WEIGHTED RAW ITEMS. This is the SQL equivalent of
+        // Apache DataSketches frequent_items_sketch::update(item, weight).
+        struct DSFreqItemsWeightedOperation
+        {
+            template <class STATE>
+            static void Initialize(STATE &state) { DSFreqItemsOperation::Initialize<STATE>(state); }
+            template <class STATE>
+            static void Destroy(STATE &state, AggregateInputData &aggr) { DSFreqItemsOperation::Destroy<STATE>(state, aggr); }
+            static bool IgnoreNull() { return true; }
+
+            template <class A_TYPE, class W_TYPE, class STATE, class OP>
+            static void Operation(STATE &state, const A_TYPE &input, const W_TYPE &weight, AggregateBinaryInput &idata)
+            {
+                auto &bind_data = idata.input.bind_data->template Cast<DSFreqItemsBindData>();
+                state.Create(bind_data.lg_max_k);
+                state.sketch->update(DSFreqItemsToString(input), DSFreqItemsToWeight(weight));
             }
 
             template <class STATE, class OP>
@@ -399,6 +477,27 @@ namespace duckdb
                 descs.push_back(std::move(desc));
             }
         }
+
+        template <typename T, typename W>
+        void RegisterWeightedFreqItems(AggregateFunctionSet &set, LogicalType input_type, LogicalType weight_type, LogicalType result_type)
+        {
+            auto fun = AggregateFunction::BinaryAggregate<DSFreqItemsState, T, W, string_t, DSFreqItemsWeightedOperation, AggregateDestructorType::LEGACY>(
+                input_type, weight_type, result_type);
+            fun.destructor = AggregateFunction::StateDestroy<DSFreqItemsState, DSFreqItemsWeightedOperation>;
+            fun.bind = DSFreqItemsWeightedBind;
+            fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
+            fun.arguments = {input_type, weight_type};
+            set.AddFunction(fun);
+            fun.arguments = {LogicalType::INTEGER, input_type, weight_type};
+            set.AddFunction(fun);
+        }
+
+        template <typename T>
+        void RegisterWeightedFreqItems(AggregateFunctionSet &set, LogicalType input_type, LogicalType result_type)
+        {
+            RegisterWeightedFreqItems<T, int64_t>(set, input_type, LogicalType::BIGINT, result_type);
+            RegisterWeightedFreqItems<T, uint64_t>(set, input_type, LogicalType::UBIGINT, result_type);
+        }
     }
 
     // ============================================================
@@ -464,6 +563,30 @@ namespace duckdb
             for (auto &d : agg_descs) {
                 info.descriptions.push_back(std::move(d));
             }
+            loader.RegisterFunction(info);
+        }
+
+        AggregateFunctionSet weighted_sketch_agg("datasketch_frequent_items_weighted");
+
+        RegisterWeightedFreqItems<int8_t>(weighted_sketch_agg, LogicalType::TINYINT, sketch_type);
+        RegisterWeightedFreqItems<int16_t>(weighted_sketch_agg, LogicalType::SMALLINT, sketch_type);
+        RegisterWeightedFreqItems<int32_t>(weighted_sketch_agg, LogicalType::INTEGER, sketch_type);
+        RegisterWeightedFreqItems<int64_t>(weighted_sketch_agg, LogicalType::BIGINT, sketch_type);
+        RegisterWeightedFreqItems<uint8_t>(weighted_sketch_agg, LogicalType::UTINYINT, sketch_type);
+        RegisterWeightedFreqItems<uint16_t>(weighted_sketch_agg, LogicalType::USMALLINT, sketch_type);
+        RegisterWeightedFreqItems<uint32_t>(weighted_sketch_agg, LogicalType::UINTEGER, sketch_type);
+        RegisterWeightedFreqItems<uint64_t>(weighted_sketch_agg, LogicalType::UBIGINT, sketch_type);
+        RegisterWeightedFreqItems<float>(weighted_sketch_agg, LogicalType::FLOAT, sketch_type);
+        RegisterWeightedFreqItems<double>(weighted_sketch_agg, LogicalType::DOUBLE, sketch_type);
+        RegisterWeightedFreqItems<string_t>(weighted_sketch_agg, LogicalType::VARCHAR, sketch_type);
+
+        {
+            CreateAggregateFunctionInfo info(weighted_sketch_agg);
+            FunctionDescription desc;
+            desc.description = "Creates a weighted Frequent Items sketch to find heavy hitters by item weight";
+            desc.examples.push_back("datasketch_frequent_items_weighted(column, weight)");
+            desc.examples.push_back("datasketch_frequent_items_weighted(10, column, weight)");
+            info.descriptions.push_back(desc);
             loader.RegisterFunction(info);
         }
 
