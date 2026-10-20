@@ -72,7 +72,8 @@ namespace duckdb
                 throw BinderException("Theta Sketch lg_k cannot be NULL");
 
             auto lg_k = (uint8_t)k_val.GetValue<int32_t>();
-            Function::EraseArgument(function, arguments, 0);
+            // lg_k stays in the argument list (the update reads the data at index 1): bind data is not part of the
+            // serialized plan, so the optimizer would otherwise treat aggregates that differ only in lg_k as identical.
             return make_uniq<DSThetaBindData>(lg_k);
         }
 
@@ -437,6 +438,7 @@ namespace duckdb
             fun_with_k.bind = DSThetaBindWithK;
             fun_with_k.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
             fun_with_k.arguments.insert(fun_with_k.arguments.begin(), LogicalType::INTEGER);
+            DSReadDataArgumentAt<1, DSThetaState, T, DSThetaCreateOperation>(fun_with_k);
             set.AddFunction(fun_with_k);
             {
                 FunctionDescription desc;
@@ -489,6 +491,7 @@ namespace duckdb
             sketch_type, sketch_type);
         fun_merge_k.bind = DSThetaBindWithK;
         fun_merge_k.arguments = {LogicalType::INTEGER, sketch_type};
+        DSReadDataArgumentAt<1, DSThetaState, string_t, DSThetaMergeOperation>(fun_merge_k);
         sketch_agg.AddFunction(fun_merge_k);
         {
             FunctionDescription desc;

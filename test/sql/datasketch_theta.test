@@ -889,3 +889,40 @@ FROM (SELECT datasketch_theta_union(
     (SELECT datasketch_theta(16, i) FROM range(1000, 4000) t(i))) AS u);
 ----
 false	4000.0
+
+# -------------------------------------------------------------------
+# 28. Aggregates that differ only in lg_k are not merged by the optimizer
+# (regression: lg_k was erased from the arguments after binding, so DuckDB's
+#  common subplan optimizer treated e.g. datasketch_theta(10, i) and
+#  datasketch_theta(12, i) as the same aggregate)
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE const_args AS SELECT i FROM range(100000) t(i);
+
+query I rowsort
+SELECT datasketch_theta_num_retained(s) >= 4096
+FROM (SELECT datasketch_theta(10, i) AS s FROM const_args UNION ALL SELECT datasketch_theta(12, i) FROM const_args);
+----
+false
+true
+
+query II
+SELECT datasketch_theta_num_retained(datasketch_theta(10, i)) >= 4096, datasketch_theta_num_retained(datasketch_theta(12, i)) >= 4096 FROM const_args;
+----
+false	true
+
+statement ok
+CREATE TABLE const_sketches AS SELECT i % 2 AS part, datasketch_theta(14, i) AS sketch FROM const_args GROUP BY i % 2;
+
+query I rowsort
+SELECT datasketch_theta_num_retained(s)
+FROM (SELECT datasketch_theta(10, sketch) AS s FROM const_sketches UNION ALL SELECT datasketch_theta(12, sketch) FROM const_sketches);
+----
+1024
+4096
+
+query II
+SELECT datasketch_theta_num_retained(datasketch_theta(10, sketch)), datasketch_theta_num_retained(datasketch_theta(12, sketch)) FROM const_sketches;
+----
+1024	4096
