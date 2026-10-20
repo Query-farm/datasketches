@@ -37,7 +37,7 @@ namespace duckdb
         LoadCPCSketch(loader);
         LoadThetaSketch(loader);
         LoadFrequentItemsSketch(loader);
-        QueryFarmSendTelemetry(loader, "datasketches", "2026102003");
+        QueryFarmSendTelemetry(loader, "datasketches", "2026102004");
     }
 
     void DatasketchesExtension::Load(ExtensionLoader &loader)
