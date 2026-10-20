@@ -12,6 +12,7 @@
 #include "duckdb/common/vector/struct_vector.hpp"
 #include "duckdb/common/vector/unified_vector_format.hpp"
 #include "duckdb/common/vector_operations/vector_operations.hpp"
+#include "duckdb/common/types/cast_helpers.hpp" // duckdb_fmt
 
 #include <DataSketches/frequent_items_sketch.hpp>
 #include <string>
@@ -22,6 +23,33 @@ namespace duckdb
     namespace
     {
         using FrequentItemsSketch = datasketches::frequent_items_sketch<std::string>;
+
+        // Converts an item to the string key stored in the sketch. Every item type is stored as a string so one
+        // sketch type serves all inputs; the conversion must therefore be injective, or distinct items would be
+        // counted together. Integers use their exact decimal form. FLOAT and DOUBLE are formatted the way DuckDB's
+        // VARCHAR cast formats them (duckdb_fmt "{}"): the shortest string that round-trips to the same value
+        // (e.g. 0.1, 1e-07), so items look exactly like CAST(x AS VARCHAR) and distinct values get distinct strings.
+        template <typename T>
+        static std::string DSFreqItemsToString(const T &input)
+        {
+            if constexpr (std::is_same_v<T, string_t>)
+            {
+                return input.GetString();
+            }
+            else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, double>)
+            {
+                return duckdb_fmt::format("{}", input);
+            }
+            else if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>)
+            {
+                // Widen so std::to_string does not see a character type.
+                return std::to_string(static_cast<int>(input));
+            }
+            else
+            {
+                return std::to_string(input);
+            }
+        }
 
         // ============================================================
         // 1. Helpers & Bind Data
@@ -38,6 +66,17 @@ namespace duckdb
             uint8_t lg_max_k;
         };
 
+        // lg_max_k is the log2 of the sketch's maximum hash map size. The library computes 1 << lg_max_k and treats
+        // values below 3 as an error, so reject out-of-range values instead of silently truncating them to uint8_t.
+        static uint8_t DSFreqItemsCheckLgMaxK(int64_t lg_max_k)
+        {
+            if (lg_max_k < 3 || lg_max_k > 30)
+            {
+                throw BinderException("Frequent Items lg_max_k must be between 3 and 30, got: %lld", (long long)lg_max_k);
+            }
+            return static_cast<uint8_t>(lg_max_k);
+        }
+
         unique_ptr<FunctionData> DSFreqItemsBind(BindAggregateFunctionInput &input)
         {
             auto &context = input.GetClientContext();
@@ -49,7 +88,7 @@ namespace duckdb
                     throw BinderException("Frequent Items lg_max_k must be constant");
                 Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
                 if (!k_val.IsNull())
-                    lg_max_k = (uint8_t)k_val.GetValue<int32_t>();
+                    lg_max_k = DSFreqItemsCheckLgMaxK(k_val.GetValue<int64_t>());
                 DSEraseAggregateArgument(input, 0);
             }
             return make_uniq<DSFreqItemsBindData>(lg_max_k);
@@ -66,7 +105,7 @@ namespace duckdb
                     throw BinderException("Frequent Items lg_max_k must be constant");
                 Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
                 if (!k_val.IsNull())
-                    lg_max_k = (uint8_t)k_val.GetValue<int32_t>();
+                    lg_max_k = DSFreqItemsCheckLgMaxK(k_val.GetValue<int64_t>());
                 DSEraseAggregateArgument(input, 0);
             }
             return make_uniq<DSFreqItemsBindData>(lg_max_k);
@@ -109,19 +148,7 @@ namespace duckdb
                 auto &bind_data = idata.input.bind_data->template Cast<DSFreqItemsBindData>();
                 state.Create(bind_data.lg_max_k);
 
-                if constexpr (std::is_same_v<A_TYPE, string_t>)
-                {
-                    state.sketch->update(input.GetString(), 1);
-                }
-                else if constexpr (std::is_same_v<A_TYPE, int8_t> || std::is_same_v<A_TYPE, uint8_t>)
-                {
-                    // Cast to int to avoid char interpretation by std::to_string
-                    state.sketch->update(std::to_string(static_cast<int>(input)), 1);
-                }
-                else
-                {
-                    state.sketch->update(std::to_string(input), 1);
-                }
+                state.sketch->update(DSFreqItemsToString(input), 1);
             }
 
             template <class INPUT_TYPE, class STATE, class OP>
@@ -163,23 +190,6 @@ namespace duckdb
                 }
             }
         };
-
-        template <typename T>
-        static std::string DSFreqItemsToString(const T &input)
-        {
-            if constexpr (std::is_same_v<T, string_t>)
-            {
-                return input.GetString();
-            }
-            else if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>)
-            {
-                return std::to_string(static_cast<int>(input));
-            }
-            else
-            {
-                return std::to_string(input);
-            }
-        }
 
         template <typename T>
         static uint64_t DSFreqItemsToWeight(const T &weight)
@@ -282,18 +292,7 @@ namespace duckdb
                                                           [&](string_t sketch_blob, T item)
                                                           {
                                                               auto sketch = DeserializeSketch(sketch_blob);
-                                                              if constexpr (std::is_same_v<T, string_t>)
-                                                              {
-                                                                  return (int64_t)sketch.get_estimate(item.GetString());
-                                                              }
-                                                              else if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>)
-                                                              {
-                                                                  return (int64_t)sketch.get_estimate(std::to_string(static_cast<int>(item)));
-                                                              }
-                                                              else
-                                                              {
-                                                                  return (int64_t)sketch.get_estimate(std::to_string(item));
-                                                              }
+                                                              return (int64_t)sketch.get_estimate(DSFreqItemsToString(item));
                                                           });
         }
 
@@ -304,18 +303,7 @@ namespace duckdb
                                                           [&](string_t sketch_blob, T item)
                                                           {
                                                               auto sketch = DeserializeSketch(sketch_blob);
-                                                              if constexpr (std::is_same_v<T, string_t>)
-                                                              {
-                                                                  return (int64_t)sketch.get_lower_bound(item.GetString());
-                                                              }
-                                                              else if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>)
-                                                              {
-                                                                  return (int64_t)sketch.get_lower_bound(std::to_string(static_cast<int>(item)));
-                                                              }
-                                                              else
-                                                              {
-                                                                  return (int64_t)sketch.get_lower_bound(std::to_string(item));
-                                                              }
+                                                              return (int64_t)sketch.get_lower_bound(DSFreqItemsToString(item));
                                                           });
         }
 
@@ -326,18 +314,7 @@ namespace duckdb
                                                           [&](string_t sketch_blob, T item)
                                                           {
                                                               auto sketch = DeserializeSketch(sketch_blob);
-                                                              if constexpr (std::is_same_v<T, string_t>)
-                                                              {
-                                                                  return (int64_t)sketch.get_upper_bound(item.GetString());
-                                                              }
-                                                              else if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>)
-                                                              {
-                                                                  return (int64_t)sketch.get_upper_bound(std::to_string(static_cast<int>(item)));
-                                                              }
-                                                              else
-                                                              {
-                                                                  return (int64_t)sketch.get_upper_bound(std::to_string(item));
-                                                              }
+                                                              return (int64_t)sketch.get_upper_bound(DSFreqItemsToString(item));
                                                           });
         }
 
