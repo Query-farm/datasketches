@@ -1,0 +1,47 @@
+# name: test/sql/datasketch_cdf_pmf_types.test
+# description: CDF/PMF return LIST(DOUBLE) probabilities for every sketch item type
+# group: [datasketches]
+
+require datasketches
+
+statement ok
+CREATE TABLE ints AS SELECT i::INTEGER AS v FROM range(1, 101) t(i);
+
+# 100 items is below k, so the sketches are exact.
+
+query III
+SELECT typeof(datasketch_kll_cdf(datasketch_kll(200, v), [50], true)),
+       datasketch_kll_cdf(datasketch_kll(200, v), [50], true),
+       datasketch_kll_pmf(datasketch_kll(200, v), [50], true)
+FROM ints
+----
+DOUBLE[]	[0.5, 1.0]	[0.5, 0.5]
+
+query III
+SELECT typeof(datasketch_quantiles_pmf(datasketch_quantiles(256, v), [25, 75], true)),
+       datasketch_quantiles_cdf(datasketch_quantiles(256, v), [25, 75], true),
+       datasketch_quantiles_pmf(datasketch_quantiles(256, v), [25, 75], true)
+FROM ints
+----
+DOUBLE[]	[0.25, 0.75, 1.0]	[0.25, 0.5, 0.25]
+
+query II
+SELECT datasketch_req_cdf(datasketch_req(200, v), [50], true),
+       datasketch_req_pmf(datasketch_req(200, v), [50], true)
+FROM ints
+----
+[0.5, 1.0]	[0.5, 0.5]
+
+query II
+SELECT datasketch_kll_cdf(datasketch_kll(200, v::TINYINT), [50::TINYINT], true),
+       datasketch_kll_pmf(datasketch_kll(200, v::TINYINT), [50::TINYINT], true)
+FROM ints
+----
+[0.5, 1.0]	[0.5, 0.5]
+
+query II
+SELECT datasketch_kll_cdf(datasketch_kll(200, v::FLOAT), [50::FLOAT], true),
+       datasketch_kll_pmf(datasketch_kll(200, v::FLOAT), [50::FLOAT], true)
+FROM ints
+----
+[0.5, 1.0]	[0.5, 0.5]

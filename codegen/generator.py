@@ -167,7 +167,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 }
 
                 auto &child_entry = ListVector::GetChildMutable(result);
-                auto child_vals = FlatVector::GetDataMutable<T>(child_entry);
+                auto child_vals = FlatVector::GetDataMutable<double>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < cdf_result.size(); i++)
                 {
@@ -186,7 +186,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     ]
                     if sketch_type != "TDigest"
                     else [sketch_argument, cdf_points_argument],
-                    "return_type_dynamic_list": True,
+                    "return_type_double_list": True,
                 },
                 {
                     "name": "pmf",
@@ -227,7 +227,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     ]
                     if sketch_type != "TDigest"
                     else [sketch_argument, pmf_points_argument],
-                    "return_type_dynamic_list": True,
+                    "return_type_double_list": True,
                 },
             ]
         )
@@ -568,8 +568,9 @@ def get_scalar_function_args(
 
     if function_info.get("dynamic_return_type"):
         all_args.append(logical_type)
-    elif function_info.get("return_type_dynamic_list"):
-        all_args.append(f"LogicalType::LIST({logical_type})")
+    elif function_info.get("return_type_double_list"):
+        # CDF/PMF results are probabilities, so they are always DOUBLE regardless of the sketch item type.
+        all_args.append("LogicalType::LIST(LogicalType::DOUBLE)")
     else:
         all_args.append(function_info["return_type"])
 
@@ -584,7 +585,7 @@ def get_function_block(function_info: Any) -> str:
         else:
             cpp_types.append(value["cpp_type"])
 
-    if function_info.get("return_type_dynamic_list"):
+    if function_info.get("return_type_double_list"):
         cpp_types.append("list_entry_t")
     elif function_info.get("dynamic_return_type"):
         cpp_types.append("T")

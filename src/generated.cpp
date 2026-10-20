@@ -1285,7 +1285,7 @@ auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length
                 }
 
                 auto &child_entry = ListVector::GetChildMutable(result);
-                auto child_vals = FlatVector::GetDataMutable<T>(child_entry);
+                auto child_vals = FlatVector::GetDataMutable<double>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < cdf_result.size(); i++)
                 {
@@ -1985,7 +1985,7 @@ return sketch.get_max_item();
         
             
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilescdf<int8_t>));
                 {
                     FunctionDescription desc;
@@ -1996,7 +1996,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilescdf<int16_t>));
                 {
                     FunctionDescription desc;
@@ -2007,7 +2007,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilescdf<int32_t>));
                 {
                     FunctionDescription desc;
@@ -2018,7 +2018,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilescdf<int64_t>));
                 {
                     FunctionDescription desc;
@@ -2029,7 +2029,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilescdf<float>));
                 {
                     FunctionDescription desc;
@@ -2051,7 +2051,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilescdf<uint8_t>));
                 {
                     FunctionDescription desc;
@@ -2062,7 +2062,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilescdf<uint16_t>));
                 {
                     FunctionDescription desc;
@@ -2073,7 +2073,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilescdf<uint32_t>));
                 {
                     FunctionDescription desc;
@@ -2084,7 +2084,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilescdf<uint64_t>));
                 {
                     FunctionDescription desc;
@@ -2113,7 +2113,7 @@ return sketch.get_max_item();
         
             
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilespmf<int8_t>));
                 {
                     FunctionDescription desc;
@@ -2124,7 +2124,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilespmf<int16_t>));
                 {
                     FunctionDescription desc;
@@ -2135,7 +2135,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilespmf<int32_t>));
                 {
                     FunctionDescription desc;
@@ -2146,7 +2146,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilespmf<int64_t>));
                 {
                     FunctionDescription desc;
@@ -2157,7 +2157,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilespmf<float>));
                 {
                     FunctionDescription desc;
@@ -2179,7 +2179,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilespmf<uint8_t>));
                 {
                     FunctionDescription desc;
@@ -2190,7 +2190,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilespmf<uint16_t>));
                 {
                     FunctionDescription desc;
@@ -2201,7 +2201,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilespmf<uint32_t>));
                 {
                     FunctionDescription desc;
@@ -2212,7 +2212,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSQuantilespmf<uint64_t>));
                 {
                     FunctionDescription desc;
@@ -3829,7 +3829,7 @@ auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length
                 }
 
                 auto &child_entry = ListVector::GetChildMutable(result);
-                auto child_vals = FlatVector::GetDataMutable<T>(child_entry);
+                auto child_vals = FlatVector::GetDataMutable<double>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < cdf_result.size(); i++)
                 {
@@ -4529,7 +4529,7 @@ return sketch.get_max_item();
         
             
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLcdf<int8_t>));
                 {
                     FunctionDescription desc;
@@ -4540,7 +4540,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLcdf<int16_t>));
                 {
                     FunctionDescription desc;
@@ -4551,7 +4551,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLcdf<int32_t>));
                 {
                     FunctionDescription desc;
@@ -4562,7 +4562,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLcdf<int64_t>));
                 {
                     FunctionDescription desc;
@@ -4573,7 +4573,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLcdf<float>));
                 {
                     FunctionDescription desc;
@@ -4595,7 +4595,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLcdf<uint8_t>));
                 {
                     FunctionDescription desc;
@@ -4606,7 +4606,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLcdf<uint16_t>));
                 {
                     FunctionDescription desc;
@@ -4617,7 +4617,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLcdf<uint32_t>));
                 {
                     FunctionDescription desc;
@@ -4628,7 +4628,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLcdf<uint64_t>));
                 {
                     FunctionDescription desc;
@@ -4657,7 +4657,7 @@ return sketch.get_max_item();
         
             
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLpmf<int8_t>));
                 {
                     FunctionDescription desc;
@@ -4668,7 +4668,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLpmf<int16_t>));
                 {
                     FunctionDescription desc;
@@ -4679,7 +4679,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLpmf<int32_t>));
                 {
                     FunctionDescription desc;
@@ -4690,7 +4690,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLpmf<int64_t>));
                 {
                     FunctionDescription desc;
@@ -4701,7 +4701,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLpmf<float>));
                 {
                     FunctionDescription desc;
@@ -4723,7 +4723,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLpmf<uint8_t>));
                 {
                     FunctionDescription desc;
@@ -4734,7 +4734,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLpmf<uint16_t>));
                 {
                     FunctionDescription desc;
@@ -4745,7 +4745,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLpmf<uint32_t>));
                 {
                     FunctionDescription desc;
@@ -4756,7 +4756,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSKLLpmf<uint64_t>));
                 {
                     FunctionDescription desc;
@@ -6373,7 +6373,7 @@ auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length
                 }
 
                 auto &child_entry = ListVector::GetChildMutable(result);
-                auto child_vals = FlatVector::GetDataMutable<T>(child_entry);
+                auto child_vals = FlatVector::GetDataMutable<double>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < cdf_result.size(); i++)
                 {
@@ -7038,7 +7038,7 @@ return sketch.get_max_item();
         
             
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQcdf<int8_t>));
                 {
                     FunctionDescription desc;
@@ -7049,7 +7049,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQcdf<int16_t>));
                 {
                     FunctionDescription desc;
@@ -7060,7 +7060,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQcdf<int32_t>));
                 {
                     FunctionDescription desc;
@@ -7071,7 +7071,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQcdf<int64_t>));
                 {
                     FunctionDescription desc;
@@ -7082,7 +7082,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQcdf<float>));
                 {
                     FunctionDescription desc;
@@ -7104,7 +7104,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQcdf<uint8_t>));
                 {
                     FunctionDescription desc;
@@ -7115,7 +7115,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQcdf<uint16_t>));
                 {
                     FunctionDescription desc;
@@ -7126,7 +7126,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQcdf<uint32_t>));
                 {
                     FunctionDescription desc;
@@ -7137,7 +7137,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQcdf<uint64_t>));
                 {
                     FunctionDescription desc;
@@ -7166,7 +7166,7 @@ return sketch.get_max_item();
         
             
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQpmf<int8_t>));
                 {
                     FunctionDescription desc;
@@ -7177,7 +7177,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQpmf<int16_t>));
                 {
                     FunctionDescription desc;
@@ -7188,7 +7188,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQpmf<int32_t>));
                 {
                     FunctionDescription desc;
@@ -7199,7 +7199,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQpmf<int64_t>));
                 {
                     FunctionDescription desc;
@@ -7210,7 +7210,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQpmf<float>));
                 {
                     FunctionDescription desc;
@@ -7232,7 +7232,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQpmf<uint8_t>));
                 {
                     FunctionDescription desc;
@@ -7243,7 +7243,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQpmf<uint16_t>));
                 {
                     FunctionDescription desc;
@@ -7254,7 +7254,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQpmf<uint32_t>));
                 {
                     FunctionDescription desc;
@@ -7265,7 +7265,7 @@ return sketch.get_max_item();
                     fn_descs.push_back(std::move(desc));
                 }
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSREQpmf<uint64_t>));
                 {
                     FunctionDescription desc;
@@ -8753,7 +8753,7 @@ auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length
                 }
 
                 auto &child_entry = ListVector::GetChildMutable(result);
-                auto child_vals = FlatVector::GetDataMutable<T>(child_entry);
+                auto child_vals = FlatVector::GetDataMutable<double>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < cdf_result.size(); i++)
                 {
@@ -9094,7 +9094,7 @@ return sketch.get_quantile(rank_data);
         
             
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT)},LogicalType::LIST(LogicalType::FLOAT)
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT)},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSTDigestcdf<float>));
                 {
                     FunctionDescription desc;
@@ -9134,7 +9134,7 @@ return sketch.get_quantile(rank_data);
         
             
                 fs.AddFunction(ScalarFunction(
-                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT)},LogicalType::LIST(LogicalType::FLOAT)
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT)},LogicalType::LIST(LogicalType::DOUBLE)
                 ,    DSTDigestpmf<float>));
                 {
                     FunctionDescription desc;
