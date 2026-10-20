@@ -836,3 +836,56 @@ ORDER BY ts;
 8	6
 9	7
 10	8
+
+# -------------------------------------------------------------------
+# 27. Unions keep the lg_k of their inputs
+# (regression: datasketch_theta_union and the merge aggregate used lg_k 12,
+#  truncating larger sketches to 4096 entries)
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE big_sketches AS
+SELECT i % 2 AS part, datasketch_theta(16, i) AS sketch FROM range(400000) t(i) GROUP BY i % 2;
+
+# each input sketch is in estimation mode with lg_k 16
+query I
+SELECT bool_and(datasketch_theta_is_estimation_mode(sketch) AND datasketch_theta_num_retained(sketch) >= 65536) FROM big_sketches;
+----
+true
+
+query II
+SELECT datasketch_theta_num_retained(u), datasketch_theta_estimate(u) BETWEEN 392000 AND 408000
+FROM (SELECT datasketch_theta_union(a.sketch, b.sketch) AS u FROM big_sketches a, big_sketches b WHERE a.part = 0 AND b.part = 1);
+----
+65536	true
+
+# the merge aggregate infers the lg_k too
+query II
+SELECT datasketch_theta_num_retained(m), datasketch_theta_estimate(m) BETWEEN 392000 AND 408000
+FROM (SELECT datasketch_theta(sketch) AS m FROM big_sketches);
+----
+65536	true
+
+# an explicit lg_k is still honored by the merge aggregate
+query I
+SELECT datasketch_theta_num_retained(datasketch_theta(12, sketch)) FROM big_sketches;
+----
+4096
+
+# a large sketch combined with a small default (lg_k 12) one keeps its size
+query II
+SELECT datasketch_theta_num_retained(u), datasketch_theta_estimate(u) BETWEEN 196000 AND 204000
+FROM (SELECT datasketch_theta_union(
+    (SELECT datasketch_theta(i) FROM range(0, 100) t(i)),
+    (SELECT datasketch_theta(16, i) FROM range(0, 200000) t(i))) AS u);
+----
+65536	true
+
+# small exact-mode sketches stay exact
+query II
+SELECT datasketch_theta_is_estimation_mode(u), datasketch_theta_estimate(u)
+FROM (SELECT datasketch_theta_union(
+    (SELECT datasketch_theta(16, i) FROM range(0, 3000) t(i)),
+    (SELECT datasketch_theta(16, i) FROM range(1000, 4000) t(i))) AS u);
+----
+false	4000.0
