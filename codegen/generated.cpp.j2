@@ -94,6 +94,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
 }
 
 
+    {% if sketch_type not in union_accepts_values %}
     {% if sketch_type not in counting_sketch_names %}
     template <class T>
     {% endif %}
@@ -135,12 +136,6 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
             D_ASSERT(!sketch);
             sketch = new {{sketch_class_name(sketch_type)}}<T>(k);
         }
-        {% elif sketch_type == "HLL" %}
-        void CreateSketch(uint16_t k)
-        {
-            D_ASSERT(!sketch);
-            sketch = new {{sketch_class_name(sketch_type)}}(k);
-        }
         {% elif sketch_type == "CPC" %}
         void CreateSketch(uint8_t k)
         {
@@ -181,6 +176,46 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
         }
         {% endif %}
     };
+    {% endif %}
+
+    {% if sketch_type in counting_sketch_names %}
+    // Holds a union so partial states and input sketches merge into it in place.
+    struct DS{{sketch_type}}UnionState
+    {
+        {{union_class_name(sketch_type)}} *sketch = nullptr;
+
+        ~DS{{sketch_type}}UnionState()
+        {
+            if (sketch)
+            {
+                delete sketch;
+            }
+        }
+
+        void CreateSketch(uint8_t k)
+        {
+            D_ASSERT(!sketch);
+            sketch = new {{union_class_name(sketch_type)}}(k);
+        }
+
+        void CreateSketch(const DS{{sketch_type}}UnionState &existing)
+        {
+            if (existing.sketch)
+            {
+                sketch = new {{union_class_name(sketch_type)}}(*existing.sketch);
+            }
+        }
+
+        {{sketch_class_name(sketch_type)}} deserialize_sketch(const string_t &data)
+        {
+            try {
+                return {{sketch_class_name(sketch_type)}}::deserialize(data.GetDataUnsafe(), data.GetSize());
+            } catch (const std::exception &e) {
+                throw InvalidInputException("Failed to deserialize {{sketch_type}} sketch: %s", e.what());
+            }
+        }
+    };
+    {% endif %}
 
 
 
@@ -242,6 +277,104 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
         }
 
         static bool IgnoreNull() { return true; }
+    };
+
+    // A union's contents as a sketch another union can absorb, and its result in each type's wire format.
+    static inline datasketches::hll_sketch UnionContents(const datasketches::hll_union &u)
+    {
+        return u.get_result(datasketches::target_hll_type::HLL_8);
+    }
+    static inline datasketches::cpc_sketch UnionContents(const datasketches::cpc_union &u)
+    {
+        return u.get_result();
+    }
+    static inline auto SerializeUnion(const datasketches::hll_union &u)
+    {
+        return u.get_result(datasketches::target_hll_type::HLL_4).serialize_updatable();
+    }
+    static inline auto SerializeUnion(const datasketches::cpc_union &u)
+    {
+        return u.get_result().serialize();
+    }
+
+    // For states holding a union. A union absorbs the same input any number of times with the same result,
+    // so repeats merge once, and partial states merge in place instead of being rebuilt.
+    struct DSUnionOperationBase : DSSketchOperationBase
+    {
+        template <class INPUT_TYPE, class STATE, class OP>
+        static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
+                                    idx_t count) {
+            if (count > 0) {
+                OP::template Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
+            }
+        }
+
+        template <class STATE, class OP>
+        static void Combine(const STATE &source, STATE &target,
+                            AggregateInputData &aggr_input_data)
+        {
+            if (!source.sketch)
+            {
+                return;
+            }
+            if (!target.sketch)
+            {
+                if (aggr_input_data.combine_type == AggregateCombineType::ALLOW_DESTRUCTIVE)
+                {
+                    // The source is discarded after this call, so take its union rather than copy it.
+                    target.sketch = source.sketch;
+                    const_cast<STATE &>(source).sketch = nullptr;
+                }
+                else
+                {
+                    target.CreateSketch(source);
+                }
+                return;
+            }
+            target.sketch->update(UnionContents(*source.sketch));
+        }
+
+        template <class STATE, class OP>
+        static void RepeatedCombine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data,
+                                    idx_t multiplicity)
+        {
+            Combine<STATE, OP>(source, target, aggr_input_data);
+        }
+
+        template <class T, class STATE>
+        static void Finalize(STATE &state, T &target,
+                             AggregateFinalizeData &finalize_data)
+        {
+            if (!state.sketch)
+            {
+                finalize_data.ReturnNull();
+            }
+            else
+            {
+                auto serialized_data = SerializeUnion(*state.sketch);
+                auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
+                target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
+            }
+        }
+    };
+
+    // Merges serialized sketches into a union state; shared by every counting sketch's union aggregate.
+    template <class BIND_DATA_TYPE>
+    struct DSUnionMergeOperation : DSUnionOperationBase
+    {
+        template <class A_TYPE, class STATE, class OP>
+        static void Operation(STATE &state,
+                              const A_TYPE &a_data,
+                              AggregateUnaryInput &idata)
+        {
+            if (!state.sketch)
+            {
+                auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
+                state.CreateSketch(bind_data.k);
+            }
+
+            state.sketch->update(state.deserialize_sketch(a_data));
+        }
     };
 
     template <class BIND_DATA_TYPE>
@@ -372,7 +505,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
     };
 
     template <class BIND_DATA_TYPE>
-    struct DSHLLCreateOperation : DSSketchOperationBase
+    struct DSHLLCreateOperation : DSUnionOperationBase
     {
         template <class A_TYPE, class STATE, class OP>
         static void Operation(STATE &state,
@@ -389,191 +522,6 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
                 state.sketch->update(a_data.GetData(), a_data.GetSize());
             } else {
                 state.sketch->update(a_data);
-            }
-        }
-
-        template <class INPUT_TYPE, class STATE, class OP>
-        static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
-                                    idx_t count) {
-            for (idx_t i = 0; i < count; i++) {
-                Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-            }
-        }
-
-        template <class STATE, class OP>
-        static void Combine(const STATE &source, STATE &target,
-                            AggregateInputData &aggr_input_data)
-        {
-            if (!target.sketch)
-            {
-                target.CreateSketch(source);
-            }
-            else
-            {
-                datasketches::hll_union u(target.sketch->get_lg_config_k());
-                u.update(*target.sketch);
-                if(source.sketch) {
-                    u.update(*source.sketch);
-                }
-                *target.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
-            }
-        }
-
-        template <class T, class STATE>
-        static void Finalize(STATE &state, T &target,
-                             AggregateFinalizeData &finalize_data)
-        {
-            if (!state.sketch)
-            {
-                finalize_data.ReturnNull();
-            }
-            else
-            {
-                auto serialized_data = state.sketch->serialize_updatable();
-                auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
-                target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
-            }
-        }
-    };
-
-    template <class BIND_DATA_TYPE>
-    struct DSHLLMergeOperation : DSSketchOperationBase
-    {
-
-        template <class A_TYPE, class STATE, class OP>
-        static void Operation(STATE &state,
-                              const A_TYPE &a_data,
-                              AggregateUnaryInput &idata)
-        {
-            auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
-
-            if (!state.sketch)
-            {
-                state.CreateSketch(bind_data.k);
-            }
-
-            auto a_sketch = state.deserialize_sketch(a_data);
-
-            datasketches::hll_union u(bind_data.k);
-            if(state.sketch) {
-                u.update(*state.sketch);
-            }
-            u.update(a_sketch);
-
-            *state.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
-        }
-
-        template <class INPUT_TYPE, class STATE, class OP>
-        static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
-                                    idx_t count) {
-            for (idx_t i = 0; i < count; i++) {
-                Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-            }
-        }
-
-        template <class STATE, class OP>
-        static void Combine(const STATE &source, STATE &target,
-                            AggregateInputData &aggr_input_data)
-        {
-            if (!target.sketch)
-            {
-                target.CreateSketch(source);
-            }
-            else
-            {
-                datasketches::hll_union u(target.sketch->get_lg_config_k());
-                if(source.sketch) {
-                    u.update(*source.sketch);
-                }
-                u.update(*target.sketch);
-
-                *target.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
-            }
-        }
-
-        template <class T, class STATE>
-        static void Finalize(STATE &state, T &target,
-                             AggregateFinalizeData &finalize_data)
-        {
-            if (!state.sketch)
-            {
-                finalize_data.ReturnNull();
-            }
-            else
-            {
-                auto serialized_data = state.sketch->serialize_updatable();
-                auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
-                target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
-            }
-        }
-    };
-
-
-    template <class BIND_DATA_TYPE>
-    struct DSCPCMergeOperation : DSSketchOperationBase
-    {
-        template <class A_TYPE, class STATE, class OP>
-        static void Operation(STATE &state,
-                              const A_TYPE &a_data,
-                              AggregateUnaryInput &idata)
-        {
-            auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
-
-            if (!state.sketch)
-            {
-                state.CreateSketch(bind_data.k);
-            }
-
-            auto a_sketch = state.deserialize_sketch(a_data);
-            datasketches::cpc_union u(bind_data.k);
-            if(state.sketch) {
-                u.update(*state.sketch);
-            }
-            u.update(a_sketch);
-
-            *state.sketch = u.get_result();
-        }
-
-        template <class INPUT_TYPE, class STATE, class OP>
-        static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
-                                    idx_t count) {
-            for (idx_t i = 0; i < count; i++) {
-                Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-            }
-        }
-
-        template <class STATE, class OP>
-        static void Combine(const STATE &source, STATE &target,
-                            AggregateInputData &aggr_input_data)
-        {
-            if (!target.sketch)
-            {
-                target.CreateSketch(source);
-            }
-            else
-            {
-                datasketches::cpc_union u(target.sketch->get_lg_k());
-                if(source.sketch) {
-                    u.update(*source.sketch);
-                }
-                u.update(*target.sketch);
-                *target.sketch = u.get_result();
-            }
-        }
-
-        template <class T, class STATE>
-        static void Finalize(STATE &state, T &target,
-                             AggregateFinalizeData &finalize_data)
-        {
-            if (!state.sketch)
-            {
-                finalize_data.ReturnNull();
-            }
-            else
-            {
-                auto serialized_data = state.sketch->serialize();
-                auto sketch_string = std::string(serialized_data.begin(), serialized_data.end());
-                target = StringVector::AddStringOrBlob(finalize_data.result, sketch_string);
             }
         }
     };
@@ -677,12 +625,12 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     {% endif %}
     {
         {% if sketch_type == "HLL" %}
-        auto fun = AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, string_t, string_t, DSHLLMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
-        DSReadDataArgumentAt<1, DS{{sketch_type}}State, string_t, DSHLLMergeOperation<DS{{sketch_type}}BindData>>(fun);
+        auto fun = AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}UnionState, string_t, string_t, DSUnionMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
+        DSReadDataArgumentAt<1, DS{{sketch_type}}UnionState, string_t, DSUnionMergeOperation<DS{{sketch_type}}BindData>>(fun);
         return fun;
         {% elif sketch_type == "CPC" %}
-        auto fun = AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, string_t, string_t, DSCPCMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
-        DSReadDataArgumentAt<1, DS{{sketch_type}}State, string_t, DSCPCMergeOperation<DS{{sketch_type}}BindData>>(fun);
+        auto fun = AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}UnionState, string_t, string_t, DSUnionMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
+        DSReadDataArgumentAt<1, DS{{sketch_type}}UnionState, string_t, DSUnionMergeOperation<DS{{sketch_type}}BindData>>(fun);
         return fun;
         {% else %}
         auto fun = AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State<T>, string_t, string_t, DSQuantilesMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
@@ -697,8 +645,8 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     auto static DS{{sketch_type}}CreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         {% if sketch_type == 'HLL' %}
-        auto fun = AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, T, string_t, DSHLLCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(type, result_type);
-        DSReadDataArgumentAt<1, DS{{sketch_type}}State, T, DSHLLCreateOperation<DS{{sketch_type}}BindData>>(fun);
+        auto fun = AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}UnionState, T, string_t, DSHLLCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DS{{sketch_type}}UnionState, T, DSHLLCreateOperation<DS{{sketch_type}}BindData>>(fun);
         return fun;
         {% elif sketch_type == 'CPC' %}
         auto fun = AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, T, string_t, DSCPCCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(type, result_type);

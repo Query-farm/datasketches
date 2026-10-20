@@ -7,6 +7,8 @@ template = env.get_template("generated.cpp.j2")
 
 
 counting_sketch_names = ["CPC", "HLL"]
+# Counting sketches whose union also accepts raw values, so their create aggregate builds the union directly.
+union_accepts_values = ["HLL"]
 
 logical_type_mapping = {
     "LogicalType::BOOLEAN": "bool",
@@ -64,6 +66,10 @@ def get_sketch_class_name(sketch_type: str):
     if sketch_type == "TDigest":
         return "datasketches::tdigest"
     return f"datasketches::{sketch_type.lower()}_sketch"
+
+
+def get_union_class_name(sketch_type: str):
+    return f"datasketches::{sketch_type.lower()}_union"
 
 
 def unary_functions_per_sketch_type(sketch_type: str):
@@ -647,6 +653,8 @@ def get_function_block(function_info: Any) -> str:
 data = {
     "sketch_class_name": get_sketch_class_name,
     "counting_sketch_names": counting_sketch_names,
+    "union_class_name": get_union_class_name,
+    "union_accepts_values": union_accepts_values,
     #    "function_names_per_sketch": get_sketch_function_names,
     "sketch_types": ["Quantiles", "KLL", "REQ", "TDigest", "HLL", "CPC"],
     "logical_type_to_cplusplus_type": sketch_type_to_allowed_logical_types,
