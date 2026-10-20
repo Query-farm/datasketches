@@ -2130,6 +2130,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
             sketch_map_types.insert({ LogicalTypeId::USMALLINT, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::USMALLINT))});
             sketch_map_types.insert({ LogicalTypeId::UINTEGER, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::UINTEGER))});
             sketch_map_types.insert({ LogicalTypeId::UBIGINT, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::UBIGINT))});
+            sketch_map_types.insert({ LogicalTypeId::VARCHAR, CreateQuantilesSketchType(loader, LogicalType(LogicalTypeId::VARCHAR))});
       
 
       
@@ -2246,6 +2247,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::BOOLEAN
+                ,    DSQuantilesis_empty<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -2376,6 +2388,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::USMALLINT
+                ,    DSQuantilesk<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -2502,6 +2525,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilescdf<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -2632,6 +2666,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilespmf<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -2758,6 +2803,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::BOOLEAN},LogicalType::DOUBLE
+                ,    DSQuantilesnormalized_rank_error<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -2888,6 +2944,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
+                ,    DSQuantilesdescribe<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -3014,6 +3081,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::UBIGINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::VARCHAR,LogicalType::BOOLEAN},LogicalType::DOUBLE
+                ,    DSQuantilesrank<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::VARCHAR,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -3144,6 +3222,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::VARCHAR
+                ,    DSQuantilesquantile<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -3270,6 +3359,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.examples.push_back("datasketch_quantiles_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::UBIGINT
+                ,    DSQuantilesn<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -3400,6 +3500,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::BOOLEAN
+                ,    DSQuantilesis_estimation_mode<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -3526,6 +3637,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::UBIGINT
+                ,    DSQuantilesnum_retained<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -3656,6 +3778,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::VARCHAR
+                ,    DSQuantilesmin_item<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -3782,6 +3915,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::VARCHAR
+                ,    DSQuantilesmax_item<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maximum item in the sketch";
+                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -3912,6 +4056,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::VARCHAR)
+                ,    DSQuantilesquantiles<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -4040,6 +4195,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilesranks<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -4166,6 +4332,17 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                     desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::VARCHAR}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSQuantilessorted_view<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -4494,6 +4671,37 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 desc.examples.push_back("datasketch_quantiles(k, sketch)");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UBIGINT] };
+                agg_descs.push_back(std::move(desc));
+            }
+        
+        
+            {
+                auto fun = DSQuantilesCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_map_types[LogicalTypeId::VARCHAR]);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
+                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
+            {
+                auto fun = DSQuantilesMergeAggregate<string_t>(LogicalType::VARCHAR, sketch_map_types[LogicalTypeId::VARCHAR]);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
+                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::VARCHAR] };
                 agg_descs.push_back(std::move(desc));
             }
         
@@ -5238,6 +5446,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
             sketch_map_types.insert({ LogicalTypeId::USMALLINT, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::USMALLINT))});
             sketch_map_types.insert({ LogicalTypeId::UINTEGER, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::UINTEGER))});
             sketch_map_types.insert({ LogicalTypeId::UBIGINT, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::UBIGINT))});
+            sketch_map_types.insert({ LogicalTypeId::VARCHAR, CreateKLLSketchType(loader, LogicalType(LogicalTypeId::VARCHAR))});
       
 
       
@@ -5354,6 +5563,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.examples.push_back("datasketch_kll_is_empty(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::BOOLEAN
+                ,    DSKLLis_empty<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is empty";
+                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -5484,6 +5704,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::USMALLINT
+                ,    DSKLLk<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the value of K for this sketch";
+                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -5610,6 +5841,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLcdf<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -5740,6 +5982,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLpmf<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
+                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.parameter_names = { "sketch","split_points","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -5866,6 +6119,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::BOOLEAN},LogicalType::DOUBLE
+                ,    DSKLLnormalized_rank_error<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized rank error of the sketch";
+                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.parameter_names = { "sketch","is_pmf" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -5996,6 +6260,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::BOOLEAN,LogicalType::BOOLEAN},LogicalType::VARCHAR
+                ,    DSKLLdescribe<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a description of this sketch";
+                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.parameter_names = { "sketch","include_levels","include_items" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -6122,6 +6397,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::UBIGINT,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::VARCHAR,LogicalType::BOOLEAN},LogicalType::DOUBLE
+                ,    DSKLLrank<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the rank of an item in the sketch";
+                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.parameter_names = { "sketch","item","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::VARCHAR,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -6252,6 +6538,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::DOUBLE,LogicalType::BOOLEAN},LogicalType::VARCHAR
+                ,    DSKLLquantile<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantile of a rank in the sketch";
+                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
+                    desc.parameter_names = { "sketch","rank","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::DOUBLE,LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -6378,6 +6675,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.examples.push_back("datasketch_kll_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::UBIGINT
+                ,    DSKLLn<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of items contained in the sketch";
+                    desc.examples.push_back("datasketch_kll_n(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -6508,6 +6816,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::BOOLEAN
+                ,    DSKLLis_estimation_mode<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return a boolean indicating if the sketch is in estimation mode";
+                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -6634,6 +6953,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.examples.push_back("datasketch_kll_num_retained(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::UBIGINT
+                ,    DSKLLnum_retained<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the number of retained items in the sketch";
+                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -6764,6 +7094,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::VARCHAR
+                ,    DSKLLmin_item<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum item in the sketch";
+                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -6890,6 +7231,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.examples.push_back("datasketch_kll_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::VARCHAR
+                ,    DSKLLmax_item<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maximum item in the sketch";
+                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -7020,6 +7372,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::VARCHAR)
+                ,    DSKLLquantiles<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -7148,6 +7511,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
                 }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLranks<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
         
 
         // Every scalar function deserializes a sketch, which throws on invalid input.
@@ -7274,6 +7648,17 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                     desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::VARCHAR]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::VARCHAR}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSKLLsorted_view<string_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -7602,6 +7987,37 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.examples.push_back("datasketch_kll(k, sketch)");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UBIGINT] };
+                agg_descs.push_back(std::move(desc));
+            }
+        
+        
+            {
+                auto fun = DSKLLCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_map_types[LogicalTypeId::VARCHAR]);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
+            {
+                auto fun = DSKLLMergeAggregate<string_t>(LogicalType::VARCHAR, sketch_map_types[LogicalTypeId::VARCHAR]);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
+                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.parameter_names = {"k", "sketch"};
+                desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::VARCHAR] };
                 agg_descs.push_back(std::move(desc));
             }
         

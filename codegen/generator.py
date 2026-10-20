@@ -46,7 +46,7 @@ def sketch_type_to_allowed_logical_types(sketch_type):
     if sketch_type == "TDigest":
         return {"LogicalType::FLOAT": "float", "LogicalType::DOUBLE": "double"}
 
-    return {
+    numeric_types = {
         "LogicalType::TINYINT": "int8_t",
         "LogicalType::SMALLINT": "int16_t",
         "LogicalType::INTEGER": "int32_t",
@@ -58,6 +58,12 @@ def sketch_type_to_allowed_logical_types(sketch_type):
         "LogicalType::UINTEGER": "uint32_t",
         "LogicalType::UBIGINT": "uint64_t",
     }
+
+    if sketch_type in ("KLL", "Quantiles"):
+        # VARCHAR items are stored as std::string (see DSItem in the template) and ordered bytewise.
+        return {**numeric_types, "LogicalType::VARCHAR": "string_t"}
+
+    return numeric_types
 
 
 def get_sketch_class_name(sketch_type: str):
