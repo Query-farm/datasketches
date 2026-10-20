@@ -17,23 +17,46 @@ namespace duckdb
         // 1. Helpers & Bind Data
         // ============================================================
 
+        // The default nominal size used when building, and the minimum used when combining sketches.
+        constexpr uint8_t DS_THETA_DEFAULT_LG_K = 12;
+
+        // Compact sketches do not record the lg_k they were built with. A sketch in estimation mode retains between
+        // k and 2k hashes (exactly k after a union), so floor(log2(retained)) recovers its lg_k; for a sketch in exact
+        // mode it is a lower bound. Combining uses the largest of these, and at least the default lg_k (12), so the
+        // result is never smaller than the inputs.
+        template <class SKETCH>
+        uint8_t ThetaInferLgK(const SKETCH &sketch)
+        {
+            uint32_t retained = sketch.get_num_retained();
+            uint8_t lg_k = 0;
+            while (retained > 1)
+            {
+                retained >>= 1;
+                lg_k++;
+            }
+            return MinValue<uint8_t>(MaxValue<uint8_t>(lg_k, DS_THETA_DEFAULT_LG_K), datasketches::theta_constants::MAX_LG_K);
+        }
+
         struct DSThetaBindData : public FunctionData
         {
-            DSThetaBindData() : lg_k(12) {}
-            explicit DSThetaBindData(uint8_t lg_k) : lg_k(lg_k) {}
+            DSThetaBindData() : lg_k(DS_THETA_DEFAULT_LG_K), infer_lg_k(false) {}
+            explicit DSThetaBindData(uint8_t lg_k, bool infer_lg_k = false) : lg_k(lg_k), infer_lg_k(infer_lg_k) {}
 
             unique_ptr<FunctionData> Copy() const override
             {
-                return make_uniq<DSThetaBindData>(lg_k);
+                return make_uniq<DSThetaBindData>(lg_k, infer_lg_k);
             }
 
             bool Equals(const FunctionData &other_p) const override
             {
                 auto &other = other_p.Cast<DSThetaBindData>();
-                return lg_k == other.lg_k;
+                return lg_k == other.lg_k && infer_lg_k == other.infer_lg_k;
             }
 
+            //! lg_k of the sketches built (or the minimum lg_k of the union when infer_lg_k is set)
             uint8_t lg_k;
+            //! Merging: grow the union to the lg_k of the sketches merged
+            bool infer_lg_k;
         };
 
         unique_ptr<FunctionData> DSThetaBindWithK(BindAggregateFunctionInput &input)
@@ -59,6 +82,12 @@ namespace duckdb
             return make_uniq<DSThetaBindData>(12);
         }
 
+        // Merging sketches: the union grows to the lg_k of the sketches merged.
+        unique_ptr<FunctionData> DSThetaBindMergeDefault(BindAggregateFunctionInput &input)
+        {
+            return make_uniq<DSThetaBindData>(DS_THETA_DEFAULT_LG_K, true);
+        }
+
         // ============================================================
         // 2. State & Operations
         // ============================================================
@@ -67,6 +96,7 @@ namespace duckdb
         {
             datasketches::update_theta_sketch *update_sketch = nullptr;
             datasketches::theta_union *union_sketch = nullptr;
+            uint8_t union_lg_k = 0;
 
             ~DSThetaState()
             {
@@ -86,14 +116,21 @@ namespace duckdb
                 }
             }
 
+            // Creates the union, or grows it to a larger lg_k (re-adding what it holds so far).
             void CreateUnionSketch(uint8_t lg_k)
             {
-                if (!union_sketch)
+                if (union_sketch && lg_k <= union_lg_k)
+                    return;
+                datasketches::theta_union::builder b;
+                b.set_lg_k(lg_k);
+                auto grown = new datasketches::theta_union(b.build());
+                if (union_sketch)
                 {
-                    datasketches::theta_union::builder b;
-                    b.set_lg_k(lg_k);
-                    union_sketch = new datasketches::theta_union(b.build());
+                    grown->update(union_sketch->get_result());
+                    delete union_sketch;
                 }
+                union_sketch = grown;
+                union_lg_k = lg_k;
             }
         };
 
@@ -104,6 +141,7 @@ namespace duckdb
             {
                 state.update_sketch = nullptr;
                 state.union_sketch = nullptr;
+                state.union_lg_k = 0;
             }
             template <class STATE>
             static void Destroy(STATE &state, AggregateInputData &)
@@ -121,16 +159,14 @@ namespace duckdb
                 if (!source.update_sketch && !source.union_sketch)
                     return;
 
-                if (!target.union_sketch)
+                auto &bind_data = aggr_input_data.bind_data->template Cast<DSThetaBindData>();
+                auto lg_k = source.union_sketch ? MaxValue(bind_data.lg_k, source.union_lg_k) : bind_data.lg_k;
+                target.CreateUnionSketch(lg_k);
+                if (target.update_sketch)
                 {
-                    auto &bind_data = aggr_input_data.bind_data->template Cast<DSThetaBindData>();
-                    target.CreateUnionSketch(bind_data.lg_k);
-                    if (target.update_sketch)
-                    {
-                        target.union_sketch->update(*target.update_sketch);
-                        delete target.update_sketch;
-                        target.update_sketch = nullptr;
-                    }
+                    target.union_sketch->update(*target.update_sketch);
+                    delete target.update_sketch;
+                    target.update_sketch = nullptr;
                 }
                 if (source.update_sketch)
                     target.union_sketch->update(*source.update_sketch);
@@ -199,8 +235,9 @@ namespace duckdb
             static void Operation(STATE &state, const A_TYPE &a_data, AggregateUnaryInput &idata)
             {
                 auto &bind_data = idata.input.bind_data->template Cast<DSThetaBindData>();
-                state.CreateUnionSketch(bind_data.lg_k);
                 auto sketch = datasketches::compact_theta_sketch::deserialize(a_data.GetDataUnsafe(), a_data.GetSize());
+                auto lg_k = bind_data.infer_lg_k ? MaxValue(bind_data.lg_k, ThetaInferLgK(sketch)) : bind_data.lg_k;
+                state.CreateUnionSketch(lg_k);
                 state.union_sketch->update(sketch);
             }
 
@@ -224,11 +261,12 @@ namespace duckdb
                 args.data[0], args.data[1], result,
                 [&](string_t a_blob, string_t b_blob)
                 {
-                    datasketches::theta_union::builder b;
-                    b.set_lg_k(12);
-                    auto union_obj = b.build();
                     auto sketch_a = datasketches::compact_theta_sketch::deserialize(a_blob.GetDataUnsafe(), a_blob.GetSize());
                     auto sketch_b = datasketches::compact_theta_sketch::deserialize(b_blob.GetDataUnsafe(), b_blob.GetSize());
+                    // keep as many entries as the larger input (lg_k was hard-coded to 12, truncating larger sketches)
+                    datasketches::theta_union::builder b;
+                    b.set_lg_k(MaxValue(ThetaInferLgK(sketch_a), ThetaInferLgK(sketch_b)));
+                    auto union_obj = b.build();
                     union_obj.update(sketch_a);
                     union_obj.update(sketch_b);
                     auto res = union_obj.get_result();
@@ -434,12 +472,12 @@ namespace duckdb
         // 2. MERGE SKETCHES (sketch_theta / BLOB)
         auto fun_merge = AggregateFunction::UnaryAggregate<DSThetaState, string_t, string_t, DSThetaMergeOperation, AggregateDestructorType::LEGACY>(
             sketch_type, sketch_type);
-        fun_merge.SetBindCallback(DSThetaBindDefault);
+        fun_merge.SetBindCallback(DSThetaBindMergeDefault);
         DSSetArguments(fun_merge, {sketch_type});
         sketch_agg.AddFunction(fun_merge);
         {
             FunctionDescription desc;
-            desc.description = "Merges existing Theta sketches into a single sketch";
+            desc.description = "Merges existing Theta sketches into a single sketch. The result keeps as many entries as the largest input sketch (inferred from the sketches, at least lg_k 12)";
             desc.examples.push_back("datasketch_theta(sketch)");
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
@@ -482,7 +520,7 @@ namespace duckdb
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_union", {sketch_type, sketch_type}, sketch_type, DSThetaUnion)));
             FunctionDescription desc;
-            desc.description = "Returns a new Theta sketch representing the union of two sketches";
+            desc.description = "Returns a new Theta sketch representing the union of two sketches. The result keeps as many entries as the larger input sketch (inferred from the sketches, at least lg_k 12)";
             desc.examples.push_back("datasketch_theta_union(sketch_a, sketch_b)");
             desc.parameter_names = {"sketch_a", "sketch_b"};
             desc.parameter_types = {sketch_type, sketch_type};
