@@ -83,7 +83,6 @@ namespace duckdb
                 Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
                 if (!k_val.IsNull())
                     lg_max_k = DSFreqItemsCheckLgMaxK(k_val.GetValue<int64_t>());
-                Function::EraseArgument(function, arguments, 0);
             }
             return make_uniq<DSFreqItemsBindData>(lg_max_k);
         }
@@ -99,7 +98,6 @@ namespace duckdb
                 Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
                 if (!k_val.IsNull())
                     lg_max_k = DSFreqItemsCheckLgMaxK(k_val.GetValue<int64_t>());
-                Function::EraseArgument(function, arguments, 0);
             }
             return make_uniq<DSFreqItemsBindData>(lg_max_k);
         }
@@ -443,7 +441,9 @@ namespace duckdb
                 desc.parameter_types = {input_type};
                 descs.push_back(std::move(desc));
             }
+            // lg_max_k stays in the argument list (see DSReadDataArgumentAt); the data follows it.
             fun.arguments = {LogicalType::INTEGER, input_type};
+            DSReadDataArgumentAt<1, DSFreqItemsState, T, DSFreqItemsOperation>(fun);
             set.AddFunction(fun);
             {
                 FunctionDescription desc;
@@ -466,6 +466,7 @@ namespace duckdb
             fun.arguments = {input_type, weight_type};
             set.AddFunction(fun);
             fun.arguments = {LogicalType::INTEGER, input_type, weight_type};
+            DSReadDataArgumentsAt<1, 2, DSFreqItemsState, T, W, DSFreqItemsWeightedOperation>(fun);
             set.AddFunction(fun);
         }
 
@@ -525,6 +526,7 @@ namespace duckdb
             agg_descs.push_back(std::move(desc));
         }
         fun_merge.arguments = {LogicalType::INTEGER, sketch_type};
+        DSReadDataArgumentAt<1, DSFreqItemsState, string_t, DSFreqItemsMergeOperation>(fun_merge);
         sketch_agg.AddFunction(fun_merge);
         {
             FunctionDescription desc;

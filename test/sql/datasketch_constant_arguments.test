@@ -1,0 +1,85 @@
+# name: test/sql/datasketch_constant_arguments.test
+# description: Aggregates that differ only in a constant argument (K, lg_max_k, build options) are not merged by the optimizer
+# group: [datasketches]
+
+require datasketches
+
+statement ok
+CREATE TABLE small AS SELECT i::DOUBLE AS v, i::BIGINT AS id FROM range(1, 11) t(i);
+
+# Identical subplans except for the constant are deduplicated by DuckDB's common subplan optimizer
+# unless the constant is part of the plan.
+query I rowsort
+SELECT datasketch_kll_k(s) FROM (SELECT datasketch_kll(12, v) AS s FROM small UNION ALL SELECT datasketch_kll(16, v) FROM small);
+----
+12
+16
+
+query I rowsort
+SELECT datasketch_quantiles_k(s) FROM (SELECT datasketch_quantiles(16, v) AS s FROM small UNION ALL SELECT datasketch_quantiles(32, v) FROM small);
+----
+16
+32
+
+query I rowsort
+SELECT datasketch_req_k(s) FROM (SELECT datasketch_req(12, v) AS s FROM small UNION ALL SELECT datasketch_req(20, v) FROM small);
+----
+12
+20
+
+query I rowsort
+SELECT datasketch_tdigest_k(s) FROM (SELECT datasketch_tdigest(50, v) AS s FROM small UNION ALL SELECT datasketch_tdigest(100, v) FROM small);
+----
+100
+50
+
+query I rowsort
+SELECT datasketch_hll_lg_config_k(s) FROM (SELECT datasketch_hll(8, id) AS s FROM small UNION ALL SELECT datasketch_hll(10, id) FROM small);
+----
+10
+8
+
+query I rowsort
+SELECT datasketch_hll_lg_config_k(s) FROM (
+    SELECT datasketch_hll_union(8, h) AS s FROM (SELECT datasketch_hll(12, id) AS h FROM small)
+    UNION ALL
+    SELECT datasketch_hll_union(10, h) FROM (SELECT datasketch_hll(12, id) AS h FROM small)
+);
+----
+10
+8
+
+query I rowsort
+SELECT regexp_extract(datasketch_cpc_describe(s), 'lg_k\s*: (\d+)', 1) FROM (SELECT datasketch_cpc(8, id) AS s FROM small UNION ALL SELECT datasketch_cpc(10, id) FROM small);
+----
+10
+8
+
+query I rowsort
+SELECT datasketch_frequent_items_epsilon(s) FROM (SELECT datasketch_frequent_items(4, v) AS s FROM small UNION ALL SELECT datasketch_frequent_items(8, v) FROM small);
+----
+0.013671875
+0.21875
+
+query I rowsort
+SELECT datasketch_frequent_items_epsilon(s) FROM (SELECT datasketch_frequent_items_weighted(4, v, 2::BIGINT) AS s FROM small UNION ALL SELECT datasketch_frequent_items_weighted(8, v, 2::BIGINT) FROM small);
+----
+0.013671875
+0.21875
+
+# The constants stay in the argument list; the data argument is still aggregated correctly.
+query IIII
+SELECT
+    datasketch_kll_n(datasketch_kll(16, v)),
+    datasketch_frequent_items_estimate(datasketch_frequent_items(4, v), 3.0::DOUBLE),
+    datasketch_frequent_items_estimate(datasketch_frequent_items_weighted(4, v, 5::BIGINT), 3.0::DOUBLE),
+    datasketch_frequent_items_estimate(datasketch_frequent_items_weighted(v, 5::BIGINT), 3.0::DOUBLE)
+FROM small;
+----
+10	1	5	5
+
+query II
+SELECT g, datasketch_kll_n(datasketch_kll(16, v)) FROM (SELECT v, v > 5 AS g FROM small) GROUP BY g ORDER BY g;
+----
+false	5
+true	5
