@@ -545,12 +545,13 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
             }
             else
             {
+                auto &bind_data = aggr_input_data.bind_data->template Cast<BIND_DATA_TYPE>();
                 datasketches::hll_union u(target.sketch->get_lg_config_k());
                 u.update(*target.sketch);
                 if(source.sketch) {
                     u.update(*source.sketch);
                 }
-                *target.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
+                *target.sketch = u.get_result(bind_data.target_type);
             }
         }
 
@@ -595,7 +596,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
             }
             u.update(a_sketch);
 
-            *state.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
+            *state.sketch = u.get_result(bind_data.target_type);
         }
 
         template <class INPUT_TYPE, class STATE, class OP>
@@ -616,13 +617,14 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
             }
             else
             {
+                auto &bind_data = aggr_input_data.bind_data->template Cast<BIND_DATA_TYPE>();
                 datasketches::hll_union u(target.sketch->get_lg_config_k());
                 if(source.sketch) {
                     u.update(*source.sketch);
                 }
                 u.update(*target.sketch);
 
-                *target.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
+                *target.sketch = u.get_result(bind_data.target_type);
             }
         }
 
@@ -918,6 +920,22 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
                 desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}} };
                 agg_descs.push_back(std::move(desc));
             }
+            {% if sketch_type == "HLL" %}
+            {
+                auto fun = DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_type);
+                fun.SetBindCallback(DS{{sketch_type}}Bind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}}, LogicalType::VARCHAR });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
+                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.parameter_names = {"k", "data", "target_type"};
+                desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}}, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            {% endif %}
         {% else %}
             {
                 auto fun = DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]);
@@ -983,6 +1001,10 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
       fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
       DSPrependArgument(fun, {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
       sketch.AddFunction(fun);
+      {% if sketch_type == "HLL" %}
+      DSSetArguments(fun, { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, sketch_type, LogicalType::VARCHAR });
+      sketch.AddFunction(fun);
+      {% endif %}
       CreateAggregateFunctionInfo sketch_info(sketch);
 
     {
@@ -993,6 +1015,16 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, sketch_type };
         sketch_info.descriptions.push_back(desc);
     }
+      {% if sketch_type == "HLL" %}
+    {
+        FunctionDescription desc;
+        desc.description = "Creates a sketch_HLL data sketch by aggregating other HLL data sketches. target_type (a constant) selects the result's register encoding: 'HLL_4' (the default), 'HLL_6' or 'HLL_8'";
+        desc.examples.push_back("datasketch_hll_union(k, sketch, 'HLL_8')");
+        desc.parameter_names = {"k", "sketch", "target_type"};
+        desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, sketch_type, LogicalType::VARCHAR };
+        sketch_info.descriptions.push_back(desc);
+    }
+      {% endif %}
 
       DSRegister(loader, sketch_info);
       }

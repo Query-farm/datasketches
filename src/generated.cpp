@@ -1163,12 +1163,13 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
             }
             else
             {
+                auto &bind_data = aggr_input_data.bind_data->template Cast<BIND_DATA_TYPE>();
                 datasketches::hll_union u(target.sketch->get_lg_config_k());
                 u.update(*target.sketch);
                 if(source.sketch) {
                     u.update(*source.sketch);
                 }
-                *target.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
+                *target.sketch = u.get_result(bind_data.target_type);
             }
         }
 
@@ -1213,7 +1214,7 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
             }
             u.update(a_sketch);
 
-            *state.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
+            *state.sketch = u.get_result(bind_data.target_type);
         }
 
         template <class INPUT_TYPE, class STATE, class OP>
@@ -1234,13 +1235,14 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
             }
             else
             {
+                auto &bind_data = aggr_input_data.bind_data->template Cast<BIND_DATA_TYPE>();
                 datasketches::hll_union u(target.sketch->get_lg_config_k());
                 if(source.sketch) {
                     u.update(*source.sketch);
                 }
                 u.update(*target.sketch);
 
-                *target.sketch = u.get_result(datasketches::target_hll_type::HLL_4);
+                *target.sketch = u.get_result(bind_data.target_type);
             }
         }
 
@@ -12261,6 +12263,117 @@ return sketch.is_compact();
     
 
 
+static inline void DSHLLcomposite_estimate(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 1);
+
+    
+        auto &sketch_vector = args.data[0];
+
+    
+        
+        UnaryExecutor::Execute
+        <string_t,double>
+        (
+        sketch_vector,result,
+        [&](string_t sketch_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
+                }
+            }();
+return sketch.get_composite_estimate();
+        });
+
+}
+
+    
+
+
+static inline void DSHLLtarget_type(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 1);
+
+    
+        auto &sketch_vector = args.data[0];
+
+    
+        
+        UnaryExecutor::Execute
+        <string_t,string_t>
+        (
+        sketch_vector,result,
+        [&](string_t sketch_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::hll_sketch::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
+                }
+            }();
+return StringVector::AddString(result, DSHLLTargetTypeName(sketch.get_target_type()));
+        });
+
+}
+
+    
+
+
+static inline void DSHLLmerge(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 2);
+
+    
+        auto &sketch_a_vector = args.data[0];
+        auto &sketch_b_vector = args.data[1];
+
+    
+        
+        BinaryExecutor::Execute
+        <string_t,string_t,string_t>
+        (
+        sketch_a_vector,sketch_b_vector,result,
+        [&](string_t sketch_a_data,string_t sketch_b_data) {
+
+            
+            auto sketch_a = [&]() {
+                try {
+                    return datasketches::hll_sketch::deserialize(sketch_a_data.GetDataUnsafe(), sketch_a_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
+                }
+            }();
+
+            auto sketch_b = [&]() {
+                try {
+                    return datasketches::hll_sketch::deserialize(sketch_b_data.GetDataUnsafe(), sketch_b_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
+                }
+            }();
+
+                datasketches::hll_union u(std::max(sketch_a.get_lg_config_k(), sketch_b.get_lg_config_k()));
+                u.update(sketch_a);
+                u.update(sketch_b);
+                auto serialized_data = u.get_result(sketch_a.get_target_type()).serialize_updatable();
+                return StringVector::AddStringOrBlob(result, std::string(serialized_data.begin(), serialized_data.end()));
+                
+        });
+
+}
+
+    
+
+
 static inline void DSHLLestimate(DataChunk &args, ExpressionState &state, Vector &result)
 {
     // Get the references to the incoming vectors.
@@ -12502,6 +12615,90 @@ return sketch.get_upper_bound(std_dev_data);
 
       }
       {
+        ScalarFunctionSet fs("datasketch_hll_composite_estimate");
+        std::vector<FunctionDescription> fn_descs;
+        
+                fs.AddFunction(ScalarFunction(
+                {sketch_type},LogicalType::DOUBLE
+                ,    DSHLLcomposite_estimate));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the composite estimate of the number of distinct items, computed from the registers alone (the raw HLL estimate blended with linear counting). datasketch_hll_estimate prefers the HIP estimator, which is only available for sketches that were not built by a union";
+                    desc.examples.push_back("datasketch_hll_composite_estimate(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_type };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_hll_target_type");
+        std::vector<FunctionDescription> fn_descs;
+        
+                fs.AddFunction(ScalarFunction(
+                {sketch_type},LogicalType::VARCHAR
+                ,    DSHLLtarget_type));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's register encoding: 'HLL_4', 'HLL_6' or 'HLL_8'";
+                    desc.examples.push_back("datasketch_hll_target_type(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_type };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_hll_merge");
+        std::vector<FunctionDescription> fn_descs;
+        
+                fs.AddFunction(ScalarFunction(
+                {sketch_type,sketch_type},sketch_type
+                ,    DSHLLmerge));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the union of two HLL sketches as a new sketch with the first sketch's target type. The union runs at the larger lg_config_k of the two; if either input is in HLL (dense) mode the result is reduced to the smaller lg_config_k";
+                    desc.examples.push_back("datasketch_hll_merge(sketch_a, sketch_b)");
+                    desc.parameter_names = { "sketch_a","sketch_b" };
+                    desc.parameter_types = { sketch_type,sketch_type };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
         ScalarFunctionSet fs("datasketch_hll_estimate");
         std::vector<FunctionDescription> fn_descs;
         
@@ -12606,6 +12803,22 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSHLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_type);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::TINYINT, LogicalType::VARCHAR });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
+                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.parameter_names = {"k", "data", "target_type"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
         
         
             {
@@ -12622,6 +12835,22 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSHLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_type);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::SMALLINT, LogicalType::VARCHAR });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
+                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.parameter_names = {"k", "data", "target_type"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
         
         
             {
@@ -12638,6 +12867,22 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSHLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_type);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::INTEGER, LogicalType::VARCHAR });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
+                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.parameter_names = {"k", "data", "target_type"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
         
         
             {
@@ -12654,6 +12899,22 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSHLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_type);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::BIGINT, LogicalType::VARCHAR });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
+                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.parameter_names = {"k", "data", "target_type"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
         
         
             {
@@ -12670,6 +12931,22 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSHLLCreateAggregate<float>(LogicalType::FLOAT, sketch_type);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::FLOAT, LogicalType::VARCHAR });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
+                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.parameter_names = {"k", "data", "target_type"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
         
         
             {
@@ -12686,6 +12963,22 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSHLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_type);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::DOUBLE, LogicalType::VARCHAR });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
+                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.parameter_names = {"k", "data", "target_type"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
         
         
             {
@@ -12702,6 +12995,22 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSHLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_type);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::UTINYINT, LogicalType::VARCHAR });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
+                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.parameter_names = {"k", "data", "target_type"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
         
         
             {
@@ -12718,6 +13027,22 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSHLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_type);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::USMALLINT, LogicalType::VARCHAR });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
+                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.parameter_names = {"k", "data", "target_type"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
         
         
             {
@@ -12734,6 +13059,22 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSHLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_type);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::UINTEGER, LogicalType::VARCHAR });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
+                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.parameter_names = {"k", "data", "target_type"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
         
         
             {
@@ -12750,6 +13091,22 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSHLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_type);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::UBIGINT, LogicalType::VARCHAR });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
+                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.parameter_names = {"k", "data", "target_type"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
         
         
             {
@@ -12766,6 +13123,22 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSHLLCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_type);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::VARCHAR, LogicalType::VARCHAR });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
+                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.parameter_names = {"k", "data", "target_type"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::VARCHAR, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
         
         
             {
@@ -12782,6 +13155,22 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BLOB };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSHLLCreateAggregate<string_t>(LogicalType::BLOB, sketch_type);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::BLOB, LogicalType::VARCHAR });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
+                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.parameter_names = {"k", "data", "target_type"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::BLOB, LogicalType::VARCHAR };
+                agg_descs.push_back(std::move(desc));
+            }
+            
         
       CreateAggregateFunctionInfo sketch_info(sketch);
       for (auto &d : agg_descs) {
@@ -12801,6 +13190,10 @@ return sketch.get_upper_bound(std_dev_data);
       fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
       DSPrependArgument(fun, LogicalType::INTEGER);
       sketch.AddFunction(fun);
+      
+      DSSetArguments(fun, { LogicalType::INTEGER, sketch_type, LogicalType::VARCHAR });
+      sketch.AddFunction(fun);
+      
       CreateAggregateFunctionInfo sketch_info(sketch);
 
     {
@@ -12811,6 +13204,16 @@ return sketch.get_upper_bound(std_dev_data);
         desc.parameter_types = { LogicalType::INTEGER, sketch_type };
         sketch_info.descriptions.push_back(desc);
     }
+      
+    {
+        FunctionDescription desc;
+        desc.description = "Creates a sketch_HLL data sketch by aggregating other HLL data sketches. target_type (a constant) selects the result's register encoding: 'HLL_4' (the default), 'HLL_6' or 'HLL_8'";
+        desc.examples.push_back("datasketch_hll_union(k, sketch, 'HLL_8')");
+        desc.parameter_names = {"k", "sketch", "target_type"};
+        desc.parameter_types = { LogicalType::INTEGER, sketch_type, LogicalType::VARCHAR };
+        sketch_info.descriptions.push_back(desc);
+    }
+      
 
       DSRegister(loader, sketch_info);
       }
@@ -12846,6 +13249,53 @@ static inline void DSCPCis_empty(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return sketch.is_empty();
+        });
+
+}
+
+    
+
+
+static inline void DSCPCmerge(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 2);
+
+    
+        auto &sketch_a_vector = args.data[0];
+        auto &sketch_b_vector = args.data[1];
+
+    
+        
+        BinaryExecutor::Execute
+        <string_t,string_t,string_t>
+        (
+        sketch_a_vector,sketch_b_vector,result,
+        [&](string_t sketch_a_data,string_t sketch_b_data) {
+
+            
+            auto sketch_a = [&]() {
+                try {
+                    return datasketches::cpc_sketch::deserialize(sketch_a_data.GetDataUnsafe(), sketch_a_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize CPC sketch: %s", e.what());
+                }
+            }();
+
+            auto sketch_b = [&]() {
+                try {
+                    return datasketches::cpc_sketch::deserialize(sketch_b_data.GetDataUnsafe(), sketch_b_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize CPC sketch: %s", e.what());
+                }
+            }();
+
+                datasketches::cpc_union u(std::max(sketch_a.get_lg_k(), sketch_b.get_lg_k()));
+                u.update(sketch_a);
+                u.update(sketch_b);
+                auto serialized_data = u.get_result().serialize();
+                return StringVector::AddStringOrBlob(result, std::string(serialized_data.begin(), serialized_data.end()));
+                
         });
 
 }
@@ -13042,6 +13492,34 @@ return sketch.get_upper_bound(std_dev_data);
 
       }
       {
+        ScalarFunctionSet fs("datasketch_cpc_merge");
+        std::vector<FunctionDescription> fn_descs;
+        
+                fs.AddFunction(ScalarFunction(
+                {sketch_type,sketch_type},sketch_type
+                ,    DSCPCmerge));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the union of two CPC sketches as a new sketch. The result uses the smaller lg_k of the two inputs";
+                    desc.examples.push_back("datasketch_cpc_merge(sketch_a, sketch_b)");
+                    desc.parameter_names = { "sketch_a","sketch_b" };
+                    desc.parameter_types = { sketch_type,sketch_type };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
         ScalarFunctionSet fs("datasketch_cpc_describe");
         std::vector<FunctionDescription> fn_descs;
         
@@ -13174,6 +13652,7 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
         
         
             {
@@ -13190,6 +13669,7 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
         
         
             {
@@ -13206,6 +13686,7 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
                 agg_descs.push_back(std::move(desc));
             }
+            
         
         
             {
@@ -13222,6 +13703,7 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
         
         
             {
@@ -13238,6 +13720,7 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
                 agg_descs.push_back(std::move(desc));
             }
+            
         
         
             {
@@ -13254,6 +13737,7 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
                 agg_descs.push_back(std::move(desc));
             }
+            
         
         
             {
@@ -13270,6 +13754,7 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
         
         
             {
@@ -13286,6 +13771,7 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
         
         
             {
@@ -13302,6 +13788,7 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
                 agg_descs.push_back(std::move(desc));
             }
+            
         
         
             {
@@ -13318,6 +13805,7 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
         
         
             {
@@ -13334,6 +13822,7 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
             }
+            
         
         
             {
@@ -13350,6 +13839,7 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BLOB };
                 agg_descs.push_back(std::move(desc));
             }
+            
         
       CreateAggregateFunctionInfo sketch_info(sketch);
       for (auto &d : agg_descs) {
@@ -13369,6 +13859,7 @@ return sketch.get_upper_bound(std_dev_data);
       fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
       DSPrependArgument(fun, LogicalType::INTEGER);
       sketch.AddFunction(fun);
+      
       CreateAggregateFunctionInfo sketch_info(sketch);
 
     {
@@ -13379,6 +13870,7 @@ return sketch.get_upper_bound(std_dev_data);
         desc.parameter_types = { LogicalType::INTEGER, sketch_type };
         sketch_info.descriptions.push_back(desc);
     }
+      
 
       DSRegister(loader, sketch_info);
       }

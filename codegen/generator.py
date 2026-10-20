@@ -295,6 +295,72 @@ def unary_functions_per_sketch_type(sketch_type: str):
             ]
         )
 
+    if sketch_type == "HLL":
+        result.extend(
+            [
+                {
+                    "method": "return sketch.get_composite_estimate();",
+                    "description": "Return the composite estimate of the number of distinct items, computed from the registers alone (the raw HLL estimate blended with linear counting). datasketch_hll_estimate prefers the HIP estimator, which is only available for sketches that were not built by a union",
+                    "example": "datasketch_hll_composite_estimate(sketch)",
+                    "arguments": [
+                        sketch_argument,
+                    ],
+                    "name": "composite_estimate",
+                    "return_type": "LogicalType::DOUBLE",
+                },
+                {
+                    "method": "return StringVector::AddString(result, DSHLLTargetTypeName(sketch.get_target_type()));",
+                    "description": "Return the sketch's register encoding: 'HLL_4', 'HLL_6' or 'HLL_8'",
+                    "example": "datasketch_hll_target_type(sketch)",
+                    "arguments": [
+                        sketch_argument,
+                    ],
+                    "name": "target_type",
+                    "return_type": "LogicalType::VARCHAR",
+                },
+                {
+                    "method": """
+                datasketches::hll_union u(std::max(sketch_a.get_lg_config_k(), sketch_b.get_lg_config_k()));
+                u.update(sketch_a);
+                u.update(sketch_b);
+                auto serialized_data = u.get_result(sketch_a.get_target_type()).serialize_updatable();
+                return StringVector::AddStringOrBlob(result, std::string(serialized_data.begin(), serialized_data.end()));
+                """,
+                    "description": "Return the union of two HLL sketches as a new sketch with the first sketch's target type. The union runs at the larger lg_config_k of the two; if either input is in HLL (dense) mode the result is reduced to the smaller lg_config_k",
+                    "example": "datasketch_hll_merge(sketch_a, sketch_b)",
+                    "arguments": [
+                        make_sketch_argument("sketch_a"),
+                        make_sketch_argument("sketch_b"),
+                    ],
+                    "name": "merge",
+                    "return_logical_type": lambda contained_type: "sketch_type",
+                    "return_cpp_type": "string_t",
+                },
+            ]
+        )
+
+    if sketch_type == "CPC":
+        result.append(
+            {
+                "method": """
+                datasketches::cpc_union u(std::max(sketch_a.get_lg_k(), sketch_b.get_lg_k()));
+                u.update(sketch_a);
+                u.update(sketch_b);
+                auto serialized_data = u.get_result().serialize();
+                return StringVector::AddStringOrBlob(result, std::string(serialized_data.begin(), serialized_data.end()));
+                """,
+                "description": "Return the union of two CPC sketches as a new sketch. The result uses the smaller lg_k of the two inputs",
+                "example": "datasketch_cpc_merge(sketch_a, sketch_b)",
+                "arguments": [
+                    make_sketch_argument("sketch_a"),
+                    make_sketch_argument("sketch_b"),
+                ],
+                "name": "merge",
+                "return_logical_type": lambda contained_type: "sketch_type",
+                "return_cpp_type": "string_t",
+            }
+        )
+
     if sketch_type == "CPC":
         result.append(
             {
