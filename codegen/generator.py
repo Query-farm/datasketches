@@ -96,39 +96,29 @@ def sorted_view_struct_type(item_logical_type: str) -> str:
 
 
 def unary_functions_per_sketch_type(sketch_type: str):
-    if sketch_type not in counting_sketch_names:
-        deserialize_sketch = f"""
-            auto sketch = [&]() {{
+    def make_sketch_argument(name: str) -> dict:
+        """A serialized sketch argument; the body sees the deserialized sketch as `<name>`."""
+        if sketch_type in counting_sketch_names:
+            sketch_class = get_sketch_class_name(sketch_type)
+            duckdb_type = lambda contained_type: "sketch_type"
+        else:
+            sketch_class = f"{get_sketch_class_name(sketch_type)}<DSItem<T>>"
+            duckdb_type = lambda contained_type: f"sketch_map_types[{contained_type.replace('LogicalType', 'LogicalTypeId')}]"
+        return {
+            "cpp_type": "string_t",
+            "duckdb_type": duckdb_type,
+            "name": name,
+            "process": f"""
+            auto {name} = [&]() {{
                 try {{
-                    return {get_sketch_class_name(sketch_type)}<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return {sketch_class}::deserialize({name}_data.GetDataUnsafe(), {name}_data.GetSize());
                 }} catch (const std::exception &e) {{
                     throw InvalidInputException("Failed to deserialize {sketch_type} sketch: %s", e.what());
                 }}
-            }}();"""
-    else:
-        deserialize_sketch = f"""
-            auto sketch = [&]() {{
-                try {{
-                    return {get_sketch_class_name(sketch_type)}::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
-                }} catch (const std::exception &e) {{
-                    throw InvalidInputException("Failed to deserialize {sketch_type} sketch: %s", e.what());
-                }}
-            }}();"""
+            }}();""",
+        }
 
-    if sketch_type in counting_sketch_names:
-        sketch_argument = {
-            "cpp_type": "string_t",
-            "duckdb_type": lambda contained_type: "sketch_type",
-            "name": "sketch",
-            "process": deserialize_sketch,
-        }
-    else:
-        sketch_argument = {
-            "cpp_type": "string_t",
-            "duckdb_type": lambda contained_type: f"sketch_map_types[{contained_type.replace('LogicalType', 'LogicalTypeId')}]",
-            "name": "sketch",
-            "process": deserialize_sketch,
-        }
+    sketch_argument = make_sketch_argument("sketch")
 
     cdf_points_argument = {
         "cpp_type": "list_entry_t",
@@ -549,6 +539,84 @@ def unary_functions_per_sketch_type(sketch_type: str):
             ]
         )
 
+    if sketch_type == "REQ":
+        result.extend(
+            [
+                {
+                    "description": "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
+                    "example": "datasketch_req_rank_lower_bound(sketch, 0.5, 2)",
+                    "method": "DSCheckRank(rank_data); return sketch.get_rank_lower_bound(rank_data, num_std_dev_data);",
+                    "name": "rank_lower_bound",
+                    "arguments": [
+                        sketch_argument,
+                        {
+                            "cpp_type": "double",
+                            "name": "rank",
+                        },
+                        {
+                            "cpp_type": "uint8_t",
+                            "name": "num_std_dev",
+                        },
+                    ],
+                    "return_type": "LogicalType::DOUBLE",
+                },
+                {
+                    "description": "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
+                    "example": "datasketch_req_rank_upper_bound(sketch, 0.5, 2)",
+                    "method": "DSCheckRank(rank_data); return sketch.get_rank_upper_bound(rank_data, num_std_dev_data);",
+                    "name": "rank_upper_bound",
+                    "arguments": [
+                        sketch_argument,
+                        {
+                            "cpp_type": "double",
+                            "name": "rank",
+                        },
+                        {
+                            "cpp_type": "uint8_t",
+                            "name": "num_std_dev",
+                        },
+                    ],
+                    "return_type": "LogicalType::DOUBLE",
+                },
+                {
+                    "description": "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)",
+                    "example": "datasketch_req_is_hra(sketch)",
+                    "method": "return sketch.is_HRA();",
+                    "name": "is_hra",
+                    "arguments": [
+                        sketch_argument,
+                    ],
+                    "return_type": "LogicalType::BOOLEAN",
+                },
+            ]
+        )
+
+    if sketch_type == "TDigest":
+        result.extend(
+            [
+                {
+                    "description": "Return the minimum value seen by the sketch",
+                    "example": "datasketch_tdigest_min_value(sketch)",
+                    "method": "return sketch.get_min_value();",
+                    "name": "min_value",
+                    "arguments": [
+                        sketch_argument,
+                    ],
+                    "dynamic_return_type": True,
+                },
+                {
+                    "description": "Return the maximum value seen by the sketch",
+                    "example": "datasketch_tdigest_max_value(sketch)",
+                    "method": "return sketch.get_max_value();",
+                    "name": "max_value",
+                    "arguments": [
+                        sketch_argument,
+                    ],
+                    "dynamic_return_type": True,
+                },
+            ]
+        )
+
     if sketch_type in ("Quantiles", "KLL", "REQ"):
         result.extend(
             [
@@ -619,7 +687,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "return_cpp_type": "list_entry_t",
                 },
                 {
-                    "description": "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_"
+                    "description": "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_"
                     + sketch_type.lower()
                     + "_n(sketch) for the normalized rank. An empty sketch yields an empty list",
                     "example": f"datasketch_{sketch_type.lower()}_sorted_view(sketch)",

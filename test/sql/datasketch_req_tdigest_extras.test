@@ -1,0 +1,126 @@
+# name: test/sql/datasketch_req_tdigest_extras.test
+# description: REQ rank bounds and accuracy mode, T-Digest min/max values
+# group: [datasketches]
+
+require datasketches
+
+statement ok
+CREATE TABLE small AS SELECT i::DOUBLE AS v FROM range(1, 11) t(i);
+
+statement ok
+CREATE TABLE big AS SELECT i::BIGINT AS v FROM range(1, 100001) t(i);
+
+# ---------------------------------------------------------------- REQ accuracy mode
+query III
+SELECT
+    datasketch_req_is_hra(datasketch_req(12, v)),
+    datasketch_req_is_hra(datasketch_req(12, v, true)),
+    datasketch_req_is_hra(datasketch_req(12, v, false))
+FROM small;
+----
+true	true	false
+
+# The mode only affects accuracy: exact (small) sketches answer the same either way.
+query II
+SELECT
+    datasketch_req_quantiles(datasketch_req(12, v, false), [0.0, 0.5, 1.0], true),
+    datasketch_req_ranks(datasketch_req(12, v, false), [1.0, 5.0, 10.0], true)
+FROM small;
+----
+[1.0, 5.0, 10.0]	[0.1, 0.5, 1.0]
+
+statement error
+SELECT datasketch_req(12, v, NULL) FROM small;
+----
+REQ hra cannot be NULL
+
+statement error
+SELECT datasketch_req(12, v, v > 3) FROM small;
+----
+REQ hra must be a constant
+
+# Merging keeps the inputs' mode.
+query I
+SELECT datasketch_req_is_hra(datasketch_req(12, s)) FROM (
+    SELECT datasketch_req(12, v, false) AS s FROM small GROUP BY v % 3
+);
+----
+false
+
+query II
+SELECT datasketch_req_is_hra(datasketch_req(12, s)), datasketch_req_n(datasketch_req(12, s)) FROM (
+    SELECT datasketch_req(12, v) AS s FROM small GROUP BY v % 3
+);
+----
+true	10
+
+# HRA and LRA sketches cannot be merged.
+statement error
+SELECT datasketch_req(12, s) FROM (
+    SELECT datasketch_req(12, v, true) AS s FROM small
+    UNION ALL SELECT datasketch_req(12, v, false) FROM small WHERE v > 0
+);
+----
+Cannot merge sketches
+
+# ---------------------------------------------------------------- REQ rank bounds
+# An exact sketch has exact rank bounds.
+query II
+SELECT
+    datasketch_req_rank_lower_bound(datasketch_req(12, v), 0.5, 2),
+    datasketch_req_rank_upper_bound(datasketch_req(12, v), 0.5, 2)
+FROM small;
+----
+0.5	0.5
+
+statement ok
+CREATE TABLE big_req AS SELECT datasketch_req(12, v) AS hra, datasketch_req(12, v, false) AS lra FROM big;
+
+query IIII
+SELECT
+    datasketch_req_is_estimation_mode(hra),
+    datasketch_req_rank_lower_bound(hra, 0.5, 2) < 0.5,
+    datasketch_req_rank_upper_bound(hra, 0.5, 2) > 0.5,
+    datasketch_req_rank_upper_bound(hra, 0.5, 2) - datasketch_req_rank_lower_bound(hra, 0.5, 2) < 0.2
+FROM big_req;
+----
+true	true	true	true
+
+# Wider confidence gives wider bounds.
+query II
+SELECT
+    datasketch_req_rank_lower_bound(lra, 0.5, 3) <= datasketch_req_rank_lower_bound(lra, 0.5, 1),
+    datasketch_req_rank_upper_bound(lra, 0.5, 3) >= datasketch_req_rank_upper_bound(lra, 0.5, 1)
+FROM big_req;
+----
+true	true
+
+statement error
+SELECT datasketch_req_rank_lower_bound(hra, 1.5, 2) FROM big_req;
+----
+Normalized rank must be between 0 and 1
+
+# ---------------------------------------------------------------- T-Digest min/max
+query IIII
+SELECT
+    datasketch_tdigest_min_value(datasketch_tdigest(100, v)),
+    datasketch_tdigest_max_value(datasketch_tdigest(100, v)),
+    typeof(datasketch_tdigest_min_value(datasketch_tdigest(100, v))),
+    datasketch_tdigest_max_value(datasketch_tdigest(100, v::FLOAT))
+FROM small;
+----
+1.0	10.0	DOUBLE	10.0
+
+# min/max are exact even when the digest compresses.
+query II
+SELECT
+    datasketch_tdigest_min_value(datasketch_tdigest(10, v::DOUBLE)),
+    datasketch_tdigest_max_value(datasketch_tdigest(10, v::DOUBLE))
+FROM big;
+----
+1.0	100000.0
+
+query I
+SELECT typeof(datasketch_tdigest_max_value(datasketch_tdigest(100, v::FLOAT))) FROM small;
+----
+FLOAT

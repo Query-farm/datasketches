@@ -9,6 +9,7 @@
 #include "duckdb/common/vector/string_vector.hpp"
 #include "duckdb/common/vector/struct_vector.hpp"
 #include "duckdb/common/vector/unified_vector_format.hpp"
+#include "duckdb/common/string_util.hpp"
 
 #include <DataSketches/quantiles_sketch.hpp>
 #include <DataSketches/kll_sketch.hpp>
@@ -75,6 +76,44 @@ static list_entry_t DSAppendList(Vector &result, idx_t length, F &&fill) {
     return list_entry_t(offset, length);
 }
 
+static datasketches::target_hll_type DSParseHLLTargetType(const string &name) {
+    auto upper = StringUtil::Upper(name);
+    if (upper == "HLL_4") {
+        return datasketches::HLL_4;
+    }
+    if (upper == "HLL_6") {
+        return datasketches::HLL_6;
+    }
+    if (upper == "HLL_8") {
+        return datasketches::HLL_8;
+    }
+    throw BinderException("HLL target_type must be one of 'HLL_4', 'HLL_6' or 'HLL_8', got: '%s'", name);
+}
+
+static string DSHLLTargetTypeName(datasketches::target_hll_type type) {
+    switch (type) {
+    case datasketches::HLL_4:
+        return "HLL_4";
+    case datasketches::HLL_6:
+        return "HLL_6";
+    case datasketches::HLL_8:
+        return "HLL_8";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+// Merges `source` into `target`, reporting incompatible sketches (e.g. REQ sketches with different rank accuracy
+// modes) as invalid input instead of an unexpected library exception.
+template <class SKETCH, class SOURCE>
+static inline void DSMergeSketch(SKETCH &target, SOURCE &&source) {
+    try {
+        target.merge(std::forward<SOURCE>(source));
+    } catch (const std::invalid_argument &e) {
+        throw InvalidInputException("Cannot merge sketches: %s", e.what());
+    }
+}
+
 static inline void DSCheckRank(double rank) {
     if (!(rank >= 0.0 && rank <= 1.0)) {
         throw InvalidInputException("Normalized rank must be between 0 and 1, got: %f", rank);
@@ -90,15 +129,20 @@ struct DSQuantilesBindData : public FunctionData {
 	}
 
 	unique_ptr<FunctionData> Copy() const override {
-		return make_uniq<DSQuantilesBindData>(k);
+		auto copy = make_uniq<DSQuantilesBindData>(k);
+		
+		return std::move(copy);
 	}
 
 	bool Equals(const FunctionData &other_p) const override {
 		auto &other = other_p.Cast<DSQuantilesBindData>();
-        return k == other.k;
+		
+		return k == other.k;
+		
 	}
 
     int32_t k;
+    
 };
 
 
@@ -125,8 +169,12 @@ unique_ptr<FunctionData> DSQuantilesBind(BindAggregateFunctionInput &input) {
 	}
 	
 
+	auto bind_data = make_uniq<DSQuantilesBindData>(actual_k);
+
+	
+
 	DSEraseAggregateArgument(input, 0);
-	return make_uniq<DSQuantilesBindData>(actual_k);
+	return std::move(bind_data);
 }
 
 
@@ -147,13 +195,24 @@ unique_ptr<FunctionData> DSQuantilesBind(BindAggregateFunctionInput &input) {
             }
         }
 
-        
-        void CreateSketch(int32_t k)
+        void CreateSketch(const DSQuantilesBindData &bind)
         {
             D_ASSERT(!sketch);
-            D_ASSERT(k > 0);
-            D_ASSERT(k <= 32768);
-            sketch = new datasketches::quantiles_sketch<DSItem<T>>(k);
+            
+            D_ASSERT(bind.k > 0);
+            D_ASSERT(bind.k <= 32768);
+            sketch = new datasketches::quantiles_sketch<DSItem<T>>(bind.k);
+            
+        }
+
+        
+        // The state of a merge aggregate starts from the first input sketch's configuration where the
+        // library requires it: REQ sketches can only be merged with sketches of the same rank accuracy mode.
+        void CreateSketchForMerge(const DSQuantilesBindData &bind, const datasketches::quantiles_sketch<DSItem<T>> &first)
+        {
+            
+            CreateSketch(bind);
+            
         }
         
 
@@ -211,15 +270,20 @@ struct DSKLLBindData : public FunctionData {
 	}
 
 	unique_ptr<FunctionData> Copy() const override {
-		return make_uniq<DSKLLBindData>(k);
+		auto copy = make_uniq<DSKLLBindData>(k);
+		
+		return std::move(copy);
 	}
 
 	bool Equals(const FunctionData &other_p) const override {
 		auto &other = other_p.Cast<DSKLLBindData>();
-        return k == other.k;
+		
+		return k == other.k;
+		
 	}
 
     int32_t k;
+    
 };
 
 
@@ -246,8 +310,12 @@ unique_ptr<FunctionData> DSKLLBind(BindAggregateFunctionInput &input) {
 	}
 	
 
+	auto bind_data = make_uniq<DSKLLBindData>(actual_k);
+
+	
+
 	DSEraseAggregateArgument(input, 0);
-	return make_uniq<DSKLLBindData>(actual_k);
+	return std::move(bind_data);
 }
 
 
@@ -268,13 +336,24 @@ unique_ptr<FunctionData> DSKLLBind(BindAggregateFunctionInput &input) {
             }
         }
 
-        
-        void CreateSketch(int32_t k)
+        void CreateSketch(const DSKLLBindData &bind)
         {
             D_ASSERT(!sketch);
-            D_ASSERT(k > 0);
-            D_ASSERT(k <= 32768);
-            sketch = new datasketches::kll_sketch<DSItem<T>>(k);
+            
+            D_ASSERT(bind.k > 0);
+            D_ASSERT(bind.k <= 32768);
+            sketch = new datasketches::kll_sketch<DSItem<T>>(bind.k);
+            
+        }
+
+        
+        // The state of a merge aggregate starts from the first input sketch's configuration where the
+        // library requires it: REQ sketches can only be merged with sketches of the same rank accuracy mode.
+        void CreateSketchForMerge(const DSKLLBindData &bind, const datasketches::kll_sketch<DSItem<T>> &first)
+        {
+            
+            CreateSketch(bind);
+            
         }
         
 
@@ -332,15 +411,25 @@ struct DSREQBindData : public FunctionData {
 	}
 
 	unique_ptr<FunctionData> Copy() const override {
-		return make_uniq<DSREQBindData>(k);
+		auto copy = make_uniq<DSREQBindData>(k);
+		
+		copy->hra = hra;
+		
+		return std::move(copy);
 	}
 
 	bool Equals(const FunctionData &other_p) const override {
 		auto &other = other_p.Cast<DSREQBindData>();
-        return k == other.k;
+		
+		return k == other.k && hra == other.hra;
+		
 	}
 
     int32_t k;
+    
+    // true: high-rank accuracy (the library default), false: low-rank accuracy.
+    bool hra = true;
+    
 };
 
 
@@ -367,8 +456,30 @@ unique_ptr<FunctionData> DSREQBind(BindAggregateFunctionInput &input) {
 	}
 	
 
+	auto bind_data = make_uniq<DSREQBindData>(actual_k);
+
+	
+	// Optional trailing constant: datasketch_req(k, data, hra).
+	if (arguments.size() == 3) {
+		if (arguments[2]->HasParameter()) {
+			throw ParameterNotResolvedException();
+		}
+		if (!arguments[2]->IsFoldable()) {
+			throw BinderException("REQ hra must be a constant");
+		}
+		Value option_val = ExpressionExecutor::EvaluateScalar(context, *arguments[2]);
+		if (option_val.IsNull()) {
+			throw BinderException("REQ hra cannot be NULL");
+		}
+		
+		bind_data->hra = option_val.GetValue<bool>();
+		
+		DSEraseAggregateArgument(input, 2);
+	}
+	
+
 	DSEraseAggregateArgument(input, 0);
-	return make_uniq<DSREQBindData>(actual_k);
+	return std::move(bind_data);
 }
 
 
@@ -389,13 +500,25 @@ unique_ptr<FunctionData> DSREQBind(BindAggregateFunctionInput &input) {
             }
         }
 
-        
-        void CreateSketch(int32_t k)
+        void CreateSketch(const DSREQBindData &bind)
         {
             D_ASSERT(!sketch);
-            D_ASSERT(k >= 4);
-            D_ASSERT(k <= 1024);
-            sketch = new datasketches::req_sketch<DSItem<T>>(k);
+            
+            D_ASSERT(bind.k >= 4);
+            D_ASSERT(bind.k <= 1024);
+            sketch = new datasketches::req_sketch<DSItem<T>>(bind.k, bind.hra);
+            
+        }
+
+        
+        // The state of a merge aggregate starts from the first input sketch's configuration where the
+        // library requires it: REQ sketches can only be merged with sketches of the same rank accuracy mode.
+        void CreateSketchForMerge(const DSREQBindData &bind, const datasketches::req_sketch<DSItem<T>> &first)
+        {
+            
+            D_ASSERT(!sketch);
+            sketch = new datasketches::req_sketch<DSItem<T>>(bind.k, first.is_HRA());
+            
         }
         
 
@@ -453,15 +576,20 @@ struct DSTDigestBindData : public FunctionData {
 	}
 
 	unique_ptr<FunctionData> Copy() const override {
-		return make_uniq<DSTDigestBindData>(k);
+		auto copy = make_uniq<DSTDigestBindData>(k);
+		
+		return std::move(copy);
 	}
 
 	bool Equals(const FunctionData &other_p) const override {
 		auto &other = other_p.Cast<DSTDigestBindData>();
-        return k == other.k;
+		
+		return k == other.k;
+		
 	}
 
     int32_t k;
+    
 };
 
 
@@ -488,8 +616,12 @@ unique_ptr<FunctionData> DSTDigestBind(BindAggregateFunctionInput &input) {
 	}
 	
 
+	auto bind_data = make_uniq<DSTDigestBindData>(actual_k);
+
+	
+
 	DSEraseAggregateArgument(input, 0);
-	return make_uniq<DSTDigestBindData>(actual_k);
+	return std::move(bind_data);
 }
 
 
@@ -510,11 +642,22 @@ unique_ptr<FunctionData> DSTDigestBind(BindAggregateFunctionInput &input) {
             }
         }
 
-        
-        void CreateSketch(uint16_t k)
+        void CreateSketch(const DSTDigestBindData &bind)
         {
             D_ASSERT(!sketch);
-            sketch = new datasketches::tdigest<DSItem<T>>(k);
+            
+            sketch = new datasketches::tdigest<DSItem<T>>(bind.k);
+            
+        }
+
+        
+        // The state of a merge aggregate starts from the first input sketch's configuration where the
+        // library requires it: REQ sketches can only be merged with sketches of the same rank accuracy mode.
+        void CreateSketchForMerge(const DSTDigestBindData &bind, const datasketches::tdigest<DSItem<T>> &first)
+        {
+            
+            CreateSketch(bind);
+            
         }
         
 
@@ -572,15 +715,24 @@ struct DSHLLBindData : public FunctionData {
 	}
 
 	unique_ptr<FunctionData> Copy() const override {
-		return make_uniq<DSHLLBindData>(k);
+		auto copy = make_uniq<DSHLLBindData>(k);
+		
+		copy->target_type = target_type;
+		
+		return std::move(copy);
 	}
 
 	bool Equals(const FunctionData &other_p) const override {
 		auto &other = other_p.Cast<DSHLLBindData>();
-        return k == other.k;
+		
+		return k == other.k && target_type == other.target_type;
+		
 	}
 
     int32_t k;
+    
+    datasketches::target_hll_type target_type = datasketches::HLL_4;
+    
 };
 
 
@@ -607,8 +759,30 @@ unique_ptr<FunctionData> DSHLLBind(BindAggregateFunctionInput &input) {
 	}
 	
 
+	auto bind_data = make_uniq<DSHLLBindData>(actual_k);
+
+	
+	// Optional trailing constant: datasketch_hll(k, data, target_type).
+	if (arguments.size() == 3) {
+		if (arguments[2]->HasParameter()) {
+			throw ParameterNotResolvedException();
+		}
+		if (!arguments[2]->IsFoldable()) {
+			throw BinderException("HLL target_type must be a constant");
+		}
+		Value option_val = ExpressionExecutor::EvaluateScalar(context, *arguments[2]);
+		if (option_val.IsNull()) {
+			throw BinderException("HLL target_type cannot be NULL");
+		}
+		
+		bind_data->target_type = DSParseHLLTargetType(option_val.GetValue<string>());
+		
+		DSEraseAggregateArgument(input, 2);
+	}
+	
+
 	DSEraseAggregateArgument(input, 0);
-	return make_uniq<DSHLLBindData>(actual_k);
+	return std::move(bind_data);
 }
 
 
@@ -627,12 +801,14 @@ unique_ptr<FunctionData> DSHLLBind(BindAggregateFunctionInput &input) {
             }
         }
 
-        
-        void CreateSketch(uint16_t k)
+        void CreateSketch(const DSHLLBindData &bind)
         {
             D_ASSERT(!sketch);
-            sketch = new datasketches::hll_sketch(k);
+            
+            sketch = new datasketches::hll_sketch(bind.k, bind.target_type);
+            
         }
+
         
 
         void CreateSketch(const DSHLLState &existing)
@@ -686,15 +862,20 @@ struct DSCPCBindData : public FunctionData {
 	}
 
 	unique_ptr<FunctionData> Copy() const override {
-		return make_uniq<DSCPCBindData>(k);
+		auto copy = make_uniq<DSCPCBindData>(k);
+		
+		return std::move(copy);
 	}
 
 	bool Equals(const FunctionData &other_p) const override {
 		auto &other = other_p.Cast<DSCPCBindData>();
-        return k == other.k;
+		
+		return k == other.k;
+		
 	}
 
     int32_t k;
+    
 };
 
 
@@ -721,8 +902,12 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
 	}
 	
 
+	auto bind_data = make_uniq<DSCPCBindData>(actual_k);
+
+	
+
 	DSEraseAggregateArgument(input, 0);
-	return make_uniq<DSCPCBindData>(actual_k);
+	return std::move(bind_data);
 }
 
 
@@ -741,12 +926,14 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
             }
         }
 
-        
-        void CreateSketch(uint8_t k)
+        void CreateSketch(const DSCPCBindData &bind)
         {
             D_ASSERT(!sketch);
-            sketch = new datasketches::cpc_sketch(k);
+            
+            sketch = new datasketches::cpc_sketch(bind.k);
+            
         }
+
         
 
         void CreateSketch(const DSCPCState &existing)
@@ -818,14 +1005,14 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
                               const A_TYPE &a_data,
                               AggregateUnaryInput &idata)
         {
+            // this is a sketch in a_data, so we need to deserialize it.
+            auto incoming = state.deserialize_sketch(a_data);
             if (!state.sketch)
             {
                 auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
-                state.CreateSketch(bind_data.k);
+                state.CreateSketchForMerge(bind_data, incoming);
             }
-
-            // this is a sketch in b_data, so we need to deserialize it.
-            state.sketch->merge(state.deserialize_sketch(a_data));
+            DSMergeSketch(*state.sketch, std::move(incoming));
         }
 
         template <class INPUT_TYPE, class STATE, class OP>
@@ -853,7 +1040,7 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
             }
             else
             {
-                target.sketch->merge(*source.sketch);
+                DSMergeSketch(*target.sketch, *source.sketch);
             }
         }
 
@@ -885,7 +1072,7 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
             if (!state.sketch)
             {
                 auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
-                state.CreateSketch(bind_data.k);
+                state.CreateSketch(bind_data);
             }
 
             state.sketch->update(DSItemIn(a_data));
@@ -916,7 +1103,7 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
             }
             else
             {
-                target.sketch->merge(*source.sketch);
+                DSMergeSketch(*target.sketch, *source.sketch);
             }
         }
 
@@ -948,7 +1135,7 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
             if (!state.sketch)
             {
                 auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
-                state.CreateSketch(bind_data.k);
+                state.CreateSketch(bind_data);
             }
 
             if constexpr (std::is_same_v<A_TYPE, duckdb::string_t>) {
@@ -1015,7 +1202,7 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
 
             if (!state.sketch)
             {
-                state.CreateSketch(bind_data.k);
+                state.CreateSketch(bind_data);
             }
 
             auto a_sketch = state.deserialize_sketch(a_data);
@@ -1087,7 +1274,7 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
 
             if (!state.sketch)
             {
-                state.CreateSketch(bind_data.k);
+                state.CreateSketch(bind_data);
             }
 
             auto a_sketch = state.deserialize_sketch(a_data);
@@ -1155,7 +1342,7 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
             if (!state.sketch)
             {
                 auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
-                state.CreateSketch(bind_data.k);
+                state.CreateSketch(bind_data);
             }
 
             if constexpr (std::is_same_v<A_TYPE, duckdb::string_t>) {
@@ -3874,7 +4061,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 ,    DSQuantilessorted_view<int8_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
@@ -3885,7 +4072,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 ,    DSQuantilessorted_view<int16_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
@@ -3896,7 +4083,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 ,    DSQuantilessorted_view<int32_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
@@ -3907,7 +4094,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 ,    DSQuantilessorted_view<int64_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
@@ -3918,7 +4105,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 ,    DSQuantilessorted_view<float>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
@@ -3929,7 +4116,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 ,    DSQuantilessorted_view<double>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
@@ -3940,7 +4127,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 ,    DSQuantilessorted_view<uint8_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
@@ -3951,7 +4138,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 ,    DSQuantilessorted_view<uint16_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
@@ -3962,7 +4149,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 ,    DSQuantilessorted_view<uint32_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
@@ -3973,7 +4160,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 ,    DSQuantilessorted_view<uint64_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
@@ -4013,6 +4200,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSQuantilesMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
                 fun.SetBindCallback(DSQuantilesBind);
@@ -4043,6 +4231,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSQuantilesMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
                 fun.SetBindCallback(DSQuantilesBind);
@@ -4073,6 +4262,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSQuantilesMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
                 fun.SetBindCallback(DSQuantilesBind);
@@ -4103,6 +4293,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSQuantilesMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
                 fun.SetBindCallback(DSQuantilesBind);
@@ -4133,6 +4324,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSQuantilesMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.SetBindCallback(DSQuantilesBind);
@@ -4163,6 +4355,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSQuantilesMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.SetBindCallback(DSQuantilesBind);
@@ -4193,6 +4386,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSQuantilesMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
                 fun.SetBindCallback(DSQuantilesBind);
@@ -4223,6 +4417,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSQuantilesMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
                 fun.SetBindCallback(DSQuantilesBind);
@@ -4253,6 +4448,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSQuantilesMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
                 fun.SetBindCallback(DSQuantilesBind);
@@ -4283,6 +4479,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSQuantilesMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
                 fun.SetBindCallback(DSQuantilesBind);
@@ -6972,7 +7169,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSKLLsorted_view<int8_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
@@ -6983,7 +7180,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSKLLsorted_view<int16_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
@@ -6994,7 +7191,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSKLLsorted_view<int32_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
@@ -7005,7 +7202,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSKLLsorted_view<int64_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
@@ -7016,7 +7213,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSKLLsorted_view<float>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
@@ -7027,7 +7224,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSKLLsorted_view<double>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
@@ -7038,7 +7235,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSKLLsorted_view<uint8_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
@@ -7049,7 +7246,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSKLLsorted_view<uint16_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
@@ -7060,7 +7257,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSKLLsorted_view<uint32_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
@@ -7071,7 +7268,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSKLLsorted_view<uint64_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
@@ -7111,6 +7308,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSKLLMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
                 fun.SetBindCallback(DSKLLBind);
@@ -7141,6 +7339,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSKLLMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
                 fun.SetBindCallback(DSKLLBind);
@@ -7171,6 +7370,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSKLLMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
                 fun.SetBindCallback(DSKLLBind);
@@ -7201,6 +7401,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSKLLMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
                 fun.SetBindCallback(DSKLLBind);
@@ -7231,6 +7432,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSKLLMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.SetBindCallback(DSKLLBind);
@@ -7261,6 +7463,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSKLLMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.SetBindCallback(DSKLLBind);
@@ -7291,6 +7494,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSKLLMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
                 fun.SetBindCallback(DSKLLBind);
@@ -7321,6 +7525,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSKLLMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
                 fun.SetBindCallback(DSKLLBind);
@@ -7351,6 +7556,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSKLLMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
                 fun.SetBindCallback(DSKLLBind);
@@ -7381,6 +7587,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSKLLMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
                 fun.SetBindCallback(DSKLLBind);
@@ -7886,6 +8093,112 @@ static inline void DSREQmax_item(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return DSItemOut<T>(result, sketch.get_max_item());
+        });
+
+}
+
+    
+
+
+template <class T>
+
+static inline void DSREQrank_lower_bound(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 3);
+
+    
+        auto &sketch_vector = args.data[0];
+        auto &rank_vector = args.data[1];
+        auto &num_std_dev_vector = args.data[2];
+
+    
+        
+        TernaryExecutor::Execute
+        <string_t,double,uint8_t,double>
+        (
+        sketch_vector,rank_vector,num_std_dev_vector,result,
+        [&](string_t sketch_data,double rank_data,uint8_t num_std_dev_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
+DSCheckRank(rank_data); return sketch.get_rank_lower_bound(rank_data, num_std_dev_data);
+        });
+
+}
+
+    
+
+
+template <class T>
+
+static inline void DSREQrank_upper_bound(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 3);
+
+    
+        auto &sketch_vector = args.data[0];
+        auto &rank_vector = args.data[1];
+        auto &num_std_dev_vector = args.data[2];
+
+    
+        
+        TernaryExecutor::Execute
+        <string_t,double,uint8_t,double>
+        (
+        sketch_vector,rank_vector,num_std_dev_vector,result,
+        [&](string_t sketch_data,double rank_data,uint8_t num_std_dev_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
+DSCheckRank(rank_data); return sketch.get_rank_upper_bound(rank_data, num_std_dev_data);
+        });
+
+}
+
+    
+
+
+template <class T>
+
+static inline void DSREQis_hra(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 1);
+
+    
+        auto &sketch_vector = args.data[0];
+
+    
+        
+        UnaryExecutor::Execute
+        <string_t,bool>
+        (
+        sketch_vector,result,
+        [&](string_t sketch_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
+return sketch.is_HRA();
         });
 
 }
@@ -9642,6 +9955,390 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
       }
       {
+        ScalarFunctionSet fs("datasketch_req_rank_lower_bound");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_lower_bound<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_lower_bound<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_lower_bound<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_lower_bound<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_lower_bound<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_lower_bound<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_lower_bound<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_lower_bound<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_lower_bound<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_lower_bound<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_req_rank_upper_bound");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_upper_bound<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_upper_bound<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_upper_bound<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_upper_bound<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_upper_bound<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_upper_bound<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_upper_bound<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_upper_bound<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_upper_bound<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::UTINYINT},LogicalType::DOUBLE
+                ,    DSREQrank_upper_bound<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
+                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.parameter_names = { "sketch","rank","num_std_dev" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_req_is_hra");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::BOOLEAN
+                ,    DSREQis_hra<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
+                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::BOOLEAN
+                ,    DSREQis_hra<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
+                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::BOOLEAN
+                ,    DSREQis_hra<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
+                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::BOOLEAN
+                ,    DSREQis_hra<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
+                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::BOOLEAN
+                ,    DSREQis_hra<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
+                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::BOOLEAN
+                ,    DSREQis_hra<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
+                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::BOOLEAN
+                ,    DSREQis_hra<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
+                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::BOOLEAN
+                ,    DSREQis_hra<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
+                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::BOOLEAN
+                ,    DSREQis_hra<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
+                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::BOOLEAN
+                ,    DSREQis_hra<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
+                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
         ScalarFunctionSet fs("datasketch_req_quantiles");
         std::vector<FunctionDescription> fn_descs;
         
@@ -9907,7 +10604,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSREQsorted_view<int8_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_req_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
@@ -9918,7 +10615,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSREQsorted_view<int16_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_req_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
@@ -9929,7 +10626,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSREQsorted_view<int32_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_req_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
@@ -9940,7 +10637,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSREQsorted_view<int64_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_req_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
@@ -9951,7 +10648,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSREQsorted_view<float>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_req_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
@@ -9962,7 +10659,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSREQsorted_view<double>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_req_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
@@ -9973,7 +10670,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSREQsorted_view<uint8_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_req_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
@@ -9984,7 +10681,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSREQsorted_view<uint16_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_req_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
@@ -9995,7 +10692,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSREQsorted_view<uint32_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_req_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
@@ -10006,7 +10703,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 ,    DSREQsorted_view<uint64_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
                     desc.examples.push_back("datasketch_req_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
@@ -10046,6 +10743,22 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSREQCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::TINYINT, LogicalType::BOOLEAN });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
+                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.parameter_names = {"k", "data", "hra"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT, LogicalType::BOOLEAN };
+                agg_descs.push_back(std::move(desc));
+            }
+            
             {
                 auto fun = DSREQMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
                 fun.SetBindCallback(DSREQBind);
@@ -10076,6 +10789,22 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSREQCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::SMALLINT, LogicalType::BOOLEAN });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
+                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.parameter_names = {"k", "data", "hra"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT, LogicalType::BOOLEAN };
+                agg_descs.push_back(std::move(desc));
+            }
+            
             {
                 auto fun = DSREQMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
                 fun.SetBindCallback(DSREQBind);
@@ -10106,6 +10835,22 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSREQCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::INTEGER, LogicalType::BOOLEAN });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
+                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.parameter_names = {"k", "data", "hra"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER, LogicalType::BOOLEAN };
+                agg_descs.push_back(std::move(desc));
+            }
+            
             {
                 auto fun = DSREQMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
                 fun.SetBindCallback(DSREQBind);
@@ -10136,6 +10881,22 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSREQCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::BIGINT, LogicalType::BOOLEAN });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
+                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.parameter_names = {"k", "data", "hra"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT, LogicalType::BOOLEAN };
+                agg_descs.push_back(std::move(desc));
+            }
+            
             {
                 auto fun = DSREQMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
                 fun.SetBindCallback(DSREQBind);
@@ -10166,6 +10927,22 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSREQCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::FLOAT, LogicalType::BOOLEAN });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
+                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.parameter_names = {"k", "data", "hra"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT, LogicalType::BOOLEAN };
+                agg_descs.push_back(std::move(desc));
+            }
+            
             {
                 auto fun = DSREQMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.SetBindCallback(DSREQBind);
@@ -10196,6 +10973,22 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSREQCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::DOUBLE, LogicalType::BOOLEAN });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
+                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.parameter_names = {"k", "data", "hra"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE, LogicalType::BOOLEAN };
+                agg_descs.push_back(std::move(desc));
+            }
+            
             {
                 auto fun = DSREQMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.SetBindCallback(DSREQBind);
@@ -10226,6 +11019,22 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSREQCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::UTINYINT, LogicalType::BOOLEAN });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
+                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.parameter_names = {"k", "data", "hra"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT, LogicalType::BOOLEAN };
+                agg_descs.push_back(std::move(desc));
+            }
+            
             {
                 auto fun = DSREQMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
                 fun.SetBindCallback(DSREQBind);
@@ -10256,6 +11065,22 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSREQCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::USMALLINT, LogicalType::BOOLEAN });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
+                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.parameter_names = {"k", "data", "hra"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT, LogicalType::BOOLEAN };
+                agg_descs.push_back(std::move(desc));
+            }
+            
             {
                 auto fun = DSREQMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
                 fun.SetBindCallback(DSREQBind);
@@ -10286,6 +11111,22 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSREQCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::UINTEGER, LogicalType::BOOLEAN });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
+                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.parameter_names = {"k", "data", "hra"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER, LogicalType::BOOLEAN };
+                agg_descs.push_back(std::move(desc));
+            }
+            
             {
                 auto fun = DSREQMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
                 fun.SetBindCallback(DSREQBind);
@@ -10316,6 +11157,22 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
                 agg_descs.push_back(std::move(desc));
             }
+            
+            {
+                auto fun = DSREQCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { LogicalType::INTEGER, LogicalType::UBIGINT, LogicalType::BOOLEAN });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
+                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.parameter_names = {"k", "data", "hra"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT, LogicalType::BOOLEAN };
+                agg_descs.push_back(std::move(desc));
+            }
+            
             {
                 auto fun = DSREQMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
                 fun.SetBindCallback(DSREQBind);
@@ -10687,6 +11544,74 @@ return DSItemOut<T>(result, sketch.get_quantile(rank_data));
     
 
 
+template <class T>
+
+static inline void DSTDigestmin_value(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 1);
+
+    
+        auto &sketch_vector = args.data[0];
+
+    
+        
+        UnaryExecutor::Execute
+        <string_t,T>
+        (
+        sketch_vector,result,
+        [&](string_t sketch_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::tdigest<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
+                }
+            }();
+return sketch.get_min_value();
+        });
+
+}
+
+    
+
+
+template <class T>
+
+static inline void DSTDigestmax_value(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 1);
+
+    
+        auto &sketch_vector = args.data[0];
+
+    
+        
+        UnaryExecutor::Execute
+        <string_t,T>
+        (
+        sketch_vector,result,
+        [&](string_t sketch_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::tdigest<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
+                }
+            }();
+return sketch.get_max_value();
+        });
+
+}
+
+    
+
+
     
     template <typename T>
     auto static DSTDigestMergeAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
@@ -11041,6 +11966,86 @@ return DSItemOut<T>(result, sketch.get_quantile(rank_data));
 
 
       }
+      {
+        ScalarFunctionSet fs("datasketch_tdigest_min_value");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::FLOAT
+                ,    DSTDigestmin_value<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum value seen by the sketch";
+                    desc.examples.push_back("datasketch_tdigest_min_value(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::DOUBLE
+                ,    DSTDigestmin_value<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the minimum value seen by the sketch";
+                    desc.examples.push_back("datasketch_tdigest_min_value(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_tdigest_max_value");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::FLOAT
+                ,    DSTDigestmax_value<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maximum value seen by the sketch";
+                    desc.examples.push_back("datasketch_tdigest_max_value(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::DOUBLE
+                ,    DSTDigestmax_value<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the maximum value seen by the sketch";
+                    desc.examples.push_back("datasketch_tdigest_max_value(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
 
       // This funciton creates the sketches.
       {
@@ -11062,6 +12067,7 @@ return DSItemOut<T>(result, sketch.get_quantile(rank_data));
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSTDigestMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
                 fun.SetBindCallback(DSTDigestBind);
@@ -11092,6 +12098,7 @@ return DSItemOut<T>(result, sketch.get_quantile(rank_data));
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
                 agg_descs.push_back(std::move(desc));
             }
+            
             {
                 auto fun = DSTDigestMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
                 fun.SetBindCallback(DSTDigestBind);

@@ -9,6 +9,7 @@
 #include "duckdb/common/vector/string_vector.hpp"
 #include "duckdb/common/vector/struct_vector.hpp"
 #include "duckdb/common/vector/unified_vector_format.hpp"
+#include "duckdb/common/string_util.hpp"
 
 #include <DataSketches/quantiles_sketch.hpp>
 #include <DataSketches/kll_sketch.hpp>
@@ -75,6 +76,44 @@ static list_entry_t DSAppendList(Vector &result, idx_t length, F &&fill) {
     return list_entry_t(offset, length);
 }
 
+static datasketches::target_hll_type DSParseHLLTargetType(const string &name) {
+    auto upper = StringUtil::Upper(name);
+    if (upper == "HLL_4") {
+        return datasketches::HLL_4;
+    }
+    if (upper == "HLL_6") {
+        return datasketches::HLL_6;
+    }
+    if (upper == "HLL_8") {
+        return datasketches::HLL_8;
+    }
+    throw BinderException("HLL target_type must be one of 'HLL_4', 'HLL_6' or 'HLL_8', got: '%s'", name);
+}
+
+static string DSHLLTargetTypeName(datasketches::target_hll_type type) {
+    switch (type) {
+    case datasketches::HLL_4:
+        return "HLL_4";
+    case datasketches::HLL_6:
+        return "HLL_6";
+    case datasketches::HLL_8:
+        return "HLL_8";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+// Merges `source` into `target`, reporting incompatible sketches (e.g. REQ sketches with different rank accuracy
+// modes) as invalid input instead of an unexpected library exception.
+template <class SKETCH, class SOURCE>
+static inline void DSMergeSketch(SKETCH &target, SOURCE &&source) {
+    try {
+        target.merge(std::forward<SOURCE>(source));
+    } catch (const std::invalid_argument &e) {
+        throw InvalidInputException("Cannot merge sketches: %s", e.what());
+    }
+}
+
 static inline void DSCheckRank(double rank) {
     if (!(rank >= 0.0 && rank <= 1.0)) {
         throw InvalidInputException("Normalized rank must be between 0 and 1, got: %f", rank);
@@ -90,15 +129,33 @@ struct DS{{sketch_type}}BindData : public FunctionData {
 	}
 
 	unique_ptr<FunctionData> Copy() const override {
-		return make_uniq<DS{{sketch_type}}BindData>(k);
+		auto copy = make_uniq<DS{{sketch_type}}BindData>(k);
+		{% if sketch_type == "REQ" %}
+		copy->hra = hra;
+		{% elif sketch_type == "HLL" %}
+		copy->target_type = target_type;
+		{% endif %}
+		return std::move(copy);
 	}
 
 	bool Equals(const FunctionData &other_p) const override {
 		auto &other = other_p.Cast<DS{{sketch_type}}BindData>();
-        return k == other.k;
+		{% if sketch_type == "REQ" %}
+		return k == other.k && hra == other.hra;
+		{% elif sketch_type == "HLL" %}
+		return k == other.k && target_type == other.target_type;
+		{% else %}
+		return k == other.k;
+		{% endif %}
 	}
 
     {{sketch_k_cpp_type[sketch_type]}} k;
+    {% if sketch_type == "REQ" %}
+    // true: high-rank accuracy (the library default), false: low-rank accuracy.
+    bool hra = true;
+    {% elif sketch_type == "HLL" %}
+    datasketches::target_hll_type target_type = datasketches::HLL_4;
+    {% endif %}
 };
 
 
@@ -145,8 +202,32 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
 	}
 	{% endif %}
 
+	auto bind_data = make_uniq<DS{{sketch_type}}BindData>(actual_k);
+
+	{% if sketch_type in ["REQ", "HLL"] %}
+	// Optional trailing constant: datasketch_{{sketch_type|lower}}(k, data, {{ "hra" if sketch_type == "REQ" else "target_type" }}).
+	if (arguments.size() == 3) {
+		if (arguments[2]->HasParameter()) {
+			throw ParameterNotResolvedException();
+		}
+		if (!arguments[2]->IsFoldable()) {
+			throw BinderException("{{sketch_type}} {{ "hra" if sketch_type == "REQ" else "target_type" }} must be a constant");
+		}
+		Value option_val = ExpressionExecutor::EvaluateScalar(context, *arguments[2]);
+		if (option_val.IsNull()) {
+			throw BinderException("{{sketch_type}} {{ "hra" if sketch_type == "REQ" else "target_type" }} cannot be NULL");
+		}
+		{% if sketch_type == "REQ" %}
+		bind_data->hra = option_val.GetValue<bool>();
+		{% else %}
+		bind_data->target_type = DSParseHLLTargetType(option_val.GetValue<string>());
+		{% endif %}
+		DSEraseAggregateArgument(input, 2);
+	}
+	{% endif %}
+
 	DSEraseAggregateArgument(input, 0);
-	return make_uniq<DS{{sketch_type}}BindData>(actual_k);
+	return std::move(bind_data);
 }
 
 
@@ -169,39 +250,37 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
             }
         }
 
-        {% if sketch_type in ["Quantiles", "KLL"] %}
-        void CreateSketch(int32_t k)
+        void CreateSketch(const DS{{sketch_type}}BindData &bind)
         {
             D_ASSERT(!sketch);
-            D_ASSERT(k > 0);
-            D_ASSERT(k <= 32768);
-            sketch = new {{sketch_class_name(sketch_type)}}<DSItem<T>>(k);
+            {% if sketch_type in ["Quantiles", "KLL"] %}
+            D_ASSERT(bind.k > 0);
+            D_ASSERT(bind.k <= 32768);
+            sketch = new {{sketch_class_name(sketch_type)}}<DSItem<T>>(bind.k);
+            {% elif sketch_type == "REQ" %}
+            D_ASSERT(bind.k >= 4);
+            D_ASSERT(bind.k <= 1024);
+            sketch = new {{sketch_class_name(sketch_type)}}<DSItem<T>>(bind.k, bind.hra);
+            {% elif sketch_type == "TDigest" %}
+            sketch = new {{sketch_class_name(sketch_type)}}<DSItem<T>>(bind.k);
+            {% elif sketch_type == "HLL" %}
+            sketch = new {{sketch_class_name(sketch_type)}}(bind.k, bind.target_type);
+            {% elif sketch_type == "CPC" %}
+            sketch = new {{sketch_class_name(sketch_type)}}(bind.k);
+            {% endif %}
         }
-        {% elif sketch_type == "REQ" %}
-        void CreateSketch(int32_t k)
+
+        {% if sketch_type not in counting_sketch_names %}
+        // The state of a merge aggregate starts from the first input sketch's configuration where the
+        // library requires it: REQ sketches can only be merged with sketches of the same rank accuracy mode.
+        void CreateSketchForMerge(const DS{{sketch_type}}BindData &bind, const {{sketch_class_name(sketch_type)}}<DSItem<T>> &first)
         {
+            {% if sketch_type == "REQ" %}
             D_ASSERT(!sketch);
-            D_ASSERT(k >= 4);
-            D_ASSERT(k <= 1024);
-            sketch = new {{sketch_class_name(sketch_type)}}<DSItem<T>>(k);
-        }
-        {% elif sketch_type == "TDigest" %}
-        void CreateSketch(uint16_t k)
-        {
-            D_ASSERT(!sketch);
-            sketch = new {{sketch_class_name(sketch_type)}}<DSItem<T>>(k);
-        }
-        {% elif sketch_type == "HLL" %}
-        void CreateSketch(uint16_t k)
-        {
-            D_ASSERT(!sketch);
-            sketch = new {{sketch_class_name(sketch_type)}}(k);
-        }
-        {% elif sketch_type == "CPC" %}
-        void CreateSketch(uint8_t k)
-        {
-            D_ASSERT(!sketch);
-            sketch = new {{sketch_class_name(sketch_type)}}(k);
+            sketch = new {{sketch_class_name(sketch_type)}}<DSItem<T>>(bind.k, first.is_HRA());
+            {% else %}
+            CreateSketch(bind);
+            {% endif %}
         }
         {% endif %}
 
@@ -308,14 +387,14 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
                               const A_TYPE &a_data,
                               AggregateUnaryInput &idata)
         {
+            // this is a sketch in a_data, so we need to deserialize it.
+            auto incoming = state.deserialize_sketch(a_data);
             if (!state.sketch)
             {
                 auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
-                state.CreateSketch(bind_data.k);
+                state.CreateSketchForMerge(bind_data, incoming);
             }
-
-            // this is a sketch in b_data, so we need to deserialize it.
-            state.sketch->merge(state.deserialize_sketch(a_data));
+            DSMergeSketch(*state.sketch, std::move(incoming));
         }
 
         template <class INPUT_TYPE, class STATE, class OP>
@@ -343,7 +422,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
             }
             else
             {
-                target.sketch->merge(*source.sketch);
+                DSMergeSketch(*target.sketch, *source.sketch);
             }
         }
 
@@ -375,7 +454,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
             if (!state.sketch)
             {
                 auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
-                state.CreateSketch(bind_data.k);
+                state.CreateSketch(bind_data);
             }
 
             state.sketch->update(DSItemIn(a_data));
@@ -406,7 +485,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
             }
             else
             {
-                target.sketch->merge(*source.sketch);
+                DSMergeSketch(*target.sketch, *source.sketch);
             }
         }
 
@@ -438,7 +517,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
             if (!state.sketch)
             {
                 auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
-                state.CreateSketch(bind_data.k);
+                state.CreateSketch(bind_data);
             }
 
             if constexpr (std::is_same_v<A_TYPE, duckdb::string_t>) {
@@ -505,7 +584,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
 
             if (!state.sketch)
             {
-                state.CreateSketch(bind_data.k);
+                state.CreateSketch(bind_data);
             }
 
             auto a_sketch = state.deserialize_sketch(a_data);
@@ -577,7 +656,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
 
             if (!state.sketch)
             {
-                state.CreateSketch(bind_data.k);
+                state.CreateSketch(bind_data);
             }
 
             auto a_sketch = state.deserialize_sketch(a_data);
@@ -645,7 +724,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
             if (!state.sketch)
             {
                 auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
-                state.CreateSketch(bind_data.k);
+                state.CreateSketch(bind_data);
             }
 
             if constexpr (std::is_same_v<A_TYPE, duckdb::string_t>) {
@@ -854,6 +933,22 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
                 desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}} };
                 agg_descs.push_back(std::move(desc));
             }
+            {% if sketch_type == "REQ" %}
+            {
+                auto fun = DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]);
+                fun.SetBindCallback(DS{{sketch_type}}Bind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSSetArguments(fun, { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}}, LogicalType::BOOLEAN });
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
+                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.parameter_names = {"k", "data", "hra"};
+                desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}}, LogicalType::BOOLEAN };
+                agg_descs.push_back(std::move(desc));
+            }
+            {% endif %}
             {
                 auto fun = DS{{sketch_type}}MergeAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]);
                 fun.SetBindCallback(DS{{sketch_type}}Bind);
