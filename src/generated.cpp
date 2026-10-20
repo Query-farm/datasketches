@@ -173,7 +173,8 @@ unique_ptr<FunctionData> DSQuantilesBind(BindAggregateFunctionInput &input) {
 
 	
 
-	DSEraseAggregateArgument(input, 0);
+	// The constant arguments stay in the argument list (DuckDB 2.0 plan serialization and the common subplan
+	// optimizer only see the arguments, not the bind data); the update callbacks read the data at index 1.
 	return std::move(bind_data);
 }
 
@@ -314,7 +315,8 @@ unique_ptr<FunctionData> DSKLLBind(BindAggregateFunctionInput &input) {
 
 	
 
-	DSEraseAggregateArgument(input, 0);
+	// The constant arguments stay in the argument list (DuckDB 2.0 plan serialization and the common subplan
+	// optimizer only see the arguments, not the bind data); the update callbacks read the data at index 1.
 	return std::move(bind_data);
 }
 
@@ -474,11 +476,11 @@ unique_ptr<FunctionData> DSREQBind(BindAggregateFunctionInput &input) {
 		
 		bind_data->hra = option_val.GetValue<bool>();
 		
-		DSEraseAggregateArgument(input, 2);
 	}
 	
 
-	DSEraseAggregateArgument(input, 0);
+	// The constant arguments stay in the argument list (DuckDB 2.0 plan serialization and the common subplan
+	// optimizer only see the arguments, not the bind data); the update callbacks read the data at index 1.
 	return std::move(bind_data);
 }
 
@@ -620,7 +622,8 @@ unique_ptr<FunctionData> DSTDigestBind(BindAggregateFunctionInput &input) {
 
 	
 
-	DSEraseAggregateArgument(input, 0);
+	// The constant arguments stay in the argument list (DuckDB 2.0 plan serialization and the common subplan
+	// optimizer only see the arguments, not the bind data); the update callbacks read the data at index 1.
 	return std::move(bind_data);
 }
 
@@ -777,11 +780,11 @@ unique_ptr<FunctionData> DSHLLBind(BindAggregateFunctionInput &input) {
 		
 		bind_data->target_type = DSParseHLLTargetType(option_val.GetValue<string>());
 		
-		DSEraseAggregateArgument(input, 2);
 	}
 	
 
-	DSEraseAggregateArgument(input, 0);
+	// The constant arguments stay in the argument list (DuckDB 2.0 plan serialization and the common subplan
+	// optimizer only see the arguments, not the bind data); the update callbacks read the data at index 1.
 	return std::move(bind_data);
 }
 
@@ -906,7 +909,8 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
 
 	
 
-	DSEraseAggregateArgument(input, 0);
+	// The constant arguments stay in the argument list (DuckDB 2.0 plan serialization and the common subplan
+	// optimizer only see the arguments, not the bind data); the update callbacks read the data at index 1.
 	return std::move(bind_data);
 }
 
@@ -2097,8 +2101,9 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
     
     {
         
-        return AggregateFunction::UnaryAggregate<DSQuantilesState<T>, string_t, string_t, DSQuantilesMergeOperation<DSQuantilesBindData>, AggregateDestructorType::LEGACY>(
-            result_type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DSQuantilesState<T>, string_t, string_t, DSQuantilesMergeOperation<DSQuantilesBindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
+        DSReadDataArgumentAt<1, DSQuantilesState<T>, string_t, DSQuantilesMergeOperation<DSQuantilesBindData>>(fun);
+        return fun;
         
     }
 
@@ -2108,8 +2113,9 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
     auto static DSQuantilesCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        return AggregateFunction::UnaryAggregate<DSQuantilesState<T>, T, string_t, DSQuantilesCreateOperation<DSQuantilesBindData>, AggregateDestructorType::LEGACY>(
-            type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DSQuantilesState<T>, T, string_t, DSQuantilesCreateOperation<DSQuantilesBindData>, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DSQuantilesState<T>, T, DSQuantilesCreateOperation<DSQuantilesBindData>>(fun);
+        return fun;
         
     }
 
@@ -5413,8 +5419,9 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
     
     {
         
-        return AggregateFunction::UnaryAggregate<DSKLLState<T>, string_t, string_t, DSQuantilesMergeOperation<DSKLLBindData>, AggregateDestructorType::LEGACY>(
-            result_type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DSKLLState<T>, string_t, string_t, DSQuantilesMergeOperation<DSKLLBindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
+        DSReadDataArgumentAt<1, DSKLLState<T>, string_t, DSQuantilesMergeOperation<DSKLLBindData>>(fun);
+        return fun;
         
     }
 
@@ -5424,8 +5431,9 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
     auto static DSKLLCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        return AggregateFunction::UnaryAggregate<DSKLLState<T>, T, string_t, DSQuantilesCreateOperation<DSKLLBindData>, AggregateDestructorType::LEGACY>(
-            type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DSKLLState<T>, T, string_t, DSQuantilesCreateOperation<DSKLLBindData>, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DSKLLState<T>, T, DSQuantilesCreateOperation<DSKLLBindData>>(fun);
+        return fun;
         
     }
 
@@ -8800,8 +8808,9 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
     
     {
         
-        return AggregateFunction::UnaryAggregate<DSREQState<T>, string_t, string_t, DSQuantilesMergeOperation<DSREQBindData>, AggregateDestructorType::LEGACY>(
-            result_type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DSREQState<T>, string_t, string_t, DSQuantilesMergeOperation<DSREQBindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
+        DSReadDataArgumentAt<1, DSREQState<T>, string_t, DSQuantilesMergeOperation<DSREQBindData>>(fun);
+        return fun;
         
     }
 
@@ -8811,8 +8820,9 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
     auto static DSREQCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        return AggregateFunction::UnaryAggregate<DSREQState<T>, T, string_t, DSQuantilesCreateOperation<DSREQBindData>, AggregateDestructorType::LEGACY>(
-            type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DSREQState<T>, T, string_t, DSQuantilesCreateOperation<DSREQBindData>, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DSREQState<T>, T, DSQuantilesCreateOperation<DSREQBindData>>(fun);
+        return fun;
         
     }
 
@@ -12036,8 +12046,9 @@ return sketch.get_max_value();
     
     {
         
-        return AggregateFunction::UnaryAggregate<DSTDigestState<T>, string_t, string_t, DSQuantilesMergeOperation<DSTDigestBindData>, AggregateDestructorType::LEGACY>(
-            result_type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DSTDigestState<T>, string_t, string_t, DSQuantilesMergeOperation<DSTDigestBindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
+        DSReadDataArgumentAt<1, DSTDigestState<T>, string_t, DSQuantilesMergeOperation<DSTDigestBindData>>(fun);
+        return fun;
         
     }
 
@@ -12047,8 +12058,9 @@ return sketch.get_max_value();
     auto static DSTDigestCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        return AggregateFunction::UnaryAggregate<DSTDigestState<T>, T, string_t, DSQuantilesCreateOperation<DSTDigestBindData>, AggregateDestructorType::LEGACY>(
-            type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DSTDigestState<T>, T, string_t, DSQuantilesCreateOperation<DSTDigestBindData>, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DSTDigestState<T>, T, DSQuantilesCreateOperation<DSTDigestBindData>>(fun);
+        return fun;
         
     }
 
@@ -12893,8 +12905,9 @@ return sketch.get_upper_bound(std_dev_data);
     
     {
         
-        return AggregateFunction::UnaryAggregate<DSHLLState, string_t, string_t, DSHLLMergeOperation<DSHLLBindData>, AggregateDestructorType::LEGACY>(
-            result_type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DSHLLState, string_t, string_t, DSHLLMergeOperation<DSHLLBindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
+        DSReadDataArgumentAt<1, DSHLLState, string_t, DSHLLMergeOperation<DSHLLBindData>>(fun);
+        return fun;
         
     }
 
@@ -12904,8 +12917,9 @@ return sketch.get_upper_bound(std_dev_data);
     auto static DSHLLCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        return AggregateFunction::UnaryAggregate<DSHLLState, T, string_t, DSHLLCreateOperation<DSHLLBindData>, AggregateDestructorType::LEGACY>(
-            type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DSHLLState, T, string_t, DSHLLCreateOperation<DSHLLBindData>, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DSHLLState, T, DSHLLCreateOperation<DSHLLBindData>>(fun);
+        return fun;
         
     }
 
@@ -13854,8 +13868,9 @@ return sketch.get_upper_bound(std_dev_data);
     
     {
         
-        return AggregateFunction::UnaryAggregate<DSCPCState, string_t, string_t, DSCPCMergeOperation<DSCPCBindData>, AggregateDestructorType::LEGACY>(
-            result_type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DSCPCState, string_t, string_t, DSCPCMergeOperation<DSCPCBindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
+        DSReadDataArgumentAt<1, DSCPCState, string_t, DSCPCMergeOperation<DSCPCBindData>>(fun);
+        return fun;
         
     }
 
@@ -13865,8 +13880,9 @@ return sketch.get_upper_bound(std_dev_data);
     auto static DSCPCCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        return AggregateFunction::UnaryAggregate<DSCPCState, T, string_t, DSCPCCreateOperation<DSCPCBindData>, AggregateDestructorType::LEGACY>(
-            type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DSCPCState, T, string_t, DSCPCCreateOperation<DSCPCBindData>, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DSCPCState, T, DSCPCCreateOperation<DSCPCBindData>>(fun);
+        return fun;
         
     }
 

@@ -155,6 +155,6 @@ SELECT datasketch_cpc_merge(sa, NULL) IS NULL, round(datasketch_cpc_estimate(dat
 true	60.0
 
 query I
-SELECT datasketch_cpc_describe(datasketch_cpc_merge(sa, sb10)) LIKE '%lg_k%10%' FROM cs;
+SELECT regexp_extract(datasketch_cpc_describe(datasketch_cpc_merge(sa, sb10)), 'lg_k\s*: (\d+)', 1) FROM cs;
 ----
-true
+10

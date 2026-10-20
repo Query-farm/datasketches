@@ -88,6 +88,44 @@ namespace duckdb
 		loader.RegisterFunction(info);
 	}
 
+	// DuckDB 2.0: constant arguments that a bind folds into its bind data (K, lg_max_k, build options) must stay in
+	// the aggregate's argument list. Plan serialization, which the common subplan optimizer uses to find identical
+	// subplans, records only the arguments, so erasing them makes e.g. datasketch_kll(12, x) and
+	// datasketch_kll(16, x) look identical and one result is reused for both. These update callbacks read the
+	// data (and weight) arguments at fixed positions and skip the constants.
+	template <idx_t DATA_INDEX, class STATE, class INPUT_TYPE, class OP>
+	static void DSUnaryScatterUpdateAt(Vector inputs[], AggregateInputData &aggr_input_data, idx_t input_count,
+	                                   Vector &states, idx_t count)
+	{
+		D_ASSERT(input_count > DATA_INDEX);
+		AggregateExecutor::UnaryScatter<STATE, INPUT_TYPE, OP>(inputs[DATA_INDEX], states, aggr_input_data, count);
+	}
+
+	template <idx_t A_INDEX, idx_t B_INDEX, class STATE, class A_TYPE, class B_TYPE, class OP>
+	static void DSBinaryScatterUpdateAt(Vector inputs[], AggregateInputData &aggr_input_data, idx_t input_count,
+	                                    Vector &states, idx_t count)
+	{
+		D_ASSERT(input_count > A_INDEX && input_count > B_INDEX);
+		AggregateExecutor::BinaryScatter<STATE, A_TYPE, B_TYPE, OP>(aggr_input_data, inputs[A_INDEX], inputs[B_INDEX],
+		                                                            states, count);
+	}
+
+	// Makes a unary aggregate (built with AggregateFunction::UnaryAggregate) read its input at DATA_INDEX.
+	template <idx_t DATA_INDEX, class STATE, class INPUT_TYPE, class OP>
+	inline void DSReadDataArgumentAt(AggregateFunction &fun)
+	{
+		D_ASSERT(!fun.HasStateClusterUpdateCallback());
+		fun.SetStateUpdateCallback(DSUnaryScatterUpdateAt<DATA_INDEX, STATE, INPUT_TYPE, OP>);
+	}
+
+	// Makes a binary aggregate (built with AggregateFunction::BinaryAggregate) read its inputs at A_INDEX and B_INDEX.
+	template <idx_t A_INDEX, idx_t B_INDEX, class STATE, class A_TYPE, class B_TYPE, class OP>
+	inline void DSReadDataArgumentsAt(AggregateFunction &fun)
+	{
+		D_ASSERT(!fun.HasStateClusterUpdateCallback());
+		fun.SetStateUpdateCallback(DSBinaryScatterUpdateAt<A_INDEX, B_INDEX, STATE, A_TYPE, B_TYPE, OP>);
+	}
+
 	// Replaces an aggregate function's argument list.
 	inline void DSSetArguments(AggregateFunction &fun, vector<LogicalType> arguments)
 	{

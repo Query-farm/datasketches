@@ -222,11 +222,11 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
 		{% else %}
 		bind_data->target_type = DSParseHLLTargetType(option_val.GetValue<string>());
 		{% endif %}
-		DSEraseAggregateArgument(input, 2);
 	}
 	{% endif %}
 
-	DSEraseAggregateArgument(input, 0);
+	// The constant arguments stay in the argument list (DuckDB 2.0 plan serialization and the common subplan
+	// optimizer only see the arguments, not the bind data); the update callbacks read the data at index 1.
 	return std::move(bind_data);
 }
 
@@ -814,14 +814,17 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     {% endif %}
     {
         {% if sketch_type == "HLL" %}
-        return AggregateFunction::UnaryAggregate<DS{{sketch_type}}State, string_t, string_t, DSHLLMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
-            result_type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DS{{sketch_type}}State, string_t, string_t, DSHLLMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
+        DSReadDataArgumentAt<1, DS{{sketch_type}}State, string_t, DSHLLMergeOperation<DS{{sketch_type}}BindData>>(fun);
+        return fun;
         {% elif sketch_type == "CPC" %}
-        return AggregateFunction::UnaryAggregate<DS{{sketch_type}}State, string_t, string_t, DSCPCMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
-            result_type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DS{{sketch_type}}State, string_t, string_t, DSCPCMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
+        DSReadDataArgumentAt<1, DS{{sketch_type}}State, string_t, DSCPCMergeOperation<DS{{sketch_type}}BindData>>(fun);
+        return fun;
         {% else %}
-        return AggregateFunction::UnaryAggregate<DS{{sketch_type}}State<T>, string_t, string_t, DSQuantilesMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
-            result_type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DS{{sketch_type}}State<T>, string_t, string_t, DSQuantilesMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(result_type, result_type);
+        DSReadDataArgumentAt<1, DS{{sketch_type}}State<T>, string_t, DSQuantilesMergeOperation<DS{{sketch_type}}BindData>>(fun);
+        return fun;
         {% endif %}
     }
 
@@ -831,14 +834,17 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     auto static DS{{sketch_type}}CreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         {% if sketch_type == 'HLL' %}
-        return AggregateFunction::UnaryAggregate<DS{{sketch_type}}State, T, string_t, DSHLLCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
-            type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DS{{sketch_type}}State, T, string_t, DSHLLCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DS{{sketch_type}}State, T, DSHLLCreateOperation<DS{{sketch_type}}BindData>>(fun);
+        return fun;
         {% elif sketch_type == 'CPC' %}
-        return AggregateFunction::UnaryAggregate<DS{{sketch_type}}State, T, string_t, DSCPCCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
-            type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DS{{sketch_type}}State, T, string_t, DSCPCCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DS{{sketch_type}}State, T, DSCPCCreateOperation<DS{{sketch_type}}BindData>>(fun);
+        return fun;
         {% else %}
-        return AggregateFunction::UnaryAggregate<DS{{sketch_type}}State<T>, T, string_t, DSQuantilesCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
-            type, result_type);
+        auto fun = AggregateFunction::UnaryAggregate<DS{{sketch_type}}State<T>, T, string_t, DSQuantilesCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DS{{sketch_type}}State<T>, T, DSQuantilesCreateOperation<DS{{sketch_type}}BindData>>(fun);
+        return fun;
         {% endif %}
     }
 
