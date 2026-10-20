@@ -66,12 +66,41 @@ def get_sketch_class_name(sketch_type: str):
     return f"datasketches::{sketch_type.lower()}_sketch"
 
 
+
+def list_argument(name: str, child_logical_type, child_cpp_type: str) -> dict:
+    """A LIST argument whose child values are read through a UnifiedVectorFormat.
+
+    Inside the function body the list entry is `<name>_data`, the child values are
+    `<name>_children_data` and their format is `<name>_children_unified`.
+    """
+    return {
+        "cpp_type": "list_entry_t",
+        "duckdb_type": lambda contained_type: f"LogicalType::LIST({child_logical_type(contained_type)})",
+        "name": name,
+        "pre_executor": f"""
+                    auto &{name}_list_children = ListVector::GetChild({name}_vector);
+                    UnifiedVectorFormat {name}_children_unified;
+                    {name}_list_children.ToUnifiedFormat({name}_children_unified);
+                    const {child_cpp_type} *{name}_children_data = UnifiedVectorFormat::GetData<{child_cpp_type}>({name}_children_unified);
+                    """,
+    }
+
+
+def sorted_view_struct_type(item_logical_type: str) -> str:
+    return (
+        "LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{"
+        f'{{"item", {item_logical_type}}}, '
+        '{"weight", LogicalType::UBIGINT}, '
+        '{"cumulative_weight", LogicalType::UBIGINT}}))'
+    )
+
+
 def unary_functions_per_sketch_type(sketch_type: str):
     if sketch_type not in counting_sketch_names:
         deserialize_sketch = f"""
             auto sketch = [&]() {{
                 try {{
-                    return {get_sketch_class_name(sketch_type)}<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return {get_sketch_class_name(sketch_type)}<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 }} catch (const std::exception &e) {{
                     throw InvalidInputException("Failed to deserialize {sketch_type} sketch: %s", e.what());
                 }}
@@ -114,10 +143,10 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     const T *split_points_list_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
                     """,
         "process": """
-                    std::vector<T> passing_points(split_points_data.length);
+                    std::vector<DSItem<T>> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
+                        passing_points[i] = DSItemIn(split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)]);
                     }
                     """,
     }
@@ -354,7 +383,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 {
                     "description": "Return the rank of an item in the sketch",
                     "example": f"datasketch_{sketch_type.lower()}_rank(sketch, item)",
-                    "method": "return sketch.get_rank(item_data);",
+                    "method": "return sketch.get_rank(DSItemIn(item_data));",
                     "name": "rank",
                     "arguments": [
                         sketch_argument,
@@ -378,7 +407,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 {
                     "description": "Return the quantile of a rank in the sketch",
                     "example": f"datasketch_{sketch_type.lower()}_quantile(sketch, rank)",
-                    "method": "return sketch.get_quantile(rank_data);",
+                    "method": "return DSItemOut<T>(result, sketch.get_quantile(rank_data));",
                     "name": "quantile",
                     "arguments": [
                         sketch_argument,
@@ -436,7 +465,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 {
                     "description": "Return the rank of an item in the sketch",
                     "example": f"datasketch_{sketch_type.lower()}_rank(sketch, item, inclusive)",
-                    "method": "return sketch.get_rank(item_data, inclusive_data);",
+                    "method": "return sketch.get_rank(DSItemIn(item_data), inclusive_data);",
                     "name": "rank",
                     "arguments": [
                         sketch_argument,
@@ -453,8 +482,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "description": "Return the quantile of a rank in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_rank(sketch, rank, inclusive)",
-                    "method": "return sketch.get_quantile(rank_data, inclusive_data);",
+                    "example": f"datasketch_{sketch_type.lower()}_quantile(sketch, rank, inclusive)",
+                    "method": "return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));",
                     "name": "quantile",
                     "arguments": [
                         sketch_argument,
@@ -471,7 +500,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "description": "Return the number of items contained in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_rank(sketch)",
+                    "example": f"datasketch_{sketch_type.lower()}_n(sketch)",
                     "method": "return sketch.get_n();",
                     "name": "n",
                     "arguments": [
@@ -502,7 +531,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 {
                     "description": "Return the minimum item in the sketch",
                     "example": f"datasketch_{sketch_type.lower()}_min_item(sketch)",
-                    "method": "return sketch.get_min_item();",
+                    "method": "return DSItemOut<T>(result, sketch.get_min_item());",
                     "name": "min_item",
                     "arguments": [
                         sketch_argument,
@@ -510,12 +539,117 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     "dynamic_return_type": True,
                 },
                 {
-                    "description": "Return the maxium item in the sketch",
+                    "description": "Return the maximum item in the sketch",
                     "example": f"datasketch_{sketch_type.lower()}_max_item(sketch)",
-                    "method": "return sketch.get_max_item();",
+                    "method": "return DSItemOut<T>(result, sketch.get_max_item());",
                     "name": "max_item",
                     "arguments": [sketch_argument],
                     "dynamic_return_type": True,
+                },
+            ]
+        )
+
+    if sketch_type in ("Quantiles", "KLL", "REQ"):
+        result.extend(
+            [
+                {
+                    "description": "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
+                    "example": f"datasketch_{sketch_type.lower()}_quantiles(sketch, [0.25, 0.5, 0.75], true)",
+                    "method": """
+                if (sketch.is_empty())
+                {
+                    throw InvalidInputException("datasketch_%s_quantiles: operation is undefined for an empty sketch");
+                }
+                return DSAppendList(result, ranks_data.length, [&](Vector &child, idx_t offset) {
+                    auto child_values = FlatVector::GetDataMutable<T>(child);
+                    for (idx_t i = 0; i < ranks_data.length; i++)
+                    {
+                        auto rank_index = ranks_children_unified.sel->get_index(ranks_data.offset + i);
+                        if (!ranks_children_unified.validity.RowIsValid(rank_index))
+                        {
+                            FlatVector::SetNull(child, offset + i, true);
+                            continue;
+                        }
+                        auto rank = ranks_children_data[rank_index];
+                        DSCheckRank(rank);
+                        child_values[offset + i] = DSItemOut<T>(child, sketch.get_quantile(rank, inclusive_data));
+                    }
+                });
+                """ % sketch_type.lower(),
+                    "name": "quantiles",
+                    "arguments": [
+                        sketch_argument,
+                        list_argument("ranks", lambda contained_type: "LogicalType::DOUBLE", "double"),
+                        {
+                            "cpp_type": "bool",
+                            "name": "inclusive",
+                        },
+                    ],
+                    "return_logical_type": lambda contained_type: f"LogicalType::LIST({contained_type})",
+                    "return_cpp_type": "list_entry_t",
+                },
+                {
+                    "description": "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
+                    "example": f"datasketch_{sketch_type.lower()}_ranks(sketch, [10, 20, 30], true)",
+                    "method": """
+                return DSAppendList(result, items_data.length, [&](Vector &child, idx_t offset) {
+                    auto child_values = FlatVector::GetDataMutable<double>(child);
+                    for (idx_t i = 0; i < items_data.length; i++)
+                    {
+                        auto item_index = items_children_unified.sel->get_index(items_data.offset + i);
+                        if (!items_children_unified.validity.RowIsValid(item_index))
+                        {
+                            FlatVector::SetNull(child, offset + i, true);
+                            continue;
+                        }
+                        child_values[offset + i] = sketch.get_rank(DSItemIn(items_children_data[item_index]), inclusive_data);
+                    }
+                });
+                """,
+                    "name": "ranks",
+                    "arguments": [
+                        sketch_argument,
+                        list_argument("items", lambda contained_type: contained_type, "T"),
+                        {
+                            "cpp_type": "bool",
+                            "name": "inclusive",
+                        },
+                    ],
+                    "return_logical_type": lambda contained_type: "LogicalType::LIST(LogicalType::DOUBLE)",
+                    "return_cpp_type": "list_entry_t",
+                },
+                {
+                    "description": "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_"
+                    + sketch_type.lower()
+                    + "_n(sketch) for the normalized rank. An empty sketch yields an empty list",
+                    "example": f"datasketch_{sketch_type.lower()}_sorted_view(sketch)",
+                    "method": """
+                if (sketch.is_empty())
+                {
+                    return list_entry_t(ListVector::GetListSize(result), 0);
+                }
+                auto view = sketch.get_sorted_view();
+                return DSAppendList(result, view.size(), [&](Vector &child, idx_t offset) {
+                    auto &entries = StructVector::GetEntries(child);
+                    auto &item_vector = entries[0];
+                    auto item_values = FlatVector::GetDataMutable<T>(item_vector);
+                    auto weight_values = FlatVector::GetDataMutable<uint64_t>(entries[1]);
+                    auto cumulative_values = FlatVector::GetDataMutable<uint64_t>(entries[2]);
+                    idx_t i = offset;
+                    for (auto it = view.begin(); it != view.end(); ++it, ++i)
+                    {
+                        item_values[i] = DSItemOut<T>(item_vector, (*it).first);
+                        weight_values[i] = it.get_weight();
+                        cumulative_values[i] = it.get_cumulative_weight(true);
+                    }
+                });
+                """,
+                    "name": "sorted_view",
+                    "arguments": [
+                        sketch_argument,
+                    ],
+                    "return_logical_type": sorted_view_struct_type,
+                    "return_cpp_type": "list_entry_t",
                 },
             ]
         )
@@ -566,7 +700,9 @@ def get_scalar_function_args(
 
     all_args = [f"{{{joined_input_parameters}}}"]
 
-    if function_info.get("dynamic_return_type"):
+    if "return_logical_type" in function_info:
+        all_args.append(function_info["return_logical_type"](logical_type))
+    elif function_info.get("dynamic_return_type"):
         all_args.append(logical_type)
     elif function_info.get("return_type_double_list"):
         # CDF/PMF results are probabilities, so they are always DOUBLE regardless of the sketch item type.
@@ -585,7 +721,9 @@ def get_function_block(function_info: Any) -> str:
         else:
             cpp_types.append(value["cpp_type"])
 
-    if function_info.get("return_type_double_list"):
+    if "return_cpp_type" in function_info:
+        cpp_types.append(function_info["return_cpp_type"])
+    elif function_info.get("return_type_double_list"):
         cpp_types.append("list_entry_t")
     elif function_info.get("dynamic_return_type"):
         cpp_types.append("T")

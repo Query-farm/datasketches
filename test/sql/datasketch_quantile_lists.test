@@ -1,0 +1,270 @@
+# name: test/sql/datasketch_quantile_lists.test
+# description: Batch quantiles/ranks and sorted views for KLL, Quantiles and REQ sketches
+# group: [datasketches]
+
+require datasketches
+
+# n (10) is far below k, so every sketch is exact.
+statement ok
+CREATE TABLE items AS SELECT i::INTEGER AS v FROM range(1, 11) t(i);
+
+# ---------------------------------------------------------------- kll
+statement ok
+CREATE TABLE kll_s AS SELECT datasketch_kll(200, v) AS s FROM items;
+
+query I
+SELECT datasketch_kll_quantiles(s, [0.0, 0.5, 1.0], true) FROM kll_s;
+----
+[1, 5, 10]
+
+# The batch form agrees with the single-rank function, for both inclusive modes.
+query II
+SELECT
+    datasketch_kll_quantiles(s, [0.1, 0.25, 0.5, 0.75, 0.9], true) =
+        [datasketch_kll_quantile(s, 0.1, true), datasketch_kll_quantile(s, 0.25, true), datasketch_kll_quantile(s, 0.5, true), datasketch_kll_quantile(s, 0.75, true), datasketch_kll_quantile(s, 0.9, true)],
+    datasketch_kll_quantiles(s, [0.1, 0.25, 0.5, 0.75, 0.9], false) =
+        [datasketch_kll_quantile(s, 0.1, false), datasketch_kll_quantile(s, 0.25, false), datasketch_kll_quantile(s, 0.5, false), datasketch_kll_quantile(s, 0.75, false), datasketch_kll_quantile(s, 0.9, false)]
+FROM kll_s;
+----
+true	true
+
+query I
+SELECT typeof(datasketch_kll_quantiles(s, [0.5], true)) FROM kll_s;
+----
+INTEGER[]
+
+query I
+SELECT datasketch_kll_quantiles(s, [0.5, NULL], true) FROM kll_s;
+----
+[5, NULL]
+
+query I
+SELECT datasketch_kll_quantiles(s, [], true) FROM kll_s;
+----
+[]
+
+statement error
+SELECT datasketch_kll_quantiles(s, [1.5], true) FROM kll_s;
+----
+Normalized rank must be between 0 and 1
+
+query I
+SELECT datasketch_kll_ranks(s, [1, 5, 10], true) FROM kll_s;
+----
+[0.1, 0.5, 1.0]
+
+query I
+SELECT datasketch_kll_ranks(s, [1, 5, 10], false) FROM kll_s;
+----
+[0.0, 0.4, 0.9]
+
+query II
+SELECT
+    datasketch_kll_ranks(s, [3, 7, NULL], true),
+    datasketch_kll_ranks(s, [3, 7], false) = [datasketch_kll_rank(s, 3, false), datasketch_kll_rank(s, 7, false)]
+FROM kll_s;
+----
+[0.3, 0.7, NULL]	true
+
+query I
+SELECT datasketch_kll_sorted_view(s) FROM kll_s;
+----
+[{'item': 1, 'weight': 1, 'cumulative_weight': 1}, {'item': 2, 'weight': 1, 'cumulative_weight': 2}, {'item': 3, 'weight': 1, 'cumulative_weight': 3}, {'item': 4, 'weight': 1, 'cumulative_weight': 4}, {'item': 5, 'weight': 1, 'cumulative_weight': 5}, {'item': 6, 'weight': 1, 'cumulative_weight': 6}, {'item': 7, 'weight': 1, 'cumulative_weight': 7}, {'item': 8, 'weight': 1, 'cumulative_weight': 8}, {'item': 9, 'weight': 1, 'cumulative_weight': 9}, {'item': 10, 'weight': 1, 'cumulative_weight': 10}]
+
+# Duplicate items: each retained copy is its own entry; the cumulative weights still reach n.
+query I
+SELECT datasketch_kll_sorted_view(datasketch_kll(200, v)) FROM (VALUES (2.5::DOUBLE), (2.5::DOUBLE), (-1.0::DOUBLE)) t(v);
+----
+[{'item': -1.0, 'weight': 1, 'cumulative_weight': 1}, {'item': 2.5, 'weight': 1, 'cumulative_weight': 2}, {'item': 2.5, 'weight': 1, 'cumulative_weight': 3}]
+
+query I
+SELECT typeof(datasketch_kll_sorted_view(s)) FROM kll_s;
+----
+STRUCT(item INTEGER, weight UBIGINT, cumulative_weight UBIGINT)[]
+
+# One sketch per group, evaluated row by row.
+query II rowsort
+SELECT g, datasketch_kll_quantiles(datasketch_kll(200, v), [0.0, 1.0], true)
+FROM (SELECT v, v % 2 AS g FROM items) GROUP BY g;
+----
+0	[2, 10]
+1	[1, 9]
+
+query I
+SELECT datasketch_kll_sorted_view(datasketch_kll(200, v)) FROM items WHERE v < 0;
+----
+NULL
+
+# ---------------------------------------------------------------- quantiles
+statement ok
+CREATE TABLE quantiles_s AS SELECT datasketch_quantiles(128, v) AS s FROM items;
+
+query I
+SELECT datasketch_quantiles_quantiles(s, [0.0, 0.5, 1.0], true) FROM quantiles_s;
+----
+[1, 5, 10]
+
+# The batch form agrees with the single-rank function, for both inclusive modes.
+query II
+SELECT
+    datasketch_quantiles_quantiles(s, [0.1, 0.25, 0.5, 0.75, 0.9], true) =
+        [datasketch_quantiles_quantile(s, 0.1, true), datasketch_quantiles_quantile(s, 0.25, true), datasketch_quantiles_quantile(s, 0.5, true), datasketch_quantiles_quantile(s, 0.75, true), datasketch_quantiles_quantile(s, 0.9, true)],
+    datasketch_quantiles_quantiles(s, [0.1, 0.25, 0.5, 0.75, 0.9], false) =
+        [datasketch_quantiles_quantile(s, 0.1, false), datasketch_quantiles_quantile(s, 0.25, false), datasketch_quantiles_quantile(s, 0.5, false), datasketch_quantiles_quantile(s, 0.75, false), datasketch_quantiles_quantile(s, 0.9, false)]
+FROM quantiles_s;
+----
+true	true
+
+query I
+SELECT typeof(datasketch_quantiles_quantiles(s, [0.5], true)) FROM quantiles_s;
+----
+INTEGER[]
+
+query I
+SELECT datasketch_quantiles_quantiles(s, [0.5, NULL], true) FROM quantiles_s;
+----
+[5, NULL]
+
+query I
+SELECT datasketch_quantiles_quantiles(s, [], true) FROM quantiles_s;
+----
+[]
+
+statement error
+SELECT datasketch_quantiles_quantiles(s, [1.5], true) FROM quantiles_s;
+----
+Normalized rank must be between 0 and 1
+
+query I
+SELECT datasketch_quantiles_ranks(s, [1, 5, 10], true) FROM quantiles_s;
+----
+[0.1, 0.5, 1.0]
+
+query I
+SELECT datasketch_quantiles_ranks(s, [1, 5, 10], false) FROM quantiles_s;
+----
+[0.0, 0.4, 0.9]
+
+query II
+SELECT
+    datasketch_quantiles_ranks(s, [3, 7, NULL], true),
+    datasketch_quantiles_ranks(s, [3, 7], false) = [datasketch_quantiles_rank(s, 3, false), datasketch_quantiles_rank(s, 7, false)]
+FROM quantiles_s;
+----
+[0.3, 0.7, NULL]	true
+
+query I
+SELECT datasketch_quantiles_sorted_view(s) FROM quantiles_s;
+----
+[{'item': 1, 'weight': 1, 'cumulative_weight': 1}, {'item': 2, 'weight': 1, 'cumulative_weight': 2}, {'item': 3, 'weight': 1, 'cumulative_weight': 3}, {'item': 4, 'weight': 1, 'cumulative_weight': 4}, {'item': 5, 'weight': 1, 'cumulative_weight': 5}, {'item': 6, 'weight': 1, 'cumulative_weight': 6}, {'item': 7, 'weight': 1, 'cumulative_weight': 7}, {'item': 8, 'weight': 1, 'cumulative_weight': 8}, {'item': 9, 'weight': 1, 'cumulative_weight': 9}, {'item': 10, 'weight': 1, 'cumulative_weight': 10}]
+
+# Duplicate items: each retained copy is its own entry; the cumulative weights still reach n.
+query I
+SELECT datasketch_quantiles_sorted_view(datasketch_quantiles(128, v)) FROM (VALUES (2.5::DOUBLE), (2.5::DOUBLE), (-1.0::DOUBLE)) t(v);
+----
+[{'item': -1.0, 'weight': 1, 'cumulative_weight': 1}, {'item': 2.5, 'weight': 1, 'cumulative_weight': 2}, {'item': 2.5, 'weight': 1, 'cumulative_weight': 3}]
+
+query I
+SELECT typeof(datasketch_quantiles_sorted_view(s)) FROM quantiles_s;
+----
+STRUCT(item INTEGER, weight UBIGINT, cumulative_weight UBIGINT)[]
+
+# One sketch per group, evaluated row by row.
+query II rowsort
+SELECT g, datasketch_quantiles_quantiles(datasketch_quantiles(128, v), [0.0, 1.0], true)
+FROM (SELECT v, v % 2 AS g FROM items) GROUP BY g;
+----
+0	[2, 10]
+1	[1, 9]
+
+query I
+SELECT datasketch_quantiles_sorted_view(datasketch_quantiles(128, v)) FROM items WHERE v < 0;
+----
+NULL
+
+# ---------------------------------------------------------------- req
+statement ok
+CREATE TABLE req_s AS SELECT datasketch_req(100, v) AS s FROM items;
+
+query I
+SELECT datasketch_req_quantiles(s, [0.0, 0.5, 1.0], true) FROM req_s;
+----
+[1, 5, 10]
+
+# The batch form agrees with the single-rank function, for both inclusive modes.
+query II
+SELECT
+    datasketch_req_quantiles(s, [0.1, 0.25, 0.5, 0.75, 0.9], true) =
+        [datasketch_req_quantile(s, 0.1, true), datasketch_req_quantile(s, 0.25, true), datasketch_req_quantile(s, 0.5, true), datasketch_req_quantile(s, 0.75, true), datasketch_req_quantile(s, 0.9, true)],
+    datasketch_req_quantiles(s, [0.1, 0.25, 0.5, 0.75, 0.9], false) =
+        [datasketch_req_quantile(s, 0.1, false), datasketch_req_quantile(s, 0.25, false), datasketch_req_quantile(s, 0.5, false), datasketch_req_quantile(s, 0.75, false), datasketch_req_quantile(s, 0.9, false)]
+FROM req_s;
+----
+true	true
+
+query I
+SELECT typeof(datasketch_req_quantiles(s, [0.5], true)) FROM req_s;
+----
+INTEGER[]
+
+query I
+SELECT datasketch_req_quantiles(s, [0.5, NULL], true) FROM req_s;
+----
+[5, NULL]
+
+query I
+SELECT datasketch_req_quantiles(s, [], true) FROM req_s;
+----
+[]
+
+statement error
+SELECT datasketch_req_quantiles(s, [1.5], true) FROM req_s;
+----
+Normalized rank must be between 0 and 1
+
+query I
+SELECT datasketch_req_ranks(s, [1, 5, 10], true) FROM req_s;
+----
+[0.1, 0.5, 1.0]
+
+query I
+SELECT datasketch_req_ranks(s, [1, 5, 10], false) FROM req_s;
+----
+[0.0, 0.4, 0.9]
+
+query II
+SELECT
+    datasketch_req_ranks(s, [3, 7, NULL], true),
+    datasketch_req_ranks(s, [3, 7], false) = [datasketch_req_rank(s, 3, false), datasketch_req_rank(s, 7, false)]
+FROM req_s;
+----
+[0.3, 0.7, NULL]	true
+
+query I
+SELECT datasketch_req_sorted_view(s) FROM req_s;
+----
+[{'item': 1, 'weight': 1, 'cumulative_weight': 1}, {'item': 2, 'weight': 1, 'cumulative_weight': 2}, {'item': 3, 'weight': 1, 'cumulative_weight': 3}, {'item': 4, 'weight': 1, 'cumulative_weight': 4}, {'item': 5, 'weight': 1, 'cumulative_weight': 5}, {'item': 6, 'weight': 1, 'cumulative_weight': 6}, {'item': 7, 'weight': 1, 'cumulative_weight': 7}, {'item': 8, 'weight': 1, 'cumulative_weight': 8}, {'item': 9, 'weight': 1, 'cumulative_weight': 9}, {'item': 10, 'weight': 1, 'cumulative_weight': 10}]
+
+# Duplicate items: each retained copy is its own entry; the cumulative weights still reach n.
+query I
+SELECT datasketch_req_sorted_view(datasketch_req(100, v)) FROM (VALUES (2.5::DOUBLE), (2.5::DOUBLE), (-1.0::DOUBLE)) t(v);
+----
+[{'item': -1.0, 'weight': 1, 'cumulative_weight': 1}, {'item': 2.5, 'weight': 1, 'cumulative_weight': 2}, {'item': 2.5, 'weight': 1, 'cumulative_weight': 3}]
+
+query I
+SELECT typeof(datasketch_req_sorted_view(s)) FROM req_s;
+----
+STRUCT(item INTEGER, weight UBIGINT, cumulative_weight UBIGINT)[]
+
+# One sketch per group, evaluated row by row.
+query II rowsort
+SELECT g, datasketch_req_quantiles(datasketch_req(100, v), [0.0, 1.0], true)
+FROM (SELECT v, v % 2 AS g FROM items) GROUP BY g;
+----
+0	[2, 10]
+1	[1, 9]
+
+query I
+SELECT datasketch_req_sorted_view(datasketch_req(100, v)) FROM items WHERE v < 0;
+----
+NULL

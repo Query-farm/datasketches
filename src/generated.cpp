@@ -7,6 +7,7 @@
 #include "duckdb/common/vector/flat_vector.hpp"
 #include "duckdb/common/vector/list_vector.hpp"
 #include "duckdb/common/vector/string_vector.hpp"
+#include "duckdb/common/vector/struct_vector.hpp"
 #include "duckdb/common/vector/unified_vector_format.hpp"
 
 #include <DataSketches/quantiles_sketch.hpp>
@@ -29,6 +30,56 @@ static std::string toLowerCase(const std::string& input) {
     return result;
 }
 
+
+// The C++ item type a sketch stores for a DuckDB value type: VARCHAR values (string_t) are stored as std::string,
+// numeric values as themselves.
+template <class T>
+struct DSItemTraits {
+    using type = T;
+};
+template <>
+struct DSItemTraits<string_t> {
+    using type = std::string;
+};
+template <class T>
+using DSItem = typename DSItemTraits<T>::type;
+
+// Converts a DuckDB value to the sketch's item type.
+template <class T>
+static inline DSItem<T> DSItemIn(const T &value) {
+    if constexpr (std::is_same_v<T, string_t>) {
+        return value.GetString();
+    } else {
+        return value;
+    }
+}
+
+// Converts a sketch item to a DuckDB value stored in `vector` (strings are copied into the vector's heap).
+template <class T, class V>
+static inline T DSItemOut(Vector &vector, const V &value) {
+    if constexpr (std::is_same_v<T, string_t>) {
+        return StringVector::AddString(vector, value);
+    } else {
+        return value;
+    }
+}
+
+// Appends `length` entries to a LIST result: `fill(child, offset)` writes child rows [offset, offset + length).
+template <class F>
+static list_entry_t DSAppendList(Vector &result, idx_t length, F &&fill) {
+    auto offset = ListVector::GetListSize(result);
+    ListVector::Reserve(result, offset + length);
+    auto &child = ListVector::GetChildMutable(result);
+    fill(child, offset);
+    ListVector::SetListSize(result, offset + length);
+    return list_entry_t(offset, length);
+}
+
+static inline void DSCheckRank(double rank) {
+    if (!(rank >= 0.0 && rank <= 1.0)) {
+        throw InvalidInputException("Normalized rank must be between 0 and 1, got: %f", rank);
+    }
+}
     
 
 
@@ -85,7 +136,7 @@ unique_ptr<FunctionData> DSQuantilesBind(BindAggregateFunctionInput &input) {
     struct DSQuantilesState
     {
         
-        datasketches::quantiles_sketch<T> *sketch = nullptr;
+        datasketches::quantiles_sketch<DSItem<T>> *sketch = nullptr;
         
 
         ~DSQuantilesState()
@@ -102,7 +153,7 @@ unique_ptr<FunctionData> DSQuantilesBind(BindAggregateFunctionInput &input) {
             D_ASSERT(!sketch);
             D_ASSERT(k > 0);
             D_ASSERT(k <= 32768);
-            sketch = new datasketches::quantiles_sketch<T>(k);
+            sketch = new datasketches::quantiles_sketch<DSItem<T>>(k);
         }
         
 
@@ -111,16 +162,16 @@ unique_ptr<FunctionData> DSQuantilesBind(BindAggregateFunctionInput &input) {
             if (existing.sketch)
             {
                 
-                sketch = new datasketches::quantiles_sketch<T>(*existing.sketch);
+                sketch = new datasketches::quantiles_sketch<DSItem<T>>(*existing.sketch);
                 
             }
         }
 
         
-        datasketches::quantiles_sketch<T> deserialize_sketch(const string_t &data)
+        datasketches::quantiles_sketch<DSItem<T>> deserialize_sketch(const string_t &data)
         {
             try {
-                return datasketches::quantiles_sketch<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+                return datasketches::quantiles_sketch<DSItem<T>>::deserialize(data.GetDataUnsafe(), data.GetSize());
             } catch (const std::exception &e) {
                 throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
             }
@@ -206,7 +257,7 @@ unique_ptr<FunctionData> DSKLLBind(BindAggregateFunctionInput &input) {
     struct DSKLLState
     {
         
-        datasketches::kll_sketch<T> *sketch = nullptr;
+        datasketches::kll_sketch<DSItem<T>> *sketch = nullptr;
         
 
         ~DSKLLState()
@@ -223,7 +274,7 @@ unique_ptr<FunctionData> DSKLLBind(BindAggregateFunctionInput &input) {
             D_ASSERT(!sketch);
             D_ASSERT(k > 0);
             D_ASSERT(k <= 32768);
-            sketch = new datasketches::kll_sketch<T>(k);
+            sketch = new datasketches::kll_sketch<DSItem<T>>(k);
         }
         
 
@@ -232,16 +283,16 @@ unique_ptr<FunctionData> DSKLLBind(BindAggregateFunctionInput &input) {
             if (existing.sketch)
             {
                 
-                sketch = new datasketches::kll_sketch<T>(*existing.sketch);
+                sketch = new datasketches::kll_sketch<DSItem<T>>(*existing.sketch);
                 
             }
         }
 
         
-        datasketches::kll_sketch<T> deserialize_sketch(const string_t &data)
+        datasketches::kll_sketch<DSItem<T>> deserialize_sketch(const string_t &data)
         {
             try {
-                return datasketches::kll_sketch<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+                return datasketches::kll_sketch<DSItem<T>>::deserialize(data.GetDataUnsafe(), data.GetSize());
             } catch (const std::exception &e) {
                 throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
             }
@@ -327,7 +378,7 @@ unique_ptr<FunctionData> DSREQBind(BindAggregateFunctionInput &input) {
     struct DSREQState
     {
         
-        datasketches::req_sketch<T> *sketch = nullptr;
+        datasketches::req_sketch<DSItem<T>> *sketch = nullptr;
         
 
         ~DSREQState()
@@ -344,7 +395,7 @@ unique_ptr<FunctionData> DSREQBind(BindAggregateFunctionInput &input) {
             D_ASSERT(!sketch);
             D_ASSERT(k >= 4);
             D_ASSERT(k <= 1024);
-            sketch = new datasketches::req_sketch<T>(k);
+            sketch = new datasketches::req_sketch<DSItem<T>>(k);
         }
         
 
@@ -353,16 +404,16 @@ unique_ptr<FunctionData> DSREQBind(BindAggregateFunctionInput &input) {
             if (existing.sketch)
             {
                 
-                sketch = new datasketches::req_sketch<T>(*existing.sketch);
+                sketch = new datasketches::req_sketch<DSItem<T>>(*existing.sketch);
                 
             }
         }
 
         
-        datasketches::req_sketch<T> deserialize_sketch(const string_t &data)
+        datasketches::req_sketch<DSItem<T>> deserialize_sketch(const string_t &data)
         {
             try {
-                return datasketches::req_sketch<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+                return datasketches::req_sketch<DSItem<T>>::deserialize(data.GetDataUnsafe(), data.GetSize());
             } catch (const std::exception &e) {
                 throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
             }
@@ -448,7 +499,7 @@ unique_ptr<FunctionData> DSTDigestBind(BindAggregateFunctionInput &input) {
     struct DSTDigestState
     {
         
-        datasketches::tdigest<T> *sketch = nullptr;
+        datasketches::tdigest<DSItem<T>> *sketch = nullptr;
         
 
         ~DSTDigestState()
@@ -463,7 +514,7 @@ unique_ptr<FunctionData> DSTDigestBind(BindAggregateFunctionInput &input) {
         void CreateSketch(uint16_t k)
         {
             D_ASSERT(!sketch);
-            sketch = new datasketches::tdigest<T>(k);
+            sketch = new datasketches::tdigest<DSItem<T>>(k);
         }
         
 
@@ -472,16 +523,16 @@ unique_ptr<FunctionData> DSTDigestBind(BindAggregateFunctionInput &input) {
             if (existing.sketch)
             {
                 
-                sketch = new datasketches::tdigest<T>(*existing.sketch);
+                sketch = new datasketches::tdigest<DSItem<T>>(*existing.sketch);
                 
             }
         }
 
         
-        datasketches::tdigest<T> deserialize_sketch(const string_t &data)
+        datasketches::tdigest<DSItem<T>> deserialize_sketch(const string_t &data)
         {
             try {
-                return datasketches::tdigest<T>::deserialize(data.GetDataUnsafe(), data.GetSize());
+                return datasketches::tdigest<DSItem<T>>::deserialize(data.GetDataUnsafe(), data.GetSize());
             } catch (const std::exception &e) {
                 throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
             }
@@ -837,7 +888,7 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
                 state.CreateSketch(bind_data.k);
             }
 
-            state.sketch->update(a_data);
+            state.sketch->update(DSItemIn(a_data));
         }
 
         template <class INPUT_TYPE, class STATE, class OP>
@@ -1187,7 +1238,7 @@ static inline void DSQuantilesis_empty(DataChunk &args, ExpressionState &state, 
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
@@ -1221,7 +1272,7 @@ static inline void DSQuantilesk(DataChunk &args, ExpressionState &state, Vector 
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
@@ -1264,16 +1315,16 @@ static inline void DSQuantilescdf(DataChunk &args, ExpressionState &state, Vecto
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
             }();
 
-                    std::vector<T> passing_points(split_points_data.length);
+                    std::vector<DSItem<T>> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
+                        passing_points[i] = DSItemIn(split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)]);
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -1331,16 +1382,16 @@ static inline void DSQuantilespmf(DataChunk &args, ExpressionState &state, Vecto
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
             }();
 
-                    std::vector<T> passing_points(split_points_data.length);
+                    std::vector<DSItem<T>> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
+                        passing_points[i] = DSItemIn(split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)]);
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -1390,7 +1441,7 @@ static inline void DSQuantilesnormalized_rank_error(DataChunk &args, ExpressionS
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
@@ -1426,7 +1477,7 @@ static inline void DSQuantilesdescribe(DataChunk &args, ExpressionState &state, 
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
@@ -1462,12 +1513,12 @@ static inline void DSQuantilesrank(DataChunk &args, ExpressionState &state, Vect
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
             }();
-return sketch.get_rank(item_data, inclusive_data);
+return sketch.get_rank(DSItemIn(item_data), inclusive_data);
         });
 
 }
@@ -1498,12 +1549,12 @@ static inline void DSQuantilesquantile(DataChunk &args, ExpressionState &state, 
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
             }();
-return sketch.get_quantile(rank_data, inclusive_data);
+return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));
         });
 
 }
@@ -1532,7 +1583,7 @@ static inline void DSQuantilesn(DataChunk &args, ExpressionState &state, Vector 
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
@@ -1566,7 +1617,7 @@ static inline void DSQuantilesis_estimation_mode(DataChunk &args, ExpressionStat
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
@@ -1600,7 +1651,7 @@ static inline void DSQuantilesnum_retained(DataChunk &args, ExpressionState &sta
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
@@ -1634,12 +1685,12 @@ static inline void DSQuantilesmin_item(DataChunk &args, ExpressionState &state, 
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
             }();
-return sketch.get_min_item();
+return DSItemOut<T>(result, sketch.get_min_item());
         });
 
 }
@@ -1668,12 +1719,182 @@ static inline void DSQuantilesmax_item(DataChunk &args, ExpressionState &state, 
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::quantiles_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
             }();
-return sketch.get_max_item();
+return DSItemOut<T>(result, sketch.get_max_item());
+        });
+
+}
+
+    
+
+
+template <class T>
+
+static inline void DSQuantilesquantiles(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 3);
+
+    
+        auto &sketch_vector = args.data[0];
+        auto &ranks_vector = args.data[1];
+        auto &inclusive_vector = args.data[2];
+
+    
+        
+                    auto &ranks_list_children = ListVector::GetChild(ranks_vector);
+                    UnifiedVectorFormat ranks_children_unified;
+                    ranks_list_children.ToUnifiedFormat(ranks_children_unified);
+                    const double *ranks_children_data = UnifiedVectorFormat::GetData<double>(ranks_children_unified);
+                    
+        TernaryExecutor::Execute
+        <string_t,list_entry_t,bool,list_entry_t>
+        (
+        sketch_vector,ranks_vector,inclusive_vector,result,
+        [&](string_t sketch_data,list_entry_t ranks_data,bool inclusive_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
+
+                if (sketch.is_empty())
+                {
+                    throw InvalidInputException("datasketch_quantiles_quantiles: operation is undefined for an empty sketch");
+                }
+                return DSAppendList(result, ranks_data.length, [&](Vector &child, idx_t offset) {
+                    auto child_values = FlatVector::GetDataMutable<T>(child);
+                    for (idx_t i = 0; i < ranks_data.length; i++)
+                    {
+                        auto rank_index = ranks_children_unified.sel->get_index(ranks_data.offset + i);
+                        if (!ranks_children_unified.validity.RowIsValid(rank_index))
+                        {
+                            FlatVector::SetNull(child, offset + i, true);
+                            continue;
+                        }
+                        auto rank = ranks_children_data[rank_index];
+                        DSCheckRank(rank);
+                        child_values[offset + i] = DSItemOut<T>(child, sketch.get_quantile(rank, inclusive_data));
+                    }
+                });
+                
+        });
+
+}
+
+    
+
+
+template <class T>
+
+static inline void DSQuantilesranks(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 3);
+
+    
+        auto &sketch_vector = args.data[0];
+        auto &items_vector = args.data[1];
+        auto &inclusive_vector = args.data[2];
+
+    
+        
+                    auto &items_list_children = ListVector::GetChild(items_vector);
+                    UnifiedVectorFormat items_children_unified;
+                    items_list_children.ToUnifiedFormat(items_children_unified);
+                    const T *items_children_data = UnifiedVectorFormat::GetData<T>(items_children_unified);
+                    
+        TernaryExecutor::Execute
+        <string_t,list_entry_t,bool,list_entry_t>
+        (
+        sketch_vector,items_vector,inclusive_vector,result,
+        [&](string_t sketch_data,list_entry_t items_data,bool inclusive_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
+
+                return DSAppendList(result, items_data.length, [&](Vector &child, idx_t offset) {
+                    auto child_values = FlatVector::GetDataMutable<double>(child);
+                    for (idx_t i = 0; i < items_data.length; i++)
+                    {
+                        auto item_index = items_children_unified.sel->get_index(items_data.offset + i);
+                        if (!items_children_unified.validity.RowIsValid(item_index))
+                        {
+                            FlatVector::SetNull(child, offset + i, true);
+                            continue;
+                        }
+                        child_values[offset + i] = sketch.get_rank(DSItemIn(items_children_data[item_index]), inclusive_data);
+                    }
+                });
+                
+        });
+
+}
+
+    
+
+
+template <class T>
+
+static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 1);
+
+    
+        auto &sketch_vector = args.data[0];
+
+    
+        
+        UnaryExecutor::Execute
+        <string_t,list_entry_t>
+        (
+        sketch_vector,result,
+        [&](string_t sketch_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::quantiles_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
+                }
+            }();
+
+                if (sketch.is_empty())
+                {
+                    return list_entry_t(ListVector::GetListSize(result), 0);
+                }
+                auto view = sketch.get_sorted_view();
+                return DSAppendList(result, view.size(), [&](Vector &child, idx_t offset) {
+                    auto &entries = StructVector::GetEntries(child);
+                    auto &item_vector = entries[0];
+                    auto item_values = FlatVector::GetDataMutable<T>(item_vector);
+                    auto weight_values = FlatVector::GetDataMutable<uint64_t>(entries[1]);
+                    auto cumulative_values = FlatVector::GetDataMutable<uint64_t>(entries[2]);
+                    idx_t i = offset;
+                    for (auto it = view.begin(); it != view.end(); ++it, ++i)
+                    {
+                        item_values[i] = DSItemOut<T>(item_vector, (*it).first);
+                        weight_values[i] = it.get_weight();
+                        cumulative_values[i] = it.get_cumulative_weight(true);
+                    }
+                });
+                
         });
 
 }
@@ -2630,7 +2851,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2641,7 +2862,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2652,7 +2873,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2663,7 +2884,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2674,7 +2895,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2685,7 +2906,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2696,7 +2917,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2707,7 +2928,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2718,7 +2939,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2729,7 +2950,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2758,7 +2979,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2769,7 +2990,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2780,7 +3001,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -2791,7 +3012,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2802,7 +3023,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -2813,7 +3034,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -2824,7 +3045,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2835,7 +3056,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2846,7 +3067,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -2857,7 +3078,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch)");
+                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3269,7 +3490,7 @@ return sketch.get_max_item();
                 ,    DSQuantilesmax_item<int8_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
@@ -3280,7 +3501,7 @@ return sketch.get_max_item();
                 ,    DSQuantilesmax_item<int16_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
@@ -3291,7 +3512,7 @@ return sketch.get_max_item();
                 ,    DSQuantilesmax_item<int32_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
@@ -3302,7 +3523,7 @@ return sketch.get_max_item();
                 ,    DSQuantilesmax_item<int64_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
@@ -3313,7 +3534,7 @@ return sketch.get_max_item();
                 ,    DSQuantilesmax_item<float>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
@@ -3324,7 +3545,7 @@ return sketch.get_max_item();
                 ,    DSQuantilesmax_item<double>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
@@ -3335,7 +3556,7 @@ return sketch.get_max_item();
                 ,    DSQuantilesmax_item<uint8_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
@@ -3346,7 +3567,7 @@ return sketch.get_max_item();
                 ,    DSQuantilesmax_item<uint16_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
@@ -3357,7 +3578,7 @@ return sketch.get_max_item();
                 ,    DSQuantilesmax_item<uint32_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
@@ -3368,8 +3589,392 @@ return sketch.get_max_item();
                 ,    DSQuantilesmax_item<uint64_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_quantiles_quantiles");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
+                ,    DSQuantilesquantiles<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
+                ,    DSQuantilesquantiles<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
+                ,    DSQuantilesquantiles<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
+                ,    DSQuantilesquantiles<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
+                ,    DSQuantilesquantiles<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilesquantiles<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
+                ,    DSQuantilesquantiles<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
+                ,    DSQuantilesquantiles<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
+                ,    DSQuantilesquantiles<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
+                ,    DSQuantilesquantiles<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_quantiles_ranks");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilesranks<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilesranks<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilesranks<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilesranks<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilesranks<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilesranks<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilesranks<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilesranks<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilesranks<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSQuantilesranks<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_quantiles_sorted_view");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::TINYINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSQuantilessorted_view<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::SMALLINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSQuantilessorted_view<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::INTEGER}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSQuantilessorted_view<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::BIGINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSQuantilessorted_view<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::FLOAT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSQuantilessorted_view<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::DOUBLE}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSQuantilessorted_view<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UTINYINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSQuantilessorted_view<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::USMALLINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSQuantilessorted_view<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UINTEGER}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSQuantilessorted_view<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UBIGINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSQuantilessorted_view<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3731,7 +4336,7 @@ static inline void DSKLLis_empty(DataChunk &args, ExpressionState &state, Vector
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
@@ -3765,7 +4370,7 @@ static inline void DSKLLk(DataChunk &args, ExpressionState &state, Vector &resul
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
@@ -3808,16 +4413,16 @@ static inline void DSKLLcdf(DataChunk &args, ExpressionState &state, Vector &res
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
             }();
 
-                    std::vector<T> passing_points(split_points_data.length);
+                    std::vector<DSItem<T>> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
+                        passing_points[i] = DSItemIn(split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)]);
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -3875,16 +4480,16 @@ static inline void DSKLLpmf(DataChunk &args, ExpressionState &state, Vector &res
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
             }();
 
-                    std::vector<T> passing_points(split_points_data.length);
+                    std::vector<DSItem<T>> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
+                        passing_points[i] = DSItemIn(split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)]);
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -3934,7 +4539,7 @@ static inline void DSKLLnormalized_rank_error(DataChunk &args, ExpressionState &
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
@@ -3970,7 +4575,7 @@ static inline void DSKLLdescribe(DataChunk &args, ExpressionState &state, Vector
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
@@ -4006,12 +4611,12 @@ static inline void DSKLLrank(DataChunk &args, ExpressionState &state, Vector &re
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
             }();
-return sketch.get_rank(item_data, inclusive_data);
+return sketch.get_rank(DSItemIn(item_data), inclusive_data);
         });
 
 }
@@ -4042,12 +4647,12 @@ static inline void DSKLLquantile(DataChunk &args, ExpressionState &state, Vector
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
             }();
-return sketch.get_quantile(rank_data, inclusive_data);
+return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));
         });
 
 }
@@ -4076,7 +4681,7 @@ static inline void DSKLLn(DataChunk &args, ExpressionState &state, Vector &resul
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
@@ -4110,7 +4715,7 @@ static inline void DSKLLis_estimation_mode(DataChunk &args, ExpressionState &sta
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
@@ -4144,7 +4749,7 @@ static inline void DSKLLnum_retained(DataChunk &args, ExpressionState &state, Ve
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
@@ -4178,12 +4783,12 @@ static inline void DSKLLmin_item(DataChunk &args, ExpressionState &state, Vector
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
             }();
-return sketch.get_min_item();
+return DSItemOut<T>(result, sketch.get_min_item());
         });
 
 }
@@ -4212,12 +4817,182 @@ static inline void DSKLLmax_item(DataChunk &args, ExpressionState &state, Vector
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::kll_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
             }();
-return sketch.get_max_item();
+return DSItemOut<T>(result, sketch.get_max_item());
+        });
+
+}
+
+    
+
+
+template <class T>
+
+static inline void DSKLLquantiles(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 3);
+
+    
+        auto &sketch_vector = args.data[0];
+        auto &ranks_vector = args.data[1];
+        auto &inclusive_vector = args.data[2];
+
+    
+        
+                    auto &ranks_list_children = ListVector::GetChild(ranks_vector);
+                    UnifiedVectorFormat ranks_children_unified;
+                    ranks_list_children.ToUnifiedFormat(ranks_children_unified);
+                    const double *ranks_children_data = UnifiedVectorFormat::GetData<double>(ranks_children_unified);
+                    
+        TernaryExecutor::Execute
+        <string_t,list_entry_t,bool,list_entry_t>
+        (
+        sketch_vector,ranks_vector,inclusive_vector,result,
+        [&](string_t sketch_data,list_entry_t ranks_data,bool inclusive_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
+
+                if (sketch.is_empty())
+                {
+                    throw InvalidInputException("datasketch_kll_quantiles: operation is undefined for an empty sketch");
+                }
+                return DSAppendList(result, ranks_data.length, [&](Vector &child, idx_t offset) {
+                    auto child_values = FlatVector::GetDataMutable<T>(child);
+                    for (idx_t i = 0; i < ranks_data.length; i++)
+                    {
+                        auto rank_index = ranks_children_unified.sel->get_index(ranks_data.offset + i);
+                        if (!ranks_children_unified.validity.RowIsValid(rank_index))
+                        {
+                            FlatVector::SetNull(child, offset + i, true);
+                            continue;
+                        }
+                        auto rank = ranks_children_data[rank_index];
+                        DSCheckRank(rank);
+                        child_values[offset + i] = DSItemOut<T>(child, sketch.get_quantile(rank, inclusive_data));
+                    }
+                });
+                
+        });
+
+}
+
+    
+
+
+template <class T>
+
+static inline void DSKLLranks(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 3);
+
+    
+        auto &sketch_vector = args.data[0];
+        auto &items_vector = args.data[1];
+        auto &inclusive_vector = args.data[2];
+
+    
+        
+                    auto &items_list_children = ListVector::GetChild(items_vector);
+                    UnifiedVectorFormat items_children_unified;
+                    items_list_children.ToUnifiedFormat(items_children_unified);
+                    const T *items_children_data = UnifiedVectorFormat::GetData<T>(items_children_unified);
+                    
+        TernaryExecutor::Execute
+        <string_t,list_entry_t,bool,list_entry_t>
+        (
+        sketch_vector,items_vector,inclusive_vector,result,
+        [&](string_t sketch_data,list_entry_t items_data,bool inclusive_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
+
+                return DSAppendList(result, items_data.length, [&](Vector &child, idx_t offset) {
+                    auto child_values = FlatVector::GetDataMutable<double>(child);
+                    for (idx_t i = 0; i < items_data.length; i++)
+                    {
+                        auto item_index = items_children_unified.sel->get_index(items_data.offset + i);
+                        if (!items_children_unified.validity.RowIsValid(item_index))
+                        {
+                            FlatVector::SetNull(child, offset + i, true);
+                            continue;
+                        }
+                        child_values[offset + i] = sketch.get_rank(DSItemIn(items_children_data[item_index]), inclusive_data);
+                    }
+                });
+                
+        });
+
+}
+
+    
+
+
+template <class T>
+
+static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 1);
+
+    
+        auto &sketch_vector = args.data[0];
+
+    
+        
+        UnaryExecutor::Execute
+        <string_t,list_entry_t>
+        (
+        sketch_vector,result,
+        [&](string_t sketch_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::kll_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
+                }
+            }();
+
+                if (sketch.is_empty())
+                {
+                    return list_entry_t(ListVector::GetListSize(result), 0);
+                }
+                auto view = sketch.get_sorted_view();
+                return DSAppendList(result, view.size(), [&](Vector &child, idx_t offset) {
+                    auto &entries = StructVector::GetEntries(child);
+                    auto &item_vector = entries[0];
+                    auto item_values = FlatVector::GetDataMutable<T>(item_vector);
+                    auto weight_values = FlatVector::GetDataMutable<uint64_t>(entries[1]);
+                    auto cumulative_values = FlatVector::GetDataMutable<uint64_t>(entries[2]);
+                    idx_t i = offset;
+                    for (auto it = view.begin(); it != view.end(); ++it, ++i)
+                    {
+                        item_values[i] = DSItemOut<T>(item_vector, (*it).first);
+                        weight_values[i] = it.get_weight();
+                        cumulative_values[i] = it.get_cumulative_weight(true);
+                    }
+                });
+                
         });
 
 }
@@ -5174,7 +5949,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5185,7 +5960,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5196,7 +5971,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5207,7 +5982,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5218,7 +5993,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5229,7 +6004,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5240,7 +6015,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5251,7 +6026,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5262,7 +6037,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5273,7 +6048,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5302,7 +6077,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.examples.push_back("datasketch_kll_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5313,7 +6088,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.examples.push_back("datasketch_kll_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5324,7 +6099,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.examples.push_back("datasketch_kll_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -5335,7 +6110,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.examples.push_back("datasketch_kll_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5346,7 +6121,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.examples.push_back("datasketch_kll_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -5357,7 +6132,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.examples.push_back("datasketch_kll_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -5368,7 +6143,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.examples.push_back("datasketch_kll_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5379,7 +6154,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.examples.push_back("datasketch_kll_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5390,7 +6165,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.examples.push_back("datasketch_kll_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -5401,7 +6176,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch)");
+                    desc.examples.push_back("datasketch_kll_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5813,7 +6588,7 @@ return sketch.get_max_item();
                 ,    DSKLLmax_item<int8_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_kll_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
@@ -5824,7 +6599,7 @@ return sketch.get_max_item();
                 ,    DSKLLmax_item<int16_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_kll_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
@@ -5835,7 +6610,7 @@ return sketch.get_max_item();
                 ,    DSKLLmax_item<int32_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_kll_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
@@ -5846,7 +6621,7 @@ return sketch.get_max_item();
                 ,    DSKLLmax_item<int64_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_kll_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
@@ -5857,7 +6632,7 @@ return sketch.get_max_item();
                 ,    DSKLLmax_item<float>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_kll_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
@@ -5868,7 +6643,7 @@ return sketch.get_max_item();
                 ,    DSKLLmax_item<double>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_kll_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
@@ -5879,7 +6654,7 @@ return sketch.get_max_item();
                 ,    DSKLLmax_item<uint8_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_kll_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
@@ -5890,7 +6665,7 @@ return sketch.get_max_item();
                 ,    DSKLLmax_item<uint16_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_kll_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
@@ -5901,7 +6676,7 @@ return sketch.get_max_item();
                 ,    DSKLLmax_item<uint32_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_kll_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
@@ -5912,8 +6687,392 @@ return sketch.get_max_item();
                 ,    DSKLLmax_item<uint64_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_kll_quantiles");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
+                ,    DSKLLquantiles<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
+                ,    DSKLLquantiles<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
+                ,    DSKLLquantiles<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
+                ,    DSKLLquantiles<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
+                ,    DSKLLquantiles<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLquantiles<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
+                ,    DSKLLquantiles<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
+                ,    DSKLLquantiles<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
+                ,    DSKLLquantiles<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
+                ,    DSKLLquantiles<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_kll_ranks");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLranks<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLranks<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLranks<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLranks<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLranks<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLranks<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLranks<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLranks<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLranks<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSKLLranks<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_kll_sorted_view");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::TINYINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSKLLsorted_view<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::SMALLINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSKLLsorted_view<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::INTEGER}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSKLLsorted_view<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::BIGINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSKLLsorted_view<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::FLOAT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSKLLsorted_view<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::DOUBLE}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSKLLsorted_view<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UTINYINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSKLLsorted_view<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::USMALLINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSKLLsorted_view<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UINTEGER}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSKLLsorted_view<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UBIGINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSKLLsorted_view<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6275,7 +7434,7 @@ static inline void DSREQis_empty(DataChunk &args, ExpressionState &state, Vector
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
                 }
@@ -6309,7 +7468,7 @@ static inline void DSREQk(DataChunk &args, ExpressionState &state, Vector &resul
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
                 }
@@ -6352,16 +7511,16 @@ static inline void DSREQcdf(DataChunk &args, ExpressionState &state, Vector &res
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
                 }
             }();
 
-                    std::vector<T> passing_points(split_points_data.length);
+                    std::vector<DSItem<T>> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
+                        passing_points[i] = DSItemIn(split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)]);
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -6419,16 +7578,16 @@ static inline void DSREQpmf(DataChunk &args, ExpressionState &state, Vector &res
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
                 }
             }();
 
-                    std::vector<T> passing_points(split_points_data.length);
+                    std::vector<DSItem<T>> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
+                        passing_points[i] = DSItemIn(split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)]);
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -6479,7 +7638,7 @@ static inline void DSREQdescribe(DataChunk &args, ExpressionState &state, Vector
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
                 }
@@ -6515,12 +7674,12 @@ static inline void DSREQrank(DataChunk &args, ExpressionState &state, Vector &re
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
                 }
             }();
-return sketch.get_rank(item_data, inclusive_data);
+return sketch.get_rank(DSItemIn(item_data), inclusive_data);
         });
 
 }
@@ -6551,12 +7710,12 @@ static inline void DSREQquantile(DataChunk &args, ExpressionState &state, Vector
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
                 }
             }();
-return sketch.get_quantile(rank_data, inclusive_data);
+return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));
         });
 
 }
@@ -6585,7 +7744,7 @@ static inline void DSREQn(DataChunk &args, ExpressionState &state, Vector &resul
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
                 }
@@ -6619,7 +7778,7 @@ static inline void DSREQis_estimation_mode(DataChunk &args, ExpressionState &sta
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
                 }
@@ -6653,7 +7812,7 @@ static inline void DSREQnum_retained(DataChunk &args, ExpressionState &state, Ve
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
                 }
@@ -6687,12 +7846,12 @@ static inline void DSREQmin_item(DataChunk &args, ExpressionState &state, Vector
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
                 }
             }();
-return sketch.get_min_item();
+return DSItemOut<T>(result, sketch.get_min_item());
         });
 
 }
@@ -6721,12 +7880,182 @@ static inline void DSREQmax_item(DataChunk &args, ExpressionState &state, Vector
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::req_sketch<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
                 }
             }();
-return sketch.get_max_item();
+return DSItemOut<T>(result, sketch.get_max_item());
+        });
+
+}
+
+    
+
+
+template <class T>
+
+static inline void DSREQquantiles(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 3);
+
+    
+        auto &sketch_vector = args.data[0];
+        auto &ranks_vector = args.data[1];
+        auto &inclusive_vector = args.data[2];
+
+    
+        
+                    auto &ranks_list_children = ListVector::GetChild(ranks_vector);
+                    UnifiedVectorFormat ranks_children_unified;
+                    ranks_list_children.ToUnifiedFormat(ranks_children_unified);
+                    const double *ranks_children_data = UnifiedVectorFormat::GetData<double>(ranks_children_unified);
+                    
+        TernaryExecutor::Execute
+        <string_t,list_entry_t,bool,list_entry_t>
+        (
+        sketch_vector,ranks_vector,inclusive_vector,result,
+        [&](string_t sketch_data,list_entry_t ranks_data,bool inclusive_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
+
+                if (sketch.is_empty())
+                {
+                    throw InvalidInputException("datasketch_req_quantiles: operation is undefined for an empty sketch");
+                }
+                return DSAppendList(result, ranks_data.length, [&](Vector &child, idx_t offset) {
+                    auto child_values = FlatVector::GetDataMutable<T>(child);
+                    for (idx_t i = 0; i < ranks_data.length; i++)
+                    {
+                        auto rank_index = ranks_children_unified.sel->get_index(ranks_data.offset + i);
+                        if (!ranks_children_unified.validity.RowIsValid(rank_index))
+                        {
+                            FlatVector::SetNull(child, offset + i, true);
+                            continue;
+                        }
+                        auto rank = ranks_children_data[rank_index];
+                        DSCheckRank(rank);
+                        child_values[offset + i] = DSItemOut<T>(child, sketch.get_quantile(rank, inclusive_data));
+                    }
+                });
+                
+        });
+
+}
+
+    
+
+
+template <class T>
+
+static inline void DSREQranks(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 3);
+
+    
+        auto &sketch_vector = args.data[0];
+        auto &items_vector = args.data[1];
+        auto &inclusive_vector = args.data[2];
+
+    
+        
+                    auto &items_list_children = ListVector::GetChild(items_vector);
+                    UnifiedVectorFormat items_children_unified;
+                    items_list_children.ToUnifiedFormat(items_children_unified);
+                    const T *items_children_data = UnifiedVectorFormat::GetData<T>(items_children_unified);
+                    
+        TernaryExecutor::Execute
+        <string_t,list_entry_t,bool,list_entry_t>
+        (
+        sketch_vector,items_vector,inclusive_vector,result,
+        [&](string_t sketch_data,list_entry_t items_data,bool inclusive_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
+
+                return DSAppendList(result, items_data.length, [&](Vector &child, idx_t offset) {
+                    auto child_values = FlatVector::GetDataMutable<double>(child);
+                    for (idx_t i = 0; i < items_data.length; i++)
+                    {
+                        auto item_index = items_children_unified.sel->get_index(items_data.offset + i);
+                        if (!items_children_unified.validity.RowIsValid(item_index))
+                        {
+                            FlatVector::SetNull(child, offset + i, true);
+                            continue;
+                        }
+                        child_values[offset + i] = sketch.get_rank(DSItemIn(items_children_data[item_index]), inclusive_data);
+                    }
+                });
+                
+        });
+
+}
+
+    
+
+
+template <class T>
+
+static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vector &result)
+{
+    // Get the references to the incoming vectors.
+    D_ASSERT(args.ColumnCount() == 1);
+
+    
+        auto &sketch_vector = args.data[0];
+
+    
+        
+        UnaryExecutor::Execute
+        <string_t,list_entry_t>
+        (
+        sketch_vector,result,
+        [&](string_t sketch_data) {
+
+            
+            auto sketch = [&]() {
+                try {
+                    return datasketches::req_sketch<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                } catch (const std::exception &e) {
+                    throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
+                }
+            }();
+
+                if (sketch.is_empty())
+                {
+                    return list_entry_t(ListVector::GetListSize(result), 0);
+                }
+                auto view = sketch.get_sorted_view();
+                return DSAppendList(result, view.size(), [&](Vector &child, idx_t offset) {
+                    auto &entries = StructVector::GetEntries(child);
+                    auto &item_vector = entries[0];
+                    auto item_values = FlatVector::GetDataMutable<T>(item_vector);
+                    auto weight_values = FlatVector::GetDataMutable<uint64_t>(entries[1]);
+                    auto cumulative_values = FlatVector::GetDataMutable<uint64_t>(entries[2]);
+                    idx_t i = offset;
+                    for (auto it = view.begin(); it != view.end(); ++it, ++i)
+                    {
+                        item_values[i] = DSItemOut<T>(item_vector, (*it).first);
+                        weight_values[i] = it.get_weight();
+                        cumulative_values[i] = it.get_cumulative_weight(true);
+                    }
+                });
+                
         });
 
 }
@@ -7555,7 +8884,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7566,7 +8895,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7577,7 +8906,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7588,7 +8917,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7599,7 +8928,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7610,7 +8939,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7621,7 +8950,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7632,7 +8961,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7643,7 +8972,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7654,7 +8983,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, rank, inclusive)");
+                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7683,7 +9012,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.examples.push_back("datasketch_req_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7694,7 +9023,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.examples.push_back("datasketch_req_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7705,7 +9034,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.examples.push_back("datasketch_req_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -7716,7 +9045,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.examples.push_back("datasketch_req_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7727,7 +9056,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.examples.push_back("datasketch_req_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -7738,7 +9067,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.examples.push_back("datasketch_req_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -7749,7 +9078,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.examples.push_back("datasketch_req_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7760,7 +9089,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.examples.push_back("datasketch_req_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7771,7 +9100,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.examples.push_back("datasketch_req_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -7782,7 +9111,7 @@ return sketch.get_max_item();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch)");
+                    desc.examples.push_back("datasketch_req_n(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -8194,7 +9523,7 @@ return sketch.get_max_item();
                 ,    DSREQmax_item<int8_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_req_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
@@ -8205,7 +9534,7 @@ return sketch.get_max_item();
                 ,    DSREQmax_item<int16_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_req_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
@@ -8216,7 +9545,7 @@ return sketch.get_max_item();
                 ,    DSREQmax_item<int32_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_req_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
@@ -8227,7 +9556,7 @@ return sketch.get_max_item();
                 ,    DSREQmax_item<int64_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_req_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
@@ -8238,7 +9567,7 @@ return sketch.get_max_item();
                 ,    DSREQmax_item<float>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_req_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
@@ -8249,7 +9578,7 @@ return sketch.get_max_item();
                 ,    DSREQmax_item<double>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_req_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
@@ -8260,7 +9589,7 @@ return sketch.get_max_item();
                 ,    DSREQmax_item<uint8_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_req_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
@@ -8271,7 +9600,7 @@ return sketch.get_max_item();
                 ,    DSREQmax_item<uint16_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_req_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
@@ -8282,7 +9611,7 @@ return sketch.get_max_item();
                 ,    DSREQmax_item<uint32_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_req_max_item(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
@@ -8293,8 +9622,392 @@ return sketch.get_max_item();
                 ,    DSREQmax_item<uint64_t>));
                 {
                     FunctionDescription desc;
-                    desc.description = "Return the maxium item in the sketch";
+                    desc.description = "Return the maximum item in the sketch";
                     desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_req_quantiles");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::TINYINT)
+                ,    DSREQquantiles<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::SMALLINT)
+                ,    DSREQquantiles<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::INTEGER)
+                ,    DSREQquantiles<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::BIGINT)
+                ,    DSREQquantiles<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::FLOAT)
+                ,    DSREQquantiles<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSREQquantiles<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UTINYINT)
+                ,    DSREQquantiles<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::USMALLINT)
+                ,    DSREQquantiles<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UINTEGER)
+                ,    DSREQquantiles<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::UBIGINT)
+                ,    DSREQquantiles<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
+                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.parameter_names = { "sketch","ranks","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_req_ranks");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSREQranks<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSREQranks<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSREQranks<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSREQranks<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSREQranks<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSREQranks<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSREQranks<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSREQranks<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSREQranks<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN},LogicalType::LIST(LogicalType::DOUBLE)
+                ,    DSREQranks<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
+                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.parameter_names = { "sketch","items","inclusive" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
+                    fn_descs.push_back(std::move(desc));
+                }
+        
+
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
+        CreateScalarFunctionInfo info(std::move(fs));
+        for (auto &d : fn_descs) {
+            info.descriptions.push_back(std::move(d));
+        }
+
+        DSRegister(loader, info);
+
+
+      }
+      {
+        ScalarFunctionSet fs("datasketch_req_sorted_view");
+        std::vector<FunctionDescription> fn_descs;
+        
+            
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::TINYINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::TINYINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSREQsorted_view<int8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::SMALLINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::SMALLINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSREQsorted_view<int16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::INTEGER]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::INTEGER}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSREQsorted_view<int32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::BIGINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::BIGINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSREQsorted_view<int64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::FLOAT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::FLOAT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSREQsorted_view<float>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::DOUBLE]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::DOUBLE}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSREQsorted_view<double>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UTINYINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UTINYINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSREQsorted_view<uint8_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::USMALLINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::USMALLINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSREQsorted_view<uint16_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UINTEGER]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UINTEGER}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSREQsorted_view<uint32_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.parameter_names = { "sketch" };
+                    desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
+                    fn_descs.push_back(std::move(desc));
+                }
+                fs.AddFunction(ScalarFunction(
+                {sketch_map_types[LogicalTypeId::UBIGINT]},LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UBIGINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}}))
+                ,    DSREQsorted_view<uint64_t>));
+                {
+                    FunctionDescription desc;
+                    desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order, with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
+                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -8656,7 +10369,7 @@ static inline void DSTDigestis_empty(DataChunk &args, ExpressionState &state, Ve
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::tdigest<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
                 }
@@ -8690,7 +10403,7 @@ static inline void DSTDigestk(DataChunk &args, ExpressionState &state, Vector &r
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::tdigest<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
                 }
@@ -8732,16 +10445,16 @@ static inline void DSTDigestcdf(DataChunk &args, ExpressionState &state, Vector 
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::tdigest<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
                 }
             }();
 
-                    std::vector<T> passing_points(split_points_data.length);
+                    std::vector<DSItem<T>> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
+                        passing_points[i] = DSItemIn(split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)]);
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length);
@@ -8798,16 +10511,16 @@ static inline void DSTDigestpmf(DataChunk &args, ExpressionState &state, Vector 
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::tdigest<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
                 }
             }();
 
-                    std::vector<T> passing_points(split_points_data.length);
+                    std::vector<DSItem<T>> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
+                        passing_points[i] = DSItemIn(split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)]);
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length);
@@ -8857,7 +10570,7 @@ static inline void DSTDigestdescribe(DataChunk &args, ExpressionState &state, Ve
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::tdigest<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
                 }
@@ -8892,12 +10605,12 @@ static inline void DSTDigestrank(DataChunk &args, ExpressionState &state, Vector
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::tdigest<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
                 }
             }();
-return sketch.get_rank(item_data);
+return sketch.get_rank(DSItemIn(item_data));
         });
 
 }
@@ -8926,7 +10639,7 @@ static inline void DSTDigesttotal_weight(DataChunk &args, ExpressionState &state
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::tdigest<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
                 }
@@ -8961,12 +10674,12 @@ static inline void DSTDigestquantile(DataChunk &args, ExpressionState &state, Ve
             
             auto sketch = [&]() {
                 try {
-                    return datasketches::tdigest<T>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
+                    return datasketches::tdigest<DSItem<T>>::deserialize(sketch_data.GetDataUnsafe(), sketch_data.GetSize());
                 } catch (const std::exception &e) {
                     throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
                 }
             }();
-return sketch.get_quantile(rank_data);
+return DSItemOut<T>(result, sketch.get_quantile(rank_data));
         });
 
 }
