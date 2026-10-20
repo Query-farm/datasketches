@@ -1,0 +1,318 @@
+# name: test/sql/datasketch_aod.test
+# description: Array-of-doubles Tuple sketches (sketch_aod)
+# group: [datasketches]
+
+require datasketches
+
+# keys 0..4, values [1, i] for i in 0..19: per key [4, 30], [4, 34], [4, 38], [4, 42], [4, 46]
+statement ok
+CREATE TABLE t AS SELECT i % 5 AS k, [1.0, i::DOUBLE] AS v FROM range(20) r(i);
+
+statement ok
+CREATE MACRO vals(s) AS list_sort(list_transform(datasketch_aod_summaries(s), lambda x: x.values));
+
+# -------------------------------------------------------------------
+# Building
+# -------------------------------------------------------------------
+
+query IIIIII
+SELECT datasketch_aod_estimate(s), datasketch_aod_num_values(s), datasketch_aod_column_sums(s), datasketch_aod_column_means(s),
+       datasketch_aod_num_retained(s), datasketch_aod_is_estimation_mode(s)
+FROM (SELECT datasketch_aod(k, v) AS s FROM t);
+----
+5.0	2	[20.0, 190.0]	[4.0, 38.0]	5	false
+
+query I
+SELECT vals(datasketch_aod(k, v)) FROM t;
+----
+[[4.0, 30.0], [4.0, 34.0], [4.0, 38.0], [4.0, 42.0], [4.0, 46.0]]
+
+# NULL keys or value lists are skipped
+query II
+SELECT datasketch_aod_estimate(s), datasketch_aod_column_sums(s)
+FROM (SELECT datasketch_aod(k, v) AS s FROM (VALUES (1, [2.0]), (NULL, [5.0]), (2, NULL), (1, [3.0])) x(k, v));
+----
+1.0	[5.0]
+
+# key types and a fixed-size array argument
+query IIII
+SELECT datasketch_aod_column_sums(datasketch_aod(k::VARCHAR, v)), datasketch_aod_column_sums(datasketch_aod(k::UINTEGER, v)),
+       datasketch_aod_estimate(datasketch_aod(10, v[2]::FLOAT, v)), datasketch_aod_column_sums(datasketch_aod(k, v::DOUBLE[2]))
+FROM t;
+----
+[20.0, 190.0]	[20.0, 190.0]	20.0	[20.0, 190.0]
+
+# empty input gives an empty sketch
+query IIII
+SELECT datasketch_aod_is_empty(s), datasketch_aod_estimate(s), datasketch_aod_column_sums(s), datasketch_aod_column_means(s) IS NULL
+FROM (SELECT datasketch_aod(k, v) AS s FROM t WHERE false);
+----
+true	0.0	[0.0]	true
+
+query I
+SELECT datasketch_aod_describe(datasketch_aod(k, v)) LIKE '%Tuple sketch summary%' FROM t;
+----
+true
+
+query II
+SELECT datasketch_theta_estimate(datasketch_aod_to_theta(datasketch_aod(k, v))),
+       datasketch_theta_exactly_equal(datasketch_aod_to_theta(datasketch_aod(k, v)), datasketch_theta(k))
+FROM t;
+----
+5.0	true
+
+# estimation mode
+query IIII
+SELECT datasketch_aod_is_estimation_mode(s), datasketch_aod_num_retained(s) >= 1024,
+       datasketch_aod_column_sums(s)[1] BETWEEN 90000 AND 110000, datasketch_aod_column_means(s)
+FROM (SELECT datasketch_aod(10, i, [1.0, 2.0]) AS s FROM range(100000) r(i));
+----
+true	true	true	[1.0, 2.0]
+
+statement error
+SELECT datasketch_aod(k, x) FROM (VALUES (1, [1.0]), (2, [1.0, 2.0])) v(k, x);
+----
+every values list must have the same length
+
+statement error
+SELECT datasketch_aod(k, []::DOUBLE[]) FROM t;
+----
+values must have between 1 and 255 elements
+
+statement error
+SELECT datasketch_aod(k, [1.0, NULL]) FROM t;
+----
+values must not contain NULL
+
+statement error
+SELECT datasketch_aod(40, k, v) FROM t;
+----
+lg_k must be between 4 and 26
+
+statement error
+SELECT datasketch_aod(k, v, p := 0) FROM t;
+----
+sampling probability p must be in (0, 1]
+
+query I
+SELECT datasketch_aod_get_theta(datasketch_aod(k, v, p := 0.5)) FROM t;
+----
+0.5
+
+# -------------------------------------------------------------------
+# Merging
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE parts AS SELECT i % 3 AS part, datasketch_aod(i % 5, [1.0, i::DOUBLE]) AS s FROM range(20) r(i) GROUP BY i % 3;
+
+query III
+SELECT vals(datasketch_aod(s)), datasketch_aod_column_sums(datasketch_aod(12, s)), datasketch_aod_exactly_equal(datasketch_aod(s), (SELECT datasketch_aod(k, v) FROM t))
+FROM parts;
+----
+[[4.0, 30.0], [4.0, 34.0], [4.0, 38.0], [4.0, 42.0], [4.0, 46.0]]	[20.0, 190.0]	true
+
+statement ok
+CREATE TABLE big AS SELECT i % 2 AS part, datasketch_aod(14, i, [1.0]) AS s FROM range(200000) r(i) GROUP BY i % 2;
+
+query III
+SELECT datasketch_aod_num_retained(datasketch_aod(s)), datasketch_aod_num_retained(datasketch_aod(12, s)),
+       datasketch_aod_estimate(datasketch_aod(s)) BETWEEN 192000 AND 208000
+FROM big;
+----
+16384	4096	true
+
+statement error
+SELECT datasketch_aod(s) FROM (SELECT datasketch_aod(k, [1.0]) AS s FROM t UNION ALL SELECT datasketch_aod(k, v) FROM t);
+----
+different numbers of values
+
+# -------------------------------------------------------------------
+# Set operations
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE sets AS
+SELECT 'A' AS name, datasketch_aod(k, v) AS s FROM t WHERE k < 3               -- keys 0, 1, 2
+UNION ALL SELECT 'B', datasketch_aod(k, v) FROM t WHERE k >= 2                 -- keys 2, 3, 4
+UNION ALL SELECT 'C', datasketch_aod(k, [1.0, 1.0]) FROM t WHERE k IN (2, 4)   -- keys 2, 4: [4, 4]
+UNION ALL SELECT 'E', datasketch_aod(k, v) FROM t WHERE false
+UNION ALL SELECT 'X', datasketch_aod(k, [1.0]) FROM t;                         -- one value per key
+
+statement ok
+CREATE MACRO s(n) AS (SELECT s FROM sets WHERE name = n);
+
+query III
+SELECT datasketch_aod_column_sums(datasketch_aod_union(s('A'), s('B'))), datasketch_aod_column_sums(datasketch_aod_union(s('A'), s('B'), s('C'))),
+       datasketch_aod_column_sums(datasketch_aod_union(s('A'), s('E')))
+----
+[24.0, 228.0]	[32.0, 236.0]	[12.0, 102.0]
+
+query III
+SELECT vals(datasketch_aod_intersect(s('A'), s('B'))), vals(datasketch_aod_intersect(s('A'), s('B'), s('C'))), datasketch_aod_union(s('A'), NULL) IS NULL
+----
+[[8.0, 76.0]]	[[12.0, 80.0]]	true
+
+query II
+SELECT datasketch_aod_column_sums(datasketch_aod_a_not_b(s('A'), s('B'))), datasketch_aod_column_sums(datasketch_aod_a_not_b(s('B'), s('E')));
+----
+[8.0, 64.0]	[12.0, 126.0]
+
+query II
+SELECT datasketch_aod_num_retained(datasketch_aod_union(12, a.s, b.s)), datasketch_aod_num_retained(datasketch_aod_union(a.s, b.s))
+FROM big a, big b WHERE a.part = 0 AND b.part = 1;
+----
+4096	16384
+
+statement error
+SELECT datasketch_aod_union(s('A'), s('X'));
+----
+different numbers of values
+
+statement error
+SELECT datasketch_aod_intersect(s('A'), s('X'));
+----
+different numbers of values
+
+statement error
+SELECT datasketch_aod_a_not_b(s('A'), s('X'));
+----
+different numbers of values
+
+# -------------------------------------------------------------------
+# Intersection aggregate
+# -------------------------------------------------------------------
+
+query II
+SELECT vals(datasketch_aod_intersect_agg(s)), datasketch_aod_num_values(datasketch_aod_intersect_agg(s)) FROM sets WHERE name IN ('A', 'B', 'C');
+----
+[[12.0, 80.0]]	2
+
+query II
+SELECT datasketch_aod_is_empty(datasketch_aod_intersect_agg(s)), datasketch_aod_intersect_agg(s) FILTER (false) IS NULL FROM sets WHERE name IN ('A', 'E');
+----
+true	true
+
+query I
+SELECT vals(datasketch_aod_intersect_agg(x)) FROM (VALUES (s('A')), (NULL), (s('B'))) v(x);
+----
+[[8.0, 76.0]]
+
+statement error
+SELECT datasketch_aod_intersect_agg(s) FROM sets WHERE name IN ('A', 'X');
+----
+different numbers of values
+
+# -------------------------------------------------------------------
+# Similarity
+# -------------------------------------------------------------------
+
+query IIII
+SELECT datasketch_aod_jaccard(s('A'), s('B')), datasketch_aod_jaccard(s('A'), s('A')).estimate, datasketch_aod_jaccard(s('E'), s('E')).estimate,
+       datasketch_aod_jaccard(s('A'), s('X')).estimate;
+----
+{'lower': 0.2, 'estimate': 0.2, 'upper': 0.2}	1.0	1.0	0.6
+
+query IIII
+SELECT datasketch_aod_exactly_equal(s('A'), s('A')), datasketch_aod_exactly_equal(s('A'), s('B')),
+       datasketch_aod_similarity_test(s('A'), s('B'), 0.1), datasketch_aod_dissimilarity_test(s('A'), s('B'), 0.1);
+----
+true	false	true	false
+
+# -------------------------------------------------------------------
+# Seeds
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE seeded AS
+SELECT 'A' AS name, datasketch_aod(k, v, seed := 42) AS s FROM t WHERE k < 3
+UNION ALL SELECT 'B', datasketch_aod(k, v, seed := 42) FROM t WHERE k >= 2;
+
+statement ok
+CREATE MACRO z(n) AS (SELECT s FROM seeded WHERE name = n);
+
+query IIIII
+SELECT datasketch_aod_seed_hash(s('A')), datasketch_aod_seed_hash(z('A')), datasketch_aod_column_sums(datasketch_aod_union(z('A'), z('B'))),
+       vals(datasketch_aod_intersect(z('A'), z('B'))), datasketch_aod_jaccard(z('A'), z('B')).estimate
+----
+37836	32248	[24.0, 228.0]	[[8.0, 76.0]]	0.2
+
+query II
+SELECT datasketch_aod_column_sums(datasketch_aod(s)), vals(datasketch_aod_intersect_agg(s)) FROM seeded;
+----
+[24.0, 228.0]	[[8.0, 76.0]]
+
+statement error
+SELECT datasketch_aod_union(z('A'), s('B'));
+----
+cannot combine Array of doubles sketches built with different seeds
+
+statement error
+SELECT datasketch_aod_a_not_b(z('A'), s('B'));
+----
+cannot combine Array of doubles sketches built with different seeds
+
+statement error
+SELECT datasketch_aod(s) FROM (SELECT s FROM seeded UNION ALL SELECT s FROM sets WHERE name = 'A');
+----
+cannot combine Array of doubles sketches built with different seeds
+
+statement error
+SELECT datasketch_aod_intersect_agg(s) FROM (SELECT s FROM seeded UNION ALL SELECT s FROM sets WHERE name = 'A');
+----
+cannot combine Array of doubles sketches built with different seeds
+
+# -------------------------------------------------------------------
+# Constant arguments are part of the plan: aggregates that differ only in
+# lg_k, seed or p are not merged by the optimizer
+# -------------------------------------------------------------------
+
+query I rowsort
+SELECT datasketch_aod_num_retained(x) >= 4096 FROM (SELECT datasketch_aod(10, i, [1.0]) AS x FROM range(100000) r(i) UNION ALL SELECT datasketch_aod(12, i, [1.0]) FROM range(100000) r(i));
+----
+false
+true
+
+query II
+SELECT datasketch_aod_num_retained(datasketch_aod(10, i, [1.0])) >= 4096, datasketch_aod_num_retained(datasketch_aod(12, i, [1.0])) >= 4096 FROM range(100000) r(i);
+----
+false	true
+
+query I
+SELECT count(DISTINCT datasketch_aod_seed_hash(x)) FROM (SELECT datasketch_aod(k, v, seed := 1) AS x FROM t UNION ALL SELECT datasketch_aod(k, v, seed := 2) FROM t);
+----
+2
+
+query I rowsort
+SELECT datasketch_aod_get_theta(x) FROM (SELECT datasketch_aod(k, v, p := 0.5) AS x FROM t UNION ALL SELECT datasketch_aod(k, v, p := 0.25) FROM t);
+----
+0.25
+0.5
+
+query I rowsort
+SELECT datasketch_aod_num_retained(x) FROM (SELECT datasketch_aod(10, s) AS x FROM big UNION ALL SELECT datasketch_aod(12, s) FROM big);
+----
+1024
+4096
+
+# -------------------------------------------------------------------
+# Documentation
+# -------------------------------------------------------------------
+
+query I
+SELECT count(*) FROM (
+    SELECT DISTINCT function_name FROM duckdb_functions()
+    WHERE function_name LIKE 'datasketch_aod%' AND (description IS NULL OR examples = [] OR NOT list_contains(categories, 'aod'))
+);
+----
+0
+
+query I
+SELECT list(DISTINCT function_name ORDER BY function_name) FROM duckdb_functions() WHERE function_name LIKE 'datasketch_aod%';
+----
+[datasketch_aod, datasketch_aod_a_not_b, datasketch_aod_column_means, datasketch_aod_column_sums, datasketch_aod_describe, datasketch_aod_dissimilarity_test, datasketch_aod_estimate, datasketch_aod_exactly_equal, datasketch_aod_get_theta, datasketch_aod_intersect, datasketch_aod_intersect_agg, datasketch_aod_is_empty, datasketch_aod_is_estimation_mode, datasketch_aod_jaccard, datasketch_aod_lower_bound, datasketch_aod_num_retained, datasketch_aod_num_values, datasketch_aod_seed_hash, datasketch_aod_similarity_test, datasketch_aod_summaries, datasketch_aod_to_theta, datasketch_aod_union, datasketch_aod_upper_bound]
+
+query T
+SELECT parameters FROM duckdb_functions() WHERE function_name = 'datasketch_aod' AND parameter_types = ['INTEGER', 'BIGINT', 'DOUBLE[]', 'BIGINT', 'DOUBLE'];
+----
+[lg_k, key, values, seed, p]

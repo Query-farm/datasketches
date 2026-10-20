@@ -26,6 +26,7 @@ set(EXTENSION_SOURCES src/datasketches_extension.cpp src/generated.cpp
 src/query_farm_telemetry.cpp
 src/theta_sketch.cpp
 src/tuple_sketch.cpp
+src/aod_sketch.cpp
 src/frequent_items_sketch.cpp)
 
 build_static_extension(${TARGET_NAME} ${EXTENSION_SOURCES})
