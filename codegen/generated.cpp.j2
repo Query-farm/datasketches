@@ -4,6 +4,10 @@
 #include "duckdb/parser/parsed_data/create_scalar_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_aggregate_function_info.hpp"
 #include "duckdb/function/scalar_function.hpp"
+#include "duckdb/common/vector/flat_vector.hpp"
+#include "duckdb/common/vector/list_vector.hpp"
+#include "duckdb/common/vector/string_vector.hpp"
+#include "duckdb/common/vector/unified_vector_format.hpp"
 
 #include <DataSketches/quantiles_sketch.hpp>
 #include <DataSketches/kll_sketch.hpp>
@@ -47,8 +51,9 @@ struct DS{{sketch_type}}BindData : public FunctionData {
 };
 
 
-unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, AggregateFunction &function,
-                                            vector<unique_ptr<Expression>> &arguments) {
+unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input) {
+	auto &context = input.GetClientContext();
+	auto &arguments = input.GetArguments();
 	if (arguments[0]->HasParameter()) {
 		throw ParameterNotResolvedException();
 	}
@@ -89,7 +94,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
 	}
 	{% endif %}
 
-	Function::EraseArgument(function, arguments, 0);
+	DSEraseAggregateArgument(input, 0);
 	return make_uniq<DS{{sketch_type}}BindData>(actual_k);
 }
 
@@ -193,7 +198,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
         type_info.temporary = false;
         type_info.internal = true;
         type_info.comment = "Sketch type for {{sketch_type}} sketch";
-        new_type.SetAlias(new_type_name);
+        new_type = new_type.WithAlias(new_type_name);
         auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
         auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
@@ -209,7 +214,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
         auto new_type_name = "sketch_{{sketch_type|lower}}_" + type_suffix;
 
 
-        new_type.SetAlias(new_type_name);
+        new_type = new_type.WithAlias(new_type_name);
         auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
@@ -677,13 +682,13 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     {% endif %}
     {
         {% if sketch_type == "HLL" %}
-        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, string_t, string_t, DSHLLMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DS{{sketch_type}}State, string_t, string_t, DSHLLMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
         {% elif sketch_type == "CPC" %}
-        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, string_t, string_t, DSCPCMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DS{{sketch_type}}State, string_t, string_t, DSCPCMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
         {% else %}
-        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State<T>, string_t, string_t, DSQuantilesMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DS{{sketch_type}}State<T>, string_t, string_t, DSQuantilesMergeOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
         {% endif %}
     }
@@ -694,13 +699,13 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     auto static DS{{sketch_type}}CreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         {% if sketch_type == 'HLL' %}
-        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, T, string_t, DSHLLCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DS{{sketch_type}}State, T, string_t, DSHLLCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
         {% elif sketch_type == 'CPC' %}
-        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, T, string_t, DSCPCCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DS{{sketch_type}}State, T, string_t, DSCPCCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
         {% else %}
-        return AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State<T>, T, string_t, DSQuantilesCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DS{{sketch_type}}State<T>, T, string_t, DSQuantilesCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
         {% endif %}
     }
@@ -750,6 +755,8 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
             {%- endfor %}
         {% endif %}
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -769,9 +776,9 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         {% if sketch_type in counting_sketch_names %}
             {
                 auto fun = DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_type);
-                fun.bind = DS{{sketch_type}}Bind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
+                fun.SetBindCallback(DS{{sketch_type}}Bind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -784,9 +791,9 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         {% else %}
             {
                 auto fun = DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]);
-                fun.bind = DS{{sketch_type}}Bind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
+                fun.SetBindCallback(DS{{sketch_type}}Bind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -798,9 +805,9 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
             }
             {
                 auto fun = DS{{sketch_type}}MergeAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]);
-                fun.bind = DS{{sketch_type}}Bind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
+                fun.SetBindCallback(DS{{sketch_type}}Bind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -826,9 +833,9 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
       {
       AggregateFunctionSet sketch("datasketch_{{sketch_type|lower}}_union");
       auto fun = DS{{sketch_type}}MergeAggregate(sketch_type);
-      fun.bind = DS{{sketch_type}}Bind;
-      fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-      fun.arguments.insert(fun.arguments.begin(), {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
+      fun.SetBindCallback(DS{{sketch_type}}Bind);
+      fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+      DSPrependArgument(fun, {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
       sketch.AddFunction(fun);
       CreateAggregateFunctionInfo sketch_info(sketch);
 

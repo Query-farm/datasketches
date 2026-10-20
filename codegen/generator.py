@@ -106,16 +106,10 @@ def unary_functions_per_sketch_type(sketch_type: str):
         "duckdb_type": lambda contained_type: f"LogicalType::LIST({contained_type})",
         "name": "split_points",
         "pre_executor": """
-                    UnifiedVectorFormat unified_split_points;
-                    split_points_vector.ToUnifiedFormat(args.size(), unified_split_points);
-
-                    // auto split_points_list_entries = UnifiedVectorFormat::GetData<list_entry_t>(unified_split_points);
-                    //         auto split_points_validitiy = FlatVector::Validity(split_points_vector);
-
-                    auto &split_points_list_children = ListVector::GetEntry(split_points_vector);
+                    auto &split_points_list_children = ListVector::GetChild(split_points_vector);
 
                     UnifiedVectorFormat split_points_children_unified;
-                    split_points_list_children.ToUnifiedFormat(args.size(), split_points_children_unified);
+                    split_points_list_children.ToUnifiedFormat(split_points_children_unified);
 
                     const T *split_points_list_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
                     """,
@@ -123,7 +117,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
                     }
                     """,
     }
@@ -172,15 +166,15 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     ListVector::Reserve(result, new_size);
                 }
 
-                auto &child_entry = ListVector::GetEntry(result);
-                auto child_vals = FlatVector::GetData<T>(child_entry);
+                auto &child_entry = ListVector::GetChildMutable(result);
+                auto child_vals = FlatVector::GetDataMutable<T>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < cdf_result.size(); i++)
                 {
                     child_vals[current_size + i] = cdf_result[i];
                 }
                 ListVector::SetListSize(result, new_size);
-                return list_entry_t{current_size, cdf_result.size()};
+                return list_entry_t(current_size, cdf_result.size());
                 """,
                     "arguments": [
                         sketch_argument,
@@ -213,15 +207,15 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     ListVector::Reserve(result, new_size);
                 }
 
-                auto &child_entry = ListVector::GetEntry(result);
-                auto child_vals = FlatVector::GetData<double>(child_entry);
+                auto &child_entry = ListVector::GetChildMutable(result);
+                auto child_vals = FlatVector::GetDataMutable<double>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < pmf_result.size(); i++)
                 {
                     child_vals[current_size + i] = pmf_result[i];
                 }
                 ListVector::SetListSize(result, new_size);
-                return list_entry_t{current_size, pmf_result.size()};
+                return list_entry_t(current_size, pmf_result.size());
                 """,
                     "arguments": [
                         sketch_argument,
@@ -619,7 +613,6 @@ def get_function_block(function_info: Any) -> str:
             pre_executor_lines.append(argument["pre_executor"])
 
     executor_args.append("result")
-    executor_args.append("args.size()")
 
     joined_executor_args = ",".join(executor_args)
     joined_lambda_args = ",".join(lambda_args)

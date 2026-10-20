@@ -6,6 +6,11 @@
 #include "duckdb/catalog/catalog.hpp"
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/types/vector.hpp"
+#include "duckdb/common/vector/flat_vector.hpp"
+#include "duckdb/common/vector/list_vector.hpp"
+#include "duckdb/common/vector/string_vector.hpp"
+#include "duckdb/common/vector/struct_vector.hpp"
+#include "duckdb/common/vector/unified_vector_format.hpp"
 #include "duckdb/common/vector_operations/vector_operations.hpp"
 
 #include <DataSketches/frequent_items_sketch.hpp>
@@ -33,9 +38,10 @@ namespace duckdb
             uint8_t lg_max_k;
         };
 
-        unique_ptr<FunctionData> DSFreqItemsBind(ClientContext &context, AggregateFunction &function,
-                                                 vector<unique_ptr<Expression>> &arguments)
+        unique_ptr<FunctionData> DSFreqItemsBind(BindAggregateFunctionInput &input)
         {
+            auto &context = input.GetClientContext();
+            auto &arguments = input.GetArguments();
             uint8_t lg_max_k = 10;
             if (arguments.size() == 2)
             {
@@ -44,14 +50,15 @@ namespace duckdb
                 Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
                 if (!k_val.IsNull())
                     lg_max_k = (uint8_t)k_val.GetValue<int32_t>();
-                Function::EraseArgument(function, arguments, 0);
+                DSEraseAggregateArgument(input, 0);
             }
             return make_uniq<DSFreqItemsBindData>(lg_max_k);
         }
 
-        unique_ptr<FunctionData> DSFreqItemsWeightedBind(ClientContext &context, AggregateFunction &function,
-                                                         vector<unique_ptr<Expression>> &arguments)
+        unique_ptr<FunctionData> DSFreqItemsWeightedBind(BindAggregateFunctionInput &input)
         {
+            auto &context = input.GetClientContext();
+            auto &arguments = input.GetArguments();
             uint8_t lg_max_k = 10;
             if (arguments.size() == 3)
             {
@@ -60,7 +67,7 @@ namespace duckdb
                 Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
                 if (!k_val.IsNull())
                     lg_max_k = (uint8_t)k_val.GetValue<int32_t>();
-                Function::EraseArgument(function, arguments, 0);
+                DSEraseAggregateArgument(input, 0);
             }
             return make_uniq<DSFreqItemsBindData>(lg_max_k);
         }
@@ -271,7 +278,7 @@ namespace duckdb
         template <typename T>
         static void DSFreqItemsEstimate(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            BinaryExecutor::Execute<string_t, T, int64_t>(args.data[0], args.data[1], result, args.size(),
+            BinaryExecutor::Execute<string_t, T, int64_t>(args.data[0], args.data[1], result,
                                                           [&](string_t sketch_blob, T item)
                                                           {
                                                               auto sketch = DeserializeSketch(sketch_blob);
@@ -293,7 +300,7 @@ namespace duckdb
         template <typename T>
         static void DSFreqItemsLowerBound(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            BinaryExecutor::Execute<string_t, T, int64_t>(args.data[0], args.data[1], result, args.size(),
+            BinaryExecutor::Execute<string_t, T, int64_t>(args.data[0], args.data[1], result,
                                                           [&](string_t sketch_blob, T item)
                                                           {
                                                               auto sketch = DeserializeSketch(sketch_blob);
@@ -315,7 +322,7 @@ namespace duckdb
         template <typename T>
         static void DSFreqItemsUpperBound(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            BinaryExecutor::Execute<string_t, T, int64_t>(args.data[0], args.data[1], result, args.size(),
+            BinaryExecutor::Execute<string_t, T, int64_t>(args.data[0], args.data[1], result,
                                                           [&](string_t sketch_blob, T item)
                                                           {
                                                               auto sketch = DeserializeSketch(sketch_blob);
@@ -336,7 +343,7 @@ namespace duckdb
 
         static void DSFreqItemsEpsilon(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            UnaryExecutor::Execute<string_t, double>(args.data[0], result, args.size(),
+            UnaryExecutor::Execute<string_t, double>(args.data[0], result,
                                                      [&](string_t sketch_blob)
                                                      {
                                                          return DeserializeSketch(sketch_blob).get_epsilon();
@@ -345,7 +352,7 @@ namespace duckdb
 
         static void DSFreqItemsTotalWeight(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            UnaryExecutor::Execute<string_t, int64_t>(args.data[0], result, args.size(),
+            UnaryExecutor::Execute<string_t, int64_t>(args.data[0], result,
                                                       [&](string_t sketch_blob)
                                                       {
                                                           return (int64_t)DeserializeSketch(sketch_blob).get_total_weight();
@@ -354,7 +361,7 @@ namespace duckdb
 
         static void DSFreqItemsIsEmpty(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            UnaryExecutor::Execute<string_t, bool>(args.data[0], result, args.size(),
+            UnaryExecutor::Execute<string_t, bool>(args.data[0], result,
                                                    [&](string_t sketch_blob)
                                                    {
                                                        return DeserializeSketch(sketch_blob).is_empty();
@@ -363,7 +370,7 @@ namespace duckdb
 
         static void DSFreqItemsNumActive(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            UnaryExecutor::Execute<string_t, int64_t>(args.data[0], result, args.size(),
+            UnaryExecutor::Execute<string_t, int64_t>(args.data[0], result,
                                                       [&](string_t sketch_blob)
                                                       {
                                                           return (int64_t)DeserializeSketch(sketch_blob).get_num_active_items();
@@ -374,18 +381,18 @@ namespace duckdb
         {
             idx_t count = args.size();
             UnifiedVectorFormat sketch_data, type_data;
-            args.data[0].ToUnifiedFormat(count, sketch_data);
-            args.data[1].ToUnifiedFormat(count, type_data);
+            args.data[0].ToUnifiedFormat(sketch_data);
+            args.data[1].ToUnifiedFormat(type_data);
 
             ListVector::Reserve(result, count * 5);
             ListVector::SetListSize(result, 0);
 
-            auto &child_entry = ListVector::GetEntry(result);
+            auto &child_entry = ListVector::GetChildMutable(result);
             auto &struct_children = StructVector::GetEntries(child_entry);
-            auto item_vec = struct_children[0].get();
-            auto est_vec = struct_children[1].get();
-            auto lb_vec = struct_children[2].get();
-            auto ub_vec = struct_children[3].get();
+            auto item_vec = &struct_children[0];
+            auto est_vec = &struct_children[1];
+            auto lb_vec = &struct_children[2];
+            auto ub_vec = &struct_children[3];
 
             idx_t current_offset = 0;
 
@@ -400,14 +407,19 @@ namespace duckdb
                     continue;
                 }
 
-                string_t type_str = ((string_t *)type_data.data)[type_idx];
+                if (!type_data.validity.RowIsValid(type_idx))
+                {
+                    FlatVector::SetNull(result, i, true);
+                    continue;
+                }
+                string_t type_str = UnifiedVectorFormat::GetData<string_t>(type_data)[type_idx];
                 auto err_type = (type_str.GetString() == "NO_FALSE_NEGATIVES") ? datasketches::NO_FALSE_NEGATIVES : datasketches::NO_FALSE_POSITIVES;
 
-                string_t sketch_blob = ((string_t *)sketch_data.data)[sketch_idx];
+                string_t sketch_blob = UnifiedVectorFormat::GetData<string_t>(sketch_data)[sketch_idx];
                 auto sketch = DeserializeSketch(sketch_blob);
                 auto rows = sketch.get_frequent_items(err_type);
 
-                auto list_data = ListVector::GetData(result);
+                auto list_data = FlatVector::GetDataMutable<list_entry_t>(result);
                 list_data[i].offset = current_offset;
                 list_data[i].length = rows.size();
 
@@ -415,10 +427,10 @@ namespace duckdb
 
                 for (auto &row : rows)
                 {
-                    FlatVector::GetData<string_t>(*item_vec)[current_offset] = StringVector::AddString(*item_vec, row.get_item());
-                    FlatVector::GetData<int64_t>(*est_vec)[current_offset] = row.get_estimate();
-                    FlatVector::GetData<int64_t>(*lb_vec)[current_offset] = row.get_lower_bound();
-                    FlatVector::GetData<int64_t>(*ub_vec)[current_offset] = row.get_upper_bound();
+                    FlatVector::GetDataMutable<string_t>(*item_vec)[current_offset] = StringVector::AddString(*item_vec, row.get_item());
+                    FlatVector::GetDataMutable<int64_t>(*est_vec)[current_offset] = row.get_estimate();
+                    FlatVector::GetDataMutable<int64_t>(*lb_vec)[current_offset] = row.get_lower_bound();
+                    FlatVector::GetDataMutable<int64_t>(*ub_vec)[current_offset] = row.get_upper_bound();
                     current_offset++;
                 }
             }
@@ -437,7 +449,7 @@ namespace duckdb
             type_info.temporary = false;
             type_info.internal = true;
             type_info.comment = "Sketch type for Frequent Items Sketch";
-            new_type.SetAlias(new_type_name);
+            new_type = new_type.WithAlias(new_type_name);
 
             auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
             auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
@@ -452,11 +464,11 @@ namespace duckdb
         template <typename T>
         void RegisterFreqItems(AggregateFunctionSet &set, std::vector<FunctionDescription> &descs, LogicalType input_type, LogicalType result_type)
         {
-            auto fun = AggregateFunction::UnaryAggregateDestructor<DSFreqItemsState, T, string_t, DSFreqItemsOperation, AggregateDestructorType::LEGACY>(
+            auto fun = AggregateFunction::UnaryAggregate<DSFreqItemsState, T, string_t, DSFreqItemsOperation, AggregateDestructorType::LEGACY>(
                 input_type, result_type);
-            fun.bind = DSFreqItemsBind;
-            fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-            fun.arguments = {input_type};
+            fun.SetBindCallback(DSFreqItemsBind);
+            fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+            DSSetArguments(fun, {input_type});
             set.AddFunction(fun);
             {
                 FunctionDescription desc;
@@ -466,7 +478,7 @@ namespace duckdb
                 desc.parameter_types = {input_type};
                 descs.push_back(std::move(desc));
             }
-            fun.arguments = {LogicalType::INTEGER, input_type};
+            DSSetArguments(fun, {LogicalType::INTEGER, input_type});
             set.AddFunction(fun);
             {
                 FunctionDescription desc;
@@ -483,12 +495,12 @@ namespace duckdb
         {
             auto fun = AggregateFunction::BinaryAggregate<DSFreqItemsState, T, W, string_t, DSFreqItemsWeightedOperation, AggregateDestructorType::LEGACY>(
                 input_type, weight_type, result_type);
-            fun.destructor = AggregateFunction::StateDestroy<DSFreqItemsState, DSFreqItemsWeightedOperation>;
-            fun.bind = DSFreqItemsWeightedBind;
-            fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-            fun.arguments = {input_type, weight_type};
+            fun.SetStateDestructorCallback(AggregateFunction::StateDestroy<DSFreqItemsState, DSFreqItemsWeightedOperation>);
+            fun.SetBindCallback(DSFreqItemsWeightedBind);
+            fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+            DSSetArguments(fun, {input_type, weight_type});
             set.AddFunction(fun);
-            fun.arguments = {LogicalType::INTEGER, input_type, weight_type};
+            DSSetArguments(fun, {LogicalType::INTEGER, input_type, weight_type});
             set.AddFunction(fun);
         }
 
@@ -533,11 +545,11 @@ namespace duckdb
         RegisterFreqItems<string_t>(sketch_agg, agg_descs, LogicalType::VARCHAR, sketch_type);
 
         // --- 2. MERGE SKETCHES (uses sketch_type which is aliased BLOB) ---
-        auto fun_merge = AggregateFunction::UnaryAggregateDestructor<DSFreqItemsState, string_t, string_t, DSFreqItemsMergeOperation, AggregateDestructorType::LEGACY>(
+        auto fun_merge = AggregateFunction::UnaryAggregate<DSFreqItemsState, string_t, string_t, DSFreqItemsMergeOperation, AggregateDestructorType::LEGACY>(
             sketch_type, sketch_type);
-        fun_merge.bind = DSFreqItemsBind;
-        fun_merge.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-        fun_merge.arguments = {sketch_type};
+        fun_merge.SetBindCallback(DSFreqItemsBind);
+        fun_merge.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+        DSSetArguments(fun_merge, {sketch_type});
         sketch_agg.AddFunction(fun_merge);
         {
             FunctionDescription desc;
@@ -547,7 +559,7 @@ namespace duckdb
             desc.parameter_types = {sketch_type};
             agg_descs.push_back(std::move(desc));
         }
-        fun_merge.arguments = {LogicalType::INTEGER, sketch_type};
+        DSSetArguments(fun_merge, {LogicalType::INTEGER, sketch_type});
         sketch_agg.AddFunction(fun_merge);
         {
             FunctionDescription desc;
@@ -594,6 +606,7 @@ namespace duckdb
         auto register_freq_items_scalar_set = [&](const char *name, const char *description,
                                                    ScalarFunctionSet &&set,
                                                    const std::vector<LogicalType> &item_types) {
+            set.SetFallible();
             CreateScalarFunctionInfo info(std::move(set));
             for (const auto &item_type : item_types) {
                 FunctionDescription desc;
@@ -671,8 +684,8 @@ namespace duckdb
 
         // --- METADATA FUNCTIONS ---
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_frequent_items_epsilon",
-                                                         {sketch_type}, LogicalType::DOUBLE, DSFreqItemsEpsilon));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_frequent_items_epsilon",
+                                                         {sketch_type}, LogicalType::DOUBLE, DSFreqItemsEpsilon)));
             FunctionDescription desc;
             desc.description = "Returns the epsilon value (relative error) of the sketch";
             desc.examples.push_back("datasketch_frequent_items_epsilon(sketch)");
@@ -682,8 +695,8 @@ namespace duckdb
             loader.RegisterFunction(info);
         }
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_frequent_items_total_weight",
-                                                         {sketch_type}, LogicalType::BIGINT, DSFreqItemsTotalWeight));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_frequent_items_total_weight",
+                                                         {sketch_type}, LogicalType::BIGINT, DSFreqItemsTotalWeight)));
             FunctionDescription desc;
             desc.description = "Returns the total weight (sum of all item counts) processed by the sketch";
             desc.examples.push_back("datasketch_frequent_items_total_weight(sketch)");
@@ -693,8 +706,8 @@ namespace duckdb
             loader.RegisterFunction(info);
         }
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_frequent_items_is_empty",
-                                                         {sketch_type}, LogicalType::BOOLEAN, DSFreqItemsIsEmpty));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_frequent_items_is_empty",
+                                                         {sketch_type}, LogicalType::BOOLEAN, DSFreqItemsIsEmpty)));
             FunctionDescription desc;
             desc.description = "Returns true if the sketch is empty";
             desc.examples.push_back("datasketch_frequent_items_is_empty(sketch)");
@@ -704,8 +717,8 @@ namespace duckdb
             loader.RegisterFunction(info);
         }
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_frequent_items_num_active",
-                                                         {sketch_type}, LogicalType::BIGINT, DSFreqItemsNumActive));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_frequent_items_num_active",
+                                                         {sketch_type}, LogicalType::BIGINT, DSFreqItemsNumActive)));
             FunctionDescription desc;
             desc.description = "Returns the number of active items currently tracked by the sketch";
             desc.examples.push_back("datasketch_frequent_items_num_active(sketch)");
@@ -723,10 +736,10 @@ namespace duckdb
             struct_fields.push_back({"lower_bound", LogicalType::BIGINT});
             struct_fields.push_back({"upper_bound", LogicalType::BIGINT});
 
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_frequent_items_get_frequent",
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_frequent_items_get_frequent",
                                                          {sketch_type, LogicalType::VARCHAR},
                                                          LogicalType::LIST(LogicalType::STRUCT(struct_fields)),
-                                                         DSFreqItemsGetFrequent));
+                                                         DSFreqItemsGetFrequent)));
             FunctionDescription desc;
             desc.description = "Returns a list of frequent items with their estimates and bounds. Use 'NO_FALSE_POSITIVES' or 'NO_FALSE_NEGATIVES' for error type";
             desc.examples.push_back("datasketch_frequent_items_get_frequent(sketch, 'NO_FALSE_POSITIVES')");

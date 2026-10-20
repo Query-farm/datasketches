@@ -4,6 +4,10 @@
 #include "duckdb/parser/parsed_data/create_scalar_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_aggregate_function_info.hpp"
 #include "duckdb/function/scalar_function.hpp"
+#include "duckdb/common/vector/flat_vector.hpp"
+#include "duckdb/common/vector/list_vector.hpp"
+#include "duckdb/common/vector/string_vector.hpp"
+#include "duckdb/common/vector/unified_vector_format.hpp"
 
 #include <DataSketches/quantiles_sketch.hpp>
 #include <DataSketches/kll_sketch.hpp>
@@ -47,8 +51,9 @@ struct DSQuantilesBindData : public FunctionData {
 };
 
 
-unique_ptr<FunctionData> DSQuantilesBind(ClientContext &context, AggregateFunction &function,
-                                            vector<unique_ptr<Expression>> &arguments) {
+unique_ptr<FunctionData> DSQuantilesBind(BindAggregateFunctionInput &input) {
+	auto &context = input.GetClientContext();
+	auto &arguments = input.GetArguments();
 	if (arguments[0]->HasParameter()) {
 		throw ParameterNotResolvedException();
 	}
@@ -69,7 +74,7 @@ unique_ptr<FunctionData> DSQuantilesBind(ClientContext &context, AggregateFuncti
 	}
 	
 
-	Function::EraseArgument(function, arguments, 0);
+	DSEraseAggregateArgument(input, 0);
 	return make_uniq<DSQuantilesBindData>(actual_k);
 }
 
@@ -133,7 +138,7 @@ unique_ptr<FunctionData> DSQuantilesBind(ClientContext &context, AggregateFuncti
         auto new_type_name = "sketch_quantiles_" + type_suffix;
 
 
-        new_type.SetAlias(new_type_name);
+        new_type = new_type.WithAlias(new_type_name);
         auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
@@ -167,8 +172,9 @@ struct DSKLLBindData : public FunctionData {
 };
 
 
-unique_ptr<FunctionData> DSKLLBind(ClientContext &context, AggregateFunction &function,
-                                            vector<unique_ptr<Expression>> &arguments) {
+unique_ptr<FunctionData> DSKLLBind(BindAggregateFunctionInput &input) {
+	auto &context = input.GetClientContext();
+	auto &arguments = input.GetArguments();
 	if (arguments[0]->HasParameter()) {
 		throw ParameterNotResolvedException();
 	}
@@ -189,7 +195,7 @@ unique_ptr<FunctionData> DSKLLBind(ClientContext &context, AggregateFunction &fu
 	}
 	
 
-	Function::EraseArgument(function, arguments, 0);
+	DSEraseAggregateArgument(input, 0);
 	return make_uniq<DSKLLBindData>(actual_k);
 }
 
@@ -253,7 +259,7 @@ unique_ptr<FunctionData> DSKLLBind(ClientContext &context, AggregateFunction &fu
         auto new_type_name = "sketch_kll_" + type_suffix;
 
 
-        new_type.SetAlias(new_type_name);
+        new_type = new_type.WithAlias(new_type_name);
         auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
@@ -287,8 +293,9 @@ struct DSREQBindData : public FunctionData {
 };
 
 
-unique_ptr<FunctionData> DSREQBind(ClientContext &context, AggregateFunction &function,
-                                            vector<unique_ptr<Expression>> &arguments) {
+unique_ptr<FunctionData> DSREQBind(BindAggregateFunctionInput &input) {
+	auto &context = input.GetClientContext();
+	auto &arguments = input.GetArguments();
 	if (arguments[0]->HasParameter()) {
 		throw ParameterNotResolvedException();
 	}
@@ -309,7 +316,7 @@ unique_ptr<FunctionData> DSREQBind(ClientContext &context, AggregateFunction &fu
 	}
 	
 
-	Function::EraseArgument(function, arguments, 0);
+	DSEraseAggregateArgument(input, 0);
 	return make_uniq<DSREQBindData>(actual_k);
 }
 
@@ -373,7 +380,7 @@ unique_ptr<FunctionData> DSREQBind(ClientContext &context, AggregateFunction &fu
         auto new_type_name = "sketch_req_" + type_suffix;
 
 
-        new_type.SetAlias(new_type_name);
+        new_type = new_type.WithAlias(new_type_name);
         auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
@@ -407,8 +414,9 @@ struct DSTDigestBindData : public FunctionData {
 };
 
 
-unique_ptr<FunctionData> DSTDigestBind(ClientContext &context, AggregateFunction &function,
-                                            vector<unique_ptr<Expression>> &arguments) {
+unique_ptr<FunctionData> DSTDigestBind(BindAggregateFunctionInput &input) {
+	auto &context = input.GetClientContext();
+	auto &arguments = input.GetArguments();
 	if (arguments[0]->HasParameter()) {
 		throw ParameterNotResolvedException();
 	}
@@ -429,7 +437,7 @@ unique_ptr<FunctionData> DSTDigestBind(ClientContext &context, AggregateFunction
 	}
 	
 
-	Function::EraseArgument(function, arguments, 0);
+	DSEraseAggregateArgument(input, 0);
 	return make_uniq<DSTDigestBindData>(actual_k);
 }
 
@@ -491,7 +499,7 @@ unique_ptr<FunctionData> DSTDigestBind(ClientContext &context, AggregateFunction
         auto new_type_name = "sketch_tdigest_" + type_suffix;
 
 
-        new_type.SetAlias(new_type_name);
+        new_type = new_type.WithAlias(new_type_name);
         auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
@@ -525,8 +533,9 @@ struct DSHLLBindData : public FunctionData {
 };
 
 
-unique_ptr<FunctionData> DSHLLBind(ClientContext &context, AggregateFunction &function,
-                                            vector<unique_ptr<Expression>> &arguments) {
+unique_ptr<FunctionData> DSHLLBind(BindAggregateFunctionInput &input) {
+	auto &context = input.GetClientContext();
+	auto &arguments = input.GetArguments();
 	if (arguments[0]->HasParameter()) {
 		throw ParameterNotResolvedException();
 	}
@@ -547,7 +556,7 @@ unique_ptr<FunctionData> DSHLLBind(ClientContext &context, AggregateFunction &fu
 	}
 	
 
-	Function::EraseArgument(function, arguments, 0);
+	DSEraseAggregateArgument(input, 0);
 	return make_uniq<DSHLLBindData>(actual_k);
 }
 
@@ -608,7 +617,7 @@ unique_ptr<FunctionData> DSHLLBind(ClientContext &context, AggregateFunction &fu
         type_info.temporary = false;
         type_info.internal = true;
         type_info.comment = "Sketch type for HLL sketch";
-        new_type.SetAlias(new_type_name);
+        new_type = new_type.WithAlias(new_type_name);
         auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
         auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
@@ -638,8 +647,9 @@ struct DSCPCBindData : public FunctionData {
 };
 
 
-unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &function,
-                                            vector<unique_ptr<Expression>> &arguments) {
+unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
+	auto &context = input.GetClientContext();
+	auto &arguments = input.GetArguments();
 	if (arguments[0]->HasParameter()) {
 		throw ParameterNotResolvedException();
 	}
@@ -660,7 +670,7 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
 	}
 	
 
-	Function::EraseArgument(function, arguments, 0);
+	DSEraseAggregateArgument(input, 0);
 	return make_uniq<DSCPCBindData>(actual_k);
 }
 
@@ -721,7 +731,7 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
         type_info.temporary = false;
         type_info.internal = true;
         type_info.comment = "Sketch type for CPC sketch";
-        new_type.SetAlias(new_type_name);
+        new_type = new_type.WithAlias(new_type_name);
         auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
         auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
@@ -1171,7 +1181,7 @@ static inline void DSQuantilesis_empty(DataChunk &args, ExpressionState &state, 
         UnaryExecutor::Execute
         <string_t,bool>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -1205,7 +1215,7 @@ static inline void DSQuantilesk(DataChunk &args, ExpressionState &state, Vector 
         UnaryExecutor::Execute
         <string_t,uint16_t>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -1238,23 +1248,17 @@ static inline void DSQuantilescdf(DataChunk &args, ExpressionState &state, Vecto
 
     
         
-                    UnifiedVectorFormat unified_split_points;
-                    split_points_vector.ToUnifiedFormat(args.size(), unified_split_points);
-
-                    // auto split_points_list_entries = UnifiedVectorFormat::GetData<list_entry_t>(unified_split_points);
-                    //         auto split_points_validitiy = FlatVector::Validity(split_points_vector);
-
-                    auto &split_points_list_children = ListVector::GetEntry(split_points_vector);
+                    auto &split_points_list_children = ListVector::GetChild(split_points_vector);
 
                     UnifiedVectorFormat split_points_children_unified;
-                    split_points_list_children.ToUnifiedFormat(args.size(), split_points_children_unified);
+                    split_points_list_children.ToUnifiedFormat(split_points_children_unified);
 
                     const T *split_points_list_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
                     
         TernaryExecutor::Execute
         <string_t,list_entry_t,bool,list_entry_t>
         (
-        sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
+        sketch_vector,split_points_vector,inclusive_vector,result,
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
 
             
@@ -1269,7 +1273,7 @@ static inline void DSQuantilescdf(DataChunk &args, ExpressionState &state, Vecto
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -1280,15 +1284,15 @@ auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length
                     ListVector::Reserve(result, new_size);
                 }
 
-                auto &child_entry = ListVector::GetEntry(result);
-                auto child_vals = FlatVector::GetData<T>(child_entry);
+                auto &child_entry = ListVector::GetChildMutable(result);
+                auto child_vals = FlatVector::GetDataMutable<T>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < cdf_result.size(); i++)
                 {
                     child_vals[current_size + i] = cdf_result[i];
                 }
                 ListVector::SetListSize(result, new_size);
-                return list_entry_t{current_size, cdf_result.size()};
+                return list_entry_t(current_size, cdf_result.size());
                 
         });
 
@@ -1311,23 +1315,17 @@ static inline void DSQuantilespmf(DataChunk &args, ExpressionState &state, Vecto
 
     
         
-                    UnifiedVectorFormat unified_split_points;
-                    split_points_vector.ToUnifiedFormat(args.size(), unified_split_points);
-
-                    // auto split_points_list_entries = UnifiedVectorFormat::GetData<list_entry_t>(unified_split_points);
-                    //         auto split_points_validitiy = FlatVector::Validity(split_points_vector);
-
-                    auto &split_points_list_children = ListVector::GetEntry(split_points_vector);
+                    auto &split_points_list_children = ListVector::GetChild(split_points_vector);
 
                     UnifiedVectorFormat split_points_children_unified;
-                    split_points_list_children.ToUnifiedFormat(args.size(), split_points_children_unified);
+                    split_points_list_children.ToUnifiedFormat(split_points_children_unified);
 
                     const T *split_points_list_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
                     
         TernaryExecutor::Execute
         <string_t,list_entry_t,bool,list_entry_t>
         (
-        sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
+        sketch_vector,split_points_vector,inclusive_vector,result,
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
 
             
@@ -1342,7 +1340,7 @@ static inline void DSQuantilespmf(DataChunk &args, ExpressionState &state, Vecto
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -1353,15 +1351,15 @@ auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length
                     ListVector::Reserve(result, new_size);
                 }
 
-                auto &child_entry = ListVector::GetEntry(result);
-                auto child_vals = FlatVector::GetData<double>(child_entry);
+                auto &child_entry = ListVector::GetChildMutable(result);
+                auto child_vals = FlatVector::GetDataMutable<double>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < pmf_result.size(); i++)
                 {
                     child_vals[current_size + i] = pmf_result[i];
                 }
                 ListVector::SetListSize(result, new_size);
-                return list_entry_t{current_size, pmf_result.size()};
+                return list_entry_t(current_size, pmf_result.size());
                 
         });
 
@@ -1386,7 +1384,7 @@ static inline void DSQuantilesnormalized_rank_error(DataChunk &args, ExpressionS
         BinaryExecutor::Execute
         <string_t,bool,double>
         (
-        sketch_vector,is_pmf_vector,result,args.size(),
+        sketch_vector,is_pmf_vector,result,
         [&](string_t sketch_data,bool is_pmf_data) {
 
             
@@ -1422,7 +1420,7 @@ static inline void DSQuantilesdescribe(DataChunk &args, ExpressionState &state, 
         TernaryExecutor::Execute
         <string_t,bool,bool,string_t>
         (
-        sketch_vector,include_levels_vector,include_items_vector,result,args.size(),
+        sketch_vector,include_levels_vector,include_items_vector,result,
         [&](string_t sketch_data,bool include_levels_data,bool include_items_data) {
 
             
@@ -1458,7 +1456,7 @@ static inline void DSQuantilesrank(DataChunk &args, ExpressionState &state, Vect
         TernaryExecutor::Execute
         <string_t,T,bool,double>
         (
-        sketch_vector,item_vector,inclusive_vector,result,args.size(),
+        sketch_vector,item_vector,inclusive_vector,result,
         [&](string_t sketch_data,T item_data,bool inclusive_data) {
 
             
@@ -1494,7 +1492,7 @@ static inline void DSQuantilesquantile(DataChunk &args, ExpressionState &state, 
         TernaryExecutor::Execute
         <string_t,double,bool,T>
         (
-        sketch_vector,rank_vector,inclusive_vector,result,args.size(),
+        sketch_vector,rank_vector,inclusive_vector,result,
         [&](string_t sketch_data,double rank_data,bool inclusive_data) {
 
             
@@ -1528,7 +1526,7 @@ static inline void DSQuantilesn(DataChunk &args, ExpressionState &state, Vector 
         UnaryExecutor::Execute
         <string_t,uint64_t>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -1562,7 +1560,7 @@ static inline void DSQuantilesis_estimation_mode(DataChunk &args, ExpressionStat
         UnaryExecutor::Execute
         <string_t,bool>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -1596,7 +1594,7 @@ static inline void DSQuantilesnum_retained(DataChunk &args, ExpressionState &sta
         UnaryExecutor::Execute
         <string_t,uint64_t>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -1630,7 +1628,7 @@ static inline void DSQuantilesmin_item(DataChunk &args, ExpressionState &state, 
         UnaryExecutor::Execute
         <string_t,T>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -1664,7 +1662,7 @@ static inline void DSQuantilesmax_item(DataChunk &args, ExpressionState &state, 
         UnaryExecutor::Execute
         <string_t,T>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -1689,7 +1687,7 @@ return sketch.get_max_item();
     
     {
         
-        return AggregateFunction::UnaryAggregateDestructor<DSQuantilesState<T>, string_t, string_t, DSQuantilesMergeOperation<DSQuantilesBindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DSQuantilesState<T>, string_t, string_t, DSQuantilesMergeOperation<DSQuantilesBindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
         
     }
@@ -1700,7 +1698,7 @@ return sketch.get_max_item();
     auto static DSQuantilesCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        return AggregateFunction::UnaryAggregateDestructor<DSQuantilesState<T>, T, string_t, DSQuantilesCreateOperation<DSQuantilesBindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DSQuantilesState<T>, T, string_t, DSQuantilesCreateOperation<DSQuantilesBindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
         
     }
@@ -1842,6 +1840,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -1968,6 +1968,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -2094,6 +2096,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -2220,6 +2224,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -2346,6 +2352,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -2472,6 +2480,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -2598,6 +2608,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -2724,6 +2736,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -2850,6 +2864,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -2976,6 +2992,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -3102,6 +3120,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -3228,6 +3248,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -3354,6 +3376,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -3372,9 +3396,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSQuantilesCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3386,9 +3410,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSQuantilesMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3402,9 +3426,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSQuantilesCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3416,9 +3440,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSQuantilesMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3432,9 +3456,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSQuantilesCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3446,9 +3470,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSQuantilesMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3462,9 +3486,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSQuantilesCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3476,9 +3500,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSQuantilesMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3492,9 +3516,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSQuantilesCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3506,9 +3530,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSQuantilesMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3522,9 +3546,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSQuantilesCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3536,9 +3560,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSQuantilesMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3552,9 +3576,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSQuantilesCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3566,9 +3590,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSQuantilesMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3582,9 +3606,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSQuantilesCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3596,9 +3620,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSQuantilesMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3612,9 +3636,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSQuantilesCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3626,9 +3650,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSQuantilesMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3642,9 +3666,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSQuantilesCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3656,9 +3680,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSQuantilesMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
-                fun.bind = DSQuantilesBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSQuantilesBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -3701,7 +3725,7 @@ static inline void DSKLLis_empty(DataChunk &args, ExpressionState &state, Vector
         UnaryExecutor::Execute
         <string_t,bool>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -3735,7 +3759,7 @@ static inline void DSKLLk(DataChunk &args, ExpressionState &state, Vector &resul
         UnaryExecutor::Execute
         <string_t,uint16_t>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -3768,23 +3792,17 @@ static inline void DSKLLcdf(DataChunk &args, ExpressionState &state, Vector &res
 
     
         
-                    UnifiedVectorFormat unified_split_points;
-                    split_points_vector.ToUnifiedFormat(args.size(), unified_split_points);
-
-                    // auto split_points_list_entries = UnifiedVectorFormat::GetData<list_entry_t>(unified_split_points);
-                    //         auto split_points_validitiy = FlatVector::Validity(split_points_vector);
-
-                    auto &split_points_list_children = ListVector::GetEntry(split_points_vector);
+                    auto &split_points_list_children = ListVector::GetChild(split_points_vector);
 
                     UnifiedVectorFormat split_points_children_unified;
-                    split_points_list_children.ToUnifiedFormat(args.size(), split_points_children_unified);
+                    split_points_list_children.ToUnifiedFormat(split_points_children_unified);
 
                     const T *split_points_list_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
                     
         TernaryExecutor::Execute
         <string_t,list_entry_t,bool,list_entry_t>
         (
-        sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
+        sketch_vector,split_points_vector,inclusive_vector,result,
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
 
             
@@ -3799,7 +3817,7 @@ static inline void DSKLLcdf(DataChunk &args, ExpressionState &state, Vector &res
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -3810,15 +3828,15 @@ auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length
                     ListVector::Reserve(result, new_size);
                 }
 
-                auto &child_entry = ListVector::GetEntry(result);
-                auto child_vals = FlatVector::GetData<T>(child_entry);
+                auto &child_entry = ListVector::GetChildMutable(result);
+                auto child_vals = FlatVector::GetDataMutable<T>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < cdf_result.size(); i++)
                 {
                     child_vals[current_size + i] = cdf_result[i];
                 }
                 ListVector::SetListSize(result, new_size);
-                return list_entry_t{current_size, cdf_result.size()};
+                return list_entry_t(current_size, cdf_result.size());
                 
         });
 
@@ -3841,23 +3859,17 @@ static inline void DSKLLpmf(DataChunk &args, ExpressionState &state, Vector &res
 
     
         
-                    UnifiedVectorFormat unified_split_points;
-                    split_points_vector.ToUnifiedFormat(args.size(), unified_split_points);
-
-                    // auto split_points_list_entries = UnifiedVectorFormat::GetData<list_entry_t>(unified_split_points);
-                    //         auto split_points_validitiy = FlatVector::Validity(split_points_vector);
-
-                    auto &split_points_list_children = ListVector::GetEntry(split_points_vector);
+                    auto &split_points_list_children = ListVector::GetChild(split_points_vector);
 
                     UnifiedVectorFormat split_points_children_unified;
-                    split_points_list_children.ToUnifiedFormat(args.size(), split_points_children_unified);
+                    split_points_list_children.ToUnifiedFormat(split_points_children_unified);
 
                     const T *split_points_list_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
                     
         TernaryExecutor::Execute
         <string_t,list_entry_t,bool,list_entry_t>
         (
-        sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
+        sketch_vector,split_points_vector,inclusive_vector,result,
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
 
             
@@ -3872,7 +3884,7 @@ static inline void DSKLLpmf(DataChunk &args, ExpressionState &state, Vector &res
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -3883,15 +3895,15 @@ auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length
                     ListVector::Reserve(result, new_size);
                 }
 
-                auto &child_entry = ListVector::GetEntry(result);
-                auto child_vals = FlatVector::GetData<double>(child_entry);
+                auto &child_entry = ListVector::GetChildMutable(result);
+                auto child_vals = FlatVector::GetDataMutable<double>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < pmf_result.size(); i++)
                 {
                     child_vals[current_size + i] = pmf_result[i];
                 }
                 ListVector::SetListSize(result, new_size);
-                return list_entry_t{current_size, pmf_result.size()};
+                return list_entry_t(current_size, pmf_result.size());
                 
         });
 
@@ -3916,7 +3928,7 @@ static inline void DSKLLnormalized_rank_error(DataChunk &args, ExpressionState &
         BinaryExecutor::Execute
         <string_t,bool,double>
         (
-        sketch_vector,is_pmf_vector,result,args.size(),
+        sketch_vector,is_pmf_vector,result,
         [&](string_t sketch_data,bool is_pmf_data) {
 
             
@@ -3952,7 +3964,7 @@ static inline void DSKLLdescribe(DataChunk &args, ExpressionState &state, Vector
         TernaryExecutor::Execute
         <string_t,bool,bool,string_t>
         (
-        sketch_vector,include_levels_vector,include_items_vector,result,args.size(),
+        sketch_vector,include_levels_vector,include_items_vector,result,
         [&](string_t sketch_data,bool include_levels_data,bool include_items_data) {
 
             
@@ -3988,7 +4000,7 @@ static inline void DSKLLrank(DataChunk &args, ExpressionState &state, Vector &re
         TernaryExecutor::Execute
         <string_t,T,bool,double>
         (
-        sketch_vector,item_vector,inclusive_vector,result,args.size(),
+        sketch_vector,item_vector,inclusive_vector,result,
         [&](string_t sketch_data,T item_data,bool inclusive_data) {
 
             
@@ -4024,7 +4036,7 @@ static inline void DSKLLquantile(DataChunk &args, ExpressionState &state, Vector
         TernaryExecutor::Execute
         <string_t,double,bool,T>
         (
-        sketch_vector,rank_vector,inclusive_vector,result,args.size(),
+        sketch_vector,rank_vector,inclusive_vector,result,
         [&](string_t sketch_data,double rank_data,bool inclusive_data) {
 
             
@@ -4058,7 +4070,7 @@ static inline void DSKLLn(DataChunk &args, ExpressionState &state, Vector &resul
         UnaryExecutor::Execute
         <string_t,uint64_t>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -4092,7 +4104,7 @@ static inline void DSKLLis_estimation_mode(DataChunk &args, ExpressionState &sta
         UnaryExecutor::Execute
         <string_t,bool>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -4126,7 +4138,7 @@ static inline void DSKLLnum_retained(DataChunk &args, ExpressionState &state, Ve
         UnaryExecutor::Execute
         <string_t,uint64_t>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -4160,7 +4172,7 @@ static inline void DSKLLmin_item(DataChunk &args, ExpressionState &state, Vector
         UnaryExecutor::Execute
         <string_t,T>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -4194,7 +4206,7 @@ static inline void DSKLLmax_item(DataChunk &args, ExpressionState &state, Vector
         UnaryExecutor::Execute
         <string_t,T>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -4219,7 +4231,7 @@ return sketch.get_max_item();
     
     {
         
-        return AggregateFunction::UnaryAggregateDestructor<DSKLLState<T>, string_t, string_t, DSQuantilesMergeOperation<DSKLLBindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DSKLLState<T>, string_t, string_t, DSQuantilesMergeOperation<DSKLLBindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
         
     }
@@ -4230,7 +4242,7 @@ return sketch.get_max_item();
     auto static DSKLLCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        return AggregateFunction::UnaryAggregateDestructor<DSKLLState<T>, T, string_t, DSQuantilesCreateOperation<DSKLLBindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DSKLLState<T>, T, string_t, DSQuantilesCreateOperation<DSKLLBindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
         
     }
@@ -4372,6 +4384,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -4498,6 +4512,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -4624,6 +4640,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -4750,6 +4768,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -4876,6 +4896,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -5002,6 +5024,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -5128,6 +5152,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -5254,6 +5280,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -5380,6 +5408,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -5506,6 +5536,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -5632,6 +5664,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -5758,6 +5792,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -5884,6 +5920,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -5902,9 +5940,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSKLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -5916,9 +5954,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSKLLMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -5932,9 +5970,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSKLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -5946,9 +5984,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSKLLMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -5962,9 +6000,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSKLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -5976,9 +6014,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSKLLMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -5992,9 +6030,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSKLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6006,9 +6044,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSKLLMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6022,9 +6060,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSKLLCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6036,9 +6074,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSKLLMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6052,9 +6090,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSKLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6066,9 +6104,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSKLLMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6082,9 +6120,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSKLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6096,9 +6134,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSKLLMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6112,9 +6150,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSKLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6126,9 +6164,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSKLLMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6142,9 +6180,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSKLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6156,9 +6194,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSKLLMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6172,9 +6210,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSKLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6186,9 +6224,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSKLLMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
-                fun.bind = DSKLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSKLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -6231,7 +6269,7 @@ static inline void DSREQis_empty(DataChunk &args, ExpressionState &state, Vector
         UnaryExecutor::Execute
         <string_t,bool>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -6265,7 +6303,7 @@ static inline void DSREQk(DataChunk &args, ExpressionState &state, Vector &resul
         UnaryExecutor::Execute
         <string_t,uint16_t>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -6298,23 +6336,17 @@ static inline void DSREQcdf(DataChunk &args, ExpressionState &state, Vector &res
 
     
         
-                    UnifiedVectorFormat unified_split_points;
-                    split_points_vector.ToUnifiedFormat(args.size(), unified_split_points);
-
-                    // auto split_points_list_entries = UnifiedVectorFormat::GetData<list_entry_t>(unified_split_points);
-                    //         auto split_points_validitiy = FlatVector::Validity(split_points_vector);
-
-                    auto &split_points_list_children = ListVector::GetEntry(split_points_vector);
+                    auto &split_points_list_children = ListVector::GetChild(split_points_vector);
 
                     UnifiedVectorFormat split_points_children_unified;
-                    split_points_list_children.ToUnifiedFormat(args.size(), split_points_children_unified);
+                    split_points_list_children.ToUnifiedFormat(split_points_children_unified);
 
                     const T *split_points_list_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
                     
         TernaryExecutor::Execute
         <string_t,list_entry_t,bool,list_entry_t>
         (
-        sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
+        sketch_vector,split_points_vector,inclusive_vector,result,
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
 
             
@@ -6329,7 +6361,7 @@ static inline void DSREQcdf(DataChunk &args, ExpressionState &state, Vector &res
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -6340,15 +6372,15 @@ auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length
                     ListVector::Reserve(result, new_size);
                 }
 
-                auto &child_entry = ListVector::GetEntry(result);
-                auto child_vals = FlatVector::GetData<T>(child_entry);
+                auto &child_entry = ListVector::GetChildMutable(result);
+                auto child_vals = FlatVector::GetDataMutable<T>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < cdf_result.size(); i++)
                 {
                     child_vals[current_size + i] = cdf_result[i];
                 }
                 ListVector::SetListSize(result, new_size);
-                return list_entry_t{current_size, cdf_result.size()};
+                return list_entry_t(current_size, cdf_result.size());
                 
         });
 
@@ -6371,23 +6403,17 @@ static inline void DSREQpmf(DataChunk &args, ExpressionState &state, Vector &res
 
     
         
-                    UnifiedVectorFormat unified_split_points;
-                    split_points_vector.ToUnifiedFormat(args.size(), unified_split_points);
-
-                    // auto split_points_list_entries = UnifiedVectorFormat::GetData<list_entry_t>(unified_split_points);
-                    //         auto split_points_validitiy = FlatVector::Validity(split_points_vector);
-
-                    auto &split_points_list_children = ListVector::GetEntry(split_points_vector);
+                    auto &split_points_list_children = ListVector::GetChild(split_points_vector);
 
                     UnifiedVectorFormat split_points_children_unified;
-                    split_points_list_children.ToUnifiedFormat(args.size(), split_points_children_unified);
+                    split_points_list_children.ToUnifiedFormat(split_points_children_unified);
 
                     const T *split_points_list_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
                     
         TernaryExecutor::Execute
         <string_t,list_entry_t,bool,list_entry_t>
         (
-        sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
+        sketch_vector,split_points_vector,inclusive_vector,result,
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
 
             
@@ -6402,7 +6428,7 @@ static inline void DSREQpmf(DataChunk &args, ExpressionState &state, Vector &res
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -6413,15 +6439,15 @@ auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length
                     ListVector::Reserve(result, new_size);
                 }
 
-                auto &child_entry = ListVector::GetEntry(result);
-                auto child_vals = FlatVector::GetData<double>(child_entry);
+                auto &child_entry = ListVector::GetChildMutable(result);
+                auto child_vals = FlatVector::GetDataMutable<double>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < pmf_result.size(); i++)
                 {
                     child_vals[current_size + i] = pmf_result[i];
                 }
                 ListVector::SetListSize(result, new_size);
-                return list_entry_t{current_size, pmf_result.size()};
+                return list_entry_t(current_size, pmf_result.size());
                 
         });
 
@@ -6447,7 +6473,7 @@ static inline void DSREQdescribe(DataChunk &args, ExpressionState &state, Vector
         TernaryExecutor::Execute
         <string_t,bool,bool,string_t>
         (
-        sketch_vector,include_levels_vector,include_items_vector,result,args.size(),
+        sketch_vector,include_levels_vector,include_items_vector,result,
         [&](string_t sketch_data,bool include_levels_data,bool include_items_data) {
 
             
@@ -6483,7 +6509,7 @@ static inline void DSREQrank(DataChunk &args, ExpressionState &state, Vector &re
         TernaryExecutor::Execute
         <string_t,T,bool,double>
         (
-        sketch_vector,item_vector,inclusive_vector,result,args.size(),
+        sketch_vector,item_vector,inclusive_vector,result,
         [&](string_t sketch_data,T item_data,bool inclusive_data) {
 
             
@@ -6519,7 +6545,7 @@ static inline void DSREQquantile(DataChunk &args, ExpressionState &state, Vector
         TernaryExecutor::Execute
         <string_t,double,bool,T>
         (
-        sketch_vector,rank_vector,inclusive_vector,result,args.size(),
+        sketch_vector,rank_vector,inclusive_vector,result,
         [&](string_t sketch_data,double rank_data,bool inclusive_data) {
 
             
@@ -6553,7 +6579,7 @@ static inline void DSREQn(DataChunk &args, ExpressionState &state, Vector &resul
         UnaryExecutor::Execute
         <string_t,uint64_t>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -6587,7 +6613,7 @@ static inline void DSREQis_estimation_mode(DataChunk &args, ExpressionState &sta
         UnaryExecutor::Execute
         <string_t,bool>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -6621,7 +6647,7 @@ static inline void DSREQnum_retained(DataChunk &args, ExpressionState &state, Ve
         UnaryExecutor::Execute
         <string_t,uint64_t>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -6655,7 +6681,7 @@ static inline void DSREQmin_item(DataChunk &args, ExpressionState &state, Vector
         UnaryExecutor::Execute
         <string_t,T>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -6689,7 +6715,7 @@ static inline void DSREQmax_item(DataChunk &args, ExpressionState &state, Vector
         UnaryExecutor::Execute
         <string_t,T>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -6714,7 +6740,7 @@ return sketch.get_max_item();
     
     {
         
-        return AggregateFunction::UnaryAggregateDestructor<DSREQState<T>, string_t, string_t, DSQuantilesMergeOperation<DSREQBindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DSREQState<T>, string_t, string_t, DSQuantilesMergeOperation<DSREQBindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
         
     }
@@ -6725,7 +6751,7 @@ return sketch.get_max_item();
     auto static DSREQCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        return AggregateFunction::UnaryAggregateDestructor<DSREQState<T>, T, string_t, DSQuantilesCreateOperation<DSREQBindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DSREQState<T>, T, string_t, DSQuantilesCreateOperation<DSREQBindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
         
     }
@@ -6867,6 +6893,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -6993,6 +7021,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -7119,6 +7149,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -7245,6 +7277,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -7371,6 +7405,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -7497,6 +7533,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -7623,6 +7661,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -7749,6 +7789,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -7875,6 +7917,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -8001,6 +8045,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -8127,6 +8173,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -8253,6 +8301,8 @@ return sketch.get_max_item();
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -8271,9 +8321,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSREQCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8285,9 +8335,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSREQMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8301,9 +8351,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSREQCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8315,9 +8365,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSREQMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8331,9 +8381,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSREQCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8345,9 +8395,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSREQMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8361,9 +8411,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSREQCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8375,9 +8425,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSREQMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8391,9 +8441,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSREQCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8405,9 +8455,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSREQMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8421,9 +8471,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSREQCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8435,9 +8485,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSREQMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8451,9 +8501,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSREQCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8465,9 +8515,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSREQMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8481,9 +8531,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSREQCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8495,9 +8545,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSREQMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8511,9 +8561,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSREQCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8525,9 +8575,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSREQMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8541,9 +8591,9 @@ return sketch.get_max_item();
         
             {
                 auto fun = DSREQCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8555,9 +8605,9 @@ return sketch.get_max_item();
             }
             {
                 auto fun = DSREQMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]);
-                fun.bind = DSREQBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSREQBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -8600,7 +8650,7 @@ static inline void DSTDigestis_empty(DataChunk &args, ExpressionState &state, Ve
         UnaryExecutor::Execute
         <string_t,bool>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -8634,7 +8684,7 @@ static inline void DSTDigestk(DataChunk &args, ExpressionState &state, Vector &r
         UnaryExecutor::Execute
         <string_t,uint16_t>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -8666,23 +8716,17 @@ static inline void DSTDigestcdf(DataChunk &args, ExpressionState &state, Vector 
 
     
         
-                    UnifiedVectorFormat unified_split_points;
-                    split_points_vector.ToUnifiedFormat(args.size(), unified_split_points);
-
-                    // auto split_points_list_entries = UnifiedVectorFormat::GetData<list_entry_t>(unified_split_points);
-                    //         auto split_points_validitiy = FlatVector::Validity(split_points_vector);
-
-                    auto &split_points_list_children = ListVector::GetEntry(split_points_vector);
+                    auto &split_points_list_children = ListVector::GetChild(split_points_vector);
 
                     UnifiedVectorFormat split_points_children_unified;
-                    split_points_list_children.ToUnifiedFormat(args.size(), split_points_children_unified);
+                    split_points_list_children.ToUnifiedFormat(split_points_children_unified);
 
                     const T *split_points_list_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
                     
         BinaryExecutor::Execute
         <string_t,list_entry_t,list_entry_t>
         (
-        sketch_vector,split_points_vector,result,args.size(),
+        sketch_vector,split_points_vector,result,
         [&](string_t sketch_data,list_entry_t split_points_data) {
 
             
@@ -8697,7 +8741,7 @@ static inline void DSTDigestcdf(DataChunk &args, ExpressionState &state, Vector 
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length);
@@ -8708,15 +8752,15 @@ auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length
                     ListVector::Reserve(result, new_size);
                 }
 
-                auto &child_entry = ListVector::GetEntry(result);
-                auto child_vals = FlatVector::GetData<T>(child_entry);
+                auto &child_entry = ListVector::GetChildMutable(result);
+                auto child_vals = FlatVector::GetDataMutable<T>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < cdf_result.size(); i++)
                 {
                     child_vals[current_size + i] = cdf_result[i];
                 }
                 ListVector::SetListSize(result, new_size);
-                return list_entry_t{current_size, cdf_result.size()};
+                return list_entry_t(current_size, cdf_result.size());
                 
         });
 
@@ -8738,23 +8782,17 @@ static inline void DSTDigestpmf(DataChunk &args, ExpressionState &state, Vector 
 
     
         
-                    UnifiedVectorFormat unified_split_points;
-                    split_points_vector.ToUnifiedFormat(args.size(), unified_split_points);
-
-                    // auto split_points_list_entries = UnifiedVectorFormat::GetData<list_entry_t>(unified_split_points);
-                    //         auto split_points_validitiy = FlatVector::Validity(split_points_vector);
-
-                    auto &split_points_list_children = ListVector::GetEntry(split_points_vector);
+                    auto &split_points_list_children = ListVector::GetChild(split_points_vector);
 
                     UnifiedVectorFormat split_points_children_unified;
-                    split_points_list_children.ToUnifiedFormat(args.size(), split_points_children_unified);
+                    split_points_list_children.ToUnifiedFormat(split_points_children_unified);
 
                     const T *split_points_list_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
                     
         BinaryExecutor::Execute
         <string_t,list_entry_t,list_entry_t>
         (
-        sketch_vector,split_points_vector,result,args.size(),
+        sketch_vector,split_points_vector,result,
         [&](string_t sketch_data,list_entry_t split_points_data) {
 
             
@@ -8769,7 +8807,7 @@ static inline void DSTDigestpmf(DataChunk &args, ExpressionState &state, Vector 
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        passing_points[i] = split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)];
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length);
@@ -8780,15 +8818,15 @@ auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length
                     ListVector::Reserve(result, new_size);
                 }
 
-                auto &child_entry = ListVector::GetEntry(result);
-                auto child_vals = FlatVector::GetData<double>(child_entry);
+                auto &child_entry = ListVector::GetChildMutable(result);
+                auto child_vals = FlatVector::GetDataMutable<double>(child_entry);
                 //auto &child_validity = FlatVector::Validity(child_entry);
                 for (idx_t i = 0; i < pmf_result.size(); i++)
                 {
                     child_vals[current_size + i] = pmf_result[i];
                 }
                 ListVector::SetListSize(result, new_size);
-                return list_entry_t{current_size, pmf_result.size()};
+                return list_entry_t(current_size, pmf_result.size());
                 
         });
 
@@ -8813,7 +8851,7 @@ static inline void DSTDigestdescribe(DataChunk &args, ExpressionState &state, Ve
         BinaryExecutor::Execute
         <string_t,bool,string_t>
         (
-        sketch_vector,include_centroids_vector,result,args.size(),
+        sketch_vector,include_centroids_vector,result,
         [&](string_t sketch_data,bool include_centroids_data) {
 
             
@@ -8848,7 +8886,7 @@ static inline void DSTDigestrank(DataChunk &args, ExpressionState &state, Vector
         BinaryExecutor::Execute
         <string_t,T,double>
         (
-        sketch_vector,item_vector,result,args.size(),
+        sketch_vector,item_vector,result,
         [&](string_t sketch_data,T item_data) {
 
             
@@ -8882,7 +8920,7 @@ static inline void DSTDigesttotal_weight(DataChunk &args, ExpressionState &state
         UnaryExecutor::Execute
         <string_t,uint64_t>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -8917,7 +8955,7 @@ static inline void DSTDigestquantile(DataChunk &args, ExpressionState &state, Ve
         BinaryExecutor::Execute
         <string_t,double,T>
         (
-        sketch_vector,rank_vector,result,args.size(),
+        sketch_vector,rank_vector,result,
         [&](string_t sketch_data,double rank_data) {
 
             
@@ -8942,7 +8980,7 @@ return sketch.get_quantile(rank_data);
     
     {
         
-        return AggregateFunction::UnaryAggregateDestructor<DSTDigestState<T>, string_t, string_t, DSQuantilesMergeOperation<DSTDigestBindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DSTDigestState<T>, string_t, string_t, DSQuantilesMergeOperation<DSTDigestBindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
         
     }
@@ -8953,7 +8991,7 @@ return sketch.get_quantile(rank_data);
     auto static DSTDigestCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        return AggregateFunction::UnaryAggregateDestructor<DSTDigestState<T>, T, string_t, DSQuantilesCreateOperation<DSTDigestBindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DSTDigestState<T>, T, string_t, DSQuantilesCreateOperation<DSTDigestBindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
         
     }
@@ -8999,6 +9037,8 @@ return sketch.get_quantile(rank_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9037,6 +9077,8 @@ return sketch.get_quantile(rank_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9075,6 +9117,8 @@ return sketch.get_quantile(rank_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9113,6 +9157,8 @@ return sketch.get_quantile(rank_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9151,6 +9197,8 @@ return sketch.get_quantile(rank_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9189,6 +9237,8 @@ return sketch.get_quantile(rank_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9227,6 +9277,8 @@ return sketch.get_quantile(rank_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9265,6 +9317,8 @@ return sketch.get_quantile(rank_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9283,9 +9337,9 @@ return sketch.get_quantile(rank_data);
         
             {
                 auto fun = DSTDigestCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
-                fun.bind = DSTDigestBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSTDigestBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9297,9 +9351,9 @@ return sketch.get_quantile(rank_data);
             }
             {
                 auto fun = DSTDigestMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]);
-                fun.bind = DSTDigestBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSTDigestBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9313,9 +9367,9 @@ return sketch.get_quantile(rank_data);
         
             {
                 auto fun = DSTDigestCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
-                fun.bind = DSTDigestBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSTDigestBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9327,9 +9381,9 @@ return sketch.get_quantile(rank_data);
             }
             {
                 auto fun = DSTDigestMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]);
-                fun.bind = DSTDigestBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSTDigestBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9370,7 +9424,7 @@ static inline void DSHLLis_empty(DataChunk &args, ExpressionState &state, Vector
         UnaryExecutor::Execute
         <string_t,bool>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -9404,7 +9458,7 @@ static inline void DSHLLdescribe(DataChunk &args, ExpressionState &state, Vector
         TernaryExecutor::Execute
         <string_t,bool,bool,string_t>
         (
-        sketch_vector,summary_vector,detail_vector,result,args.size(),
+        sketch_vector,summary_vector,detail_vector,result,
         [&](string_t sketch_data,bool summary_data,bool detail_data) {
 
             
@@ -9436,7 +9490,7 @@ static inline void DSHLLlg_config_k(DataChunk &args, ExpressionState &state, Vec
         UnaryExecutor::Execute
         <string_t,uint8_t>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -9468,7 +9522,7 @@ static inline void DSHLLis_compact(DataChunk &args, ExpressionState &state, Vect
         UnaryExecutor::Execute
         <string_t,bool>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -9500,7 +9554,7 @@ static inline void DSHLLestimate(DataChunk &args, ExpressionState &state, Vector
         UnaryExecutor::Execute
         <string_t,double>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -9533,7 +9587,7 @@ static inline void DSHLLlower_bound(DataChunk &args, ExpressionState &state, Vec
         BinaryExecutor::Execute
         <string_t,uint8_t,double>
         (
-        sketch_vector,std_dev_vector,result,args.size(),
+        sketch_vector,std_dev_vector,result,
         [&](string_t sketch_data,uint8_t std_dev_data) {
 
             
@@ -9566,7 +9620,7 @@ static inline void DSHLLupper_bound(DataChunk &args, ExpressionState &state, Vec
         BinaryExecutor::Execute
         <string_t,uint8_t,double>
         (
-        sketch_vector,std_dev_vector,result,args.size(),
+        sketch_vector,std_dev_vector,result,
         [&](string_t sketch_data,uint8_t std_dev_data) {
 
             
@@ -9590,7 +9644,7 @@ return sketch.get_upper_bound(std_dev_data);
     
     {
         
-        return AggregateFunction::UnaryAggregateDestructor<DSHLLState, string_t, string_t, DSHLLMergeOperation<DSHLLBindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DSHLLState, string_t, string_t, DSHLLMergeOperation<DSHLLBindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
         
     }
@@ -9601,7 +9655,7 @@ return sketch.get_upper_bound(std_dev_data);
     auto static DSHLLCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        return AggregateFunction::UnaryAggregateDestructor<DSHLLState, T, string_t, DSHLLCreateOperation<DSHLLBindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DSHLLState, T, string_t, DSHLLCreateOperation<DSHLLBindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
         
     }
@@ -9632,6 +9686,8 @@ return sketch.get_upper_bound(std_dev_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9658,6 +9714,8 @@ return sketch.get_upper_bound(std_dev_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9684,6 +9742,8 @@ return sketch.get_upper_bound(std_dev_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9710,6 +9770,8 @@ return sketch.get_upper_bound(std_dev_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9736,6 +9798,8 @@ return sketch.get_upper_bound(std_dev_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9762,6 +9826,8 @@ return sketch.get_upper_bound(std_dev_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9788,6 +9854,8 @@ return sketch.get_upper_bound(std_dev_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -9806,9 +9874,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSHLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_type);
-                fun.bind = DSHLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9822,9 +9890,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSHLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_type);
-                fun.bind = DSHLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9838,9 +9906,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSHLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_type);
-                fun.bind = DSHLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9854,9 +9922,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSHLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_type);
-                fun.bind = DSHLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9870,9 +9938,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSHLLCreateAggregate<float>(LogicalType::FLOAT, sketch_type);
-                fun.bind = DSHLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9886,9 +9954,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSHLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_type);
-                fun.bind = DSHLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9902,9 +9970,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSHLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_type);
-                fun.bind = DSHLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9918,9 +9986,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSHLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_type);
-                fun.bind = DSHLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9934,9 +10002,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSHLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_type);
-                fun.bind = DSHLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9950,9 +10018,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSHLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_type);
-                fun.bind = DSHLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9966,9 +10034,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSHLLCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_type);
-                fun.bind = DSHLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -9982,9 +10050,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSHLLCreateAggregate<string_t>(LogicalType::BLOB, sketch_type);
-                fun.bind = DSHLLBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSHLLBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -10009,9 +10077,9 @@ return sketch.get_upper_bound(std_dev_data);
       {
       AggregateFunctionSet sketch("datasketch_hll_union");
       auto fun = DSHLLMergeAggregate(sketch_type);
-      fun.bind = DSHLLBind;
-      fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-      fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+      fun.SetBindCallback(DSHLLBind);
+      fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+      DSPrependArgument(fun, LogicalType::INTEGER);
       sketch.AddFunction(fun);
       CreateAggregateFunctionInfo sketch_info(sketch);
 
@@ -10046,7 +10114,7 @@ static inline void DSCPCis_empty(DataChunk &args, ExpressionState &state, Vector
         UnaryExecutor::Execute
         <string_t,bool>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -10078,7 +10146,7 @@ static inline void DSCPCdescribe(DataChunk &args, ExpressionState &state, Vector
         UnaryExecutor::Execute
         <string_t,string_t>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -10110,7 +10178,7 @@ static inline void DSCPCestimate(DataChunk &args, ExpressionState &state, Vector
         UnaryExecutor::Execute
         <string_t,double>
         (
-        sketch_vector,result,args.size(),
+        sketch_vector,result,
         [&](string_t sketch_data) {
 
             
@@ -10143,7 +10211,7 @@ static inline void DSCPClower_bound(DataChunk &args, ExpressionState &state, Vec
         BinaryExecutor::Execute
         <string_t,uint8_t,double>
         (
-        sketch_vector,std_dev_vector,result,args.size(),
+        sketch_vector,std_dev_vector,result,
         [&](string_t sketch_data,uint8_t std_dev_data) {
 
             
@@ -10176,7 +10244,7 @@ static inline void DSCPCupper_bound(DataChunk &args, ExpressionState &state, Vec
         BinaryExecutor::Execute
         <string_t,uint8_t,double>
         (
-        sketch_vector,std_dev_vector,result,args.size(),
+        sketch_vector,std_dev_vector,result,
         [&](string_t sketch_data,uint8_t std_dev_data) {
 
             
@@ -10200,7 +10268,7 @@ return sketch.get_upper_bound(std_dev_data);
     
     {
         
-        return AggregateFunction::UnaryAggregateDestructor<DSCPCState, string_t, string_t, DSCPCMergeOperation<DSCPCBindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DSCPCState, string_t, string_t, DSCPCMergeOperation<DSCPCBindData>, AggregateDestructorType::LEGACY>(
             result_type, result_type);
         
     }
@@ -10211,7 +10279,7 @@ return sketch.get_upper_bound(std_dev_data);
     auto static DSCPCCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        return AggregateFunction::UnaryAggregateDestructor<DSCPCState, T, string_t, DSCPCCreateOperation<DSCPCBindData>, AggregateDestructorType::LEGACY>(
+        return AggregateFunction::UnaryAggregate<DSCPCState, T, string_t, DSCPCCreateOperation<DSCPCBindData>, AggregateDestructorType::LEGACY>(
             type, result_type);
         
     }
@@ -10242,6 +10310,8 @@ return sketch.get_upper_bound(std_dev_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -10268,6 +10338,8 @@ return sketch.get_upper_bound(std_dev_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -10294,6 +10366,8 @@ return sketch.get_upper_bound(std_dev_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -10320,6 +10394,8 @@ return sketch.get_upper_bound(std_dev_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -10346,6 +10422,8 @@ return sketch.get_upper_bound(std_dev_data);
                 }
         
 
+        // Every scalar function deserializes a sketch, which throws on invalid input.
+        fs.SetFallible();
         CreateScalarFunctionInfo info(std::move(fs));
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
@@ -10364,9 +10442,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSCPCCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_type);
-                fun.bind = DSCPCBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSCPCBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -10380,9 +10458,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSCPCCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_type);
-                fun.bind = DSCPCBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSCPCBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -10396,9 +10474,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSCPCCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_type);
-                fun.bind = DSCPCBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSCPCBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -10412,9 +10490,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSCPCCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_type);
-                fun.bind = DSCPCBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSCPCBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -10428,9 +10506,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSCPCCreateAggregate<float>(LogicalType::FLOAT, sketch_type);
-                fun.bind = DSCPCBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSCPCBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -10444,9 +10522,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSCPCCreateAggregate<double>(LogicalType::DOUBLE, sketch_type);
-                fun.bind = DSCPCBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSCPCBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -10460,9 +10538,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSCPCCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_type);
-                fun.bind = DSCPCBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSCPCBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -10476,9 +10554,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSCPCCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_type);
-                fun.bind = DSCPCBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSCPCBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -10492,9 +10570,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSCPCCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_type);
-                fun.bind = DSCPCBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSCPCBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -10508,9 +10586,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSCPCCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_type);
-                fun.bind = DSCPCBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSCPCBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -10524,9 +10602,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSCPCCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_type);
-                fun.bind = DSCPCBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSCPCBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -10540,9 +10618,9 @@ return sketch.get_upper_bound(std_dev_data);
         
             {
                 auto fun = DSCPCCreateAggregate<string_t>(LogicalType::BLOB, sketch_type);
-                fun.bind = DSCPCBind;
-                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                fun.SetBindCallback(DSCPCBind);
+                fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+                DSPrependArgument(fun, LogicalType::INTEGER);
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
@@ -10567,9 +10645,9 @@ return sketch.get_upper_bound(std_dev_data);
       {
       AggregateFunctionSet sketch("datasketch_cpc_union");
       auto fun = DSCPCMergeAggregate(sketch_type);
-      fun.bind = DSCPCBind;
-      fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-      fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+      fun.SetBindCallback(DSCPCBind);
+      fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+      DSPrependArgument(fun, LogicalType::INTEGER);
       sketch.AddFunction(fun);
       CreateAggregateFunctionInfo sketch_info(sketch);
 

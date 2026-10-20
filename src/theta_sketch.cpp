@@ -36,9 +36,10 @@ namespace duckdb
             uint8_t lg_k;
         };
 
-        unique_ptr<FunctionData> DSThetaBindWithK(ClientContext &context, AggregateFunction &function,
-                                                  vector<unique_ptr<Expression>> &arguments)
+        unique_ptr<FunctionData> DSThetaBindWithK(BindAggregateFunctionInput &input)
         {
+            auto &context = input.GetClientContext();
+            auto &arguments = input.GetArguments();
             if (arguments[0]->HasParameter())
                 throw ParameterNotResolvedException();
             if (!arguments[0]->IsFoldable())
@@ -49,12 +50,11 @@ namespace duckdb
                 throw BinderException("Theta Sketch lg_k cannot be NULL");
 
             auto lg_k = (uint8_t)k_val.GetValue<int32_t>();
-            Function::EraseArgument(function, arguments, 0);
+            DSEraseAggregateArgument(input, 0);
             return make_uniq<DSThetaBindData>(lg_k);
         }
 
-        unique_ptr<FunctionData> DSThetaBindDefault(ClientContext &context, AggregateFunction &function,
-                                                    vector<unique_ptr<Expression>> &arguments)
+        unique_ptr<FunctionData> DSThetaBindDefault(BindAggregateFunctionInput &input)
         {
             return make_uniq<DSThetaBindData>(12);
         }
@@ -221,7 +221,7 @@ namespace duckdb
         static void DSThetaUnion(DataChunk &args, ExpressionState &state, Vector &result)
         {
             BinaryExecutor::Execute<string_t, string_t, string_t>(
-                args.data[0], args.data[1], result, args.size(),
+                args.data[0], args.data[1], result,
                 [&](string_t a_blob, string_t b_blob)
                 {
                     datasketches::theta_union::builder b;
@@ -240,7 +240,7 @@ namespace duckdb
         static void DSThetaIntersect(DataChunk &args, ExpressionState &state, Vector &result)
         {
             BinaryExecutor::Execute<string_t, string_t, string_t>(
-                args.data[0], args.data[1], result, args.size(),
+                args.data[0], args.data[1], result,
                 [&](string_t a_blob, string_t b_blob)
                 {
                     auto sketch_a = datasketches::compact_theta_sketch::deserialize(a_blob.GetDataUnsafe(), a_blob.GetSize());
@@ -257,7 +257,7 @@ namespace duckdb
         static void DSThetaANotB(DataChunk &args, ExpressionState &state, Vector &result)
         {
             BinaryExecutor::Execute<string_t, string_t, string_t>(
-                args.data[0], args.data[1], result, args.size(),
+                args.data[0], args.data[1], result,
                 [&](string_t a_blob, string_t b_blob)
                 {
                     auto sketch_a = datasketches::compact_theta_sketch::deserialize(a_blob.GetDataUnsafe(), a_blob.GetSize());
@@ -271,7 +271,7 @@ namespace duckdb
 
         static void DSThetaEstimate(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            UnaryExecutor::Execute<string_t, double>(args.data[0], result, args.size(),
+            UnaryExecutor::Execute<string_t, double>(args.data[0], result,
                                                      [&](string_t sketch_blob)
                                                      {
                                                          return datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).get_estimate();
@@ -280,7 +280,7 @@ namespace duckdb
 
         static void DSThetaLowerBound(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            BinaryExecutor::Execute<string_t, int32_t, double>(args.data[0], args.data[1], result, args.size(),
+            BinaryExecutor::Execute<string_t, int32_t, double>(args.data[0], args.data[1], result,
                                                                [&](string_t sketch_blob, int32_t num_std_devs)
                                                                {
                                                                    return datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).get_lower_bound(static_cast<uint8_t>(num_std_devs));
@@ -289,7 +289,7 @@ namespace duckdb
 
         static void DSThetaUpperBound(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            BinaryExecutor::Execute<string_t, int32_t, double>(args.data[0], args.data[1], result, args.size(),
+            BinaryExecutor::Execute<string_t, int32_t, double>(args.data[0], args.data[1], result,
                                                                [&](string_t sketch_blob, int32_t num_std_devs)
                                                                {
                                                                    return datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).get_upper_bound(static_cast<uint8_t>(num_std_devs));
@@ -298,7 +298,7 @@ namespace duckdb
 
         static void DSThetaDescribe(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            UnaryExecutor::Execute<string_t, string_t>(args.data[0], result, args.size(),
+            UnaryExecutor::Execute<string_t, string_t>(args.data[0], result,
                                                        [&](string_t sketch_blob)
                                                        {
                                                            return StringVector::AddString(result, datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).to_string(false));
@@ -309,7 +309,7 @@ namespace duckdb
 
         static void DSThetaIsEmpty(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            UnaryExecutor::Execute<string_t, bool>(args.data[0], result, args.size(),
+            UnaryExecutor::Execute<string_t, bool>(args.data[0], result,
                                                    [&](string_t sketch_blob)
                                                    {
                                                        return datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).is_empty();
@@ -318,7 +318,7 @@ namespace duckdb
 
         static void DSThetaIsEstimation(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            UnaryExecutor::Execute<string_t, bool>(args.data[0], result, args.size(),
+            UnaryExecutor::Execute<string_t, bool>(args.data[0], result,
                                                    [&](string_t sketch_blob)
                                                    {
                                                        return datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).is_estimation_mode();
@@ -327,7 +327,7 @@ namespace duckdb
 
         static void DSThetaGetTheta(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            UnaryExecutor::Execute<string_t, double>(args.data[0], result, args.size(),
+            UnaryExecutor::Execute<string_t, double>(args.data[0], result,
                                                      [&](string_t sketch_blob)
                                                      {
                                                          return datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).get_theta();
@@ -336,7 +336,7 @@ namespace duckdb
 
         static void DSThetaNumRetained(DataChunk &args, ExpressionState &state, Vector &result)
         {
-            UnaryExecutor::Execute<string_t, int64_t>(args.data[0], result, args.size(),
+            UnaryExecutor::Execute<string_t, int64_t>(args.data[0], result,
                                                       [&](string_t sketch_blob)
                                                       {
                                                           return (int64_t)datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).get_num_retained();
@@ -346,7 +346,7 @@ namespace duckdb
         static void DSThetaGetSeed(DataChunk &args, ExpressionState &state, Vector &result)
         {
             // Note: Compact sketches typically store the Seed HASH, not the full seed.
-            UnaryExecutor::Execute<string_t, int64_t>(args.data[0], result, args.size(),
+            UnaryExecutor::Execute<string_t, int64_t>(args.data[0], result,
                                                       [&](string_t sketch_blob)
                                                       {
                                                           return (int64_t)datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).get_seed_hash();
@@ -365,7 +365,7 @@ namespace duckdb
             type_info.temporary = false;
             type_info.internal = true;
             type_info.comment = "Sketch type for Theta Sketch";
-            new_type.SetAlias(new_type_name);
+            new_type = new_type.WithAlias(new_type_name);
 
             auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
             auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
@@ -379,10 +379,10 @@ namespace duckdb
         template <typename T>
         static void RegisterThetaAggregates(AggregateFunctionSet &set, std::vector<FunctionDescription> &descs, const LogicalType &input_type, const LogicalType &result_type)
         {
-            auto fun_default = AggregateFunction::UnaryAggregateDestructor<DSThetaState, T, string_t, DSThetaCreateOperation, AggregateDestructorType::LEGACY>(
+            auto fun_default = AggregateFunction::UnaryAggregate<DSThetaState, T, string_t, DSThetaCreateOperation, AggregateDestructorType::LEGACY>(
                 input_type, result_type);
-            fun_default.bind = DSThetaBindDefault;
-            fun_default.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
+            fun_default.SetBindCallback(DSThetaBindDefault);
+            fun_default.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
             set.AddFunction(fun_default);
             {
                 FunctionDescription desc;
@@ -393,11 +393,11 @@ namespace duckdb
                 descs.push_back(std::move(desc));
             }
 
-            auto fun_with_k = AggregateFunction::UnaryAggregateDestructor<DSThetaState, T, string_t, DSThetaCreateOperation, AggregateDestructorType::LEGACY>(
+            auto fun_with_k = AggregateFunction::UnaryAggregate<DSThetaState, T, string_t, DSThetaCreateOperation, AggregateDestructorType::LEGACY>(
                 input_type, result_type);
-            fun_with_k.bind = DSThetaBindWithK;
-            fun_with_k.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
-            fun_with_k.arguments.insert(fun_with_k.arguments.begin(), LogicalType::INTEGER);
+            fun_with_k.SetBindCallback(DSThetaBindWithK);
+            fun_with_k.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
+            DSPrependArgument(fun_with_k, LogicalType::INTEGER);
             set.AddFunction(fun_with_k);
             {
                 FunctionDescription desc;
@@ -432,10 +432,10 @@ namespace duckdb
         RegisterThetaAggregates<string_t>(sketch_agg, agg_descs, LogicalType::VARCHAR, sketch_type);
 
         // 2. MERGE SKETCHES (sketch_theta / BLOB)
-        auto fun_merge = AggregateFunction::UnaryAggregateDestructor<DSThetaState, string_t, string_t, DSThetaMergeOperation, AggregateDestructorType::LEGACY>(
+        auto fun_merge = AggregateFunction::UnaryAggregate<DSThetaState, string_t, string_t, DSThetaMergeOperation, AggregateDestructorType::LEGACY>(
             sketch_type, sketch_type);
-        fun_merge.bind = DSThetaBindDefault;
-        fun_merge.arguments = {sketch_type};
+        fun_merge.SetBindCallback(DSThetaBindDefault);
+        DSSetArguments(fun_merge, {sketch_type});
         sketch_agg.AddFunction(fun_merge);
         {
             FunctionDescription desc;
@@ -446,10 +446,10 @@ namespace duckdb
             agg_descs.push_back(std::move(desc));
         }
 
-        auto fun_merge_k = AggregateFunction::UnaryAggregateDestructor<DSThetaState, string_t, string_t, DSThetaMergeOperation, AggregateDestructorType::LEGACY>(
+        auto fun_merge_k = AggregateFunction::UnaryAggregate<DSThetaState, string_t, string_t, DSThetaMergeOperation, AggregateDestructorType::LEGACY>(
             sketch_type, sketch_type);
-        fun_merge_k.bind = DSThetaBindWithK;
-        fun_merge_k.arguments = {LogicalType::INTEGER, sketch_type};
+        fun_merge_k.SetBindCallback(DSThetaBindWithK);
+        DSSetArguments(fun_merge_k, {LogicalType::INTEGER, sketch_type});
         sketch_agg.AddFunction(fun_merge_k);
         {
             FunctionDescription desc;
@@ -470,7 +470,7 @@ namespace duckdb
 
         // --- SCALAR FUNCTIONS ---
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_intersect", {sketch_type, sketch_type}, sketch_type, DSThetaIntersect));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_intersect", {sketch_type, sketch_type}, sketch_type, DSThetaIntersect)));
             FunctionDescription desc;
             desc.description = "Returns a new Theta sketch representing the intersection of two sketches";
             desc.examples.push_back("datasketch_theta_intersect(sketch_a, sketch_b)");
@@ -480,7 +480,7 @@ namespace duckdb
             loader.RegisterFunction(info);
         }
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_union", {sketch_type, sketch_type}, sketch_type, DSThetaUnion));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_union", {sketch_type, sketch_type}, sketch_type, DSThetaUnion)));
             FunctionDescription desc;
             desc.description = "Returns a new Theta sketch representing the union of two sketches";
             desc.examples.push_back("datasketch_theta_union(sketch_a, sketch_b)");
@@ -490,7 +490,7 @@ namespace duckdb
             loader.RegisterFunction(info);
         }
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_a_not_b", {sketch_type, sketch_type}, sketch_type, DSThetaANotB));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_a_not_b", {sketch_type, sketch_type}, sketch_type, DSThetaANotB)));
             FunctionDescription desc;
             desc.description = "Returns a new Theta sketch representing elements in sketch A but not in sketch B (set difference)";
             desc.examples.push_back("datasketch_theta_a_not_b(sketch_a, sketch_b)");
@@ -500,7 +500,7 @@ namespace duckdb
             loader.RegisterFunction(info);
         }
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_estimate", {sketch_type}, LogicalType::DOUBLE, DSThetaEstimate));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_estimate", {sketch_type}, LogicalType::DOUBLE, DSThetaEstimate)));
             FunctionDescription desc;
             desc.description = "Returns the estimated number of distinct values in the Theta sketch";
             desc.examples.push_back("datasketch_theta_estimate(sketch)");
@@ -510,7 +510,7 @@ namespace duckdb
             loader.RegisterFunction(info);
         }
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_lower_bound", {sketch_type, LogicalType::INTEGER}, LogicalType::DOUBLE, DSThetaLowerBound));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_lower_bound", {sketch_type, LogicalType::INTEGER}, LogicalType::DOUBLE, DSThetaLowerBound)));
             FunctionDescription desc;
             desc.description = "Returns the lower bound estimate at the given number of standard deviations (1, 2, or 3)";
             desc.examples.push_back("datasketch_theta_lower_bound(sketch, 2)");
@@ -520,7 +520,7 @@ namespace duckdb
             loader.RegisterFunction(info);
         }
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_upper_bound", {sketch_type, LogicalType::INTEGER}, LogicalType::DOUBLE, DSThetaUpperBound));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_upper_bound", {sketch_type, LogicalType::INTEGER}, LogicalType::DOUBLE, DSThetaUpperBound)));
             FunctionDescription desc;
             desc.description = "Returns the upper bound estimate at the given number of standard deviations (1, 2, or 3)";
             desc.examples.push_back("datasketch_theta_upper_bound(sketch, 2)");
@@ -530,7 +530,7 @@ namespace duckdb
             loader.RegisterFunction(info);
         }
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_describe", {sketch_type}, LogicalType::VARCHAR, DSThetaDescribe));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_describe", {sketch_type}, LogicalType::VARCHAR, DSThetaDescribe)));
             FunctionDescription desc;
             desc.description = "Returns a human-readable description of the Theta sketch";
             desc.examples.push_back("datasketch_theta_describe(sketch)");
@@ -542,7 +542,7 @@ namespace duckdb
 
         // Metadata
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_is_empty", {sketch_type}, LogicalType::BOOLEAN, DSThetaIsEmpty));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_is_empty", {sketch_type}, LogicalType::BOOLEAN, DSThetaIsEmpty)));
             FunctionDescription desc;
             desc.description = "Returns true if the Theta sketch is empty";
             desc.examples.push_back("datasketch_theta_is_empty(sketch)");
@@ -552,7 +552,7 @@ namespace duckdb
             loader.RegisterFunction(info);
         }
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_is_estimation_mode", {sketch_type}, LogicalType::BOOLEAN, DSThetaIsEstimation));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_is_estimation_mode", {sketch_type}, LogicalType::BOOLEAN, DSThetaIsEstimation)));
             FunctionDescription desc;
             desc.description = "Returns true if the sketch is in estimation mode (has exceeded exact counting capacity)";
             desc.examples.push_back("datasketch_theta_is_estimation_mode(sketch)");
@@ -562,7 +562,7 @@ namespace duckdb
             loader.RegisterFunction(info);
         }
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_get_theta", {sketch_type}, LogicalType::DOUBLE, DSThetaGetTheta));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_get_theta", {sketch_type}, LogicalType::DOUBLE, DSThetaGetTheta)));
             FunctionDescription desc;
             desc.description = "Returns the theta value of the sketch (sampling probability)";
             desc.examples.push_back("datasketch_theta_get_theta(sketch)");
@@ -572,7 +572,7 @@ namespace duckdb
             loader.RegisterFunction(info);
         }
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_num_retained", {sketch_type}, LogicalType::BIGINT, DSThetaNumRetained));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_num_retained", {sketch_type}, LogicalType::BIGINT, DSThetaNumRetained)));
             FunctionDescription desc;
             desc.description = "Returns the number of hash values retained in the sketch";
             desc.examples.push_back("datasketch_theta_num_retained(sketch)");
@@ -582,7 +582,7 @@ namespace duckdb
             loader.RegisterFunction(info);
         }
         {
-            CreateScalarFunctionInfo info(ScalarFunction("datasketch_theta_get_seed", {sketch_type}, LogicalType::BIGINT, DSThetaGetSeed));
+            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_get_seed", {sketch_type}, LogicalType::BIGINT, DSThetaGetSeed)));
             FunctionDescription desc;
             desc.description = "Returns the seed hash used by the sketch";
             desc.examples.push_back("datasketch_theta_get_seed(sketch)");
