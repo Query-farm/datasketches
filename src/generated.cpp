@@ -1849,6 +1849,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         loader.RegisterFunction(info);
 
 
@@ -1974,6 +1976,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         loader.RegisterFunction(info);
 
@@ -2101,6 +2105,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         loader.RegisterFunction(info);
 
 
@@ -2226,6 +2232,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         loader.RegisterFunction(info);
 
@@ -2353,6 +2361,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         loader.RegisterFunction(info);
 
 
@@ -2478,6 +2488,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         loader.RegisterFunction(info);
 
@@ -2605,6 +2617,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         loader.RegisterFunction(info);
 
 
@@ -2730,6 +2744,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         loader.RegisterFunction(info);
 
@@ -2857,6 +2873,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         loader.RegisterFunction(info);
 
 
@@ -2982,6 +3000,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         loader.RegisterFunction(info);
 
@@ -3109,6 +3129,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         loader.RegisterFunction(info);
 
 
@@ -3235,6 +3257,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         loader.RegisterFunction(info);
 
 
@@ -3360,6 +3384,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         loader.RegisterFunction(info);
 
@@ -3675,6 +3701,8 @@ return sketch.get_max_item();
       for (auto &d : agg_descs) {
           sketch_info.descriptions.push_back(std::move(d));
       }
+
+      DSSetCategories(sketch_info, {"sketch", "quantiles"});
 
       loader.RegisterFunction(sketch_info);
       }
@@ -4381,6 +4409,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         loader.RegisterFunction(info);
 
 
@@ -4506,6 +4536,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         loader.RegisterFunction(info);
 
@@ -4633,6 +4665,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         loader.RegisterFunction(info);
 
 
@@ -4758,6 +4792,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         loader.RegisterFunction(info);
 
@@ -4885,6 +4921,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         loader.RegisterFunction(info);
 
 
@@ -5010,6 +5048,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         loader.RegisterFunction(info);
 
@@ -5137,6 +5177,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         loader.RegisterFunction(info);
 
 
@@ -5262,6 +5304,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         loader.RegisterFunction(info);
 
@@ -5389,6 +5433,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         loader.RegisterFunction(info);
 
 
@@ -5514,6 +5560,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         loader.RegisterFunction(info);
 
@@ -5641,6 +5689,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         loader.RegisterFunction(info);
 
 
@@ -5767,6 +5817,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         loader.RegisterFunction(info);
 
 
@@ -5892,6 +5944,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         loader.RegisterFunction(info);
 
@@ -6207,6 +6261,8 @@ return sketch.get_max_item();
       for (auto &d : agg_descs) {
           sketch_info.descriptions.push_back(std::move(d));
       }
+
+      DSSetCategories(sketch_info, {"sketch", "kll"});
 
       loader.RegisterFunction(sketch_info);
       }
@@ -6878,6 +6934,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         loader.RegisterFunction(info);
 
 
@@ -7003,6 +7061,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         loader.RegisterFunction(info);
 
@@ -7130,6 +7190,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         loader.RegisterFunction(info);
 
 
@@ -7255,6 +7317,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         loader.RegisterFunction(info);
 
@@ -7382,6 +7446,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         loader.RegisterFunction(info);
 
 
@@ -7507,6 +7573,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         loader.RegisterFunction(info);
 
@@ -7634,6 +7702,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         loader.RegisterFunction(info);
 
 
@@ -7759,6 +7829,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         loader.RegisterFunction(info);
 
@@ -7886,6 +7958,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         loader.RegisterFunction(info);
 
 
@@ -8011,6 +8085,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         loader.RegisterFunction(info);
 
@@ -8138,6 +8214,8 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         loader.RegisterFunction(info);
 
 
@@ -8263,6 +8341,8 @@ return sketch.get_max_item();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         loader.RegisterFunction(info);
 
@@ -8578,6 +8658,8 @@ return sketch.get_max_item();
       for (auto &d : agg_descs) {
           sketch_info.descriptions.push_back(std::move(d));
       }
+
+      DSSetCategories(sketch_info, {"sketch", "req"});
 
       loader.RegisterFunction(sketch_info);
       }
@@ -9012,6 +9094,8 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "tdigest"});
+
         loader.RegisterFunction(info);
 
 
@@ -9049,6 +9133,8 @@ return sketch.get_quantile(rank_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "tdigest"});
 
         loader.RegisterFunction(info);
 
@@ -9088,6 +9174,8 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "tdigest"});
+
         loader.RegisterFunction(info);
 
 
@@ -9125,6 +9213,8 @@ return sketch.get_quantile(rank_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "tdigest"});
 
         loader.RegisterFunction(info);
 
@@ -9164,6 +9254,8 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "tdigest"});
+
         loader.RegisterFunction(info);
 
 
@@ -9201,6 +9293,8 @@ return sketch.get_quantile(rank_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "tdigest"});
 
         loader.RegisterFunction(info);
 
@@ -9240,6 +9334,8 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "tdigest"});
+
         loader.RegisterFunction(info);
 
 
@@ -9277,6 +9373,8 @@ return sketch.get_quantile(rank_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "tdigest"});
 
         loader.RegisterFunction(info);
 
@@ -9352,6 +9450,8 @@ return sketch.get_quantile(rank_data);
       for (auto &d : agg_descs) {
           sketch_info.descriptions.push_back(std::move(d));
       }
+
+      DSSetCategories(sketch_info, {"sketch", "tdigest"});
 
       loader.RegisterFunction(sketch_info);
       }
@@ -9647,6 +9747,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "hll"});
+
         loader.RegisterFunction(info);
 
 
@@ -9672,6 +9774,8 @@ return sketch.get_upper_bound(std_dev_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "hll"});
 
         loader.RegisterFunction(info);
 
@@ -9699,6 +9803,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "hll"});
+
         loader.RegisterFunction(info);
 
 
@@ -9724,6 +9830,8 @@ return sketch.get_upper_bound(std_dev_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "hll"});
 
         loader.RegisterFunction(info);
 
@@ -9751,6 +9859,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "hll"});
+
         loader.RegisterFunction(info);
 
 
@@ -9777,6 +9887,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "hll"});
+
         loader.RegisterFunction(info);
 
 
@@ -9802,6 +9914,8 @@ return sketch.get_upper_bound(std_dev_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "hll"});
 
         loader.RegisterFunction(info);
 
@@ -10010,6 +10124,8 @@ return sketch.get_upper_bound(std_dev_data);
           sketch_info.descriptions.push_back(std::move(d));
       }
 
+      DSSetCategories(sketch_info, {"sketch", "hll"});
+
       loader.RegisterFunction(sketch_info);
       }
 
@@ -10033,6 +10149,8 @@ return sketch.get_upper_bound(std_dev_data);
         desc.parameter_types = { LogicalType::INTEGER, sketch_type };
         sketch_info.descriptions.push_back(desc);
     }
+
+      DSSetCategories(sketch_info, {"sketch", "hll"});
 
       loader.RegisterFunction(sketch_info);
       }
@@ -10259,6 +10377,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "cpc"});
+
         loader.RegisterFunction(info);
 
 
@@ -10284,6 +10404,8 @@ return sketch.get_upper_bound(std_dev_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "cpc"});
 
         loader.RegisterFunction(info);
 
@@ -10311,6 +10433,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "cpc"});
+
         loader.RegisterFunction(info);
 
 
@@ -10337,6 +10461,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "cpc"});
+
         loader.RegisterFunction(info);
 
 
@@ -10362,6 +10488,8 @@ return sketch.get_upper_bound(std_dev_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "cpc"});
 
         loader.RegisterFunction(info);
 
@@ -10570,6 +10698,8 @@ return sketch.get_upper_bound(std_dev_data);
           sketch_info.descriptions.push_back(std::move(d));
       }
 
+      DSSetCategories(sketch_info, {"sketch", "cpc"});
+
       loader.RegisterFunction(sketch_info);
       }
 
@@ -10593,6 +10723,8 @@ return sketch.get_upper_bound(std_dev_data);
         desc.parameter_types = { LogicalType::INTEGER, sketch_type };
         sketch_info.descriptions.push_back(desc);
     }
+
+      DSSetCategories(sketch_info, {"sketch", "cpc"});
 
       loader.RegisterFunction(sketch_info);
       }

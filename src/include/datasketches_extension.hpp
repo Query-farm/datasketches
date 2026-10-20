@@ -2,6 +2,7 @@
 
 #include "duckdb.hpp"
 #include "duckdb/function/aggregate_function.hpp"
+#include "duckdb/parser/parsed_data/create_function_info.hpp"
 
 namespace duckdb
 {
@@ -66,6 +67,26 @@ namespace duckdb
 	{
 		fun.update = DSBinaryScatterUpdateAt<A_INDEX, B_INDEX, STATE, A_TYPE, B_TYPE, OP>;
 		fun.simple_update = DSBinaryUpdateAt<A_INDEX, B_INDEX, STATE, A_TYPE, B_TYPE, OP>;
+	}
+
+
+	// Gives every description of a function the given categories (e.g. {"sketch", "kll"}) unless it already has
+	// some. A function registered without descriptions gets one carrying only the categories, so duckdb_functions()
+	// reports them for every overload.
+	template <class INFO>
+	inline void DSSetCategories(INFO &info, const vector<string> &categories)
+	{
+		if (info.descriptions.empty())
+		{
+			info.descriptions.emplace_back();
+		}
+		for (auto &desc : info.descriptions)
+		{
+			if (desc.categories.empty())
+			{
+				desc.categories = categories;
+			}
+		}
 	}
 
 } // namespace duckdb

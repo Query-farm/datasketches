@@ -507,6 +507,7 @@ namespace duckdb
             for (auto &d : agg_descs) {
                 info.descriptions.push_back(std::move(d));
             }
+            DSSetCategories(info, {"sketch", "theta"});
             loader.RegisterFunction(info);
         }
 
@@ -519,6 +520,7 @@ namespace duckdb
             desc.parameter_names = {"sketch_a", "sketch_b"};
             desc.parameter_types = {sketch_type, sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "theta"});
             loader.RegisterFunction(info);
         }
         {
@@ -529,6 +531,7 @@ namespace duckdb
             desc.parameter_names = {"sketch_a", "sketch_b"};
             desc.parameter_types = {sketch_type, sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "theta"});
             loader.RegisterFunction(info);
         }
         {
@@ -539,6 +542,7 @@ namespace duckdb
             desc.parameter_names = {"sketch_a", "sketch_b"};
             desc.parameter_types = {sketch_type, sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "theta"});
             loader.RegisterFunction(info);
         }
         {
@@ -549,6 +553,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "theta"});
             loader.RegisterFunction(info);
         }
         {
@@ -559,6 +564,7 @@ namespace duckdb
             desc.parameter_names = {"sketch", "num_std_devs"};
             desc.parameter_types = {sketch_type, LogicalType::INTEGER};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "theta"});
             loader.RegisterFunction(info);
         }
         {
@@ -569,6 +575,7 @@ namespace duckdb
             desc.parameter_names = {"sketch", "num_std_devs"};
             desc.parameter_types = {sketch_type, LogicalType::INTEGER};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "theta"});
             loader.RegisterFunction(info);
         }
         {
@@ -579,6 +586,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "theta"});
             loader.RegisterFunction(info);
         }
 
@@ -591,6 +599,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "theta"});
             loader.RegisterFunction(info);
         }
         {
@@ -601,6 +610,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "theta"});
             loader.RegisterFunction(info);
         }
         {
@@ -611,6 +621,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "theta"});
             loader.RegisterFunction(info);
         }
         {
@@ -621,6 +632,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "theta"});
             loader.RegisterFunction(info);
         }
         {
@@ -631,6 +643,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "theta"});
             loader.RegisterFunction(info);
         }
     }
