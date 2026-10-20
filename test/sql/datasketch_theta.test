@@ -839,8 +839,9 @@ ORDER BY ts;
 
 # Parameter names are reported from the documented names
 query T
-SELECT DISTINCT parameters FROM duckdb_functions() WHERE function_name = 'datasketch_theta_union';
+SELECT DISTINCT parameters FROM duckdb_functions() WHERE function_name = 'datasketch_theta_union' ORDER BY 1;
 ----
+[lg_k, sketch_a, sketch_b]
 [sketch_a, sketch_b]
 
 query T

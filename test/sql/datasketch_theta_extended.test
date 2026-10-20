@@ -1,0 +1,452 @@
+# name: test/sql/datasketch_theta_extended.test
+# description: Theta sketch set operations, similarity, seeds, sampling and serialization
+# group: [datasketches]
+
+require datasketches
+
+statement ok
+CREATE TABLE sets AS
+SELECT 'A' AS name, datasketch_theta(i) AS sketch FROM range(1, 9) t(i)       -- {1..8}
+UNION ALL SELECT 'B', datasketch_theta(i) FROM range(5, 13) t(i)              -- {5..12}
+UNION ALL SELECT 'C', datasketch_theta(i) FROM range(7, 21) t(i)              -- {7..20}
+UNION ALL SELECT 'D', datasketch_theta(i) FROM range(100, 104) t(i)           -- {100..103}
+UNION ALL SELECT 'E', datasketch_theta(i) FROM range(0) t(i);                 -- {}
+
+statement ok
+CREATE MACRO s(n) AS (SELECT sketch FROM sets WHERE name = n);
+
+# -------------------------------------------------------------------
+# Variadic union and intersection
+# -------------------------------------------------------------------
+
+query III
+SELECT
+    datasketch_theta_estimate(datasketch_theta_union(s('A'), s('B'))),
+    datasketch_theta_estimate(datasketch_theta_union(s('A'), s('B'), s('C'))),
+    datasketch_theta_estimate(datasketch_theta_union(s('A'), s('B'), s('C'), s('D'), s('E')));
+----
+12.0	20.0	24.0
+
+query III
+SELECT
+    datasketch_theta_estimate(datasketch_theta_intersect(s('A'), s('B'))),
+    datasketch_theta_estimate(datasketch_theta_intersect(s('A'), s('B'), s('C'))),
+    datasketch_theta_estimate(datasketch_theta_intersect(s('A'), s('B'), s('C'), s('D')));
+----
+4.0	2.0	0.0
+
+# any NULL argument gives NULL
+query II
+SELECT datasketch_theta_union(s('A'), NULL, s('B')) IS NULL, datasketch_theta_intersect(s('A'), s('B'), NULL) IS NULL;
+----
+true	true
+
+# variadic calls row by row
+query II
+SELECT n, datasketch_theta_estimate(datasketch_theta_union(a.sketch, b.sketch, c.sketch))
+FROM (SELECT * FROM sets WHERE name IN ('D', 'E')) a(n, sketch), (SELECT sketch FROM sets WHERE name = 'A') b, (SELECT sketch FROM sets WHERE name = 'B') c
+ORDER BY n;
+----
+D	16.0
+E	12.0
+
+# union with an explicit lg_k
+statement ok
+CREATE TABLE big AS SELECT i % 2 AS part, datasketch_theta(16, i) AS sketch FROM range(400000) t(i) GROUP BY i % 2;
+
+query II
+SELECT datasketch_theta_num_retained(datasketch_theta_union(14, a.sketch, b.sketch)),
+       datasketch_theta_num_retained(datasketch_theta_union(a.sketch, b.sketch))
+FROM big a, big b WHERE a.part = 0 AND b.part = 1;
+----
+16384	65536
+
+query I
+SELECT datasketch_theta_estimate(datasketch_theta_union(5, s('A'), s('B'), s('C')));
+----
+20.0
+
+statement error
+SELECT datasketch_theta_union(30, s('A'), s('B'));
+----
+lg_k must be between 4 and 26
+
+# -------------------------------------------------------------------
+# Intersection aggregate
+# -------------------------------------------------------------------
+
+query I
+SELECT datasketch_theta_estimate(datasketch_theta_intersect_agg(sketch)) FROM sets WHERE name IN ('A', 'B', 'C');
+----
+2.0
+
+query II
+SELECT g, datasketch_theta_estimate(datasketch_theta_intersect_agg(sketch))
+FROM (SELECT name IN ('A', 'B') AS g, sketch FROM sets WHERE name IN ('A', 'B', 'C', 'D'))
+GROUP BY g ORDER BY g;
+----
+false	0.0
+true	4.0
+
+# an empty sketch makes the intersection empty
+query II
+SELECT datasketch_theta_is_empty(x), datasketch_theta_estimate(x)
+FROM (SELECT datasketch_theta_intersect_agg(sketch) AS x FROM sets WHERE name IN ('A', 'E'));
+----
+true	0.0
+
+# NULL sketches are skipped; no sketches at all gives NULL
+query II
+SELECT datasketch_theta_estimate(datasketch_theta_intersect_agg(x)), datasketch_theta_intersect_agg(y) IS NULL
+FROM (VALUES (s('A'), NULL::sketch_theta), (NULL, NULL), (s('B'), NULL)) t(x, y);
+----
+4.0	true
+
+query I
+SELECT datasketch_theta_intersect_agg(sketch) IS NULL FROM sets WHERE false;
+----
+true
+
+# the intersection of many partial sketches matches the scalar function
+query I
+WITH parts AS (
+    SELECT p, datasketch_theta(i) AS sketch
+    FROM range(0, 5) t(p), range(0, 1000) r(i)
+    WHERE i % 5 != p OR i < 300
+    GROUP BY p
+)
+SELECT datasketch_theta_estimate(datasketch_theta_intersect_agg(sketch)) FROM parts;
+----
+300.0
+
+# as a window function
+query II
+SELECT name, datasketch_theta_estimate(datasketch_theta_intersect_agg(sketch) OVER (ORDER BY name ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW))
+FROM sets WHERE name IN ('A', 'B', 'C') ORDER BY name;
+----
+A	8.0
+B	4.0
+C	2.0
+
+# -------------------------------------------------------------------
+# Jaccard similarity
+# -------------------------------------------------------------------
+
+# A = {1..8}, B = {5..12}: |A ∩ B| = 4, |A ∪ B| = 12
+query I
+SELECT datasketch_theta_jaccard(s('A'), s('B'));
+----
+{'lower': 0.3333333333333333, 'estimate': 0.3333333333333333, 'upper': 0.3333333333333333}
+
+query III
+SELECT datasketch_theta_jaccard(s('A'), s('A')).estimate,
+       datasketch_theta_jaccard(s('A'), s('D')).estimate,
+       datasketch_theta_jaccard(s('E'), s('E')).estimate;
+----
+1.0	0.0	1.0
+
+query I
+SELECT datasketch_theta_jaccard(s('A'), s('E'));
+----
+{'lower': 0.0, 'estimate': 0.0, 'upper': 0.0}
+
+query I
+SELECT datasketch_theta_jaccard(s('A'), NULL) IS NULL;
+----
+true
+
+# estimation mode: the bounds bracket the estimate (true value 1/3)
+query I
+WITH x AS (
+    SELECT datasketch_theta(i) FILTER (i < 200000) AS a, datasketch_theta(i) FILTER (i >= 100000) AS b
+    FROM range(300000) t(i)
+)
+SELECT j.lower <= j.estimate AND j.estimate <= j.upper AND j.lower < 1.0 / 3 AND 1.0 / 3 < j.upper
+FROM (SELECT datasketch_theta_jaccard(a, b) AS j FROM x);
+----
+true
+
+query IIII
+SELECT datasketch_theta_exactly_equal(s('A'), s('A')),
+       datasketch_theta_exactly_equal(s('A'), (SELECT datasketch_theta(9 - i) FROM range(1, 9) t(i))),
+       datasketch_theta_exactly_equal(s('A'), s('B')),
+       datasketch_theta_exactly_equal(s('E'), s('E'));
+----
+true	true	false	true
+
+query IIII
+SELECT datasketch_theta_similarity_test(s('A'), s('A'), 0.9),
+       datasketch_theta_similarity_test(s('A'), s('B'), 0.5),
+       datasketch_theta_similarity_test(s('A'), s('B'), 0.3),
+       datasketch_theta_similarity_test(s('A'), s('D'), 0.1);
+----
+true	false	true	false
+
+query IIII
+SELECT datasketch_theta_dissimilarity_test(s('A'), s('A'), 0.5),
+       datasketch_theta_dissimilarity_test(s('A'), s('B'), 0.5),
+       datasketch_theta_dissimilarity_test(s('A'), s('B'), 0.3),
+       datasketch_theta_dissimilarity_test(s('A'), s('D'), 0.0);
+----
+false	true	false	true
+
+# -------------------------------------------------------------------
+# Seeds
+# -------------------------------------------------------------------
+
+# compact sketches store a hash of the seed (an empty sketch stores 0); get_seed is an alias of seed_hash
+query III
+SELECT datasketch_theta_seed_hash(s('A')), datasketch_theta_get_seed(s('A')), datasketch_theta_seed_hash(s('E'));
+----
+37836	37836	0
+
+statement ok
+CREATE TABLE seeded AS
+SELECT 'A' AS name, datasketch_theta(i, seed := 42) AS sketch FROM range(1, 9) t(i)
+UNION ALL SELECT 'B', datasketch_theta(i, seed := 42) FROM range(5, 13) t(i)
+UNION ALL SELECT 'E', datasketch_theta(i, seed := 42) FROM range(0) t(i)
+UNION ALL SELECT 'X', datasketch_theta(14, i, seed := -7) FROM range(1, 9) t(i);
+
+statement ok
+CREATE MACRO z(n) AS (SELECT sketch FROM seeded WHERE name = n);
+
+query IIII
+SELECT datasketch_theta_seed_hash(z('A')), datasketch_theta_is_empty(z('E')),
+       datasketch_theta_seed_hash(z('A')) != 37836, datasketch_theta_seed_hash(z('X')) NOT IN (37836, datasketch_theta_seed_hash(z('A')));
+----
+32248	true	true	true
+
+# sketches with a custom seed can be read and combined without repeating the seed
+query IIIIII
+SELECT datasketch_theta_estimate(z('A')),
+       datasketch_theta_estimate(datasketch_theta_union(z('A'), z('B'))),
+       datasketch_theta_estimate(datasketch_theta_intersect(z('A'), z('B'))),
+       datasketch_theta_estimate(datasketch_theta_a_not_b(z('A'), z('B'))),
+       datasketch_theta_jaccard(z('A'), z('B')).estimate,
+       datasketch_theta_seed_hash(datasketch_theta_union(z('A'), z('B'))) = datasketch_theta_seed_hash(z('A'));
+----
+8.0	12.0	4.0	4.0	0.3333333333333333	true
+
+query III
+SELECT datasketch_theta_estimate(datasketch_theta(sketch)),
+       datasketch_theta_estimate(datasketch_theta_intersect_agg(sketch)),
+       datasketch_theta_seed_hash(datasketch_theta(sketch)) = datasketch_theta_seed_hash(z('A'))
+FROM seeded WHERE name IN ('A', 'B');
+----
+12.0	4.0	true
+
+# merging per-group sketches with a custom seed (parallel combine)
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(sketch))
+FROM (SELECT datasketch_theta(i, seed := 42) AS sketch FROM range(3000) t(i) GROUP BY i % 7);
+----
+3000.0
+
+# an empty sketch has no hashes, so its seed does not matter
+query II
+SELECT datasketch_theta_estimate(datasketch_theta_union(z('A'), s('E'))),
+       datasketch_theta_estimate(datasketch_theta_a_not_b(z('A'), s('E')));
+----
+8.0	8.0
+
+# the same values with different seeds give different sketches
+query I
+SELECT datasketch_theta_exactly_equal(z('A'), z('A')) AND datasketch_theta_estimate(z('X')) = 8;
+----
+true
+
+statement error
+SELECT datasketch_theta_union(z('A'), s('B'));
+----
+cannot combine Theta sketches built with different seeds
+
+statement error
+SELECT datasketch_theta_union(s('A'), s('B'), z('X'));
+----
+cannot combine Theta sketches built with different seeds
+
+statement error
+SELECT datasketch_theta_intersect(z('A'), s('B'));
+----
+cannot combine Theta sketches built with different seeds
+
+statement error
+SELECT datasketch_theta_a_not_b(z('A'), s('B'));
+----
+cannot combine Theta sketches built with different seeds
+
+statement error
+SELECT datasketch_theta_jaccard(z('A'), s('B'));
+----
+cannot combine Theta sketches built with different seeds
+
+statement error
+SELECT datasketch_theta_exactly_equal(z('A'), z('X'));
+----
+cannot combine Theta sketches built with different seeds
+
+statement error
+SELECT datasketch_theta(sketch) FROM (SELECT sketch FROM seeded WHERE name = 'A' UNION ALL SELECT sketch FROM sets WHERE name = 'B');
+----
+cannot merge Theta sketches built with different seeds
+
+statement error
+SELECT datasketch_theta_intersect_agg(sketch) FROM (SELECT sketch FROM seeded WHERE name = 'A' UNION ALL SELECT sketch FROM sets WHERE name = 'B');
+----
+cannot combine Theta sketches built with different seeds
+
+statement error
+SELECT datasketch_theta(i, seed := i) FROM range(3) t(i);
+----
+must be a constant expression
+
+# a custom seed in a window aggregate
+query II
+SELECT i, datasketch_theta_estimate(datasketch_theta(i % 3, seed := 42) OVER (ORDER BY i ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW))
+FROM range(5) t(i) ORDER BY i;
+----
+0	1.0
+1	2.0
+2	3.0
+3	3.0
+4	3.0
+
+# -------------------------------------------------------------------
+# Sampling probability p
+# -------------------------------------------------------------------
+
+query III
+SELECT datasketch_theta_get_theta(x), datasketch_theta_is_estimation_mode(x), datasketch_theta_num_retained(x) < 1000
+FROM (SELECT datasketch_theta(i, p := 0.5) AS x FROM range(1000) t(i));
+----
+0.5	true	true
+
+query I
+SELECT datasketch_theta_exactly_equal(datasketch_theta(i, p := 1.0), datasketch_theta(i)) FROM range(1000) t(i);
+----
+true
+
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(12, i, seed := 42, p := 0.25)) BETWEEN 800 AND 1200 FROM range(1000) t(i);
+----
+true
+
+statement error
+SELECT datasketch_theta(i, p := 0) FROM range(3) t(i);
+----
+sampling probability p must be in (0, 1]
+
+statement error
+SELECT datasketch_theta(i, p := 1.5) FROM range(3) t(i);
+----
+sampling probability p must be in (0, 1]
+
+statement error
+SELECT datasketch_theta(40, i) FROM range(3) t(i);
+----
+lg_k must be between 4 and 26
+
+# -------------------------------------------------------------------
+# Serialization
+# -------------------------------------------------------------------
+
+# stored sketches use the compressed format (serial version 4) when it applies
+query II
+SELECT substr(hex(s('A')::BLOB), 3, 2),
+       substr(hex((SELECT datasketch_theta(i) FROM range(100000) t(i))::BLOB), 3, 2);
+----
+04	04
+
+# a single item or an empty sketch keep version 3
+query II
+SELECT substr(hex((SELECT datasketch_theta(1))::BLOB), 3, 2), substr(hex(s('E')::BLOB), 3, 2);
+----
+03	03
+
+# sketches serialized by earlier versions (serial version 3, uncompressed) are still read
+statement ok
+CREATE TABLE old_sketch AS SELECT unhex('02030300001ACC93080000000000000015F97DCBBD86A10540DE2EE1C9DB3D08698BB991B8685708FE162113FB98BC10BD3273724691CC14C397FC1281709D1EBA40B3C1DA06695DE0F48BEA9983C37C')::sketch_theta AS sketch;
+
+query III
+SELECT datasketch_theta_estimate(sketch),
+       datasketch_theta_estimate(datasketch_theta_union(sketch, s('B'))),
+       datasketch_theta_exactly_equal(sketch, s('A'))
+FROM old_sketch;
+----
+8.0	12.0	true
+
+query II
+SELECT datasketch_theta_estimate(datasketch_theta(sketch)), datasketch_theta_estimate(datasketch_theta_intersect_agg(sketch))
+FROM (SELECT sketch FROM old_sketch UNION ALL SELECT s('B'));
+----
+12.0	4.0
+
+# -------------------------------------------------------------------
+# Unsigned integer and BLOB input
+# -------------------------------------------------------------------
+
+query IIII
+SELECT datasketch_theta_estimate(datasketch_theta(i::UTINYINT)),
+       datasketch_theta_estimate(datasketch_theta(i::USMALLINT)),
+       datasketch_theta_estimate(datasketch_theta(i::UINTEGER)),
+       datasketch_theta_estimate(datasketch_theta(10, i::UBIGINT))
+FROM range(200) t(i);
+----
+200.0	200.0	200.0	200.0
+
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(x))
+FROM (VALUES (18446744073709551615::UBIGINT), (18446744073709551614::UBIGINT), (0::UBIGINT), (18446744073709551615::UBIGINT)) t(x);
+----
+3.0
+
+query II
+SELECT datasketch_theta_estimate(datasketch_theta_blob(b)), datasketch_theta_estimate(datasketch_theta_blob(14, b, seed := 42))
+FROM (VALUES ('\x00\x01'::BLOB), ('\x00'::BLOB), (''::BLOB), ('\x00\x01'::BLOB), (NULL)) t(b);
+----
+3.0	3.0
+
+# BLOB values hash their bytes, like VARCHAR values do
+query I
+SELECT datasketch_theta_exactly_equal(datasketch_theta_blob(s::BLOB), datasketch_theta(s))
+FROM (VALUES ('apple'), ('banana'), ('cherry')) t(s);
+----
+true
+
+# datasketch_theta(BLOB) still merges serialized sketches (e.g. read back from Parquet)
+query I
+SELECT datasketch_theta_estimate(datasketch_theta(sketch::BLOB)) FROM sets WHERE name IN ('A', 'B');
+----
+12.0
+
+# -------------------------------------------------------------------
+# Errors and documentation
+# -------------------------------------------------------------------
+
+statement error
+SELECT datasketch_theta_estimate('\x01\x02\x03'::BLOB::sketch_theta);
+----
+Theta sketch error
+
+statement error
+SELECT datasketch_theta_lower_bound(s('A'), 4);
+----
+num_std_devs must be 1, 2 or 3
+
+query I
+SELECT count(*) FROM (
+    SELECT DISTINCT function_name FROM duckdb_functions()
+    WHERE function_name LIKE 'datasketch_theta%' AND (description IS NULL OR examples = [] OR NOT list_contains(categories, 'theta'))
+);
+----
+0
+
+query I
+SELECT list(DISTINCT function_name ORDER BY function_name) FROM duckdb_functions() WHERE function_name LIKE 'datasketch_theta%';
+----
+[datasketch_theta, datasketch_theta_a_not_b, datasketch_theta_blob, datasketch_theta_describe, datasketch_theta_dissimilarity_test, datasketch_theta_estimate, datasketch_theta_exactly_equal, datasketch_theta_get_seed, datasketch_theta_get_theta, datasketch_theta_intersect, datasketch_theta_intersect_agg, datasketch_theta_is_empty, datasketch_theta_is_estimation_mode, datasketch_theta_jaccard, datasketch_theta_lower_bound, datasketch_theta_num_retained, datasketch_theta_seed_hash, datasketch_theta_similarity_test, datasketch_theta_union, datasketch_theta_upper_bound]
+
+query T
+SELECT parameters FROM duckdb_functions() WHERE function_name = 'datasketch_theta' AND parameter_types = ['INTEGER', 'UBIGINT', 'BIGINT', 'DOUBLE'];
+----
+[lg_k, data, seed, p]
