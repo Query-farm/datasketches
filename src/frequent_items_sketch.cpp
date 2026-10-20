@@ -468,7 +468,7 @@ namespace duckdb
         }
 
         template <typename T, typename W>
-        void RegisterWeightedFreqItems(AggregateFunctionSet &set, LogicalType input_type, LogicalType weight_type, LogicalType result_type)
+        void RegisterWeightedFreqItems(AggregateFunctionSet &set, std::vector<FunctionDescription> &descs, LogicalType input_type, LogicalType weight_type, LogicalType result_type)
         {
             auto fun = AggregateFunction::BinaryAggregate<DSFreqItemsState, T, W, string_t, DSFreqItemsWeightedOperation, AggregateDestructorType::LEGACY>(
                 input_type, weight_type, result_type);
@@ -477,16 +477,32 @@ namespace duckdb
             fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
             DSSetArguments(fun, {input_type, weight_type});
             set.AddFunction(fun);
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a weighted Frequent Items sketch to find heavy hitters by total item weight; each row adds its weight to the item's count";
+                desc.examples.push_back("datasketch_frequent_items_weighted(column, weight)");
+                desc.parameter_names = {"data", "weight"};
+                desc.parameter_types = {input_type, weight_type};
+                descs.push_back(std::move(desc));
+            }
             DSSetArguments(fun, {LogicalType::INTEGER, input_type, weight_type});
             DSReadDataArgumentsAt<1, 2, DSFreqItemsState, T, W, DSFreqItemsWeightedOperation>(fun);
             set.AddFunction(fun);
+            {
+                FunctionDescription desc;
+                desc.description = "Creates a weighted Frequent Items sketch with the given log2 of max map size (lg_max_k); each row adds its weight to the item's count";
+                desc.examples.push_back("datasketch_frequent_items_weighted(10, column, weight)");
+                desc.parameter_names = {"lg_max_k", "data", "weight"};
+                desc.parameter_types = {LogicalType::INTEGER, input_type, weight_type};
+                descs.push_back(std::move(desc));
+            }
         }
 
         template <typename T>
-        void RegisterWeightedFreqItems(AggregateFunctionSet &set, LogicalType input_type, LogicalType result_type)
+        void RegisterWeightedFreqItems(AggregateFunctionSet &set, std::vector<FunctionDescription> &descs, LogicalType input_type, LogicalType result_type)
         {
-            RegisterWeightedFreqItems<T, int64_t>(set, input_type, LogicalType::BIGINT, result_type);
-            RegisterWeightedFreqItems<T, uint64_t>(set, input_type, LogicalType::UBIGINT, result_type);
+            RegisterWeightedFreqItems<T, int64_t>(set, descs, input_type, LogicalType::BIGINT, result_type);
+            RegisterWeightedFreqItems<T, uint64_t>(set, descs, input_type, LogicalType::UBIGINT, result_type);
         }
     }
 
@@ -559,26 +575,25 @@ namespace duckdb
         }
 
         AggregateFunctionSet weighted_sketch_agg("datasketch_frequent_items_weighted");
+        std::vector<FunctionDescription> weighted_descs;
 
-        RegisterWeightedFreqItems<int8_t>(weighted_sketch_agg, LogicalType::TINYINT, sketch_type);
-        RegisterWeightedFreqItems<int16_t>(weighted_sketch_agg, LogicalType::SMALLINT, sketch_type);
-        RegisterWeightedFreqItems<int32_t>(weighted_sketch_agg, LogicalType::INTEGER, sketch_type);
-        RegisterWeightedFreqItems<int64_t>(weighted_sketch_agg, LogicalType::BIGINT, sketch_type);
-        RegisterWeightedFreqItems<uint8_t>(weighted_sketch_agg, LogicalType::UTINYINT, sketch_type);
-        RegisterWeightedFreqItems<uint16_t>(weighted_sketch_agg, LogicalType::USMALLINT, sketch_type);
-        RegisterWeightedFreqItems<uint32_t>(weighted_sketch_agg, LogicalType::UINTEGER, sketch_type);
-        RegisterWeightedFreqItems<uint64_t>(weighted_sketch_agg, LogicalType::UBIGINT, sketch_type);
-        RegisterWeightedFreqItems<float>(weighted_sketch_agg, LogicalType::FLOAT, sketch_type);
-        RegisterWeightedFreqItems<double>(weighted_sketch_agg, LogicalType::DOUBLE, sketch_type);
-        RegisterWeightedFreqItems<string_t>(weighted_sketch_agg, LogicalType::VARCHAR, sketch_type);
+        RegisterWeightedFreqItems<int8_t>(weighted_sketch_agg, weighted_descs, LogicalType::TINYINT, sketch_type);
+        RegisterWeightedFreqItems<int16_t>(weighted_sketch_agg, weighted_descs, LogicalType::SMALLINT, sketch_type);
+        RegisterWeightedFreqItems<int32_t>(weighted_sketch_agg, weighted_descs, LogicalType::INTEGER, sketch_type);
+        RegisterWeightedFreqItems<int64_t>(weighted_sketch_agg, weighted_descs, LogicalType::BIGINT, sketch_type);
+        RegisterWeightedFreqItems<uint8_t>(weighted_sketch_agg, weighted_descs, LogicalType::UTINYINT, sketch_type);
+        RegisterWeightedFreqItems<uint16_t>(weighted_sketch_agg, weighted_descs, LogicalType::USMALLINT, sketch_type);
+        RegisterWeightedFreqItems<uint32_t>(weighted_sketch_agg, weighted_descs, LogicalType::UINTEGER, sketch_type);
+        RegisterWeightedFreqItems<uint64_t>(weighted_sketch_agg, weighted_descs, LogicalType::UBIGINT, sketch_type);
+        RegisterWeightedFreqItems<float>(weighted_sketch_agg, weighted_descs, LogicalType::FLOAT, sketch_type);
+        RegisterWeightedFreqItems<double>(weighted_sketch_agg, weighted_descs, LogicalType::DOUBLE, sketch_type);
+        RegisterWeightedFreqItems<string_t>(weighted_sketch_agg, weighted_descs, LogicalType::VARCHAR, sketch_type);
 
         {
             CreateAggregateFunctionInfo info(weighted_sketch_agg);
-            FunctionDescription desc;
-            desc.description = "Creates a weighted Frequent Items sketch to find heavy hitters by item weight";
-            desc.examples.push_back("datasketch_frequent_items_weighted(column, weight)");
-            desc.examples.push_back("datasketch_frequent_items_weighted(10, column, weight)");
-            info.descriptions.push_back(desc);
+            for (auto &d : weighted_descs) {
+                info.descriptions.push_back(std::move(d));
+            }
             DSSetCategories(info, {"sketch", "frequent_items"});
             DSRegister(loader, info);
         }
