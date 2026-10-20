@@ -1,0 +1,342 @@
+# name: test/sql/datasketch_tuple.test
+# description: Tuple sketches with DOUBLE summaries (sketch_tuple_double)
+# group: [datasketches]
+
+require datasketches
+
+# keys 0..4, values 0..19: per key sums 30, 34, 38, 42, 46; minimums 0..4; maximums 15..19
+statement ok
+CREATE TABLE t AS SELECT i % 5 AS k, i::DOUBLE AS v FROM range(20) r(i);
+
+statement ok
+CREATE MACRO vals(s) AS list_sort(list_transform(datasketch_tuple_summaries(s), lambda x: x.summary));
+
+# -------------------------------------------------------------------
+# Building
+# -------------------------------------------------------------------
+
+query IIIII
+SELECT datasketch_tuple_estimate(s), datasketch_tuple_sum(s), datasketch_tuple_mean(s), datasketch_tuple_num_retained(s), datasketch_tuple_is_estimation_mode(s)
+FROM (SELECT datasketch_tuple(k, v) AS s FROM t);
+----
+5.0	190.0	38.0	5	false
+
+query IIII
+SELECT vals(datasketch_tuple(k, v)), vals(datasketch_tuple(k, v, mode := 'min')), vals(datasketch_tuple(k, v, mode := 'MAX')), vals(datasketch_tuple(14, k, v, mode := 'one'))
+FROM t;
+----
+[30.0, 34.0, 38.0, 42.0, 46.0]	[0.0, 1.0, 2.0, 3.0, 4.0]	[15.0, 16.0, 17.0, 18.0, 19.0]	[1.0, 1.0, 1.0, 1.0, 1.0]
+
+# NULL keys or values are skipped
+query II
+SELECT datasketch_tuple_estimate(s), datasketch_tuple_sum(s)
+FROM (SELECT datasketch_tuple(k, v) AS s FROM (VALUES (1, 2.0), (NULL, 5.0), (2, NULL), (1, 3.0)) x(k, v));
+----
+1.0	5.0
+
+# key types
+query IIIII
+SELECT datasketch_tuple_sum(datasketch_tuple(k::VARCHAR, v)), datasketch_tuple_sum(datasketch_tuple(k::UTINYINT, v)),
+       datasketch_tuple_sum(datasketch_tuple(k::UBIGINT, v)), datasketch_tuple_estimate(datasketch_tuple(v::FLOAT, v)),
+       datasketch_tuple_estimate(datasketch_tuple(10, v, k))
+FROM t;
+----
+190.0	190.0	190.0	20.0	20.0
+
+# empty input gives an empty sketch
+query IIII
+SELECT datasketch_tuple_is_empty(s), datasketch_tuple_estimate(s), datasketch_tuple_sum(s), datasketch_tuple_mean(s) IS NULL
+FROM (SELECT datasketch_tuple(k, v) AS s FROM t WHERE false);
+----
+true	0.0	0.0	true
+
+query I
+SELECT datasketch_tuple_describe(datasketch_tuple(k, v)) LIKE '%Tuple sketch summary%' FROM t;
+----
+true
+
+# the keys hash like Theta sketch keys
+query II
+SELECT datasketch_theta_estimate(datasketch_tuple_to_theta(datasketch_tuple(k, v))),
+       datasketch_theta_exactly_equal(datasketch_tuple_to_theta(datasketch_tuple(k, v)), datasketch_theta(k))
+FROM t;
+----
+5.0	true
+
+# estimation mode: sum and mean are estimates
+query IIII
+SELECT datasketch_tuple_is_estimation_mode(s), datasketch_tuple_num_retained(s) >= 1024,
+       datasketch_tuple_sum(s) BETWEEN 0.9 * 100000 AND 1.1 * 100000, datasketch_tuple_mean(s)
+FROM (SELECT datasketch_tuple(10, i, 1.0) AS s FROM range(100000) r(i));
+----
+true	true	true	1.0
+
+statement error
+SELECT datasketch_tuple(k, v, mode := 'avg') FROM t;
+----
+mode must be 'sum', 'min', 'max' or 'one'
+
+statement error
+SELECT datasketch_tuple(40, k, v) FROM t;
+----
+lg_k must be between 4 and 26
+
+statement error
+SELECT datasketch_tuple(k, v, p := 2) FROM t;
+----
+sampling probability p must be in (0, 1]
+
+statement error
+SELECT datasketch_tuple(k, v, seed := k) FROM t;
+----
+must be a constant expression
+
+query I
+SELECT datasketch_tuple_get_theta(datasketch_tuple(k, v, p := 0.5)) FROM t;
+----
+0.5
+
+# -------------------------------------------------------------------
+# Merging
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE parts AS SELECT i % 3 AS part, datasketch_tuple(k, v) AS s FROM (SELECT i, i % 5 AS k, i::DOUBLE AS v FROM range(20) r(i)) GROUP BY i % 3;
+
+query III
+SELECT vals(datasketch_tuple(s)), datasketch_tuple_exactly_equal(datasketch_tuple(s), (SELECT datasketch_tuple(k, v) FROM t)), datasketch_tuple_sum(datasketch_tuple(s))
+FROM parts;
+----
+[30.0, 34.0, 38.0, 42.0, 46.0]	true	190.0
+
+# the mode combines the per-part summaries
+statement ok
+CREATE TABLE max_parts AS SELECT i % 3 AS part, datasketch_tuple(k, v, mode := 'max') AS s FROM (SELECT i, i % 5 AS k, i::DOUBLE AS v FROM range(20) r(i)) GROUP BY i % 3;
+
+query I
+SELECT vals(datasketch_tuple(s, mode := 'max')) FROM max_parts;
+----
+[15.0, 16.0, 17.0, 18.0, 19.0]
+
+query I
+SELECT vals(datasketch_tuple(12, s, mode := 'max')) FROM max_parts;
+----
+[15.0, 16.0, 17.0, 18.0, 19.0]
+
+# merging keeps the lg_k of the inputs
+statement ok
+CREATE TABLE big AS SELECT i % 2 AS part, datasketch_tuple(14, i, 1.0) AS s FROM range(200000) r(i) GROUP BY i % 2;
+
+query III
+SELECT datasketch_tuple_num_retained(datasketch_tuple(s)), datasketch_tuple_num_retained(datasketch_tuple(12, s)),
+       datasketch_tuple_estimate(datasketch_tuple(s)) BETWEEN 192000 AND 208000
+FROM big;
+----
+16384	4096	true
+
+# -------------------------------------------------------------------
+# Set operations
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE sets AS
+SELECT 'A' AS name, datasketch_tuple(k, v) AS s FROM t WHERE k < 3        -- keys 0, 1, 2
+UNION ALL SELECT 'B', datasketch_tuple(k, v) FROM t WHERE k >= 2          -- keys 2, 3, 4
+UNION ALL SELECT 'C', datasketch_tuple(k, 1.0) FROM t WHERE k IN (2, 4)   -- keys 2, 4 (summaries 4.0)
+UNION ALL SELECT 'E', datasketch_tuple(k, v) FROM t WHERE false;
+
+statement ok
+CREATE MACRO s(n) AS (SELECT s FROM sets WHERE name = n);
+
+query III
+SELECT vals(datasketch_tuple_union(s('A'), s('B'))), vals(datasketch_tuple_union(s('A'), s('B'), s('C'))), vals(datasketch_tuple_union(s('A'), s('B'), s('C'), mode := 'max'))
+----
+[30.0, 34.0, 42.0, 46.0, 76.0]	[30.0, 34.0, 42.0, 50.0, 80.0]	[30.0, 34.0, 38.0, 42.0, 46.0]
+
+query II
+SELECT vals(datasketch_tuple_union(s('A'), s('E'))), datasketch_tuple_union(s('A'), NULL) IS NULL;
+----
+[30.0, 34.0, 38.0]	true
+
+query III
+SELECT vals(datasketch_tuple_intersect(s('A'), s('B'))), vals(datasketch_tuple_intersect(s('A'), s('B'), s('C'))), vals(datasketch_tuple_intersect(s('B'), s('C'), mode := 'min'))
+----
+[76.0]	[80.0]	[4.0, 4.0]
+
+query II
+SELECT vals(datasketch_tuple_a_not_b(s('A'), s('B'))), vals(datasketch_tuple_a_not_b(s('B'), s('E')));
+----
+[30.0, 34.0]	[38.0, 42.0, 46.0]
+
+query II
+SELECT datasketch_tuple_num_retained(datasketch_tuple_union(12, a.s, b.s)), datasketch_tuple_num_retained(datasketch_tuple_union(a.s, b.s))
+FROM big a, big b WHERE a.part = 0 AND b.part = 1;
+----
+4096	16384
+
+statement error
+SELECT datasketch_tuple_union(s('A'), s('B'), mode := 'median');
+----
+mode must be
+
+# -------------------------------------------------------------------
+# Intersection aggregate
+# -------------------------------------------------------------------
+
+query II
+SELECT vals(datasketch_tuple_intersect_agg(s)), vals(datasketch_tuple_intersect_agg(s, mode := 'max')) FROM sets WHERE name IN ('A', 'B');
+----
+[76.0]	[38.0]
+
+query II
+SELECT datasketch_tuple_is_empty(datasketch_tuple_intersect_agg(s)), datasketch_tuple_intersect_agg(s) FILTER (false) IS NULL FROM sets;
+----
+true	true
+
+query I
+SELECT vals(datasketch_tuple_intersect_agg(x)) FROM (VALUES (s('A')), (NULL), (s('B')), (s('C'))) v(x);
+----
+[80.0]
+
+# -------------------------------------------------------------------
+# Similarity
+# -------------------------------------------------------------------
+
+query IIII
+SELECT datasketch_tuple_jaccard(s('A'), s('B')), datasketch_tuple_jaccard(s('A'), s('A')).estimate, datasketch_tuple_jaccard(s('E'), s('E')).estimate,
+       datasketch_tuple_jaccard(s('A'), s('E')).estimate;
+----
+{'lower': 0.2, 'estimate': 0.2, 'upper': 0.2}	1.0	1.0	0.0
+
+query IIII
+SELECT datasketch_tuple_exactly_equal(s('A'), s('A')), datasketch_tuple_exactly_equal(s('A'), s('B')),
+       datasketch_tuple_similarity_test(s('A'), s('B'), 0.1), datasketch_tuple_dissimilarity_test(s('A'), s('B'), 0.3);
+----
+true	false	true	true
+
+# summaries are not compared: the same keys with different summaries are "exactly equal"
+query I
+SELECT datasketch_tuple_exactly_equal(datasketch_tuple(k, v), datasketch_tuple(k, v, mode := 'one')) FROM t;
+----
+true
+
+# -------------------------------------------------------------------
+# Seeds
+# -------------------------------------------------------------------
+
+statement ok
+CREATE TABLE seeded AS
+SELECT 'A' AS name, datasketch_tuple(k, v, seed := 42) AS s FROM t WHERE k < 3
+UNION ALL SELECT 'B', datasketch_tuple(k, v, seed := 42) FROM t WHERE k >= 2;
+
+statement ok
+CREATE MACRO z(n) AS (SELECT s FROM seeded WHERE name = n);
+
+query IIIIII
+SELECT datasketch_tuple_seed_hash(s('A')), datasketch_tuple_seed_hash(z('A')), vals(datasketch_tuple_union(z('A'), z('B'))),
+       vals(datasketch_tuple_intersect(z('A'), z('B'))), datasketch_tuple_jaccard(z('A'), z('B')).estimate,
+       datasketch_theta_seed_hash(datasketch_tuple_to_theta(z('A')))
+----
+37836	32248	[30.0, 34.0, 42.0, 46.0, 76.0]	[76.0]	0.2	32248
+
+query II
+SELECT vals(datasketch_tuple(s)), vals(datasketch_tuple_intersect_agg(s)) FROM seeded;
+----
+[30.0, 34.0, 42.0, 46.0, 76.0]	[76.0]
+
+statement error
+SELECT datasketch_tuple_union(z('A'), s('B'));
+----
+cannot combine Tuple sketches built with different seeds
+
+statement error
+SELECT datasketch_tuple_a_not_b(z('A'), s('B'));
+----
+cannot combine Tuple sketches built with different seeds
+
+statement error
+SELECT datasketch_tuple_jaccard(z('A'), s('B'));
+----
+cannot combine Tuple sketches built with different seeds
+
+statement error
+SELECT datasketch_tuple(s) FROM (SELECT s FROM seeded UNION ALL SELECT s FROM sets WHERE name = 'A');
+----
+cannot combine Tuple sketches built with different seeds
+
+statement error
+SELECT datasketch_tuple_intersect_agg(s) FROM (SELECT s FROM seeded UNION ALL SELECT s FROM sets WHERE name = 'A');
+----
+cannot combine Tuple sketches built with different seeds
+
+# -------------------------------------------------------------------
+# Constant arguments are part of the plan: aggregates that differ only in
+# lg_k, mode, seed or p are not merged by the optimizer
+# -------------------------------------------------------------------
+
+query I rowsort
+SELECT datasketch_tuple_num_retained(x) >= 4096 FROM (SELECT datasketch_tuple(10, i, 1.0) AS x FROM range(100000) r(i) UNION ALL SELECT datasketch_tuple(12, i, 1.0) FROM range(100000) r(i));
+----
+false
+true
+
+query I rowsort
+SELECT datasketch_tuple_sum(x) FROM (SELECT datasketch_tuple(k, v, mode := 'min') AS x FROM t UNION ALL SELECT datasketch_tuple(k, v, mode := 'max') FROM t);
+----
+10.0
+85.0
+
+query II
+SELECT datasketch_tuple_sum(datasketch_tuple(k, v, mode := 'min')), datasketch_tuple_sum(datasketch_tuple(k, v, mode := 'max')) FROM t;
+----
+10.0	85.0
+
+query I
+SELECT count(DISTINCT datasketch_tuple_seed_hash(x)) FROM (SELECT datasketch_tuple(k, v, seed := 1) AS x FROM t UNION ALL SELECT datasketch_tuple(k, v, seed := 2) FROM t);
+----
+2
+
+query I rowsort
+SELECT datasketch_tuple_get_theta(x) FROM (SELECT datasketch_tuple(k, v, p := 0.5) AS x FROM t UNION ALL SELECT datasketch_tuple(k, v, p := 0.25) FROM t);
+----
+0.25
+0.5
+
+query I rowsort
+SELECT datasketch_tuple_num_retained(x) FROM (SELECT datasketch_tuple(10, s) AS x FROM big UNION ALL SELECT datasketch_tuple(12, s) FROM big);
+----
+1024
+4096
+
+query I
+SELECT count(DISTINCT datasketch_tuple_sum(x)) FROM (SELECT datasketch_tuple(s, mode := 'min') AS x FROM parts UNION ALL SELECT datasketch_tuple(s, mode := 'max') FROM parts);
+----
+2
+
+query I rowsort
+SELECT datasketch_tuple_sum(x) FROM (SELECT datasketch_tuple_intersect_agg(s, mode := 'sum') AS x FROM sets WHERE name IN ('A', 'B') UNION ALL SELECT datasketch_tuple_intersect_agg(s, mode := 'min') FROM sets WHERE name IN ('A', 'B'));
+----
+38.0
+76.0
+
+# -------------------------------------------------------------------
+# Documentation
+# -------------------------------------------------------------------
+
+query I
+SELECT count(*) FROM (
+    SELECT DISTINCT function_name FROM duckdb_functions()
+    WHERE function_name LIKE 'datasketch_tuple%' AND (description IS NULL OR examples = [] OR NOT list_contains(categories, 'tuple'))
+);
+----
+0
+
+query I
+SELECT list(DISTINCT function_name ORDER BY function_name) FROM duckdb_functions() WHERE function_name LIKE 'datasketch_tuple%';
+----
+[datasketch_tuple, datasketch_tuple_a_not_b, datasketch_tuple_describe, datasketch_tuple_dissimilarity_test, datasketch_tuple_estimate, datasketch_tuple_exactly_equal, datasketch_tuple_get_theta, datasketch_tuple_intersect, datasketch_tuple_intersect_agg, datasketch_tuple_is_empty, datasketch_tuple_is_estimation_mode, datasketch_tuple_jaccard, datasketch_tuple_lower_bound, datasketch_tuple_mean, datasketch_tuple_num_retained, datasketch_tuple_seed_hash, datasketch_tuple_similarity_test, datasketch_tuple_sum, datasketch_tuple_summaries, datasketch_tuple_to_theta, datasketch_tuple_union, datasketch_tuple_upper_bound]
+
+query T
+SELECT parameters FROM duckdb_functions() WHERE function_name = 'datasketch_tuple' AND parameter_types = ['INTEGER', 'VARCHAR', 'DOUBLE', 'VARCHAR', 'BIGINT', 'DOUBLE'];
+----
+[lg_k, key, value, mode, seed, p]

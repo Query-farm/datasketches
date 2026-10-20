@@ -24,6 +24,7 @@ namespace duckdb
     void LoadHLLSketch(ExtensionLoader &loader);
     void LoadCPCSketch(ExtensionLoader &loader);
     void LoadThetaSketch(ExtensionLoader &loader);
+    void LoadTupleSketch(ExtensionLoader &loader);
     void LoadFrequentItemsSketch(ExtensionLoader &loader);
 
     static void LoadInternal(ExtensionLoader &loader)
@@ -35,6 +36,7 @@ namespace duckdb
         LoadHLLSketch(loader);
         LoadCPCSketch(loader);
         LoadThetaSketch(loader);
+        LoadTupleSketch(loader);
         LoadFrequentItemsSketch(loader);
         QueryFarmSendTelemetry(loader, "datasketches", "2026102005");
     }
