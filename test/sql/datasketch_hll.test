@@ -311,3 +311,81 @@ SELECT datasketch_hll_is_compact(datasketch_hll_union(12, sketch)) FROM partitio
 ----
 false
 
+# =============================================================================
+# UNION STATE: PARALLEL MERGES, MANY-ROW UNIONS, REPEATED INPUTS
+# =============================================================================
+
+statement ok
+SET threads = 8;
+
+statement ok
+CREATE TABLE hll_par AS SELECT i AS v, i % 2000 AS g FROM range(400000) t(i)
+
+# 2000 groups of 200 distinct values: partial states on every thread, merged per group
+query I
+SELECT count(*) FROM (SELECT g, datasketch_hll_estimate(datasketch_hll(12, v)) AS e FROM hll_par GROUP BY g) WHERE abs(e - 200) > 10
+----
+0
+
+# 20 groups of 20000 distinct values: large partial states merged per group
+query I
+SELECT count(*) FROM (SELECT g % 20 AS h, datasketch_hll_estimate(datasketch_hll(12, v)) AS e FROM hll_par GROUP BY h) WHERE abs(e - 20000) / 20000 > 0.05
+----
+0
+
+statement ok
+CREATE TABLE hll_par_sketches AS SELECT g, datasketch_hll(12, v) AS s FROM hll_par GROUP BY g
+
+# Union of 2000 sketches into one group
+query I
+SELECT abs(datasketch_hll_estimate(datasketch_hll_union(12, s)) - 400000) / 400000 < 0.05 FROM hll_par_sketches
+----
+true
+
+# Grouped unions agree with and without parallelism
+statement ok
+SET threads = 1;
+
+statement ok
+CREATE TABLE hll_u1 AS SELECT g % 10 AS h, datasketch_hll_estimate(datasketch_hll_union(12, s)) AS e FROM hll_par_sketches GROUP BY h
+
+statement ok
+SET threads = 8;
+
+query I
+SELECT count(*) FROM hll_u1 JOIN (SELECT g % 10 AS h, datasketch_hll_estimate(datasketch_hll_union(12, s)) AS e FROM hll_par_sketches GROUP BY h) u8 USING (h) WHERE abs(hll_u1.e - u8.e) / hll_u1.e > 0.01
+----
+0
+
+# A repeated value counts once
+query I
+SELECT datasketch_hll_estimate(datasketch_hll(12, 42))::INT FROM range(10000)
+----
+1
+
+# Unioning the same sketch many times equals unioning it twice
+statement ok
+CREATE TABLE hll_one AS SELECT datasketch_hll(12, v) AS s FROM hll_par WHERE g < 100
+
+query I
+SELECT (SELECT datasketch_hll_estimate(datasketch_hll_union(12, s)) FROM hll_one, range(5000)) = (SELECT datasketch_hll_estimate(datasketch_hll_union(12, s)) FROM hll_one, range(2))
+----
+true
+
+# A running window over the sketch merges states many times
+query I
+SELECT count(*) FROM (SELECT datasketch_hll_estimate(datasketch_hll(12, v) OVER (ORDER BY v ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)) AS e, row_number() OVER (ORDER BY v) AS n FROM (SELECT v FROM hll_par WHERE v < 5000)) WHERE abs(e - n) / n > 0.05
+----
+0
+
+# Unioning sketches of a smaller lg_k keeps their lg_k
+query I
+SELECT datasketch_hll_lg_config_k(datasketch_hll_union(12, s)) FROM (SELECT datasketch_hll(10, v) AS s FROM hll_par GROUP BY g % 4)
+----
+10
+
+# Unioning sketches of a larger lg_k reduces them to the bound lg_k
+query I
+SELECT datasketch_hll_lg_config_k(datasketch_hll_union(10, s)) FROM (SELECT datasketch_hll(12, v) AS s FROM hll_par GROUP BY g % 4)
+----
+10
