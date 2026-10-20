@@ -267,11 +267,12 @@ namespace duckdb
             return make_uniq<DSThetaBindData>(lg_k, false, seed, static_cast<float>(p));
         }
 
-        // Merging sketches with an explicit lg_k.
+        // Merging sketches with an explicit lg_k. The lg_k stays in the argument list (the update reads the sketch
+        // at index 1): bind data is not part of the serialized plan, so the optimizer would otherwise treat
+        // aggregates that differ only in lg_k as identical.
         unique_ptr<FunctionData> DSThetaBindMergeWithK(BindAggregateFunctionInput &input)
         {
             auto lg_k = DSThetaBindLgK(input, 0);
-            DSEraseAggregateArgument(input, 0);
             return make_uniq<DSThetaBindData>(lg_k, false, DS_THETA_DEFAULT_SEED, 1.0f);
         }
 
@@ -929,16 +930,6 @@ namespace duckdb
             DSRegister(loader, info);
         }
 
-        // The update callback of an aggregate whose value follows LEADING constant arguments (e.g. lg_k): the
-        // constant arguments stay in the argument list on DuckDB 2.0 when the function also has keyword arguments.
-        template <idx_t LEADING, class STATE, class INPUT_TYPE, class OP>
-        void ThetaSkipLeadingScatterUpdate(Vector inputs[], AggregateInputData &aggr_input_data, idx_t input_count,
-                                           Vector &states, idx_t count)
-        {
-            D_ASSERT(input_count > LEADING);
-            AggregateExecutor::UnaryScatter<STATE, INPUT_TYPE, OP>(inputs[LEADING], states, aggr_input_data, count);
-        }
-
         const char *ThetaBuildDescription(bool with_lg_k)
         {
             return with_lg_k ? "Creates a Theta sketch with the given log2 of nominal entries (lg_k, 4-26) for estimating the number of distinct "
@@ -962,7 +953,7 @@ namespace duckdb
                 if (with_lg_k)
                 {
                     signature.AddParameter(LogicalType::INTEGER);
-                    fun.SetStateUpdateCallback(ThetaSkipLeadingScatterUpdate<1, DSThetaState, T, DSThetaCreateOperation>);
+                    DSReadDataArgumentAt<1, DSThetaState, T, DSThetaCreateOperation>(fun);
                     fun.SetBindCallback(DSThetaBindBuild<true>);
                 }
                 else
@@ -1036,6 +1027,7 @@ namespace duckdb
             fun_merge_k.SetBindCallback(DSThetaBindMergeWithK);
             fun_merge_k.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
             DSSetArguments(fun_merge_k, {LogicalType::INTEGER, sketch_type});
+            DSReadDataArgumentAt<1, DSThetaState, string_t, DSThetaMergeOperation>(fun_merge_k);
             sketch_agg.AddFunction(fun_merge_k);
             agg_descs.push_back(ThetaDescription("Merges (unions) Theta sketches into a single sketch with the given log2 of nominal entries (lg_k)",
                                                  {"datasketch_theta(16, sketch)"}, {"lg_k", "sketch"}, {LogicalType::INTEGER, sketch_type}));

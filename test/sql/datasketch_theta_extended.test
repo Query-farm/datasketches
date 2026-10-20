@@ -450,3 +450,31 @@ query T
 SELECT parameters FROM duckdb_functions() WHERE function_name = 'datasketch_theta' AND parameter_types = ['INTEGER', 'UBIGINT', 'BIGINT', 'DOUBLE'];
 ----
 [lg_k, data, seed, p]
+
+# -------------------------------------------------------------------
+# Aggregates that differ only in seed or p are not merged by the optimizer
+# -------------------------------------------------------------------
+
+query I
+SELECT count(DISTINCT datasketch_theta_seed_hash(s))
+FROM (SELECT datasketch_theta(i, seed := 1) AS s FROM range(100) t(i) UNION ALL SELECT datasketch_theta(i, seed := 2) FROM range(100) t(i));
+----
+2
+
+query I rowsort
+SELECT datasketch_theta_get_theta(s)
+FROM (SELECT datasketch_theta(12, i, p := 0.5) AS s FROM range(100) t(i) UNION ALL SELECT datasketch_theta(12, i, p := 0.25) FROM range(100) t(i));
+----
+0.25
+0.5
+
+query II
+SELECT datasketch_theta_get_theta(datasketch_theta(i, p := 0.5)), datasketch_theta_get_theta(datasketch_theta(i, p := 0.25)) FROM range(100) t(i);
+----
+0.5	0.25
+
+query I
+SELECT count(DISTINCT datasketch_theta_seed_hash(s))
+FROM (SELECT datasketch_theta_blob(i::VARCHAR::BLOB, seed := 1) AS s FROM range(100) t(i) UNION ALL SELECT datasketch_theta_blob(i::VARCHAR::BLOB, seed := 2) FROM range(100) t(i));
+----
+2
