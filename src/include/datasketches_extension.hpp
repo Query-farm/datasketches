@@ -44,6 +44,50 @@ namespace duckdb
 		return fun;
 	}
 
+	// DuckDB 2.0 reports parameter names from the function signature (duckdb_functions()), not from the
+	// descriptions, so copy the documented names onto the matching overloads' (positional-only) parameters.
+	template <class INFO>
+	inline void DSApplyParameterNames(INFO &info)
+	{
+		auto descriptions = info.descriptions;
+		info.functions.ApplyToFunctions([&](SimpleFunction &fun) {
+			auto &signature = fun.GetSignature();
+			for (auto &desc : descriptions)
+			{
+				if (desc.parameter_types.size() != signature.GetParameterCount() ||
+				    desc.parameter_names.size() != signature.GetParameterCount())
+				{
+					continue;
+				}
+				bool match = true;
+				for (idx_t i = 0; i < signature.GetParameterCount(); i++)
+				{
+					if (desc.parameter_types[i] != signature.GetParameter(i).GetType())
+					{
+						match = false;
+						break;
+					}
+				}
+				if (!match)
+				{
+					continue;
+				}
+				for (idx_t i = 0; i < signature.GetParameterCount(); i++)
+				{
+					signature.GetParameter(i).SetName(Identifier(desc.parameter_names[i]));
+				}
+				return;
+			}
+		});
+	}
+
+	template <class INFO>
+	inline void DSRegister(ExtensionLoader &loader, INFO &info)
+	{
+		DSApplyParameterNames(info);
+		loader.RegisterFunction(info);
+	}
+
 	// Replaces an aggregate function's argument list.
 	inline void DSSetArguments(AggregateFunction &fun, vector<LogicalType> arguments)
 	{

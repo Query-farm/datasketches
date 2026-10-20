@@ -575,7 +575,7 @@ namespace duckdb
             for (auto &d : agg_descs) {
                 info.descriptions.push_back(std::move(d));
             }
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
 
         AggregateFunctionSet weighted_sketch_agg("datasketch_frequent_items_weighted");
@@ -599,7 +599,7 @@ namespace duckdb
             desc.examples.push_back("datasketch_frequent_items_weighted(column, weight)");
             desc.examples.push_back("datasketch_frequent_items_weighted(10, column, weight)");
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
 
         // --- SCALAR FUNCTIONS (ESTIMATES & BOUNDS) ---
@@ -616,7 +616,7 @@ namespace duckdb
                 desc.parameter_types = {sketch_type, item_type};
                 info.descriptions.push_back(std::move(desc));
             }
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         };
 
         const std::vector<LogicalType> item_types = {
@@ -692,7 +692,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_frequent_items_total_weight",
@@ -703,7 +703,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_frequent_items_is_empty",
@@ -714,7 +714,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_frequent_items_num_active",
@@ -725,7 +725,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
 
         // --- GET FREQUENT LIST ---
@@ -746,7 +746,7 @@ namespace duckdb
             desc.parameter_names = {"sketch", "error_type"};
             desc.parameter_types = {sketch_type, LogicalType::VARCHAR};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
     }
 

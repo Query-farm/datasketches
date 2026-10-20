@@ -1847,7 +1847,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -1975,7 +1975,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -2103,7 +2103,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -2231,7 +2231,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -2359,7 +2359,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -2487,7 +2487,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -2615,7 +2615,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -2743,7 +2743,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -2871,7 +2871,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -2999,7 +2999,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -3127,7 +3127,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -3255,7 +3255,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -3383,7 +3383,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -3698,7 +3698,7 @@ return sketch.get_max_item();
           sketch_info.descriptions.push_back(std::move(d));
       }
 
-      loader.RegisterFunction(sketch_info);
+      DSRegister(loader, sketch_info);
       }
 
 
@@ -4391,7 +4391,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -4519,7 +4519,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -4647,7 +4647,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -4775,7 +4775,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -4903,7 +4903,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -5031,7 +5031,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -5159,7 +5159,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -5287,7 +5287,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -5415,7 +5415,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -5543,7 +5543,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -5671,7 +5671,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -5799,7 +5799,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -5927,7 +5927,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -6242,7 +6242,7 @@ return sketch.get_max_item();
           sketch_info.descriptions.push_back(std::move(d));
       }
 
-      loader.RegisterFunction(sketch_info);
+      DSRegister(loader, sketch_info);
       }
 
 
@@ -6900,7 +6900,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -7028,7 +7028,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -7156,7 +7156,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -7284,7 +7284,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -7412,7 +7412,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -7540,7 +7540,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -7668,7 +7668,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -7796,7 +7796,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -7924,7 +7924,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -8052,7 +8052,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -8180,7 +8180,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -8308,7 +8308,7 @@ return sketch.get_max_item();
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -8623,7 +8623,7 @@ return sketch.get_max_item();
           sketch_info.descriptions.push_back(std::move(d));
       }
 
-      loader.RegisterFunction(sketch_info);
+      DSRegister(loader, sketch_info);
       }
 
 
@@ -9044,7 +9044,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9084,7 +9084,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9124,7 +9124,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9164,7 +9164,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9204,7 +9204,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9244,7 +9244,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9284,7 +9284,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9324,7 +9324,7 @@ return sketch.get_quantile(rank_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9399,7 +9399,7 @@ return sketch.get_quantile(rank_data);
           sketch_info.descriptions.push_back(std::move(d));
       }
 
-      loader.RegisterFunction(sketch_info);
+      DSRegister(loader, sketch_info);
       }
 
 
@@ -9693,7 +9693,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9721,7 +9721,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9749,7 +9749,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9777,7 +9777,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9805,7 +9805,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9833,7 +9833,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -9861,7 +9861,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -10068,7 +10068,7 @@ return sketch.get_upper_bound(std_dev_data);
           sketch_info.descriptions.push_back(std::move(d));
       }
 
-      loader.RegisterFunction(sketch_info);
+      DSRegister(loader, sketch_info);
       }
 
 
@@ -10092,7 +10092,7 @@ return sketch.get_upper_bound(std_dev_data);
         sketch_info.descriptions.push_back(desc);
     }
 
-      loader.RegisterFunction(sketch_info);
+      DSRegister(loader, sketch_info);
       }
       
 
@@ -10317,7 +10317,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -10345,7 +10345,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -10373,7 +10373,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -10401,7 +10401,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -10429,7 +10429,7 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -10636,7 +10636,7 @@ return sketch.get_upper_bound(std_dev_data);
           sketch_info.descriptions.push_back(std::move(d));
       }
 
-      loader.RegisterFunction(sketch_info);
+      DSRegister(loader, sketch_info);
       }
 
 
@@ -10660,7 +10660,7 @@ return sketch.get_upper_bound(std_dev_data);
         sketch_info.descriptions.push_back(desc);
     }
 
-      loader.RegisterFunction(sketch_info);
+      DSRegister(loader, sketch_info);
       }
       
 

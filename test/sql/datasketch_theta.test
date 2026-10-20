@@ -836,3 +836,14 @@ ORDER BY ts;
 8	6
 9	7
 10	8
+
+# Parameter names are reported from the documented names
+query T
+SELECT DISTINCT parameters FROM duckdb_functions() WHERE function_name = 'datasketch_theta_union';
+----
+[sketch_a, sketch_b]
+
+query T
+SELECT parameters FROM duckdb_functions() WHERE function_name = 'datasketch_kll' AND parameter_types = ['INTEGER', 'DOUBLE'];
+----
+[k, data]

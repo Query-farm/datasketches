@@ -762,7 +762,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
             info.descriptions.push_back(std::move(d));
         }
 
-        loader.RegisterFunction(info);
+        DSRegister(loader, info);
 
 
       }
@@ -824,7 +824,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
           sketch_info.descriptions.push_back(std::move(d));
       }
 
-      loader.RegisterFunction(sketch_info);
+      DSRegister(loader, sketch_info);
       }
 
 
@@ -848,7 +848,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         sketch_info.descriptions.push_back(desc);
     }
 
-      loader.RegisterFunction(sketch_info);
+      DSRegister(loader, sketch_info);
       }
       {% endif %}
 

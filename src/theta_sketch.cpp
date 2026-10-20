@@ -465,7 +465,7 @@ namespace duckdb
             for (auto &d : agg_descs) {
                 info.descriptions.push_back(std::move(d));
             }
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
 
         // --- SCALAR FUNCTIONS ---
@@ -477,7 +477,7 @@ namespace duckdb
             desc.parameter_names = {"sketch_a", "sketch_b"};
             desc.parameter_types = {sketch_type, sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_union", {sketch_type, sketch_type}, sketch_type, DSThetaUnion)));
@@ -487,7 +487,7 @@ namespace duckdb
             desc.parameter_names = {"sketch_a", "sketch_b"};
             desc.parameter_types = {sketch_type, sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_a_not_b", {sketch_type, sketch_type}, sketch_type, DSThetaANotB)));
@@ -497,7 +497,7 @@ namespace duckdb
             desc.parameter_names = {"sketch_a", "sketch_b"};
             desc.parameter_types = {sketch_type, sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_estimate", {sketch_type}, LogicalType::DOUBLE, DSThetaEstimate)));
@@ -507,7 +507,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_lower_bound", {sketch_type, LogicalType::INTEGER}, LogicalType::DOUBLE, DSThetaLowerBound)));
@@ -517,7 +517,7 @@ namespace duckdb
             desc.parameter_names = {"sketch", "num_std_devs"};
             desc.parameter_types = {sketch_type, LogicalType::INTEGER};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_upper_bound", {sketch_type, LogicalType::INTEGER}, LogicalType::DOUBLE, DSThetaUpperBound)));
@@ -527,7 +527,7 @@ namespace duckdb
             desc.parameter_names = {"sketch", "num_std_devs"};
             desc.parameter_types = {sketch_type, LogicalType::INTEGER};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_describe", {sketch_type}, LogicalType::VARCHAR, DSThetaDescribe)));
@@ -537,7 +537,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
 
         // Metadata
@@ -549,7 +549,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_is_estimation_mode", {sketch_type}, LogicalType::BOOLEAN, DSThetaIsEstimation)));
@@ -559,7 +559,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_get_theta", {sketch_type}, LogicalType::DOUBLE, DSThetaGetTheta)));
@@ -569,7 +569,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_num_retained", {sketch_type}, LogicalType::BIGINT, DSThetaNumRetained)));
@@ -579,7 +579,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
         {
             CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_theta_get_seed", {sketch_type}, LogicalType::BIGINT, DSThetaGetSeed)));
@@ -589,7 +589,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
-            loader.RegisterFunction(info);
+            DSRegister(loader, info);
         }
     }
 
