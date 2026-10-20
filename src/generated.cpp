@@ -2275,6 +2275,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         DSRegister(loader, info);
 
 
@@ -2413,6 +2415,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         DSRegister(loader, info);
 
@@ -2553,6 +2557,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         DSRegister(loader, info);
 
 
@@ -2691,6 +2697,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         DSRegister(loader, info);
 
@@ -2831,6 +2839,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         DSRegister(loader, info);
 
 
@@ -2969,6 +2979,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         DSRegister(loader, info);
 
@@ -3109,6 +3121,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         DSRegister(loader, info);
 
 
@@ -3247,6 +3261,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         DSRegister(loader, info);
 
@@ -3387,6 +3403,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         DSRegister(loader, info);
 
 
@@ -3525,6 +3543,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         DSRegister(loader, info);
 
@@ -3665,6 +3685,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         DSRegister(loader, info);
 
 
@@ -3803,6 +3825,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         DSRegister(loader, info);
 
@@ -3943,6 +3967,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         DSRegister(loader, info);
 
 
@@ -4081,6 +4107,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         DSRegister(loader, info);
 
@@ -4221,6 +4249,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "quantiles"});
+
         DSRegister(loader, info);
 
 
@@ -4359,6 +4389,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "quantiles"});
 
         DSRegister(loader, info);
 
@@ -4715,6 +4747,8 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
       for (auto &d : agg_descs) {
           sketch_info.descriptions.push_back(std::move(d));
       }
+
+      DSSetCategories(sketch_info, {"sketch", "quantiles"});
 
       DSRegister(loader, sketch_info);
       }
@@ -5593,6 +5627,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         DSRegister(loader, info);
 
 
@@ -5731,6 +5767,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         DSRegister(loader, info);
 
@@ -5871,6 +5909,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         DSRegister(loader, info);
 
 
@@ -6009,6 +6049,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         DSRegister(loader, info);
 
@@ -6149,6 +6191,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         DSRegister(loader, info);
 
 
@@ -6287,6 +6331,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         DSRegister(loader, info);
 
@@ -6427,6 +6473,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         DSRegister(loader, info);
 
 
@@ -6565,6 +6613,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         DSRegister(loader, info);
 
@@ -6705,6 +6755,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         DSRegister(loader, info);
 
 
@@ -6843,6 +6895,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         DSRegister(loader, info);
 
@@ -6983,6 +7037,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         DSRegister(loader, info);
 
 
@@ -7121,6 +7177,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         DSRegister(loader, info);
 
@@ -7261,6 +7319,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         DSRegister(loader, info);
 
 
@@ -7399,6 +7459,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         DSRegister(loader, info);
 
@@ -7539,6 +7601,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "kll"});
+
         DSRegister(loader, info);
 
 
@@ -7677,6 +7741,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "kll"});
 
         DSRegister(loader, info);
 
@@ -8033,6 +8099,8 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
       for (auto &d : agg_descs) {
           sketch_info.descriptions.push_back(std::move(d));
       }
+
+      DSSetCategories(sketch_info, {"sketch", "kll"});
 
       DSRegister(loader, sketch_info);
       }
@@ -8970,6 +9038,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         DSRegister(loader, info);
 
 
@@ -9097,6 +9167,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         DSRegister(loader, info);
 
@@ -9226,6 +9298,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         DSRegister(loader, info);
 
 
@@ -9353,6 +9427,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         DSRegister(loader, info);
 
@@ -9482,6 +9558,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         DSRegister(loader, info);
 
 
@@ -9609,6 +9687,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         DSRegister(loader, info);
 
@@ -9738,6 +9818,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         DSRegister(loader, info);
 
 
@@ -9865,6 +9947,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         DSRegister(loader, info);
 
@@ -9994,6 +10078,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         DSRegister(loader, info);
 
 
@@ -10121,6 +10207,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         DSRegister(loader, info);
 
@@ -10250,6 +10338,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         DSRegister(loader, info);
 
 
@@ -10377,6 +10467,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         DSRegister(loader, info);
 
@@ -10506,6 +10598,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         DSRegister(loader, info);
 
 
@@ -10633,6 +10727,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         DSRegister(loader, info);
 
@@ -10762,6 +10858,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         DSRegister(loader, info);
 
 
@@ -10889,6 +10987,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         DSRegister(loader, info);
 
@@ -11018,6 +11118,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "req"});
+
         DSRegister(loader, info);
 
 
@@ -11145,6 +11247,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "req"});
 
         DSRegister(loader, info);
 
@@ -11620,6 +11724,8 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
       for (auto &d : agg_descs) {
           sketch_info.descriptions.push_back(std::move(d));
       }
+
+      DSSetCategories(sketch_info, {"sketch", "req"});
 
       DSRegister(loader, sketch_info);
       }
@@ -12112,6 +12218,8 @@ return sketch.get_max_value();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "tdigest"});
+
         DSRegister(loader, info);
 
 
@@ -12151,6 +12259,8 @@ return sketch.get_max_value();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "tdigest"});
 
         DSRegister(loader, info);
 
@@ -12192,6 +12302,8 @@ return sketch.get_max_value();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "tdigest"});
+
         DSRegister(loader, info);
 
 
@@ -12231,6 +12343,8 @@ return sketch.get_max_value();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "tdigest"});
 
         DSRegister(loader, info);
 
@@ -12272,6 +12386,8 @@ return sketch.get_max_value();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "tdigest"});
+
         DSRegister(loader, info);
 
 
@@ -12311,6 +12427,8 @@ return sketch.get_max_value();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "tdigest"});
 
         DSRegister(loader, info);
 
@@ -12352,6 +12470,8 @@ return sketch.get_max_value();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "tdigest"});
+
         DSRegister(loader, info);
 
 
@@ -12391,6 +12511,8 @@ return sketch.get_max_value();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "tdigest"});
 
         DSRegister(loader, info);
 
@@ -12432,6 +12554,8 @@ return sketch.get_max_value();
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "tdigest"});
+
         DSRegister(loader, info);
 
 
@@ -12471,6 +12595,8 @@ return sketch.get_max_value();
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "tdigest"});
 
         DSRegister(loader, info);
 
@@ -12548,6 +12674,8 @@ return sketch.get_max_value();
       for (auto &d : agg_descs) {
           sketch_info.descriptions.push_back(std::move(d));
       }
+
+      DSSetCategories(sketch_info, {"sketch", "tdigest"});
 
       DSRegister(loader, sketch_info);
       }
@@ -12956,6 +13084,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "hll"});
+
         DSRegister(loader, info);
 
 
@@ -12983,6 +13113,8 @@ return sketch.get_upper_bound(std_dev_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "hll"});
 
         DSRegister(loader, info);
 
@@ -13012,6 +13144,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "hll"});
+
         DSRegister(loader, info);
 
 
@@ -13039,6 +13173,8 @@ return sketch.get_upper_bound(std_dev_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "hll"});
 
         DSRegister(loader, info);
 
@@ -13068,6 +13204,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "hll"});
+
         DSRegister(loader, info);
 
 
@@ -13095,6 +13233,8 @@ return sketch.get_upper_bound(std_dev_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "hll"});
 
         DSRegister(loader, info);
 
@@ -13124,6 +13264,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "hll"});
+
         DSRegister(loader, info);
 
 
@@ -13151,6 +13293,8 @@ return sketch.get_upper_bound(std_dev_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "hll"});
 
         DSRegister(loader, info);
 
@@ -13180,6 +13324,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "hll"});
+
         DSRegister(loader, info);
 
 
@@ -13207,6 +13353,8 @@ return sketch.get_upper_bound(std_dev_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "hll"});
 
         DSRegister(loader, info);
 
@@ -13607,6 +13755,8 @@ return sketch.get_upper_bound(std_dev_data);
           sketch_info.descriptions.push_back(std::move(d));
       }
 
+      DSSetCategories(sketch_info, {"sketch", "hll"});
+
       DSRegister(loader, sketch_info);
       }
 
@@ -13644,6 +13794,8 @@ return sketch.get_upper_bound(std_dev_data);
         sketch_info.descriptions.push_back(desc);
     }
       
+
+      DSSetCategories(sketch_info, {"sketch", "hll"});
 
       DSRegister(loader, sketch_info);
       }
@@ -13919,6 +14071,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "cpc"});
+
         DSRegister(loader, info);
 
 
@@ -13946,6 +14100,8 @@ return sketch.get_upper_bound(std_dev_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "cpc"});
 
         DSRegister(loader, info);
 
@@ -13975,6 +14131,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "cpc"});
+
         DSRegister(loader, info);
 
 
@@ -14002,6 +14160,8 @@ return sketch.get_upper_bound(std_dev_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "cpc"});
 
         DSRegister(loader, info);
 
@@ -14031,6 +14191,8 @@ return sketch.get_upper_bound(std_dev_data);
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "cpc"});
+
         DSRegister(loader, info);
 
 
@@ -14058,6 +14220,8 @@ return sketch.get_upper_bound(std_dev_data);
         for (auto &d : fn_descs) {
             info.descriptions.push_back(std::move(d));
         }
+
+        DSSetCategories(info, {"sketch", "cpc"});
 
         DSRegister(loader, info);
 
@@ -14278,6 +14442,8 @@ return sketch.get_upper_bound(std_dev_data);
           sketch_info.descriptions.push_back(std::move(d));
       }
 
+      DSSetCategories(sketch_info, {"sketch", "cpc"});
+
       DSRegister(loader, sketch_info);
       }
 
@@ -14303,6 +14469,8 @@ return sketch.get_upper_bound(std_dev_data);
         sketch_info.descriptions.push_back(desc);
     }
       
+
+      DSSetCategories(sketch_info, {"sketch", "cpc"});
 
       DSRegister(loader, sketch_info);
       }

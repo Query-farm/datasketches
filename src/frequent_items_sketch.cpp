@@ -554,6 +554,7 @@ namespace duckdb
             for (auto &d : agg_descs) {
                 info.descriptions.push_back(std::move(d));
             }
+            DSSetCategories(info, {"sketch", "frequent_items"});
             DSRegister(loader, info);
         }
 
@@ -578,6 +579,7 @@ namespace duckdb
             desc.examples.push_back("datasketch_frequent_items_weighted(column, weight)");
             desc.examples.push_back("datasketch_frequent_items_weighted(10, column, weight)");
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "frequent_items"});
             DSRegister(loader, info);
         }
 
@@ -595,6 +597,7 @@ namespace duckdb
                 desc.parameter_types = {sketch_type, item_type};
                 info.descriptions.push_back(std::move(desc));
             }
+            DSSetCategories(info, {"sketch", "frequent_items"});
             DSRegister(loader, info);
         };
 
@@ -671,6 +674,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "frequent_items"});
             DSRegister(loader, info);
         }
         {
@@ -682,6 +686,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "frequent_items"});
             DSRegister(loader, info);
         }
         {
@@ -693,6 +698,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "frequent_items"});
             DSRegister(loader, info);
         }
         {
@@ -704,6 +710,7 @@ namespace duckdb
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "frequent_items"});
             DSRegister(loader, info);
         }
 
@@ -725,6 +732,7 @@ namespace duckdb
             desc.parameter_names = {"sketch", "error_type"};
             desc.parameter_types = {sketch_type, LogicalType::VARCHAR};
             info.descriptions.push_back(desc);
+            DSSetCategories(info, {"sketch", "frequent_items"});
             DSRegister(loader, info);
         }
     }

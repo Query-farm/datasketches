@@ -1,0 +1,42 @@
+# name: test/sql/datasketch_function_categories.test
+# description: Every datasketches function reports categories in duckdb_functions()
+# group: [datasketches]
+
+require datasketches
+
+# Generic: any datasketch_* function (including ones added later) must carry the 'sketch' category
+# and at least one family category.
+query I
+SELECT count(*) FROM duckdb_functions()
+WHERE function_name LIKE 'datasketch\_%' ESCAPE '\'
+  AND (categories IS NULL OR NOT list_contains(categories, 'sketch') OR len(categories) < 2);
+----
+0
+
+query I
+SELECT list(DISTINCT function_name ORDER BY function_name) FROM duckdb_functions()
+WHERE function_name LIKE 'datasketch\_%' ESCAPE '\'
+  AND (categories IS NULL OR NOT list_contains(categories, 'sketch') OR len(categories) < 2);
+----
+NULL
+
+# Each family is tagged with its own category.
+query II rowsort
+SELECT family, bool_and(list_contains(categories, family)) FROM (
+    SELECT categories, regexp_extract(function_name, '^datasketch_(kll|quantiles|req|tdigest|hll|cpc|frequent_items|theta)', 1) AS family
+    FROM duckdb_functions() WHERE function_name LIKE 'datasketch\_%' ESCAPE '\'
+) WHERE family <> '' GROUP BY family;
+----
+cpc	true
+frequent_items	true
+hll	true
+kll	true
+quantiles	true
+req	true
+tdigest	true
+theta	true
+
+query I
+SELECT count(*) > 0 FROM duckdb_functions() WHERE function_name = 'datasketch_kll' AND categories = ['sketch', 'kll'];
+----
+true

@@ -900,6 +900,8 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
             info.descriptions.push_back(std::move(d));
         }
 
+        DSSetCategories(info, {"sketch", "{{sketch_type|lower}}"});
+
         DSRegister(loader, info);
 
 
@@ -994,6 +996,8 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
           sketch_info.descriptions.push_back(std::move(d));
       }
 
+      DSSetCategories(sketch_info, {"sketch", "{{sketch_type|lower}}"});
+
       DSRegister(loader, sketch_info);
       }
 
@@ -1031,6 +1035,8 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         sketch_info.descriptions.push_back(desc);
     }
       {% endif %}
+
+      DSSetCategories(sketch_info, {"sketch", "{{sketch_type|lower}}"});
 
       DSRegister(loader, sketch_info);
       }
