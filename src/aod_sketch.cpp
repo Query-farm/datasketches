@@ -751,17 +751,19 @@ namespace duckdb
                 const string what = "an array-of-doubles sketch: a Theta sketch of the distinct keys where each retained key carries an array of "
                                     "DOUBLE values (1-255, the same length for every row), summed element-wise per key. Options: seed := (hash "
                                     "seed; sketches can only be combined with sketches built with the same seed); p := sampling probability in (0, 1]";
+                // Runnable examples over inline data
+                const string rows = " FROM (SELECT i % 100 AS user_id, 1.0::DOUBLE AS clicks, i * 0.5::DOUBLE AS revenue FROM range(1000) t(i)) t";
                 if (with_lg_k)
                 {
                     descs.push_back(DSAodDescription("Creates, with the given log2 of nominal entries (lg_k, 4-26), " + what,
-                                                     {"datasketch_aod(14, user_id, [clicks, revenue])", "datasketch_aod(14, user_id, [clicks, revenue], seed := 42)"},
+                                                     {"SELECT datasketch_aod(14, user_id, [clicks, revenue])" + rows, "SELECT datasketch_aod(14, user_id, [clicks, revenue], seed := 42)" + rows},
                                                      {"lg_k", "key", "values", "seed", "p"},
                                                      {LogicalType::INTEGER, key_type, values_type, LogicalType::BIGINT, LogicalType::DOUBLE}));
                 }
                 else
                 {
                     descs.push_back(DSAodDescription("Creates (lg_k 12) " + what,
-                                                     {"datasketch_aod(user_id, [clicks, revenue])"},
+                                                     {"SELECT datasketch_aod(user_id, [clicks, revenue])" + rows},
                                                      {"key", "values", "seed", "p"},
                                                      {key_type, values_type, LogicalType::BIGINT, LogicalType::DOUBLE}));
                 }
@@ -773,6 +775,7 @@ namespace duckdb
     {
         auto sketch_type = DSCreateSketchType(loader, "sketch_aod", "Sketch type for array-of-doubles Tuple Sketch");
         auto theta_type = LogicalType(LogicalTypeId::BLOB).WithAlias("sketch_theta");
+        const DSExampleSources ex("datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[])");
 
         // --- datasketch_aod: build from (key, values), or merge (union) sketches
         {
@@ -801,7 +804,7 @@ namespace duckdb
                     DSReadDataArgumentAt<1, DSAodState, string_t, DSAodOperation>(fun);
                     descs.push_back(DSAodDescription("Merges (unions) array-of-doubles sketches into one with the given log2 of nominal entries (lg_k); "
                                                      "the values of a key are summed element-wise",
-                                                     {"datasketch_aod(16, sketch)"}, {"lg_k", "sketch"}, {LogicalType::INTEGER, sketch_type}));
+                                                     {ex.QueryPartials("datasketch_aod(16, sketch)")}, {"lg_k", "sketch"}, {LogicalType::INTEGER, sketch_type}));
                 }
                 else
                 {
@@ -809,7 +812,7 @@ namespace duckdb
                     DSReadDataArgumentAt<0, DSAodState, string_t, DSAodOperation>(fun);
                     descs.push_back(DSAodDescription("Merges (unions) array-of-doubles sketches into one, keeping as many entries as the largest input "
                                                      "(at least lg_k 12); the values of a key are summed element-wise",
-                                                     {"datasketch_aod(sketch)"}, {"sketch"}, {sketch_type}));
+                                                     {ex.QueryPartials("datasketch_aod(sketch)")}, {"sketch"}, {sketch_type}));
                 }
                 fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
                 set.AddFunction(fun);
@@ -828,7 +831,7 @@ namespace duckdb
             vector<FunctionDescription> descs;
             descs.push_back(DSAodDescription("Intersects array-of-doubles sketches across rows: keeps the keys present in every sketch, summing their "
                                              "values element-wise. NULL sketches are skipped; returns NULL if there are no sketches",
-                                             {"datasketch_aod_intersect_agg(sketch)"}, {"sketch"}, {sketch_type}));
+                                             {ex.QueryOverlapping("datasketch_aod_intersect_agg(sketch)")}, {"sketch"}, {sketch_type}));
             ThetaRegisterAggregate(loader, set, descs);
         }
 
@@ -842,23 +845,23 @@ namespace duckdb
             ThetaRegisterScalar(loader, std::move(set),
                                 {DSAodDescription("Returns the union of two or more array-of-doubles sketches (values of a key summed element-wise), keeping as "
                                                   "many entries as the largest input (at least lg_k 12)",
-                                                  {"datasketch_aod_union(sketch_a, sketch_b)", "datasketch_aod_union(sketch_a, sketch_b, sketch_c)"},
+                                                  {ex.Query("datasketch_aod_union(sketch_a, sketch_b)"), ex.Query("datasketch_aod_union(sketch_a, sketch_b, sketch_c)")},
                                                   {"sketch_a", "sketch_b"}, {sketch_type, sketch_type}),
                                  DSAodDescription("Returns the union of two or more array-of-doubles sketches (values of a key summed element-wise) with the "
                                                   "given log2 of nominal entries (lg_k, 4-26)",
-                                                  {"datasketch_aod_union(16, sketch_a, sketch_b)"},
+                                                  {ex.Query("datasketch_aod_union(16, sketch_a, sketch_b)")},
                                                   {"lg_k", "sketch_a", "sketch_b"}, {LogicalType::INTEGER, sketch_type, sketch_type})});
         }
         ThetaRegisterScalar(loader, ThetaVariadic(ScalarFunction("datasketch_aod_intersect", {sketch_type, sketch_type}, sketch_type, DSAodIntersectFunction), {"sketch_a", "sketch_b"}, sketch_type),
                             DSAodDescription("Returns the intersection of two or more array-of-doubles sketches: the keys present in every sketch, with "
                                              "their values summed element-wise",
-                                             {"datasketch_aod_intersect(sketch_a, sketch_b)", "datasketch_aod_intersect(sketch_a, sketch_b, sketch_c)"},
+                                             {ex.Query("datasketch_aod_intersect(sketch_a, sketch_b)"), ex.Query("datasketch_aod_intersect(sketch_a, sketch_b, sketch_c)")},
                                              {"sketch_a", "sketch_b"}, {sketch_type, sketch_type}));
 
         // --- values
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_aod_num_values", {sketch_type}, LogicalType::BIGINT, DSAodNumValues),
                             DSAodDescription("Returns the number of values per key of the array-of-doubles sketch",
-                                             {"datasketch_aod_num_values(sketch)"}, {"sketch"}, {sketch_type}));
+                                             {ex.Query("datasketch_aod_num_values(sketch)")}, {"sketch"}, {sketch_type}));
         {
             child_list_t<LogicalType> entry;
             entry.emplace_back("hash", LogicalType::UBIGINT);
@@ -866,17 +869,17 @@ namespace duckdb
             ThetaRegisterScalar(loader, ScalarFunction("datasketch_aod_summaries", {sketch_type}, LogicalType::LIST(LogicalType::STRUCT(std::move(entry))), DSAodSummaries),
                                 DSAodDescription("Returns the retained entries of the array-of-doubles sketch as a list of {hash, values} structs (the key "
                                                  "hash and its values)",
-                                                 {"datasketch_aod_summaries(sketch)"}, {"sketch"}, {sketch_type}));
+                                                 {ex.Query("datasketch_aod_summaries(sketch)")}, {"sketch"}, {sketch_type}));
         }
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_aod_column_means", {sketch_type}, LogicalType::LIST(LogicalType::DOUBLE), DSAodColumns<true>),
                             DSAodDescription("Returns the mean of each value column over the retained keys (the mean per distinct key), or NULL if the "
                                              "sketch retains no entries",
-                                             {"datasketch_aod_column_means(sketch)"}, {"sketch"}, {sketch_type}));
+                                             {ex.Query("datasketch_aod_column_means(sketch)")}, {"sketch"}, {sketch_type}));
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_aod_column_sums", {sketch_type}, LogicalType::LIST(LogicalType::DOUBLE), DSAodColumns<false>),
                             DSAodDescription("Returns the estimated total of each value column over all distinct keys: the column sums of the retained "
                                              "entries divided by theta (exact when the sketch is not in estimation mode)",
-                                             {"datasketch_aod_column_sums(sketch)"}, {"sketch"}, {sketch_type}));
+                                             {ex.Query("datasketch_aod_column_sums(sketch)")}, {"sketch"}, {sketch_type}));
 
-        DSAodScalars::Register(loader, sketch_type, theta_type, "array-of-doubles sketch", DSAodCategories());
+        DSAodScalars::Register(loader, sketch_type, theta_type, "array-of-doubles sketch", DSAodCategories(), ex);
     }
 }

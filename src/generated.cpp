@@ -2115,7 +2115,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2126,7 +2126,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2137,7 +2137,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -2148,7 +2148,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2159,7 +2159,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -2170,7 +2170,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -2181,7 +2181,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2192,7 +2192,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2203,7 +2203,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -2214,7 +2214,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2225,7 +2225,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_quantiles_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -2256,7 +2256,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2267,7 +2267,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2278,7 +2278,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -2289,7 +2289,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2300,7 +2300,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -2311,7 +2311,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -2322,7 +2322,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2333,7 +2333,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2344,7 +2344,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -2355,7 +2355,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -2366,7 +2366,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_quantiles_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -2397,7 +2397,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2408,7 +2408,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2419,7 +2419,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2430,7 +2430,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2441,7 +2441,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2452,7 +2452,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2463,7 +2463,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2474,7 +2474,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2485,7 +2485,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2496,7 +2496,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2507,7 +2507,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2538,7 +2538,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2549,7 +2549,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2560,7 +2560,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2571,7 +2571,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2582,7 +2582,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2593,7 +2593,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2604,7 +2604,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2615,7 +2615,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2626,7 +2626,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2637,7 +2637,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2648,7 +2648,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_quantiles_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2679,7 +2679,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2690,7 +2690,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2701,7 +2701,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2712,7 +2712,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2723,7 +2723,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2734,7 +2734,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2745,7 +2745,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2756,7 +2756,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2767,7 +2767,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2778,7 +2778,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2789,7 +2789,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_quantiles_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2820,7 +2820,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2831,7 +2831,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2842,7 +2842,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2853,7 +2853,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2864,7 +2864,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2875,7 +2875,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2886,7 +2886,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2897,7 +2897,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2908,7 +2908,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2919,7 +2919,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2930,7 +2930,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_quantiles_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2961,7 +2961,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::TINYINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2972,7 +2972,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::SMALLINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2983,7 +2983,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::INTEGER,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -2994,7 +2994,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BIGINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3005,7 +3005,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::FLOAT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3016,7 +3016,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3027,7 +3027,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::UTINYINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3038,7 +3038,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::USMALLINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3049,7 +3049,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::UINTEGER,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3060,7 +3060,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::UBIGINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3071,7 +3071,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::VARCHAR,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3102,7 +3102,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3113,7 +3113,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3124,7 +3124,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3135,7 +3135,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3146,7 +3146,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3157,7 +3157,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3168,7 +3168,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3179,7 +3179,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3190,7 +3190,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3201,7 +3201,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3212,7 +3212,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3243,7 +3243,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3254,7 +3254,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3265,7 +3265,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -3276,7 +3276,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3287,7 +3287,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -3298,7 +3298,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -3309,7 +3309,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3320,7 +3320,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3331,7 +3331,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -3342,7 +3342,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3353,7 +3353,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -3384,7 +3384,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3395,7 +3395,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3406,7 +3406,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -3417,7 +3417,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3428,7 +3428,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -3439,7 +3439,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -3450,7 +3450,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3461,7 +3461,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3472,7 +3472,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -3483,7 +3483,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3494,7 +3494,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_quantiles_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -3525,7 +3525,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3536,7 +3536,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3547,7 +3547,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -3558,7 +3558,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3569,7 +3569,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -3580,7 +3580,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -3591,7 +3591,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3602,7 +3602,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3613,7 +3613,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -3624,7 +3624,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3635,7 +3635,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -3666,7 +3666,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3677,7 +3677,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3688,7 +3688,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -3699,7 +3699,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3710,7 +3710,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -3721,7 +3721,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -3732,7 +3732,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3743,7 +3743,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3754,7 +3754,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -3765,7 +3765,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3776,7 +3776,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -3807,7 +3807,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3818,7 +3818,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3829,7 +3829,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -3840,7 +3840,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3851,7 +3851,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -3862,7 +3862,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -3873,7 +3873,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3884,7 +3884,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3895,7 +3895,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -3906,7 +3906,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -3917,7 +3917,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_quantiles_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -3948,7 +3948,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3959,7 +3959,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3970,7 +3970,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3981,7 +3981,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -3992,7 +3992,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4003,7 +4003,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4014,7 +4014,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4025,7 +4025,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4036,7 +4036,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4047,7 +4047,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4058,7 +4058,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4089,7 +4089,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4100,7 +4100,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4111,7 +4111,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4122,7 +4122,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4133,7 +4133,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4144,7 +4144,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4155,7 +4155,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4166,7 +4166,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4177,7 +4177,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4188,7 +4188,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4199,7 +4199,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_quantiles_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -4230,7 +4230,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -4241,7 +4241,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -4252,7 +4252,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -4263,7 +4263,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -4274,7 +4274,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -4285,7 +4285,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -4296,7 +4296,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -4307,7 +4307,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -4318,7 +4318,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -4329,7 +4329,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -4340,7 +4340,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_quantiles_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -4376,7 +4376,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
-                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
                 agg_descs.push_back(std::move(desc));
@@ -4391,7 +4391,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
-                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::TINYINT] };
                 agg_descs.push_back(std::move(desc));
@@ -4407,7 +4407,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
-                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
                 agg_descs.push_back(std::move(desc));
@@ -4422,7 +4422,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
-                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::SMALLINT] };
                 agg_descs.push_back(std::move(desc));
@@ -4438,7 +4438,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
-                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
                 agg_descs.push_back(std::move(desc));
@@ -4453,7 +4453,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
-                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER] };
                 agg_descs.push_back(std::move(desc));
@@ -4469,7 +4469,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
-                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
                 agg_descs.push_back(std::move(desc));
@@ -4484,7 +4484,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
-                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::BIGINT] };
                 agg_descs.push_back(std::move(desc));
@@ -4500,7 +4500,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
-                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
                 agg_descs.push_back(std::move(desc));
@@ -4515,7 +4515,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
-                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::FLOAT] };
                 agg_descs.push_back(std::move(desc));
@@ -4531,7 +4531,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
-                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
                 agg_descs.push_back(std::move(desc));
@@ -4546,7 +4546,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
-                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::DOUBLE] };
                 agg_descs.push_back(std::move(desc));
@@ -4562,7 +4562,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
-                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
                 agg_descs.push_back(std::move(desc));
@@ -4577,7 +4577,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
-                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UTINYINT] };
                 agg_descs.push_back(std::move(desc));
@@ -4593,7 +4593,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
-                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
                 agg_descs.push_back(std::move(desc));
@@ -4608,7 +4608,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
-                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::USMALLINT] };
                 agg_descs.push_back(std::move(desc));
@@ -4624,7 +4624,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
-                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
                 agg_descs.push_back(std::move(desc));
@@ -4639,7 +4639,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
-                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UINTEGER] };
                 agg_descs.push_back(std::move(desc));
@@ -4655,7 +4655,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
-                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
                 agg_descs.push_back(std::move(desc));
@@ -4670,7 +4670,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
-                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UBIGINT] };
                 agg_descs.push_back(std::move(desc));
@@ -4686,7 +4686,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by aggregating values";
-                desc.examples.push_back("datasketch_quantiles(k, data)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -4701,7 +4701,7 @@ static inline void DSQuantilessorted_view(DataChunk &args, ExpressionState &stat
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches";
-                desc.examples.push_back("datasketch_quantiles(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::VARCHAR] };
                 agg_descs.push_back(std::move(desc));
@@ -5467,7 +5467,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5478,7 +5478,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5489,7 +5489,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -5500,7 +5500,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5511,7 +5511,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -5522,7 +5522,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -5533,7 +5533,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5544,7 +5544,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5555,7 +5555,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -5566,7 +5566,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5577,7 +5577,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_kll_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -5608,7 +5608,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5619,7 +5619,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5630,7 +5630,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -5641,7 +5641,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5652,7 +5652,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -5663,7 +5663,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -5674,7 +5674,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5685,7 +5685,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5696,7 +5696,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -5707,7 +5707,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -5718,7 +5718,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_kll_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -5749,7 +5749,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5760,7 +5760,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5771,7 +5771,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5782,7 +5782,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5793,7 +5793,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5804,7 +5804,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5815,7 +5815,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5826,7 +5826,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5837,7 +5837,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5848,7 +5848,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5859,7 +5859,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5890,7 +5890,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5901,7 +5901,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5912,7 +5912,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5923,7 +5923,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5934,7 +5934,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5945,7 +5945,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5956,7 +5956,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5967,7 +5967,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5978,7 +5978,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -5989,7 +5989,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6000,7 +6000,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_kll_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6031,7 +6031,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6042,7 +6042,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6053,7 +6053,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6064,7 +6064,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6075,7 +6075,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6086,7 +6086,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6097,7 +6097,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6108,7 +6108,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6119,7 +6119,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6130,7 +6130,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6141,7 +6141,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized rank error of the sketch";
-                    desc.examples.push_back("datasketch_kll_normalized_rank_error(sketch, is_pmf)");
+                    desc.examples.push_back("SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","is_pmf" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6172,7 +6172,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6183,7 +6183,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6194,7 +6194,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6205,7 +6205,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6216,7 +6216,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6227,7 +6227,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6238,7 +6238,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6249,7 +6249,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6260,7 +6260,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6271,7 +6271,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6282,7 +6282,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_kll_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6313,7 +6313,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::TINYINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6324,7 +6324,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::SMALLINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6335,7 +6335,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::INTEGER,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6346,7 +6346,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BIGINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6357,7 +6357,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::FLOAT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6368,7 +6368,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6379,7 +6379,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::UTINYINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6390,7 +6390,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::USMALLINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6401,7 +6401,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::UINTEGER,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6412,7 +6412,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::UBIGINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6423,7 +6423,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_kll_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::VARCHAR,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6454,7 +6454,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6465,7 +6465,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6476,7 +6476,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6487,7 +6487,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6498,7 +6498,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6509,7 +6509,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6520,7 +6520,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6531,7 +6531,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6542,7 +6542,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6553,7 +6553,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6564,7 +6564,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_kll_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -6595,7 +6595,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6606,7 +6606,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6617,7 +6617,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -6628,7 +6628,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6639,7 +6639,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -6650,7 +6650,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -6661,7 +6661,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6672,7 +6672,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6683,7 +6683,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -6694,7 +6694,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6705,7 +6705,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_kll_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -6736,7 +6736,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6747,7 +6747,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6758,7 +6758,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -6769,7 +6769,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6780,7 +6780,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -6791,7 +6791,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -6802,7 +6802,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6813,7 +6813,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6824,7 +6824,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -6835,7 +6835,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6846,7 +6846,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_kll_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -6877,7 +6877,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6888,7 +6888,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6899,7 +6899,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -6910,7 +6910,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6921,7 +6921,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -6932,7 +6932,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -6943,7 +6943,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6954,7 +6954,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6965,7 +6965,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -6976,7 +6976,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -6987,7 +6987,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_kll_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -7018,7 +7018,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7029,7 +7029,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7040,7 +7040,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -7051,7 +7051,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7062,7 +7062,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -7073,7 +7073,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -7084,7 +7084,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7095,7 +7095,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7106,7 +7106,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -7117,7 +7117,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7128,7 +7128,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -7159,7 +7159,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7170,7 +7170,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7181,7 +7181,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -7192,7 +7192,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7203,7 +7203,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -7214,7 +7214,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -7225,7 +7225,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7236,7 +7236,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7247,7 +7247,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -7258,7 +7258,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7269,7 +7269,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_kll_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -7300,7 +7300,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7311,7 +7311,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7322,7 +7322,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7333,7 +7333,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7344,7 +7344,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7355,7 +7355,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7366,7 +7366,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7377,7 +7377,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7388,7 +7388,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7399,7 +7399,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7410,7 +7410,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7441,7 +7441,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7452,7 +7452,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7463,7 +7463,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7474,7 +7474,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7485,7 +7485,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7496,7 +7496,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7507,7 +7507,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7518,7 +7518,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7529,7 +7529,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7540,7 +7540,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7551,7 +7551,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_kll_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR],LogicalType::LIST(LogicalType::VARCHAR),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -7582,7 +7582,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7593,7 +7593,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7604,7 +7604,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -7615,7 +7615,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7626,7 +7626,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -7637,7 +7637,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -7648,7 +7648,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7659,7 +7659,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7670,7 +7670,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -7681,7 +7681,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -7692,7 +7692,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_kll_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::VARCHAR] };
                     fn_descs.push_back(std::move(desc));
@@ -7728,7 +7728,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.examples.push_back("SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
                 agg_descs.push_back(std::move(desc));
@@ -7743,7 +7743,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
-                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::TINYINT] };
                 agg_descs.push_back(std::move(desc));
@@ -7759,7 +7759,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.examples.push_back("SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
                 agg_descs.push_back(std::move(desc));
@@ -7774,7 +7774,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
-                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::SMALLINT] };
                 agg_descs.push_back(std::move(desc));
@@ -7790,7 +7790,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.examples.push_back("SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
                 agg_descs.push_back(std::move(desc));
@@ -7805,7 +7805,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
-                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER] };
                 agg_descs.push_back(std::move(desc));
@@ -7821,7 +7821,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.examples.push_back("SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
                 agg_descs.push_back(std::move(desc));
@@ -7836,7 +7836,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
-                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::BIGINT] };
                 agg_descs.push_back(std::move(desc));
@@ -7852,7 +7852,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.examples.push_back("SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
                 agg_descs.push_back(std::move(desc));
@@ -7867,7 +7867,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
-                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::FLOAT] };
                 agg_descs.push_back(std::move(desc));
@@ -7883,7 +7883,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.examples.push_back("SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
                 agg_descs.push_back(std::move(desc));
@@ -7898,7 +7898,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
-                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::DOUBLE] };
                 agg_descs.push_back(std::move(desc));
@@ -7914,7 +7914,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.examples.push_back("SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
                 agg_descs.push_back(std::move(desc));
@@ -7929,7 +7929,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
-                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UTINYINT] };
                 agg_descs.push_back(std::move(desc));
@@ -7945,7 +7945,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.examples.push_back("SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
                 agg_descs.push_back(std::move(desc));
@@ -7960,7 +7960,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
-                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::USMALLINT] };
                 agg_descs.push_back(std::move(desc));
@@ -7976,7 +7976,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.examples.push_back("SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
                 agg_descs.push_back(std::move(desc));
@@ -7991,7 +7991,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
-                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UINTEGER] };
                 agg_descs.push_back(std::move(desc));
@@ -8007,7 +8007,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.examples.push_back("SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
                 agg_descs.push_back(std::move(desc));
@@ -8022,7 +8022,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
-                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UBIGINT] };
                 agg_descs.push_back(std::move(desc));
@@ -8038,7 +8038,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_kll(k, data)");
+                desc.examples.push_back("SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -8053,7 +8053,7 @@ static inline void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_kll data sketch by merging other KLL data sketches";
-                desc.examples.push_back("datasketch_kll(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::VARCHAR] };
                 agg_descs.push_back(std::move(desc));
@@ -8889,7 +8889,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -8900,7 +8900,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -8911,7 +8911,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -8922,7 +8922,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -8933,7 +8933,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -8944,7 +8944,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -8955,7 +8955,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -8966,7 +8966,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -8977,7 +8977,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -8988,7 +8988,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_req_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9019,7 +9019,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9030,7 +9030,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9041,7 +9041,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -9052,7 +9052,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9063,7 +9063,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -9074,7 +9074,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -9085,7 +9085,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9096,7 +9096,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9107,7 +9107,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -9118,7 +9118,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_req_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9149,7 +9149,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9160,7 +9160,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9171,7 +9171,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9182,7 +9182,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9193,7 +9193,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9204,7 +9204,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9215,7 +9215,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9226,7 +9226,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9237,7 +9237,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9248,7 +9248,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_cdf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9279,7 +9279,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9290,7 +9290,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9301,7 +9301,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9312,7 +9312,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9323,7 +9323,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9334,7 +9334,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9345,7 +9345,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9356,7 +9356,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9367,7 +9367,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9378,7 +9378,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_req_pmf(sketch, points, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9409,7 +9409,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9420,7 +9420,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9431,7 +9431,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9442,7 +9442,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9453,7 +9453,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9464,7 +9464,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9475,7 +9475,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9486,7 +9486,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9497,7 +9497,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9508,7 +9508,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_req_describe(sketch, include_levels, include_items)");
+                    desc.examples.push_back("SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_levels","include_items" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9539,7 +9539,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::TINYINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9550,7 +9550,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::SMALLINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9561,7 +9561,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::INTEGER,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9572,7 +9572,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::BIGINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9583,7 +9583,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::FLOAT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9594,7 +9594,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9605,7 +9605,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::UTINYINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9616,7 +9616,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::USMALLINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9627,7 +9627,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::UINTEGER,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9638,7 +9638,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_req_rank(sketch, item, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::UBIGINT,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9669,7 +9669,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9680,7 +9680,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9691,7 +9691,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9702,7 +9702,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9713,7 +9713,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9724,7 +9724,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9735,7 +9735,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9746,7 +9746,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9757,7 +9757,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9768,7 +9768,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_req_quantile(sketch, rank, inclusive)");
+                    desc.examples.push_back("SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -9799,7 +9799,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9810,7 +9810,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9821,7 +9821,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -9832,7 +9832,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9843,7 +9843,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -9854,7 +9854,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -9865,7 +9865,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9876,7 +9876,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9887,7 +9887,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -9898,7 +9898,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of items contained in the sketch";
-                    desc.examples.push_back("datasketch_req_n(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9929,7 +9929,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9940,7 +9940,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9951,7 +9951,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -9962,7 +9962,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -9973,7 +9973,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -9984,7 +9984,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -9995,7 +9995,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10006,7 +10006,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10017,7 +10017,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -10028,7 +10028,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is in estimation mode";
-                    desc.examples.push_back("datasketch_req_is_estimation_mode(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10059,7 +10059,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10070,7 +10070,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10081,7 +10081,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -10092,7 +10092,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10103,7 +10103,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -10114,7 +10114,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -10125,7 +10125,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10136,7 +10136,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10147,7 +10147,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -10158,7 +10158,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the number of retained items in the sketch";
-                    desc.examples.push_back("datasketch_req_num_retained(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10189,7 +10189,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10200,7 +10200,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10211,7 +10211,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -10222,7 +10222,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10233,7 +10233,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -10244,7 +10244,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -10255,7 +10255,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10266,7 +10266,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10277,7 +10277,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -10288,7 +10288,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum item in the sketch";
-                    desc.examples.push_back("datasketch_req_min_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10319,7 +10319,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10330,7 +10330,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10341,7 +10341,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -10352,7 +10352,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10363,7 +10363,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -10374,7 +10374,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -10385,7 +10385,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10396,7 +10396,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10407,7 +10407,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -10418,7 +10418,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum item in the sketch";
-                    desc.examples.push_back("datasketch_req_max_item(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10449,7 +10449,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10460,7 +10460,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10471,7 +10471,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10482,7 +10482,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10493,7 +10493,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10504,7 +10504,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10515,7 +10515,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10526,7 +10526,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10537,7 +10537,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10548,7 +10548,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_lower_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10579,7 +10579,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10590,7 +10590,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10601,7 +10601,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10612,7 +10612,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10623,7 +10623,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10634,7 +10634,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10645,7 +10645,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10656,7 +10656,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10667,7 +10667,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10678,7 +10678,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)";
-                    desc.examples.push_back("datasketch_req_rank_upper_bound(sketch, 0.5, 2)");
+                    desc.examples.push_back("SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank","num_std_dev" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::DOUBLE,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -10709,7 +10709,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
-                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10720,7 +10720,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
-                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10731,7 +10731,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
-                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -10742,7 +10742,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
-                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10753,7 +10753,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
-                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -10764,7 +10764,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
-                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -10775,7 +10775,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
-                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10786,7 +10786,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
-                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10797,7 +10797,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
-                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -10808,7 +10808,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)";
-                    desc.examples.push_back("datasketch_req_is_hra(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -10839,7 +10839,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -10850,7 +10850,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -10861,7 +10861,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -10872,7 +10872,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -10883,7 +10883,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -10894,7 +10894,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -10905,7 +10905,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -10916,7 +10916,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -10927,7 +10927,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -10938,7 +10938,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile";
-                    desc.examples.push_back("datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true)");
+                    desc.examples.push_back("SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","ranks","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -10969,7 +10969,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT],LogicalType::LIST(LogicalType::TINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -10980,7 +10980,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT],LogicalType::LIST(LogicalType::SMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -10991,7 +10991,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER],LogicalType::LIST(LogicalType::INTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -11002,7 +11002,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT],LogicalType::LIST(LogicalType::BIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -11013,7 +11013,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -11024,7 +11024,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -11035,7 +11035,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT],LogicalType::LIST(LogicalType::UTINYINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -11046,7 +11046,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT],LogicalType::LIST(LogicalType::USMALLINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -11057,7 +11057,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER],LogicalType::LIST(LogicalType::UINTEGER),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -11068,7 +11068,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the normalized ranks of a list of items. A NULL item yields a NULL rank";
-                    desc.examples.push_back("datasketch_req_ranks(sketch, [10, 20, 30], true)");
+                    desc.examples.push_back("SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","items","inclusive" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT],LogicalType::LIST(LogicalType::UBIGINT),LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -11099,7 +11099,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::TINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -11110,7 +11110,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::SMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -11121,7 +11121,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::INTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -11132,7 +11132,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::BIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -11143,7 +11143,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -11154,7 +11154,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -11165,7 +11165,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UTINYINT] };
                     fn_descs.push_back(std::move(desc));
@@ -11176,7 +11176,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::USMALLINT] };
                     fn_descs.push_back(std::move(desc));
@@ -11187,7 +11187,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UINTEGER] };
                     fn_descs.push_back(std::move(desc));
@@ -11198,7 +11198,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list";
-                    desc.examples.push_back("datasketch_req_sorted_view(sketch)");
+                    desc.examples.push_back("SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::UBIGINT] };
                     fn_descs.push_back(std::move(desc));
@@ -11234,7 +11234,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values";
-                desc.examples.push_back("datasketch_req(k, data)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
                 agg_descs.push_back(std::move(desc));
@@ -11249,7 +11249,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
-                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "hra"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT, LogicalType::BOOLEAN };
                 agg_descs.push_back(std::move(desc));
@@ -11264,7 +11264,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
-                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::TINYINT] };
                 agg_descs.push_back(std::move(desc));
@@ -11280,7 +11280,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values";
-                desc.examples.push_back("datasketch_req(k, data)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
                 agg_descs.push_back(std::move(desc));
@@ -11295,7 +11295,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
-                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "hra"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT, LogicalType::BOOLEAN };
                 agg_descs.push_back(std::move(desc));
@@ -11310,7 +11310,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
-                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::SMALLINT] };
                 agg_descs.push_back(std::move(desc));
@@ -11326,7 +11326,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values";
-                desc.examples.push_back("datasketch_req(k, data)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
                 agg_descs.push_back(std::move(desc));
@@ -11341,7 +11341,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
-                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "hra"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER, LogicalType::BOOLEAN };
                 agg_descs.push_back(std::move(desc));
@@ -11356,7 +11356,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
-                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER] };
                 agg_descs.push_back(std::move(desc));
@@ -11372,7 +11372,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values";
-                desc.examples.push_back("datasketch_req(k, data)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
                 agg_descs.push_back(std::move(desc));
@@ -11387,7 +11387,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
-                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "hra"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT, LogicalType::BOOLEAN };
                 agg_descs.push_back(std::move(desc));
@@ -11402,7 +11402,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
-                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::BIGINT] };
                 agg_descs.push_back(std::move(desc));
@@ -11418,7 +11418,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values";
-                desc.examples.push_back("datasketch_req(k, data)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
                 agg_descs.push_back(std::move(desc));
@@ -11433,7 +11433,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
-                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "hra"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT, LogicalType::BOOLEAN };
                 agg_descs.push_back(std::move(desc));
@@ -11448,7 +11448,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
-                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::FLOAT] };
                 agg_descs.push_back(std::move(desc));
@@ -11464,7 +11464,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values";
-                desc.examples.push_back("datasketch_req(k, data)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
                 agg_descs.push_back(std::move(desc));
@@ -11479,7 +11479,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
-                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "hra"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE, LogicalType::BOOLEAN };
                 agg_descs.push_back(std::move(desc));
@@ -11494,7 +11494,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
-                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::DOUBLE] };
                 agg_descs.push_back(std::move(desc));
@@ -11510,7 +11510,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values";
-                desc.examples.push_back("datasketch_req(k, data)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
                 agg_descs.push_back(std::move(desc));
@@ -11525,7 +11525,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
-                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "hra"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT, LogicalType::BOOLEAN };
                 agg_descs.push_back(std::move(desc));
@@ -11540,7 +11540,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
-                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UTINYINT] };
                 agg_descs.push_back(std::move(desc));
@@ -11556,7 +11556,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values";
-                desc.examples.push_back("datasketch_req(k, data)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
                 agg_descs.push_back(std::move(desc));
@@ -11571,7 +11571,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
-                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "hra"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT, LogicalType::BOOLEAN };
                 agg_descs.push_back(std::move(desc));
@@ -11586,7 +11586,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
-                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::USMALLINT] };
                 agg_descs.push_back(std::move(desc));
@@ -11602,7 +11602,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values";
-                desc.examples.push_back("datasketch_req(k, data)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
                 agg_descs.push_back(std::move(desc));
@@ -11617,7 +11617,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
-                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "hra"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER, LogicalType::BOOLEAN };
                 agg_descs.push_back(std::move(desc));
@@ -11632,7 +11632,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
-                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UINTEGER] };
                 agg_descs.push_back(std::move(desc));
@@ -11648,7 +11648,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values";
-                desc.examples.push_back("datasketch_req(k, data)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
                 agg_descs.push_back(std::move(desc));
@@ -11663,7 +11663,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
-                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.examples.push_back("SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "hra"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT, LogicalType::BOOLEAN };
                 agg_descs.push_back(std::move(desc));
@@ -11678,7 +11678,7 @@ static inline void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vec
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by merging other REQ data sketches";
-                desc.examples.push_back("datasketch_req(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UBIGINT] };
                 agg_descs.push_back(std::move(desc));
@@ -12157,7 +12157,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_tdigest_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_is_empty(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -12168,7 +12168,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_tdigest_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_is_empty(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -12199,7 +12199,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_tdigest_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_k(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -12210,7 +12210,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of K for this sketch";
-                    desc.examples.push_back("datasketch_tdigest_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_k(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -12241,7 +12241,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_tdigest_cdf(sketch, points)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_cdf(sketch, [25.0, 50.0, 75.0]) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT) };
                     fn_descs.push_back(std::move(desc));
@@ -12252,7 +12252,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_tdigest_cdf(sketch, points)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_cdf(sketch, [25.0, 50.0, 75.0]) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE) };
                     fn_descs.push_back(std::move(desc));
@@ -12283,7 +12283,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_tdigest_pmf(sketch, points)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_pmf(sketch, [25.0, 50.0, 75.0]) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::LIST(LogicalType::FLOAT) };
                     fn_descs.push_back(std::move(desc));
@@ -12294,7 +12294,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the Probability Mass Function (PMF) of the sketch for a series of points";
-                    desc.examples.push_back("datasketch_tdigest_pmf(sketch, points)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_pmf(sketch, [25.0, 50.0, 75.0]) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","split_points" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::LIST(LogicalType::DOUBLE) };
                     fn_descs.push_back(std::move(desc));
@@ -12325,7 +12325,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_tdigest_describe(sketch, include_centroids)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_describe(sketch, false) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_centroids" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -12336,7 +12336,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return a description of this sketch";
-                    desc.examples.push_back("datasketch_tdigest_describe(sketch, include_centroids)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_describe(sketch, false) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","include_centroids" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -12367,7 +12367,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_tdigest_rank(sketch, item)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_rank(sketch, 50.0) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::FLOAT };
                     fn_descs.push_back(std::move(desc));
@@ -12378,7 +12378,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the rank of an item in the sketch";
-                    desc.examples.push_back("datasketch_tdigest_rank(sketch, item)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_rank(sketch, 50.0) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","item" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE };
                     fn_descs.push_back(std::move(desc));
@@ -12409,7 +12409,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the total weight of this sketch";
-                    desc.examples.push_back("datasketch_tdigest_total_weight(sketch)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_total_weight(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -12420,7 +12420,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the total weight of this sketch";
-                    desc.examples.push_back("datasketch_tdigest_total_weight(sketch)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_total_weight(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -12451,7 +12451,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_tdigest_quantile(sketch, rank)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_quantile(sketch, 0.5) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT],LogicalType::DOUBLE };
                     fn_descs.push_back(std::move(desc));
@@ -12462,7 +12462,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the quantile of a rank in the sketch";
-                    desc.examples.push_back("datasketch_tdigest_quantile(sketch, rank)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_quantile(sketch, 0.5) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","rank" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE],LogicalType::DOUBLE };
                     fn_descs.push_back(std::move(desc));
@@ -12493,7 +12493,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum value seen by the sketch";
-                    desc.examples.push_back("datasketch_tdigest_min_value(sketch)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_min_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -12504,7 +12504,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the minimum value seen by the sketch";
-                    desc.examples.push_back("datasketch_tdigest_min_value(sketch)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_min_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -12535,7 +12535,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum value seen by the sketch";
-                    desc.examples.push_back("datasketch_tdigest_max_value(sketch)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_max_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::FLOAT] };
                     fn_descs.push_back(std::move(desc));
@@ -12546,7 +12546,7 @@ return sketch.get_max_value();
                 {
                     FunctionDescription desc;
                     desc.description = "Return the maximum value seen by the sketch";
-                    desc.examples.push_back("datasketch_tdigest_max_value(sketch)");
+                    desc.examples.push_back("SELECT datasketch_tdigest_max_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_map_types[LogicalTypeId::DOUBLE] };
                     fn_descs.push_back(std::move(desc));
@@ -12582,7 +12582,7 @@ return sketch.get_max_value();
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_tdigest data sketch by aggregating values";
-                desc.examples.push_back("datasketch_tdigest(k, data)");
+                desc.examples.push_back("SELECT datasketch_tdigest(100, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
                 agg_descs.push_back(std::move(desc));
@@ -12597,7 +12597,7 @@ return sketch.get_max_value();
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_tdigest data sketch by merging other TDigest data sketches";
-                desc.examples.push_back("datasketch_tdigest(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_tdigest(100, sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::FLOAT] };
                 agg_descs.push_back(std::move(desc));
@@ -12613,7 +12613,7 @@ return sketch.get_max_value();
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_tdigest data sketch by aggregating values";
-                desc.examples.push_back("datasketch_tdigest(k, data)");
+                desc.examples.push_back("SELECT datasketch_tdigest(100, i::DOUBLE) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
                 agg_descs.push_back(std::move(desc));
@@ -12628,7 +12628,7 @@ return sketch.get_max_value();
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_tdigest data sketch by merging other TDigest data sketches";
-                desc.examples.push_back("datasketch_tdigest(k, sketch)");
+                desc.examples.push_back("SELECT datasketch_tdigest(100, sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::DOUBLE] };
                 agg_descs.push_back(std::move(desc));
@@ -13034,7 +13034,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_hll_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_hll_is_empty(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_type };
                     fn_descs.push_back(std::move(desc));
@@ -13064,7 +13064,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return a string representation of the sketch";
-                    desc.examples.push_back("datasketch_hll_describe(sketch, include_summary, include_detail)");
+                    desc.examples.push_back("SELECT datasketch_hll_describe(sketch, true, false) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","summary","detail" };
                     desc.parameter_types = { sketch_type,LogicalType::BOOLEAN,LogicalType::BOOLEAN };
                     fn_descs.push_back(std::move(desc));
@@ -13094,7 +13094,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return the value of log base 2 K for this sketch";
-                    desc.examples.push_back("datasketch_hll_lg_config_k(sketch)");
+                    desc.examples.push_back("SELECT datasketch_hll_lg_config_k(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_type };
                     fn_descs.push_back(std::move(desc));
@@ -13124,7 +13124,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return whether the sketch is in compact form";
-                    desc.examples.push_back("datasketch_hll_is_compact(sketch)");
+                    desc.examples.push_back("SELECT datasketch_hll_is_compact(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_type };
                     fn_descs.push_back(std::move(desc));
@@ -13154,7 +13154,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return the composite estimate of the number of distinct items, computed from the registers alone (the raw HLL estimate blended with linear counting). datasketch_hll_estimate prefers the HIP estimator, which is only available for sketches that were not built by a union";
-                    desc.examples.push_back("datasketch_hll_composite_estimate(sketch)");
+                    desc.examples.push_back("SELECT datasketch_hll_composite_estimate(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_type };
                     fn_descs.push_back(std::move(desc));
@@ -13184,7 +13184,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return the sketch's register encoding: 'HLL_4', 'HLL_6' or 'HLL_8'";
-                    desc.examples.push_back("datasketch_hll_target_type(sketch)");
+                    desc.examples.push_back("SELECT datasketch_hll_target_type(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_type };
                     fn_descs.push_back(std::move(desc));
@@ -13214,7 +13214,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return the union of two HLL sketches as a new sketch with the first sketch's target type. The union runs at the larger lg_config_k of the two; if either input is in HLL (dense) mode the result is reduced to the smaller lg_config_k";
-                    desc.examples.push_back("datasketch_hll_merge(sketch_a, sketch_b)");
+                    desc.examples.push_back("SELECT datasketch_hll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_hll(12, i) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_hll(12, i) AS sketch_b FROM range(50, 150) t(i)) b");
                     desc.parameter_names = { "sketch_a","sketch_b" };
                     desc.parameter_types = { sketch_type,sketch_type };
                     fn_descs.push_back(std::move(desc));
@@ -13244,7 +13244,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return the estimate of the number of distinct items seen by the sketch";
-                    desc.examples.push_back("datasketch_hll_estimate(sketch)");
+                    desc.examples.push_back("SELECT datasketch_hll_estimate(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_type };
                     fn_descs.push_back(std::move(desc));
@@ -13274,7 +13274,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return the lower bound of the number of distinct items seen by the sketch";
-                    desc.examples.push_back("datasketch_hll_lower_bound(sketch, std_dev)");
+                    desc.examples.push_back("SELECT datasketch_hll_lower_bound(sketch, 2) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","std_dev" };
                     desc.parameter_types = { sketch_type,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -13304,7 +13304,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return the upper bound of the number of distinct items seen by the sketch";
-                    desc.examples.push_back("datasketch_hll_upper_bound(sketch, std_dev)");
+                    desc.examples.push_back("SELECT datasketch_hll_upper_bound(sketch, 2) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","std_dev" };
                     desc.parameter_types = { sketch_type,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -13340,7 +13340,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.examples.push_back("SELECT datasketch_hll(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
                 agg_descs.push_back(std::move(desc));
@@ -13355,7 +13355,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
-                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.examples.push_back("SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "target_type"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -13372,7 +13372,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.examples.push_back("SELECT datasketch_hll(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
                 agg_descs.push_back(std::move(desc));
@@ -13387,7 +13387,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
-                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.examples.push_back("SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "target_type"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -13404,7 +13404,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.examples.push_back("SELECT datasketch_hll(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
                 agg_descs.push_back(std::move(desc));
@@ -13419,7 +13419,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
-                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.examples.push_back("SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "target_type"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -13436,7 +13436,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.examples.push_back("SELECT datasketch_hll(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
                 agg_descs.push_back(std::move(desc));
@@ -13451,7 +13451,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
-                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.examples.push_back("SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "target_type"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -13468,7 +13468,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.examples.push_back("SELECT datasketch_hll(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
                 agg_descs.push_back(std::move(desc));
@@ -13483,7 +13483,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
-                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.examples.push_back("SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "target_type"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -13500,7 +13500,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.examples.push_back("SELECT datasketch_hll(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
                 agg_descs.push_back(std::move(desc));
@@ -13515,7 +13515,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
-                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.examples.push_back("SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "target_type"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -13532,7 +13532,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.examples.push_back("SELECT datasketch_hll(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
                 agg_descs.push_back(std::move(desc));
@@ -13547,7 +13547,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
-                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.examples.push_back("SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "target_type"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -13564,7 +13564,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.examples.push_back("SELECT datasketch_hll(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
                 agg_descs.push_back(std::move(desc));
@@ -13579,7 +13579,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
-                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.examples.push_back("SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "target_type"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -13596,7 +13596,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.examples.push_back("SELECT datasketch_hll(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
                 agg_descs.push_back(std::move(desc));
@@ -13611,7 +13611,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
-                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.examples.push_back("SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "target_type"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -13628,7 +13628,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.examples.push_back("SELECT datasketch_hll(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
                 agg_descs.push_back(std::move(desc));
@@ -13643,7 +13643,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
-                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.examples.push_back("SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "target_type"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -13660,7 +13660,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.examples.push_back("SELECT datasketch_hll(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -13675,7 +13675,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
-                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.examples.push_back("SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "target_type"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::VARCHAR, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -13692,7 +13692,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values";
-                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.examples.push_back("SELECT datasketch_hll(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BLOB };
                 agg_descs.push_back(std::move(desc));
@@ -13707,7 +13707,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
-                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.examples.push_back("SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data", "target_type"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BLOB, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -13743,7 +13743,7 @@ return sketch.get_upper_bound(std_dev_data);
     {
         FunctionDescription desc;
         desc.description = "Creates a sketch_HLL data sketch by aggregating other HLL data sketches";
-        desc.examples.push_back("datasketch_hll_union(k, sketch)");
+        desc.examples.push_back("SELECT datasketch_hll_union(12, sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
         desc.parameter_names = {"k", "sketch"};
         desc.parameter_types = { LogicalType::INTEGER, sketch_type };
         sketch_info.descriptions.push_back(desc);
@@ -13752,7 +13752,7 @@ return sketch.get_upper_bound(std_dev_data);
     {
         FunctionDescription desc;
         desc.description = "Creates a sketch_HLL data sketch by aggregating other HLL data sketches. target_type (a constant) selects the result's register encoding: 'HLL_4' (the default), 'HLL_6' or 'HLL_8'";
-        desc.examples.push_back("datasketch_hll_union(k, sketch, 'HLL_8')");
+        desc.examples.push_back("SELECT datasketch_hll_union(12, sketch, 'HLL_8') FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
         desc.parameter_names = {"k", "sketch", "target_type"};
         desc.parameter_types = { LogicalType::INTEGER, sketch_type, LogicalType::VARCHAR };
         sketch_info.descriptions.push_back(desc);
@@ -14021,7 +14021,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return a boolean indicating if the sketch is empty";
-                    desc.examples.push_back("datasketch_cpc_is_empty(sketch)");
+                    desc.examples.push_back("SELECT datasketch_cpc_is_empty(sketch) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_type };
                     fn_descs.push_back(std::move(desc));
@@ -14051,7 +14051,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return the union of two CPC sketches as a new sketch. The result uses the smaller lg_k of the two inputs";
-                    desc.examples.push_back("datasketch_cpc_merge(sketch_a, sketch_b)");
+                    desc.examples.push_back("SELECT datasketch_cpc_merge(sketch_a, sketch_b) FROM (SELECT datasketch_cpc(12, i) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_cpc(12, i) AS sketch_b FROM range(50, 150) t(i)) b");
                     desc.parameter_names = { "sketch_a","sketch_b" };
                     desc.parameter_types = { sketch_type,sketch_type };
                     fn_descs.push_back(std::move(desc));
@@ -14081,7 +14081,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return a string representation of the sketch";
-                    desc.examples.push_back("datasketch_cpc_describe(sketch)");
+                    desc.examples.push_back("SELECT datasketch_cpc_describe(sketch) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_type };
                     fn_descs.push_back(std::move(desc));
@@ -14111,7 +14111,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return the estimate of the number of distinct items seen by the sketch";
-                    desc.examples.push_back("datasketch_cpc_estimate(sketch)");
+                    desc.examples.push_back("SELECT datasketch_cpc_estimate(sketch) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch" };
                     desc.parameter_types = { sketch_type };
                     fn_descs.push_back(std::move(desc));
@@ -14141,7 +14141,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return the lower bound of the number of distinct items seen by the sketch";
-                    desc.examples.push_back("datasketch_cpc_lower_bound(sketch, std_dev)");
+                    desc.examples.push_back("SELECT datasketch_cpc_lower_bound(sketch, 2) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","std_dev" };
                     desc.parameter_types = { sketch_type,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -14171,7 +14171,7 @@ return sketch.get_upper_bound(std_dev_data);
                 {
                     FunctionDescription desc;
                     desc.description = "Return the upper bound of the number of distinct items seen by the sketch";
-                    desc.examples.push_back("datasketch_cpc_upper_bound(sketch, std_dev)");
+                    desc.examples.push_back("SELECT datasketch_cpc_upper_bound(sketch, 2) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s");
                     desc.parameter_names = { "sketch","std_dev" };
                     desc.parameter_types = { sketch_type,LogicalType::UTINYINT };
                     fn_descs.push_back(std::move(desc));
@@ -14207,7 +14207,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_cpc data sketch by aggregating values";
-                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.examples.push_back("SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::TINYINT };
                 agg_descs.push_back(std::move(desc));
@@ -14224,7 +14224,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_cpc data sketch by aggregating values";
-                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.examples.push_back("SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::SMALLINT };
                 agg_descs.push_back(std::move(desc));
@@ -14241,7 +14241,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_cpc data sketch by aggregating values";
-                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.examples.push_back("SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::INTEGER };
                 agg_descs.push_back(std::move(desc));
@@ -14258,7 +14258,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_cpc data sketch by aggregating values";
-                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.examples.push_back("SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BIGINT };
                 agg_descs.push_back(std::move(desc));
@@ -14275,7 +14275,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_cpc data sketch by aggregating values";
-                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.examples.push_back("SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::FLOAT };
                 agg_descs.push_back(std::move(desc));
@@ -14292,7 +14292,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_cpc data sketch by aggregating values";
-                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.examples.push_back("SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::DOUBLE };
                 agg_descs.push_back(std::move(desc));
@@ -14309,7 +14309,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_cpc data sketch by aggregating values";
-                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.examples.push_back("SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UTINYINT };
                 agg_descs.push_back(std::move(desc));
@@ -14326,7 +14326,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_cpc data sketch by aggregating values";
-                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.examples.push_back("SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::USMALLINT };
                 agg_descs.push_back(std::move(desc));
@@ -14343,7 +14343,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_cpc data sketch by aggregating values";
-                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.examples.push_back("SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UINTEGER };
                 agg_descs.push_back(std::move(desc));
@@ -14360,7 +14360,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_cpc data sketch by aggregating values";
-                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.examples.push_back("SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
                 agg_descs.push_back(std::move(desc));
@@ -14377,7 +14377,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_cpc data sketch by aggregating values";
-                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.examples.push_back("SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -14394,7 +14394,7 @@ return sketch.get_upper_bound(std_dev_data);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_cpc data sketch by aggregating values";
-                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.examples.push_back("SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::BLOB };
                 agg_descs.push_back(std::move(desc));
@@ -14427,7 +14427,7 @@ return sketch.get_upper_bound(std_dev_data);
     {
         FunctionDescription desc;
         desc.description = "Creates a sketch_CPC data sketch by aggregating other CPC data sketches";
-        desc.examples.push_back("datasketch_cpc_union(k, sketch)");
+        desc.examples.push_back("SELECT datasketch_cpc_union(12, sketch) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
         desc.parameter_names = {"k", "sketch"};
         desc.parameter_types = { LogicalType::INTEGER, sketch_type };
         sketch_info.descriptions.push_back(desc);

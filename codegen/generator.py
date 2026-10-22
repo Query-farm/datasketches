@@ -181,9 +181,9 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 {
                     "name": "cdf",
                     "description": "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "example": f"datasketch_{sketch_type.lower()}_cdf(sketch, points, inclusive)"
+                    "example": f"datasketch_{sketch_type.lower()}_cdf(sketch, [25.0, 50.0, 75.0], true)"
                     if sketch_type != "TDigest"
-                    else f"datasketch_{sketch_type.lower()}_cdf(sketch, points)",
+                    else f"datasketch_{sketch_type.lower()}_cdf(sketch, [25.0, 50.0, 75.0])",
                     "method": (
                         "auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);"
                         if sketch_type != "TDigest"
@@ -222,9 +222,9 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 {
                     "name": "pmf",
                     "description": "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "example": f"datasketch_{sketch_type.lower()}_pmf(sketch, points, inclusive)"
+                    "example": f"datasketch_{sketch_type.lower()}_pmf(sketch, [25.0, 50.0, 75.0], true)"
                     if sketch_type != "TDigest"
-                    else f"datasketch_{sketch_type.lower()}_pmf(sketch, points)",
+                    else f"datasketch_{sketch_type.lower()}_pmf(sketch, [25.0, 50.0, 75.0])",
                     "method": (
                         "auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);"
                         if sketch_type != "TDigest"
@@ -269,7 +269,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 {
                     "method": "return StringVector::AddString(result, sketch.to_string(summary_data, detail_data, false, false));",
                     "description": "Return a string representation of the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_describe(sketch, include_summary, include_detail)",
+                    "example": f"datasketch_{sketch_type.lower()}_describe(sketch, true, false)",
                     "arguments": [
                         sketch_argument,
                         {
@@ -402,7 +402,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "description": "Return the lower bound of the number of distinct items seen by the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_lower_bound(sketch, std_dev)",
+                    "example": f"datasketch_{sketch_type.lower()}_lower_bound(sketch, 2)",
                     "method": "return sketch.get_lower_bound(std_dev_data);",
                     "arguments": [
                         sketch_argument,
@@ -416,7 +416,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "description": "Return the upper bound of the number of distinct items seen by the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_upper_bound(sketch, std_dev)",
+                    "example": f"datasketch_{sketch_type.lower()}_upper_bound(sketch, 2)",
                     "method": "return sketch.get_upper_bound(std_dev_data);",
                     "arguments": [
                         sketch_argument,
@@ -436,7 +436,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
             [
                 {
                     "description": "Return a description of this sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_describe(sketch, include_centroids)",
+                    "example": f"datasketch_{sketch_type.lower()}_describe(sketch, false)",
                     "method": "return StringVector::AddString(result, sketch.to_string(include_centroids_data));",
                     "arguments": [
                         sketch_argument,
@@ -450,7 +450,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "description": "Return the rank of an item in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_rank(sketch, item)",
+                    "example": f"datasketch_{sketch_type.lower()}_rank(sketch, 50.0)",
                     "method": "return sketch.get_rank(DSItemIn(item_data));",
                     "name": "rank",
                     "arguments": [
@@ -474,7 +474,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "description": "Return the quantile of a rank in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_quantile(sketch, rank)",
+                    "example": f"datasketch_{sketch_type.lower()}_quantile(sketch, 0.5)",
                     "method": "return DSItemOut<T>(result, sketch.get_quantile(rank_data));",
                     "name": "quantile",
                     "arguments": [
@@ -494,7 +494,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
             [
                 {
                     "description": "Return the normalized rank error of the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_normalized_rank_error(sketch, is_pmf)",
+                    "example": f"datasketch_{sketch_type.lower()}_normalized_rank_error(sketch, false)",
                     "method": "return sketch.get_normalized_rank_error(is_pmf_data);",
                     "name": "normalized_rank_error",
                     "arguments": [
@@ -514,7 +514,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
             [
                 {
                     "description": "Return a description of this sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_describe(sketch, include_levels, include_items)",
+                    "example": f"datasketch_{sketch_type.lower()}_describe(sketch, false, false)",
                     "method": "return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));",
                     "arguments": [
                         sketch_argument,
@@ -532,7 +532,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "description": "Return the rank of an item in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_rank(sketch, item, inclusive)",
+                    "example": f"datasketch_{sketch_type.lower()}_rank(sketch, 50.0, true)",
                     "method": "return sketch.get_rank(DSItemIn(item_data), inclusive_data);",
                     "name": "rank",
                     "arguments": [
@@ -550,7 +550,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "description": "Return the quantile of a rank in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_quantile(sketch, rank, inclusive)",
+                    "example": f"datasketch_{sketch_type.lower()}_quantile(sketch, 0.5, true)",
                     "method": "return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));",
                     "name": "quantile",
                     "arguments": [
@@ -736,7 +736,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "description": "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "example": f"datasketch_{sketch_type.lower()}_ranks(sketch, [10, 20, 30], true)",
+                    "example": f"datasketch_{sketch_type.lower()}_ranks(sketch, [10.0, 20.0, 30.0], true)",
                     "method": """
                 return DSAppendList(result, items_data.length, [&](Vector &child, idx_t offset) {
                     auto child_values = FlatVector::GetDataMutable<double>(child);
@@ -799,7 +799,116 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
             ]
         )
+    for function_info in result:
+        function_info["example"] = example_query(sketch_type, function_info["example"])
     return result
+
+
+# ---------------------------------------------------------------------------
+# Function description examples
+# ---------------------------------------------------------------------------
+# Every example is a complete, runnable query: it builds its sketches from inline data (range()) instead of
+# referring to columns of a table the reader does not have. test/sql/datasketch_generated_examples.test, which
+# this script also writes, runs each of them.
+
+example_k = {"Quantiles": 16, "KLL": 200, "REQ": 12, "TDigest": 100, "HLL": 12, "CPC": 12}
+
+
+def example_value(sketch_type: str) -> str:
+    """The value aggregated into example sketches: integers for counting sketches, DOUBLE otherwise."""
+    return "i" if sketch_type in counting_sketch_names else "i::DOUBLE"
+
+
+def example_create(sketch_type: str, extra_args: str = "") -> str:
+    return f"datasketch_{sketch_type.lower()}({example_k[sketch_type]}, {example_value(sketch_type)}{extra_args})"
+
+
+def example_sketch_source(sketch_type: str, alias: str = "sketch", rows: str = "range(100)", group_by: str = "") -> str:
+    return f"(SELECT {example_create(sketch_type)} AS {alias} FROM {rows} t(i){group_by})"
+
+
+def example_query(sketch_type: str, call: str) -> str:
+    """Wrap a scalar call on `sketch` (or `sketch_a` and `sketch_b`) in a query that builds the sketches."""
+    if "sketch_a" in call:
+        return (
+            f"SELECT {call} FROM {example_sketch_source(sketch_type, 'sketch_a')} a, "
+            f"{example_sketch_source(sketch_type, 'sketch_b', 'range(50, 150)')} b"
+        )
+    return f"SELECT {call} FROM {example_sketch_source(sketch_type)} s"
+
+
+def aggregate_examples(sketch_type: str) -> dict:
+    name = f"datasketch_{sketch_type.lower()}"
+    k = example_k[sketch_type]
+    partial_sketches = example_sketch_source(sketch_type, group_by=" GROUP BY i % 4")
+    hll_target_type_arg = ", 'HLL_8'"
+    return {
+        "create": f"SELECT {example_create(sketch_type)} FROM range(100) t(i)",
+        "create_hll_target_type": f"SELECT {example_create(sketch_type, hll_target_type_arg)} FROM range(100) t(i)",
+        "create_req_hra": f"SELECT {example_create(sketch_type, ', false')} FROM range(100) t(i)",
+        "merge": f"SELECT {name}({k}, sketch) FROM {partial_sketches} s",
+        "union": f"SELECT {name}_union({k}, sketch) FROM {partial_sketches} s",
+        "union_hll_target_type": f"SELECT {name}_union({k}, sketch, 'HLL_8') FROM {partial_sketches} s",
+    }
+
+
+def all_examples(sketch_type: str) -> list:
+    """Every example the template registers for a sketch type, in registration order."""
+    examples = [fn["example"] for fn in unary_functions_per_sketch_type(sketch_type)]
+    aggregates = aggregate_examples(sketch_type)
+    examples.append(aggregates["create"])
+    if sketch_type == "HLL":
+        examples.append(aggregates["create_hll_target_type"])
+    if sketch_type == "REQ":
+        examples.append(aggregates["create_req_hra"])
+    if sketch_type in counting_sketch_names:
+        examples.append(aggregates["union"])
+        if sketch_type == "HLL":
+            examples.append(aggregates["union_hll_target_type"])
+    else:
+        examples.append(aggregates["merge"])
+    return examples
+
+
+def sql_string(value: str) -> str:
+    return "'" + value.replace("'", "''") + "'"
+
+
+def render_examples_test(sketch_types: list) -> str:
+    examples = []
+    for sketch_type in sketch_types:
+        for example in all_examples(sketch_type):
+            if example not in examples:
+                examples.append(example)
+    family = "|".join(t.lower() for t in sketch_types)
+    lines = [
+        "# name: test/sql/datasketch_generated_examples.test",
+        "# description: every example in the generated function descriptions runs",
+        "# group: [datasketches]",
+        "",
+        "# Generated by codegen/generator.py. Do not edit; regenerate instead.",
+        "",
+        "require datasketches",
+        "",
+        "statement ok",
+        "CREATE TABLE generated_examples(example VARCHAR);",
+        "",
+        "statement ok",
+        "INSERT INTO generated_examples VALUES",
+        ",\n".join(f"({sql_string(e)})" for e in examples) + ";",
+        "",
+        "# Every registered example of the generated sketch functions is one of the examples run below",
+        "query II",
+        "SELECT count(*), count(*) FILTER (WHERE example NOT IN (SELECT example FROM generated_examples))",
+        "FROM (SELECT DISTINCT unnest(examples) AS example FROM duckdb_functions()",
+        f"      WHERE regexp_matches(function_name, '^datasketch_({family})(_|$)'));",
+        "----",
+        f"{len(examples)}\t0",
+        "",
+    ]
+    for example in examples:
+        lines += ["statement ok", example + ";", ""]
+    return "\n".join(lines)
 
 
 def get_executor_name(arguments: list) -> str:
@@ -931,6 +1040,7 @@ data = {
     "sketch_types": ["Quantiles", "KLL", "REQ", "TDigest", "HLL", "CPC"],
     "logical_type_to_cplusplus_type": sketch_type_to_allowed_logical_types,
     "functions_per_sketch_type": unary_functions_per_sketch_type,
+    "aggregate_examples": aggregate_examples,
     "get_function_block": get_function_block,
     "get_scalar_function_args": get_scalar_function_args,
     "get_parameter_names": get_parameter_names,
@@ -955,5 +1065,9 @@ output = template.render(data)
 # Write the generated C++ code to a file
 with open("src/generated.cpp", "w") as f:
     f.write(output)
+
+# Write the test that runs every generated example
+with open("test/sql/datasketch_generated_examples.test", "w") as f:
+    f.write(render_examples_test(data["sketch_types"]))
 
 print("C++ file generated successfully!")

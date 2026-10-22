@@ -31,13 +31,13 @@ query II
 SELECT parameters, examples FROM duckdb_functions()
 WHERE function_name = 'datasketch_frequent_items_weighted' AND parameter_types = ['VARCHAR', 'BIGINT'];
 ----
-[data, weight]	['datasketch_frequent_items_weighted(column, weight)']
+[data, weight]	['SELECT datasketch_frequent_items_weighted(item, weight) FROM (SELECT (i % 10)::VARCHAR AS item, i AS weight FROM range(1000) t(i)) t']
 
 query II
 SELECT parameters, examples FROM duckdb_functions()
 WHERE function_name = 'datasketch_frequent_items_weighted' AND parameter_types = ['INTEGER', 'DOUBLE', 'UBIGINT'];
 ----
-[lg_max_k, data, weight]	['datasketch_frequent_items_weighted(10, column, weight)']
+[lg_max_k, data, weight]	['SELECT datasketch_frequent_items_weighted(10, item, weight) FROM (SELECT (i % 10)::VARCHAR AS item, i AS weight FROM range(1000) t(i)) t']
 
 query I
 SELECT count(*) FROM duckdb_functions()

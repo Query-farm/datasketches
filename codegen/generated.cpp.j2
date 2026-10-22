@@ -871,7 +871,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_{{sketch_type|lower}} data sketch by aggregating values";
-                desc.examples.push_back("datasketch_{{sketch_type|lower}}(k, data)");
+                desc.examples.push_back("{{aggregate_examples(sketch_type).create}}");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}} };
                 agg_descs.push_back(std::move(desc));
@@ -886,7 +886,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
-                desc.examples.push_back("datasketch_hll(k, data, 'HLL_8')");
+                desc.examples.push_back("{{aggregate_examples(sketch_type).create_hll_target_type}}");
                 desc.parameter_names = {"k", "data", "target_type"};
                 desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}}, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
@@ -902,7 +902,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_{{sketch_type|lower}} data sketch by aggregating values";
-                desc.examples.push_back("datasketch_{{sketch_type|lower}}(k, data)");
+                desc.examples.push_back("{{aggregate_examples(sketch_type).create}}");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}} };
                 agg_descs.push_back(std::move(desc));
@@ -917,7 +917,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
-                desc.examples.push_back("datasketch_req(k, data, false)");
+                desc.examples.push_back("{{aggregate_examples(sketch_type).create_req_hra}}");
                 desc.parameter_names = {"k", "data", "hra"};
                 desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}}, LogicalType::BOOLEAN };
                 agg_descs.push_back(std::move(desc));
@@ -932,7 +932,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_{{sketch_type|lower}} data sketch by merging other {{sketch_type}} data sketches";
-                desc.examples.push_back("datasketch_{{sketch_type|lower}}(k, sketch)");
+                desc.examples.push_back("{{aggregate_examples(sketch_type).merge}}");
                 desc.parameter_names = {"k", "sketch"};
                 desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, sketch_map_types[{{to_type_id(logical_type)}}] };
                 agg_descs.push_back(std::move(desc));
@@ -968,7 +968,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     {
         FunctionDescription desc;
         desc.description = "Creates a sketch_{{sketch_type}} data sketch by aggregating other {{sketch_type}} data sketches";
-        desc.examples.push_back("datasketch_{{sketch_type|lower}}_union(k, sketch)");
+        desc.examples.push_back("{{aggregate_examples(sketch_type).union}}");
         desc.parameter_names = {"k", "sketch"};
         desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, sketch_type };
         sketch_info.descriptions.push_back(desc);
@@ -977,7 +977,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     {
         FunctionDescription desc;
         desc.description = "Creates a sketch_HLL data sketch by aggregating other HLL data sketches. target_type (a constant) selects the result's register encoding: 'HLL_4' (the default), 'HLL_6' or 'HLL_8'";
-        desc.examples.push_back("datasketch_hll_union(k, sketch, 'HLL_8')");
+        desc.examples.push_back("{{aggregate_examples(sketch_type).union_hll_target_type}}");
         desc.parameter_names = {"k", "sketch", "target_type"};
         desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, sketch_type, LogicalType::VARCHAR };
         sketch_info.descriptions.push_back(desc);

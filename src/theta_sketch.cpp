@@ -741,17 +741,20 @@ namespace duckdb
                 fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
                 set.AddFunction(fun);
 
+                // Runnable examples over inline data (BLOB input hashes the bytes of each value)
+                const string value = input_type.id() == LogicalTypeId::BLOB ? "i::VARCHAR::BLOB" : "i";
+                const string rows = ") FROM range(1000) t(i)";
                 if (with_lg_k)
                 {
                     descs.push_back(ThetaDescription(ThetaBuildDescription(true),
-                                                     {name + "(14, column)", name + "(14, column, seed := 42, p := 0.5)"},
+                                                     {"SELECT " + name + "(14, " + value + rows, "SELECT " + name + "(14, " + value + ", seed := 42, p := 0.5" + rows},
                                                      {"lg_k", "data", "seed", "p"},
                                                      {LogicalType::INTEGER, input_type, LogicalType::BIGINT, LogicalType::DOUBLE}));
                 }
                 else
                 {
                     descs.push_back(ThetaDescription(ThetaBuildDescription(false),
-                                                     {name + "(column)", name + "(column, seed := 42)"},
+                                                     {"SELECT " + name + "(" + value + rows, "SELECT " + name + "(" + value + ", seed := 42" + rows},
                                                      {"data", "seed", "p"},
                                                      {input_type, LogicalType::BIGINT, LogicalType::DOUBLE}));
                 }
@@ -766,6 +769,7 @@ namespace duckdb
     void LoadThetaSketch(ExtensionLoader &loader)
     {
         auto sketch_type = CreateThetaSketchType(loader);
+        const DSExampleSources ex("datasketch_theta(i)");
 
         // --- datasketch_theta: build from values, or merge (union) sketches
         {
@@ -794,7 +798,7 @@ namespace duckdb
             sketch_agg.AddFunction(fun_merge);
             agg_descs.push_back(ThetaDescription("Merges (unions) Theta sketches into a single sketch. The result keeps as many entries as the "
                                                  "largest input sketch (inferred from the sketches, at least lg_k 12)",
-                                                 {"datasketch_theta(sketch)"}, {"sketch"}, {sketch_type}));
+                                                 {ex.QueryPartials("datasketch_theta(sketch)")}, {"sketch"}, {sketch_type}));
 
             auto fun_merge_k = AggregateFunction::UnaryAggregate<DSThetaState, string_t, string_t, DSThetaMergeOperation, AggregateDestructorType::LEGACY>(
                 sketch_type, sketch_type);
@@ -804,7 +808,7 @@ namespace duckdb
             DSReadDataArgumentAt<1, DSThetaState, string_t, DSThetaMergeOperation>(fun_merge_k);
             sketch_agg.AddFunction(fun_merge_k);
             agg_descs.push_back(ThetaDescription("Merges (unions) Theta sketches into a single sketch with the given log2 of nominal entries (lg_k)",
-                                                 {"datasketch_theta(16, sketch)"}, {"lg_k", "sketch"}, {LogicalType::INTEGER, sketch_type}));
+                                                 {ex.QueryPartials("datasketch_theta(16, sketch)")}, {"lg_k", "sketch"}, {LogicalType::INTEGER, sketch_type}));
 
             ThetaRegisterAggregate(loader, sketch_agg, agg_descs);
         }
@@ -834,7 +838,7 @@ namespace duckdb
             vector<FunctionDescription> descs;
             descs.push_back(ThetaDescription("Intersects Theta sketches across rows: the result estimates the number of distinct values present "
                                              "in every input sketch. NULL sketches are skipped; returns NULL if there are no sketches",
-                                             {"datasketch_theta_intersect_agg(sketch)"}, {"sketch"}, {sketch_type}));
+                                             {ex.QueryOverlapping("datasketch_theta_intersect_agg(sketch)")}, {"sketch"}, {sketch_type}));
             ThetaRegisterAggregate(loader, intersect_agg, descs);
         }
 
@@ -848,11 +852,11 @@ namespace duckdb
             ThetaRegisterScalar(loader, std::move(set),
                                 {ThetaDescription("Returns a new Theta sketch representing the union of two or more sketches. The result keeps "
                                                   "as many entries as the largest input sketch (inferred from the sketches, at least lg_k 12)",
-                                                  {"datasketch_theta_union(sketch_a, sketch_b)", "datasketch_theta_union(sketch_a, sketch_b, sketch_c)"},
+                                                  {ex.Query("datasketch_theta_union(sketch_a, sketch_b)"), ex.Query("datasketch_theta_union(sketch_a, sketch_b, sketch_c)")},
                                                   {"sketch_a", "sketch_b"}, {sketch_type, sketch_type}),
                                  ThetaDescription("Returns a new Theta sketch representing the union of two or more sketches, with the given "
                                                   "log2 of nominal entries (lg_k, 4-26)",
-                                                  {"datasketch_theta_union(16, sketch_a, sketch_b)", "datasketch_theta_union(16, sketch_a, sketch_b, sketch_c)"},
+                                                  {ex.Query("datasketch_theta_union(16, sketch_a, sketch_b)"), ex.Query("datasketch_theta_union(16, sketch_a, sketch_b, sketch_c)")},
                                                   {"lg_k", "sketch_a", "sketch_b"}, {LogicalType::INTEGER, sketch_type, sketch_type})});
         }
         {
@@ -860,12 +864,12 @@ namespace duckdb
                                      {"sketch_a", "sketch_b"}, sketch_type);
             ThetaRegisterScalar(loader, std::move(fun),
                                 ThetaDescription("Returns a new Theta sketch representing the intersection of two or more sketches",
-                                                 {"datasketch_theta_intersect(sketch_a, sketch_b)", "datasketch_theta_intersect(sketch_a, sketch_b, sketch_c)"},
+                                                 {ex.Query("datasketch_theta_intersect(sketch_a, sketch_b)"), ex.Query("datasketch_theta_intersect(sketch_a, sketch_b, sketch_c)")},
                                                  {"sketch_a", "sketch_b"}, {sketch_type, sketch_type}));
         }
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_a_not_b", {sketch_type, sketch_type}, sketch_type, DSThetaANotB),
                             ThetaDescription("Returns a new Theta sketch representing elements in sketch A but not in sketch B (set difference)",
-                                             {"datasketch_theta_a_not_b(sketch_a, sketch_b)"}, {"sketch_a", "sketch_b"}, {sketch_type, sketch_type}));
+                                             {ex.Query("datasketch_theta_a_not_b(sketch_a, sketch_b)")}, {"sketch_a", "sketch_b"}, {sketch_type, sketch_type}));
 
         // --- SIMILARITY ---
         {
@@ -877,59 +881,59 @@ namespace duckdb
                                 ThetaDescription("Returns the Jaccard similarity |A ∩ B| / |A ∪ B| of two sketches as a struct of its estimate "
                                                  "and approximate lower and upper bounds (about 2 standard deviations). Two empty sketches "
                                                  "are identical (1.0)",
-                                                 {"datasketch_theta_jaccard(sketch_a, sketch_b)", "datasketch_theta_jaccard(sketch_a, sketch_b).estimate"},
+                                                 {ex.Query("datasketch_theta_jaccard(sketch_a, sketch_b)"), ex.Query("datasketch_theta_jaccard(sketch_a, sketch_b).estimate")},
                                                  {"sketch_a", "sketch_b"}, {sketch_type, sketch_type}));
         }
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_exactly_equal", {sketch_type, sketch_type}, LogicalType::BOOLEAN, DSThetaExactlyEqual),
                             ThetaDescription("Returns true if the two sketches retain exactly the same hashes with the same theta, i.e. they "
                                              "represent the same set as far as the sketches can tell",
-                                             {"datasketch_theta_exactly_equal(sketch_a, sketch_b)"}, {"sketch_a", "sketch_b"}, {sketch_type, sketch_type}));
+                                             {ex.Query("datasketch_theta_exactly_equal(sketch_a, sketch_b)")}, {"sketch_a", "sketch_b"}, {sketch_type, sketch_type}));
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_similarity_test", {sketch_type, sketch_type, LogicalType::DOUBLE}, LogicalType::BOOLEAN, DSThetaSimilarityTest<true>),
                             ThetaDescription("Returns true if the Jaccard similarity of the two sketches is at least the threshold, with "
                                              "high confidence (its lower bound is >= threshold)",
-                                             {"datasketch_theta_similarity_test(actual, expected, 0.9)"}, {"actual", "expected", "threshold"},
+                                             {ex.Query("datasketch_theta_similarity_test(actual, expected, 0.9)")}, {"actual", "expected", "threshold"},
                                              {sketch_type, sketch_type, LogicalType::DOUBLE}));
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_dissimilarity_test", {sketch_type, sketch_type, LogicalType::DOUBLE}, LogicalType::BOOLEAN, DSThetaSimilarityTest<false>),
                             ThetaDescription("Returns true if the Jaccard similarity of the two sketches is at most the threshold, with "
                                              "high confidence (its upper bound is <= threshold)",
-                                             {"datasketch_theta_dissimilarity_test(actual, expected, 0.1)"}, {"actual", "expected", "threshold"},
+                                             {ex.Query("datasketch_theta_dissimilarity_test(actual, expected, 0.1)")}, {"actual", "expected", "threshold"},
                                              {sketch_type, sketch_type, LogicalType::DOUBLE}));
 
         // --- ESTIMATES ---
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_estimate", {sketch_type}, LogicalType::DOUBLE, DSThetaEstimate),
                             ThetaDescription("Returns the estimated number of distinct values in the Theta sketch",
-                                             {"datasketch_theta_estimate(sketch)"}, {"sketch"}, {sketch_type}));
+                                             {ex.Query("datasketch_theta_estimate(sketch)")}, {"sketch"}, {sketch_type}));
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_lower_bound", {sketch_type, LogicalType::INTEGER}, LogicalType::DOUBLE, DSThetaBound<true>),
                             ThetaDescription("Returns the lower bound estimate at the given number of standard deviations (1, 2, or 3)",
-                                             {"datasketch_theta_lower_bound(sketch, 2)"}, {"sketch", "num_std_devs"}, {sketch_type, LogicalType::INTEGER}));
+                                             {ex.Query("datasketch_theta_lower_bound(sketch, 2)")}, {"sketch", "num_std_devs"}, {sketch_type, LogicalType::INTEGER}));
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_upper_bound", {sketch_type, LogicalType::INTEGER}, LogicalType::DOUBLE, DSThetaBound<false>),
                             ThetaDescription("Returns the upper bound estimate at the given number of standard deviations (1, 2, or 3)",
-                                             {"datasketch_theta_upper_bound(sketch, 2)"}, {"sketch", "num_std_devs"}, {sketch_type, LogicalType::INTEGER}));
+                                             {ex.Query("datasketch_theta_upper_bound(sketch, 2)")}, {"sketch", "num_std_devs"}, {sketch_type, LogicalType::INTEGER}));
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_describe", {sketch_type}, LogicalType::VARCHAR, DSThetaDescribe),
                             ThetaDescription("Returns a human-readable description of the Theta sketch",
-                                             {"datasketch_theta_describe(sketch)"}, {"sketch"}, {sketch_type}));
+                                             {ex.Query("datasketch_theta_describe(sketch)")}, {"sketch"}, {sketch_type}));
 
         // --- METADATA ---
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_is_empty", {sketch_type}, LogicalType::BOOLEAN, DSThetaIsEmpty),
                             ThetaDescription("Returns true if the Theta sketch is empty",
-                                             {"datasketch_theta_is_empty(sketch)"}, {"sketch"}, {sketch_type}));
+                                             {ex.Query("datasketch_theta_is_empty(sketch)")}, {"sketch"}, {sketch_type}));
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_is_estimation_mode", {sketch_type}, LogicalType::BOOLEAN, DSThetaIsEstimation),
                             ThetaDescription("Returns true if the sketch is in estimation mode (has exceeded exact counting capacity)",
-                                             {"datasketch_theta_is_estimation_mode(sketch)"}, {"sketch"}, {sketch_type}));
+                                             {ex.Query("datasketch_theta_is_estimation_mode(sketch)")}, {"sketch"}, {sketch_type}));
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_get_theta", {sketch_type}, LogicalType::DOUBLE, DSThetaGetTheta),
                             ThetaDescription("Returns the theta value of the sketch (sampling probability)",
-                                             {"datasketch_theta_get_theta(sketch)"}, {"sketch"}, {sketch_type}));
+                                             {ex.Query("datasketch_theta_get_theta(sketch)")}, {"sketch"}, {sketch_type}));
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_num_retained", {sketch_type}, LogicalType::BIGINT, DSThetaNumRetained),
                             ThetaDescription("Returns the number of hash values retained in the sketch",
-                                             {"datasketch_theta_num_retained(sketch)"}, {"sketch"}, {sketch_type}));
+                                             {ex.Query("datasketch_theta_num_retained(sketch)")}, {"sketch"}, {sketch_type}));
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_seed_hash", {sketch_type}, LogicalType::BIGINT, DSThetaSeedHash),
                             ThetaDescription("Returns the 16-bit hash of the seed the sketch was built with (compact sketches store only "
                                              "this hash, not the seed); sketches can only be combined if their seed hashes match",
-                                             {"datasketch_theta_seed_hash(sketch)"}, {"sketch"}, {sketch_type}));
+                                             {ex.Query("datasketch_theta_seed_hash(sketch)")}, {"sketch"}, {sketch_type}));
         ThetaRegisterScalar(loader, ScalarFunction("datasketch_theta_get_seed", {sketch_type}, LogicalType::BIGINT, DSThetaSeedHash),
                             ThetaDescription("Alias of datasketch_theta_seed_hash: returns the 16-bit hash of the seed the sketch was built "
                                              "with, not the seed itself (compact sketches do not store the seed)",
-                                             {"datasketch_theta_get_seed(sketch)"}, {"sketch"}, {sketch_type}));
+                                             {ex.Query("datasketch_theta_get_seed(sketch)")}, {"sketch"}, {sketch_type}));
     }
 
 }

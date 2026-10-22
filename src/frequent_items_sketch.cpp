@@ -20,6 +20,16 @@
 
 namespace duckdb
 {
+
+    // Runnable description examples over inline data: items are the strings '0' to '9', weight is the row number.
+    static constexpr const char *DS_FREQ_ITEMS_EXAMPLE_ROWS = " FROM (SELECT (i % 10)::VARCHAR AS item, i AS weight FROM range(1000) t(i)) t";
+
+    static const DSExampleSources &DSFreqItemsExamples()
+    {
+        static const DSExampleSources examples("datasketch_frequent_items(10, (i % 10)::VARCHAR)");
+        return examples;
+    }
+
     namespace
     {
         using FrequentItemsSketch = datasketches::frequent_items_sketch<std::string>;
@@ -448,7 +458,7 @@ namespace duckdb
             {
                 FunctionDescription desc;
                 desc.description = "Creates a Frequent Items sketch to find heavy hitters in a data stream";
-                desc.examples.push_back("datasketch_frequent_items(column)");
+                desc.examples.push_back(std::string("SELECT datasketch_frequent_items(item)") + DS_FREQ_ITEMS_EXAMPLE_ROWS);
                 desc.parameter_names = {"data"};
                 desc.parameter_types = {input_type};
                 descs.push_back(std::move(desc));
@@ -460,7 +470,7 @@ namespace duckdb
             {
                 FunctionDescription desc;
                 desc.description = "Creates a Frequent Items sketch with the given log2 of max map size (lg_max_k)";
-                desc.examples.push_back("datasketch_frequent_items(10, column)");
+                desc.examples.push_back(std::string("SELECT datasketch_frequent_items(10, item)") + DS_FREQ_ITEMS_EXAMPLE_ROWS);
                 desc.parameter_names = {"lg_max_k", "data"};
                 desc.parameter_types = {LogicalType::INTEGER, input_type};
                 descs.push_back(std::move(desc));
@@ -480,7 +490,7 @@ namespace duckdb
             {
                 FunctionDescription desc;
                 desc.description = "Creates a weighted Frequent Items sketch to find heavy hitters by total item weight; each row adds its weight to the item's count";
-                desc.examples.push_back("datasketch_frequent_items_weighted(column, weight)");
+                desc.examples.push_back(std::string("SELECT datasketch_frequent_items_weighted(item, weight)") + DS_FREQ_ITEMS_EXAMPLE_ROWS);
                 desc.parameter_names = {"data", "weight"};
                 desc.parameter_types = {input_type, weight_type};
                 descs.push_back(std::move(desc));
@@ -491,7 +501,7 @@ namespace duckdb
             {
                 FunctionDescription desc;
                 desc.description = "Creates a weighted Frequent Items sketch with the given log2 of max map size (lg_max_k); each row adds its weight to the item's count";
-                desc.examples.push_back("datasketch_frequent_items_weighted(10, column, weight)");
+                desc.examples.push_back(std::string("SELECT datasketch_frequent_items_weighted(10, item, weight)") + DS_FREQ_ITEMS_EXAMPLE_ROWS);
                 desc.parameter_names = {"lg_max_k", "data", "weight"};
                 desc.parameter_types = {LogicalType::INTEGER, input_type, weight_type};
                 descs.push_back(std::move(desc));
@@ -548,7 +558,7 @@ namespace duckdb
         {
             FunctionDescription desc;
             desc.description = "Merges existing Frequent Items sketches into a single sketch";
-            desc.examples.push_back("datasketch_frequent_items(sketch)");
+            desc.examples.push_back(DSFreqItemsExamples().QueryPartials("datasketch_frequent_items(sketch)"));
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             agg_descs.push_back(std::move(desc));
@@ -559,7 +569,7 @@ namespace duckdb
         {
             FunctionDescription desc;
             desc.description = "Merges existing Frequent Items sketches into a single sketch with the given log2 of max map size (lg_max_k)";
-            desc.examples.push_back("datasketch_frequent_items(10, sketch)");
+            desc.examples.push_back(DSFreqItemsExamples().QueryPartials("datasketch_frequent_items(10, sketch)"));
             desc.parameter_names = {"lg_max_k", "sketch"};
             desc.parameter_types = {LogicalType::INTEGER, sketch_type};
             agg_descs.push_back(std::move(desc));
@@ -607,7 +617,7 @@ namespace duckdb
             for (const auto &item_type : item_types) {
                 FunctionDescription desc;
                 desc.description = description;
-                desc.examples.push_back(std::string(name) + "(sketch, item)");
+                desc.examples.push_back(DSFreqItemsExamples().Query(std::string(name) + "(sketch, '3')"));
                 desc.parameter_names = {"sketch", "item"};
                 desc.parameter_types = {sketch_type, item_type};
                 info.descriptions.push_back(std::move(desc));
@@ -685,7 +695,7 @@ namespace duckdb
                                                          {sketch_type}, LogicalType::DOUBLE, DSFreqItemsEpsilon)));
             FunctionDescription desc;
             desc.description = "Returns the epsilon value (relative error) of the sketch";
-            desc.examples.push_back("datasketch_frequent_items_epsilon(sketch)");
+            desc.examples.push_back(DSFreqItemsExamples().Query("datasketch_frequent_items_epsilon(sketch)"));
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
@@ -697,7 +707,7 @@ namespace duckdb
                                                          {sketch_type}, LogicalType::BIGINT, DSFreqItemsTotalWeight)));
             FunctionDescription desc;
             desc.description = "Returns the total weight (sum of all item counts) processed by the sketch";
-            desc.examples.push_back("datasketch_frequent_items_total_weight(sketch)");
+            desc.examples.push_back(DSFreqItemsExamples().Query("datasketch_frequent_items_total_weight(sketch)"));
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
@@ -709,7 +719,7 @@ namespace duckdb
                                                          {sketch_type}, LogicalType::BOOLEAN, DSFreqItemsIsEmpty)));
             FunctionDescription desc;
             desc.description = "Returns true if the sketch is empty";
-            desc.examples.push_back("datasketch_frequent_items_is_empty(sketch)");
+            desc.examples.push_back(DSFreqItemsExamples().Query("datasketch_frequent_items_is_empty(sketch)"));
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
@@ -721,7 +731,7 @@ namespace duckdb
                                                          {sketch_type}, LogicalType::BIGINT, DSFreqItemsNumActive)));
             FunctionDescription desc;
             desc.description = "Returns the number of active items currently tracked by the sketch";
-            desc.examples.push_back("datasketch_frequent_items_num_active(sketch)");
+            desc.examples.push_back(DSFreqItemsExamples().Query("datasketch_frequent_items_num_active(sketch)"));
             desc.parameter_names = {"sketch"};
             desc.parameter_types = {sketch_type};
             info.descriptions.push_back(desc);
@@ -743,7 +753,7 @@ namespace duckdb
                                                          DSFreqItemsGetFrequent)));
             FunctionDescription desc;
             desc.description = "Returns a list of frequent items with their estimates and bounds. Use 'NO_FALSE_POSITIVES' or 'NO_FALSE_NEGATIVES' for error type";
-            desc.examples.push_back("datasketch_frequent_items_get_frequent(sketch, 'NO_FALSE_POSITIVES')");
+            desc.examples.push_back(DSFreqItemsExamples().Query("datasketch_frequent_items_get_frequent(sketch, 'NO_FALSE_POSITIVES')"));
             desc.parameter_names = {"sketch", "error_type"};
             desc.parameter_types = {sketch_type, LogicalType::VARCHAR};
             info.descriptions.push_back(desc);

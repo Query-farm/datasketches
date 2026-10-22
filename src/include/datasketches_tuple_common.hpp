@@ -225,12 +225,20 @@ namespace duckdb
             }
 
             // Registers the functions common to all tuple sketch types.
+            // `ex` builds the sketches the examples refer to, so each example is a runnable query.
             static void Register(ExtensionLoader &loader, const LogicalType &sketch_type, const LogicalType &theta_type,
-                                 const string &noun, const vector<string> &categories)
+                                 const string &noun, const vector<string> &categories, const DSExampleSources &ex)
             {
                 const string p = TRAITS::PREFIX;
                 auto desc = [&](const string &description, const vector<string> &examples, const vector<string> &names, const vector<LogicalType> &types)
-                { return DSSketchDescription(description, examples, names, types, categories); };
+                {
+                    vector<string> queries;
+                    for (auto &example : examples)
+                    {
+                        queries.push_back(ex.Query(example));
+                    }
+                    return DSSketchDescription(description, std::move(queries), names, types, categories);
+                };
                 const vector<string> one = {"sketch"};
                 const vector<LogicalType> one_type = {sketch_type};
 

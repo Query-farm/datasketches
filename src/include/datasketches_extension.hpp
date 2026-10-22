@@ -1,6 +1,7 @@
 #pragma once
 
 #include "duckdb.hpp"
+#include <string>
 #include "duckdb/function/aggregate_function.hpp"
 #include "duckdb/function/scalar_function.hpp"
 #include "duckdb/catalog/catalog.hpp"
@@ -152,4 +153,75 @@ namespace duckdb
 		}
 	}
 
+	// Example queries for function descriptions. Each example is a complete query that runs as-is: the sketches it
+	// refers to (sketch, sketch_a, sketch_b, sketch_c, actual, expected) are built from inline data with `build`, an
+	// aggregate over the BIGINT column i of range().
+	struct DSExampleSources
+	{
+		explicit DSExampleSources(string build_p) : build(std::move(build_p))
+		{
+		}
+
+		string build;
+
+		// A subquery producing one sketch named `alias` over range(lo, hi).
+		string Sketch(const string &alias, idx_t lo, idx_t hi) const
+		{
+			return "(SELECT " + build + " AS " + alias + " FROM range(" + std::to_string(lo) + ", " + std::to_string(hi) + ") t(i))";
+		}
+
+		// True if `name` appears in `call` as a whole argument (not as part of a function name such as datasketch_aod).
+		static bool HasArgument(const string &call, const string &name)
+		{
+			for (auto pos = call.find(name); pos != string::npos; pos = call.find(name, pos + 1))
+			{
+				auto end = pos + name.size();
+				bool starts = pos > 0 && (call[pos - 1] == '(' || call[pos - 1] == ' ');
+				bool ends = end < call.size() && (call[end] == ',' || call[end] == ')');
+				if (starts && ends)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		// SELECT <call> FROM the sketches the call refers to. Overlapping inputs keep set operations meaningful.
+		string Query(const string &call) const
+		{
+			string from;
+			if (HasArgument(call, "sketch_a"))
+			{
+				from = Sketch("sketch_a", 0, 1000) + " a, " + Sketch("sketch_b", 500, 1500) + " b";
+				if (HasArgument(call, "sketch_c"))
+				{
+					from += ", " + Sketch("sketch_c", 250, 1250) + " c";
+				}
+			}
+			else if (HasArgument(call, "actual"))
+			{
+				from = Sketch("actual", 0, 1000) + " a, " + Sketch("expected", 100, 1100) + " e";
+			}
+			else
+			{
+				from = Sketch("sketch", 0, 1000) + " s";
+			}
+			return "SELECT " + call + " FROM " + from;
+		}
+
+		// SELECT <call> FROM several rows of `sketch` (partial sketches of disjoint groups), for aggregates that merge sketches.
+		string QueryPartials(const string &call) const
+		{
+			return "SELECT " + call + " FROM (SELECT " + build + " AS sketch FROM range(1000) t(i) GROUP BY i % 4) s";
+		}
+
+		// SELECT <call> FROM two rows of overlapping `sketch`es, for aggregates that intersect sketches.
+		string QueryOverlapping(const string &call) const
+		{
+			return "SELECT " + call + " FROM (SELECT " + build + " AS sketch FROM range(0, 1000) t(i) UNION ALL SELECT " + build +
+			       " FROM range(500, 1500) t(i)) s";
+		}
+	};
+
 } // namespace duckdb
+

@@ -17,6 +17,20 @@ concurrency:
     github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
   cancel-in-progress: true
 jobs:
+  codegen-check:
+    name: Generated code matches codegen/generator.py
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Regenerate
+      run: |
+        python3 -m pip install jinja2
+        python3 codegen/generator.py
+    - name: Fail if the generated files differ from the committed ones
+      run: git diff --exit-code -- src/generated.cpp test/sql/datasketch_generated_examples.test
   duckdb-stable-build:
     name: Build extension binaries
     uses: Query-farm/extension-ci-tools/.github/workflows/build.yml@query-farm
@@ -31,7 +45,7 @@ jobs:
       ccache_remote_token: ${{ secrets.QUERY_FARM_CCACHE_TOKEN }}
   duckdb-deploy:
     name: Deploy to duckdb-extensions.query.farm
-    needs: duckdb-stable-build
+    needs: [codegen-check, duckdb-stable-build]
     if: github.event_name != 'pull_request' && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/v2.0' || startsWith(github.ref, 'refs/tags/'))
     uses: Query-farm/extension-ci-tools/.github/workflows/_query_farm_deploy.yml@query-farm
     with:

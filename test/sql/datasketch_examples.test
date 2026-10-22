@@ -1,0 +1,472 @@
+# name: test/sql/datasketch_examples.test
+# description: every example in the Theta, Tuple, array-of-doubles and Frequent Items function descriptions runs
+# group: [datasketches]
+
+# The generated sketch functions (Quantiles, KLL, REQ, TDigest, HLL, CPC) are covered by
+# datasketch_generated_examples.test, which codegen/generator.py writes. When an example below changes, update
+# both the list and the statement that runs it.
+
+require datasketches
+
+statement ok
+CREATE TABLE documented_examples(example VARCHAR);
+
+statement ok
+INSERT INTO documented_examples VALUES
+('SELECT datasketch_aod(14, user_id, [clicks, revenue]) FROM (SELECT i % 100 AS user_id, 1.0::DOUBLE AS clicks, i * 0.5::DOUBLE AS revenue FROM range(1000) t(i)) t'),
+('SELECT datasketch_aod(14, user_id, [clicks, revenue], seed := 42) FROM (SELECT i % 100 AS user_id, 1.0::DOUBLE AS clicks, i * 0.5::DOUBLE AS revenue FROM range(1000) t(i)) t'),
+('SELECT datasketch_aod(16, sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_aod(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_aod(user_id, [clicks, revenue]) FROM (SELECT i % 100 AS user_id, 1.0::DOUBLE AS clicks, i * 0.5::DOUBLE AS revenue FROM range(1000) t(i)) t'),
+('SELECT datasketch_aod_a_not_b(sketch_a, sketch_b) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_aod_column_means(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_aod_column_sums(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_aod_describe(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_aod_dissimilarity_test(actual, expected, 0.1) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS actual FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS expected FROM range(100, 1100) t(i)) e'),
+('SELECT datasketch_aod_estimate(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_aod_exactly_equal(sketch_a, sketch_b) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_aod_get_theta(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_aod_intersect(sketch_a, sketch_b) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_aod_intersect(sketch_a, sketch_b, sketch_c) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_c FROM range(250, 1250) t(i)) c'),
+('SELECT datasketch_aod_intersect_agg(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i) UNION ALL SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) FROM range(500, 1500) t(i)) s'),
+('SELECT datasketch_aod_is_empty(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_aod_is_estimation_mode(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_aod_jaccard(sketch_a, sketch_b) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_aod_jaccard(sketch_a, sketch_b).estimate FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_aod_lower_bound(sketch, 2) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_aod_num_retained(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_aod_num_values(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_aod_seed_hash(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_aod_similarity_test(actual, expected, 0.9) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS actual FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS expected FROM range(100, 1100) t(i)) e'),
+('SELECT datasketch_aod_summaries(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_aod_to_theta(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_aod_union(16, sketch_a, sketch_b) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_aod_union(sketch_a, sketch_b) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_aod_union(sketch_a, sketch_b, sketch_c) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_c FROM range(250, 1250) t(i)) c'),
+('SELECT datasketch_aod_upper_bound(sketch, 2) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_frequent_items(10, item) FROM (SELECT (i % 10)::VARCHAR AS item, i AS weight FROM range(1000) t(i)) t'),
+('SELECT datasketch_frequent_items(10, sketch) FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_frequent_items(item) FROM (SELECT (i % 10)::VARCHAR AS item, i AS weight FROM range(1000) t(i)) t'),
+('SELECT datasketch_frequent_items(sketch) FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_frequent_items_epsilon(sketch) FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_frequent_items_estimate(sketch, ''3'') FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_frequent_items_get_frequent(sketch, ''NO_FALSE_POSITIVES'') FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_frequent_items_is_empty(sketch) FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_frequent_items_lower_bound(sketch, ''3'') FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_frequent_items_num_active(sketch) FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_frequent_items_total_weight(sketch) FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_frequent_items_upper_bound(sketch, ''3'') FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_frequent_items_weighted(10, item, weight) FROM (SELECT (i % 10)::VARCHAR AS item, i AS weight FROM range(1000) t(i)) t'),
+('SELECT datasketch_frequent_items_weighted(item, weight) FROM (SELECT (i % 10)::VARCHAR AS item, i AS weight FROM range(1000) t(i)) t'),
+('SELECT datasketch_theta(14, i) FROM range(1000) t(i)'),
+('SELECT datasketch_theta(14, i, seed := 42, p := 0.5) FROM range(1000) t(i)'),
+('SELECT datasketch_theta(16, sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_theta(i) FROM range(1000) t(i)'),
+('SELECT datasketch_theta(i, seed := 42) FROM range(1000) t(i)'),
+('SELECT datasketch_theta(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_theta_a_not_b(sketch_a, sketch_b) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_theta_blob(14, i::VARCHAR::BLOB) FROM range(1000) t(i)'),
+('SELECT datasketch_theta_blob(14, i::VARCHAR::BLOB, seed := 42, p := 0.5) FROM range(1000) t(i)'),
+('SELECT datasketch_theta_blob(i::VARCHAR::BLOB) FROM range(1000) t(i)'),
+('SELECT datasketch_theta_blob(i::VARCHAR::BLOB, seed := 42) FROM range(1000) t(i)'),
+('SELECT datasketch_theta_describe(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_theta_dissimilarity_test(actual, expected, 0.1) FROM (SELECT datasketch_theta(i) AS actual FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS expected FROM range(100, 1100) t(i)) e'),
+('SELECT datasketch_theta_estimate(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_theta_exactly_equal(sketch_a, sketch_b) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_theta_get_seed(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_theta_get_theta(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_theta_intersect(sketch_a, sketch_b) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_theta_intersect(sketch_a, sketch_b, sketch_c) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_theta(i) AS sketch_c FROM range(250, 1250) t(i)) c'),
+('SELECT datasketch_theta_intersect_agg(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i) UNION ALL SELECT datasketch_theta(i) FROM range(500, 1500) t(i)) s'),
+('SELECT datasketch_theta_is_empty(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_theta_is_estimation_mode(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_theta_jaccard(sketch_a, sketch_b) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_theta_jaccard(sketch_a, sketch_b).estimate FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_theta_lower_bound(sketch, 2) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_theta_num_retained(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_theta_seed_hash(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_theta_similarity_test(actual, expected, 0.9) FROM (SELECT datasketch_theta(i) AS actual FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS expected FROM range(100, 1100) t(i)) e'),
+('SELECT datasketch_theta_union(16, sketch_a, sketch_b) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_theta_union(16, sketch_a, sketch_b, sketch_c) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_theta(i) AS sketch_c FROM range(250, 1250) t(i)) c'),
+('SELECT datasketch_theta_union(sketch_a, sketch_b) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_theta_union(sketch_a, sketch_b, sketch_c) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_theta(i) AS sketch_c FROM range(250, 1250) t(i)) c'),
+('SELECT datasketch_theta_upper_bound(sketch, 2) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_tuple(14, user_id, amount) FROM (SELECT i % 100 AS user_id, i::DOUBLE AS amount FROM range(1000) t(i)) t'),
+('SELECT datasketch_tuple(14, user_id, amount, mode := ''max'', seed := 42) FROM (SELECT i % 100 AS user_id, i::DOUBLE AS amount FROM range(1000) t(i)) t'),
+('SELECT datasketch_tuple(16, sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_tuple(16, sketch, mode := ''max'') FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_tuple(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_tuple(sketch, mode := ''max'') FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_tuple(user_id, amount) FROM (SELECT i % 100 AS user_id, i::DOUBLE AS amount FROM range(1000) t(i)) t'),
+('SELECT datasketch_tuple(user_id, amount, mode := ''min'') FROM (SELECT i % 100 AS user_id, i::DOUBLE AS amount FROM range(1000) t(i)) t'),
+('SELECT datasketch_tuple_a_not_b(sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_tuple_describe(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_tuple_dissimilarity_test(actual, expected, 0.1) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS actual FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS expected FROM range(100, 1100) t(i)) e'),
+('SELECT datasketch_tuple_estimate(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_tuple_exactly_equal(sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_tuple_get_theta(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_tuple_intersect(sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_tuple_intersect(sketch_a, sketch_b, mode := ''min'') FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_tuple_intersect_agg(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i) UNION ALL SELECT datasketch_tuple(i % 100, i::DOUBLE) FROM range(500, 1500) t(i)) s'),
+('SELECT datasketch_tuple_intersect_agg(sketch, mode := ''min'') FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i) UNION ALL SELECT datasketch_tuple(i % 100, i::DOUBLE) FROM range(500, 1500) t(i)) s'),
+('SELECT datasketch_tuple_is_empty(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_tuple_is_estimation_mode(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_tuple_jaccard(sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_tuple_jaccard(sketch_a, sketch_b).estimate FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_tuple_lower_bound(sketch, 2) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_tuple_mean(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_tuple_num_retained(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_tuple_seed_hash(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_tuple_similarity_test(actual, expected, 0.9) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS actual FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS expected FROM range(100, 1100) t(i)) e'),
+('SELECT datasketch_tuple_sum(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_tuple_summaries(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_tuple_to_theta(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_tuple_union(16, sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_tuple_union(sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_tuple_union(sketch_a, sketch_b, sketch_c, mode := ''max'') FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_c FROM range(250, 1250) t(i)) c'),
+('SELECT datasketch_tuple_upper_bound(sketch, 2) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s');
+
+# Every registered example of these functions is one of the examples run below
+query II
+SELECT count(*), count(*) FILTER (WHERE example NOT IN (SELECT example FROM documented_examples))
+FROM (SELECT DISTINCT unnest(examples) AS example FROM duckdb_functions()
+      WHERE function_name LIKE 'datasketch%'
+        AND NOT regexp_matches(function_name, '^datasketch_(quantiles|kll|req|tdigest|hll|cpc)(_|$)'));
+----
+112	0
+
+statement ok
+SELECT datasketch_aod(14, user_id, [clicks, revenue]) FROM (SELECT i % 100 AS user_id, 1.0::DOUBLE AS clicks, i * 0.5::DOUBLE AS revenue FROM range(1000) t(i)) t;
+
+statement ok
+SELECT datasketch_aod(14, user_id, [clicks, revenue], seed := 42) FROM (SELECT i % 100 AS user_id, 1.0::DOUBLE AS clicks, i * 0.5::DOUBLE AS revenue FROM range(1000) t(i)) t;
+
+statement ok
+SELECT datasketch_aod(16, sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_aod(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_aod(user_id, [clicks, revenue]) FROM (SELECT i % 100 AS user_id, 1.0::DOUBLE AS clicks, i * 0.5::DOUBLE AS revenue FROM range(1000) t(i)) t;
+
+statement ok
+SELECT datasketch_aod_a_not_b(sketch_a, sketch_b) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_aod_column_means(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_column_sums(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_describe(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_dissimilarity_test(actual, expected, 0.1) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS actual FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS expected FROM range(100, 1100) t(i)) e;
+
+statement ok
+SELECT datasketch_aod_estimate(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_exactly_equal(sketch_a, sketch_b) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_aod_get_theta(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_intersect(sketch_a, sketch_b) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_aod_intersect(sketch_a, sketch_b, sketch_c) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_c FROM range(250, 1250) t(i)) c;
+
+statement ok
+SELECT datasketch_aod_intersect_agg(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i) UNION ALL SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) FROM range(500, 1500) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_is_empty(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_is_estimation_mode(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_jaccard(sketch_a, sketch_b) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_aod_jaccard(sketch_a, sketch_b).estimate FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_aod_lower_bound(sketch, 2) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_num_retained(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_num_values(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_seed_hash(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_similarity_test(actual, expected, 0.9) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS actual FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS expected FROM range(100, 1100) t(i)) e;
+
+statement ok
+SELECT datasketch_aod_summaries(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_to_theta(sketch) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_aod_union(16, sketch_a, sketch_b) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_aod_union(sketch_a, sketch_b) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_aod_union(sketch_a, sketch_b, sketch_c) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_c FROM range(250, 1250) t(i)) c;
+
+statement ok
+SELECT datasketch_aod_upper_bound(sketch, 2) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_frequent_items(10, item) FROM (SELECT (i % 10)::VARCHAR AS item, i AS weight FROM range(1000) t(i)) t;
+
+statement ok
+SELECT datasketch_frequent_items(10, sketch) FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_frequent_items(item) FROM (SELECT (i % 10)::VARCHAR AS item, i AS weight FROM range(1000) t(i)) t;
+
+statement ok
+SELECT datasketch_frequent_items(sketch) FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_frequent_items_epsilon(sketch) FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_frequent_items_estimate(sketch, '3') FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_frequent_items_get_frequent(sketch, 'NO_FALSE_POSITIVES') FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_frequent_items_is_empty(sketch) FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_frequent_items_lower_bound(sketch, '3') FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_frequent_items_num_active(sketch) FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_frequent_items_total_weight(sketch) FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_frequent_items_upper_bound(sketch, '3') FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_frequent_items_weighted(10, item, weight) FROM (SELECT (i % 10)::VARCHAR AS item, i AS weight FROM range(1000) t(i)) t;
+
+statement ok
+SELECT datasketch_frequent_items_weighted(item, weight) FROM (SELECT (i % 10)::VARCHAR AS item, i AS weight FROM range(1000) t(i)) t;
+
+statement ok
+SELECT datasketch_theta(14, i) FROM range(1000) t(i);
+
+statement ok
+SELECT datasketch_theta(14, i, seed := 42, p := 0.5) FROM range(1000) t(i);
+
+statement ok
+SELECT datasketch_theta(16, sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_theta(i) FROM range(1000) t(i);
+
+statement ok
+SELECT datasketch_theta(i, seed := 42) FROM range(1000) t(i);
+
+statement ok
+SELECT datasketch_theta(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_theta_a_not_b(sketch_a, sketch_b) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_theta_blob(14, i::VARCHAR::BLOB) FROM range(1000) t(i);
+
+statement ok
+SELECT datasketch_theta_blob(14, i::VARCHAR::BLOB, seed := 42, p := 0.5) FROM range(1000) t(i);
+
+statement ok
+SELECT datasketch_theta_blob(i::VARCHAR::BLOB) FROM range(1000) t(i);
+
+statement ok
+SELECT datasketch_theta_blob(i::VARCHAR::BLOB, seed := 42) FROM range(1000) t(i);
+
+statement ok
+SELECT datasketch_theta_describe(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_theta_dissimilarity_test(actual, expected, 0.1) FROM (SELECT datasketch_theta(i) AS actual FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS expected FROM range(100, 1100) t(i)) e;
+
+statement ok
+SELECT datasketch_theta_estimate(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_theta_exactly_equal(sketch_a, sketch_b) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_theta_get_seed(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_theta_get_theta(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_theta_intersect(sketch_a, sketch_b) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_theta_intersect(sketch_a, sketch_b, sketch_c) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_theta(i) AS sketch_c FROM range(250, 1250) t(i)) c;
+
+statement ok
+SELECT datasketch_theta_intersect_agg(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i) UNION ALL SELECT datasketch_theta(i) FROM range(500, 1500) t(i)) s;
+
+statement ok
+SELECT datasketch_theta_is_empty(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_theta_is_estimation_mode(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_theta_jaccard(sketch_a, sketch_b) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_theta_jaccard(sketch_a, sketch_b).estimate FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_theta_lower_bound(sketch, 2) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_theta_num_retained(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_theta_seed_hash(sketch) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_theta_similarity_test(actual, expected, 0.9) FROM (SELECT datasketch_theta(i) AS actual FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS expected FROM range(100, 1100) t(i)) e;
+
+statement ok
+SELECT datasketch_theta_union(16, sketch_a, sketch_b) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_theta_union(16, sketch_a, sketch_b, sketch_c) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_theta(i) AS sketch_c FROM range(250, 1250) t(i)) c;
+
+statement ok
+SELECT datasketch_theta_union(sketch_a, sketch_b) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_theta_union(sketch_a, sketch_b, sketch_c) FROM (SELECT datasketch_theta(i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_theta(i) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_theta(i) AS sketch_c FROM range(250, 1250) t(i)) c;
+
+statement ok
+SELECT datasketch_theta_upper_bound(sketch, 2) FROM (SELECT datasketch_theta(i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple(14, user_id, amount) FROM (SELECT i % 100 AS user_id, i::DOUBLE AS amount FROM range(1000) t(i)) t;
+
+statement ok
+SELECT datasketch_tuple(14, user_id, amount, mode := 'max', seed := 42) FROM (SELECT i % 100 AS user_id, i::DOUBLE AS amount FROM range(1000) t(i)) t;
+
+statement ok
+SELECT datasketch_tuple(16, sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_tuple(16, sketch, mode := 'max') FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_tuple(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_tuple(sketch, mode := 'max') FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_tuple(user_id, amount) FROM (SELECT i % 100 AS user_id, i::DOUBLE AS amount FROM range(1000) t(i)) t;
+
+statement ok
+SELECT datasketch_tuple(user_id, amount, mode := 'min') FROM (SELECT i % 100 AS user_id, i::DOUBLE AS amount FROM range(1000) t(i)) t;
+
+statement ok
+SELECT datasketch_tuple_a_not_b(sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_tuple_describe(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_dissimilarity_test(actual, expected, 0.1) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS actual FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS expected FROM range(100, 1100) t(i)) e;
+
+statement ok
+SELECT datasketch_tuple_estimate(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_exactly_equal(sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_tuple_get_theta(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_intersect(sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_tuple_intersect(sketch_a, sketch_b, mode := 'min') FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_tuple_intersect_agg(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i) UNION ALL SELECT datasketch_tuple(i % 100, i::DOUBLE) FROM range(500, 1500) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_intersect_agg(sketch, mode := 'min') FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i) UNION ALL SELECT datasketch_tuple(i % 100, i::DOUBLE) FROM range(500, 1500) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_is_empty(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_is_estimation_mode(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_jaccard(sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_tuple_jaccard(sketch_a, sketch_b).estimate FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_tuple_lower_bound(sketch, 2) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_mean(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_num_retained(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_seed_hash(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_similarity_test(actual, expected, 0.9) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS actual FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS expected FROM range(100, 1100) t(i)) e;
+
+statement ok
+SELECT datasketch_tuple_sum(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_summaries(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_to_theta(sketch) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_tuple_union(16, sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_tuple_union(sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_tuple_union(sketch_a, sketch_b, sketch_c, mode := 'max') FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_c FROM range(250, 1250) t(i)) c;
+
+statement ok
+SELECT datasketch_tuple_upper_bound(sketch, 2) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
