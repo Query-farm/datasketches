@@ -41,6 +41,9 @@ def sketch_type_to_allowed_logical_types(sketch_type):
             "LogicalType::USMALLINT": "uint16_t",
             "LogicalType::UINTEGER": "uint32_t",
             "LogicalType::UBIGINT": "uint64_t",
+            "LogicalType::HUGEINT": "hugeint_t",
+            "LogicalType::UHUGEINT": "uhugeint_t",
+            "LogicalType::UUID": "DSUUIDInput",
             "LogicalType::VARCHAR": "string_t",
             "LogicalType::BLOB": "string_t",
         }

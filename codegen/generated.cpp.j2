@@ -4,6 +4,8 @@
 #include "duckdb/parser/parsed_data/create_scalar_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_aggregate_function_info.hpp"
 #include "duckdb/function/scalar_function.hpp"
+#include "duckdb/common/operator/cast_operators.hpp"
+#include "duckdb/common/bswap.hpp"
 
 #include <DataSketches/quantiles_sketch.hpp>
 #include <DataSketches/kll_sketch.hpp>
@@ -279,6 +281,61 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
         static bool IgnoreNull() { return true; }
     };
 
+    // Marks the UUID overload: its values are read as hugeint_t but hashed as UUIDs.
+    struct DSUUIDInput
+    {
+    };
+    template <class T>
+    struct DSCountingInput
+    {
+        using physical_type = T;
+        static constexpr bool is_uuid = false;
+    };
+    template <>
+    struct DSCountingInput<DSUUIDInput>
+    {
+        using physical_type = hugeint_t;
+        static constexpr bool is_uuid = true;
+    };
+
+    // Feeds one input value to a counting sketch or union.
+    template <bool IS_UUID, class SKETCH, class T>
+    static inline void DSCountingUpdate(SKETCH &sketch, const T &value)
+    {
+        if constexpr (std::is_same_v<T, string_t>)
+        {
+            sketch.update(value.GetData(), value.GetSize());
+        }
+        else if constexpr (IS_UUID)
+        {
+            // The canonical 16 bytes (big-endian, as in UUID::ToBlob), so these sketches equal sketches of `uuid::BLOB`.
+            const uint64_t halves[2] = {BSwapIfLE(static_cast<uint64_t>(value.upper) ^ (uint64_t(1) << 63)),
+                                        BSwapIfLE(value.lower)};
+            sketch.update(halves, sizeof(halves));
+        }
+        else if constexpr (std::is_same_v<T, hugeint_t> || std::is_same_v<T, uhugeint_t>)
+        {
+            // These inputs used to reach the sketch through an implicit cast to DOUBLE. A value that converts to
+            // DOUBLE exactly keeps that hash, so existing sketches still merge; the rest hash all 128 bits instead of
+            // collapsing into one DOUBLE.
+            double as_double;
+            T round_trip;
+            if (TryCast::Operation<T, double>(value, as_double, false) &&
+                TryCast::Operation<double, T>(as_double, round_trip, false) && round_trip == value)
+            {
+                sketch.update(as_double);
+                return;
+            }
+            // Little-endian, lower half first, on every platform.
+            const uint64_t halves[2] = {BSwapIfBE(value.lower), BSwapIfBE(static_cast<uint64_t>(value.upper))};
+            sketch.update(halves, sizeof(halves));
+        }
+        else
+        {
+            sketch.update(value);
+        }
+    }
+
     // A union's contents as a sketch another union can absorb, and its result in each type's wire format.
     static inline datasketches::hll_sketch UnionContents(const datasketches::hll_union &u)
     {
@@ -504,7 +561,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
         }
     };
 
-    template <class BIND_DATA_TYPE>
+    template <class BIND_DATA_TYPE, bool IS_UUID = false>
     struct DSHLLCreateOperation : DSUnionOperationBase
     {
         template <class A_TYPE, class STATE, class OP>
@@ -518,15 +575,11 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
                 state.CreateSketch(bind_data.k);
             }
 
-            if constexpr (std::is_same_v<A_TYPE, duckdb::string_t>) {
-                state.sketch->update(a_data.GetData(), a_data.GetSize());
-            } else {
-                state.sketch->update(a_data);
-            }
+            DSCountingUpdate<IS_UUID>(*state.sketch, a_data);
         }
     };
 
-    template <class BIND_DATA_TYPE>
+    template <class BIND_DATA_TYPE, bool IS_UUID = false>
     struct DSCPCCreateOperation : DSSketchOperationBase
     {
         template <class A_TYPE, class STATE, class OP>
@@ -540,11 +593,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
                 state.CreateSketch(bind_data.k);
             }
 
-            if constexpr (std::is_same_v<A_TYPE, duckdb::string_t>) {
-                state.sketch->update(a_data.GetData(), a_data.GetSize());
-            } else {
-                state.sketch->update(a_data);
-            }
+            DSCountingUpdate<IS_UUID>(*state.sketch, a_data);
         }
 
         template <class INPUT_TYPE, class STATE, class OP>
@@ -645,12 +694,16 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
     auto static DS{{sketch_type}}CreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         {% if sketch_type == 'HLL' %}
-        auto fun = AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}UnionState, T, string_t, DSHLLCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(type, result_type);
-        DSReadDataArgumentAt<1, DS{{sketch_type}}UnionState, T, DSHLLCreateOperation<DS{{sketch_type}}BindData>>(fun);
+        using INPUT = DSCountingInput<T>;
+        using OP = DSHLLCreateOperation<DS{{sketch_type}}BindData, INPUT::is_uuid>;
+        auto fun = AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}UnionState, typename INPUT::physical_type, string_t, OP, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DS{{sketch_type}}UnionState, typename INPUT::physical_type, OP>(fun);
         return fun;
         {% elif sketch_type == 'CPC' %}
-        auto fun = AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, T, string_t, DSCPCCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(type, result_type);
-        DSReadDataArgumentAt<1, DS{{sketch_type}}State, T, DSCPCCreateOperation<DS{{sketch_type}}BindData>>(fun);
+        using INPUT = DSCountingInput<T>;
+        using OP = DSCPCCreateOperation<DS{{sketch_type}}BindData, INPUT::is_uuid>;
+        auto fun = AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State, typename INPUT::physical_type, string_t, OP, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DS{{sketch_type}}State, typename INPUT::physical_type, OP>(fun);
         return fun;
         {% else %}
         auto fun = AggregateFunction::UnaryAggregateDestructor<DS{{sketch_type}}State<T>, T, string_t, DSQuantilesCreateOperation<DS{{sketch_type}}BindData>, AggregateDestructorType::LEGACY>(type, result_type);
