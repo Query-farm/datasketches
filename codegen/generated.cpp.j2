@@ -626,14 +626,32 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
             {
                 return;
             }
+            const bool destructive = aggr_input_data.combine_type == AggregateCombineType::ALLOW_DESTRUCTIVE;
             if (!target.sketch)
             {
-                target.CreateSketch(source);
+                if (destructive)
+                {
+                    // The source is discarded after this call, so take its sketch rather than copy it.
+                    target.sketch = source.sketch;
+                    const_cast<STATE &>(source).sketch = nullptr;
+                }
+                else
+                {
+                    target.CreateSketch(source);
+                }
                 return;
             }
+            // Move the sketches into the union so it adopts their tables instead of copying them.
             datasketches::cpc_union u(target.sketch->get_lg_k());
-            u.update(*target.sketch);
-            u.update(*source.sketch);
+            u.update(std::move(*target.sketch));
+            if (destructive)
+            {
+                u.update(std::move(*const_cast<STATE &>(source).sketch));
+            }
+            else
+            {
+                u.update(*source.sketch);
+            }
             *target.sketch = u.get_result();
         }
 
