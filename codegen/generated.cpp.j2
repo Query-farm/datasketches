@@ -187,7 +187,7 @@ static AggregateFunction DS{{ S }}CreateAggregate(const LogicalType &type, const
 
 void Load{{ S }}Sketch(ExtensionLoader &loader) {
 {% if sketch.counting %}
-    auto sketch_type = DSCreateSketchType(loader, "sketch_{{ sketch.sql }}", "Sketch type for {{ S }} sketch", false);
+    auto sketch_type = DSCreateSketchType(loader, "sketch_{{ sketch.sql }}", "Sketch type for {{ S }} sketch");
 {% else %}
     std::unordered_map<LogicalTypeId, LogicalType> sketch_map_types;
 {% for item_type in sketch.item_types %}
@@ -242,12 +242,12 @@ void Load{{ S }}Sketch(ExtensionLoader &loader) {
         vector<FunctionDescription> descriptions;
         DSAddAggregate(set, descriptions, DS{{ S }}MergeAggregate(sketch_type), DS{{ S }}Bind,
                        { {{ k_logical_type }}, sketch_type }, {"k", "sketch"},
-                       "Creates a sketch_{{ S }} data sketch by aggregating other {{ S }} data sketches",
+                       "Creates a sketch_{{ sketch.sql }} data sketch by aggregating other {{ S }} data sketches",
                        {{ examples.union|cpp_string }});
 {% if option %}
         DSAddAggregate(set, descriptions, DS{{ S }}MergeAggregate(sketch_type), DS{{ S }}Bind,
                        { {{ k_logical_type }}, sketch_type, {{ option.logical_type }} }, {"k", "sketch", "{{ option.name }}"},
-                       {{ ("Creates a sketch_" ~ S ~ " data sketch by aggregating other " ~ S ~ " data sketches. " ~ option.union_note)|cpp_string }},
+                       {{ ("Creates a sketch_" ~ sketch.sql ~ " data sketch by aggregating other " ~ S ~ " data sketches. " ~ option.union_note)|cpp_string }},
                        {{ examples.union_option|cpp_string }});
 {% endif %}
         DSRegisterAggregates(loader, std::move(set), std::move(descriptions), "{{ sketch.sql }}");

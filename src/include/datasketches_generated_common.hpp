@@ -545,10 +545,9 @@ static inline Value DSBindConstant(ClientContext &context, Expression &argument,
 }
 
 // Registers a BLOB-backed sketch type with casts to and from BLOB.
-static inline LogicalType DSCreateSketchType(ExtensionLoader &loader, const string &name, const string &comment,
-                                             bool alias_in_catalog = true) {
+static inline LogicalType DSCreateSketchType(ExtensionLoader &loader, const string &name, const string &comment) {
     auto new_type = LogicalType(LogicalTypeId::BLOB).WithAlias(name);
-    auto type_info = CreateTypeInfo(name, alias_in_catalog ? new_type : LogicalType::BLOB);
+    auto type_info = CreateTypeInfo(name, new_type);
     type_info.temporary = false;
     type_info.internal = true;
     type_info.comment = comment;

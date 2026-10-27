@@ -4690,7 +4690,7 @@ static AggregateFunction DSHLLCreateAggregate(const LogicalType &type, const Log
 }
 
 void LoadHLLSketch(ExtensionLoader &loader) {
-    auto sketch_type = DSCreateSketchType(loader, "sketch_hll", "Sketch type for HLL sketch", false);
+    auto sketch_type = DSCreateSketchType(loader, "sketch_hll", "Sketch type for HLL sketch");
 
     {
         ScalarFunctionSet set("datasketch_hll_is_empty");
@@ -4924,11 +4924,11 @@ void LoadHLLSketch(ExtensionLoader &loader) {
         vector<FunctionDescription> descriptions;
         DSAddAggregate(set, descriptions, DSHLLMergeAggregate(sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, sketch_type }, {"k", "sketch"},
-                       "Creates a sketch_HLL data sketch by aggregating other HLL data sketches",
+                       "Creates a sketch_hll data sketch by aggregating other HLL data sketches",
                        "SELECT datasketch_hll_union(12, sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
         DSAddAggregate(set, descriptions, DSHLLMergeAggregate(sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, sketch_type, LogicalType::VARCHAR }, {"k", "sketch", "target_type"},
-                       "Creates a sketch_HLL data sketch by aggregating other HLL data sketches. target_type (a constant) selects the result's register encoding: 'HLL_4' (the default), 'HLL_6' or 'HLL_8'",
+                       "Creates a sketch_hll data sketch by aggregating other HLL data sketches. target_type (a constant) selects the result's register encoding: 'HLL_4' (the default), 'HLL_6' or 'HLL_8'",
                        "SELECT datasketch_hll_union(12, sketch, 'HLL_8') FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
         DSRegisterAggregates(loader, std::move(set), std::move(descriptions), "hll");
     }
@@ -5094,7 +5094,7 @@ static AggregateFunction DSCPCCreateAggregate(const LogicalType &type, const Log
 }
 
 void LoadCPCSketch(ExtensionLoader &loader) {
-    auto sketch_type = DSCreateSketchType(loader, "sketch_cpc", "Sketch type for CPC sketch", false);
+    auto sketch_type = DSCreateSketchType(loader, "sketch_cpc", "Sketch type for CPC sketch");
 
     {
         ScalarFunctionSet set("datasketch_cpc_is_empty");
@@ -5228,7 +5228,7 @@ void LoadCPCSketch(ExtensionLoader &loader) {
         vector<FunctionDescription> descriptions;
         DSAddAggregate(set, descriptions, DSCPCMergeAggregate(sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, sketch_type }, {"k", "sketch"},
-                       "Creates a sketch_CPC data sketch by aggregating other CPC data sketches",
+                       "Creates a sketch_cpc data sketch by aggregating other CPC data sketches",
                        "SELECT datasketch_cpc_union(12, sketch) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
         DSRegisterAggregates(loader, std::move(set), std::move(descriptions), "cpc");
     }
