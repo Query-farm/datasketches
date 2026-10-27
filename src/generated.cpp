@@ -2724,8 +2724,8 @@ unique_ptr<FunctionData> DSREQBind(BindAggregateFunctionInput &input) {
     auto &arguments = input.GetArguments();
     auto k = DSBindConstant(context, *arguments[0], "REQ can only take a constant K value",
                             "REQ K value cannot be NULL").GetValue<int32_t>();
-    if (k < 4 || k > 255) {
-        throw BinderException("REQ K value must be between 4 and 255, got: " + std::to_string(k));
+    if (k < 4 || k > 1024) {
+        throw BinderException("REQ K value must be between 4 and 1024, got: " + std::to_string(k));
     }
     auto bind_data = make_uniq<DSREQBindData>(k);
     // Optional trailing constant: datasketch_req(k, data, hra).
