@@ -43,10 +43,15 @@ FROM t;
 ----
 190.0	190.0	190.0	20.0	20.0
 
-# empty input gives an empty sketch
+# no input rows gives NULL, as for every sketch aggregate; merging only empty sketches gives an empty sketch
+query II
+SELECT datasketch_tuple(k, v) IS NULL, datasketch_tuple(10, k, v) IS NULL FROM t WHERE false;
+----
+true	true
+
 query IIII
 SELECT datasketch_tuple_is_empty(s), datasketch_tuple_estimate(s), datasketch_tuple_sum(s), datasketch_tuple_mean(s) IS NULL
-FROM (SELECT datasketch_tuple(k, v) AS s FROM t WHERE false);
+FROM (SELECT datasketch_tuple(e) AS s FROM (SELECT unhex('01030901001E0000')::sketch_tuple_double AS e));
 ----
 true	0.0	0.0	true
 
@@ -143,7 +148,7 @@ CREATE TABLE sets AS
 SELECT 'A' AS name, datasketch_tuple(k, v) AS s FROM t WHERE k < 3        -- keys 0, 1, 2
 UNION ALL SELECT 'B', datasketch_tuple(k, v) FROM t WHERE k >= 2          -- keys 2, 3, 4
 UNION ALL SELECT 'C', datasketch_tuple(k, 1.0) FROM t WHERE k IN (2, 4)   -- keys 2, 4 (summaries 4.0)
-UNION ALL SELECT 'E', datasketch_tuple(k, v) FROM t WHERE false;
+UNION ALL SELECT 'E', unhex('01030901001E0000')::sketch_tuple_double;   -- empty
 
 statement ok
 CREATE MACRO s(n) AS (SELECT s FROM sets WHERE name = n);

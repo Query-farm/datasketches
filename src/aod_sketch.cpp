@@ -203,6 +203,8 @@ namespace duckdb
             uint64_t union_seed = DS_THETA_DEFAULT_SEED;
             //! The number of values per key (0 while unknown)
             uint8_t num_values = 0;
+            //! A merged input sketch was empty: with no other input, the result is an empty sketch rather than NULL
+            bool saw_empty_sketch = false;
 
             ~DSAodState()
             {
@@ -290,6 +292,7 @@ namespace duckdb
                 state.union_lg_k = 0;
                 state.union_seed = DS_THETA_DEFAULT_SEED;
                 state.num_values = 0;
+                state.saw_empty_sketch = false;
             }
 
             template <class STATE>
@@ -306,6 +309,7 @@ namespace duckdb
             template <class STATE, class OP>
             static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data)
             {
+                target.saw_empty_sketch = target.saw_empty_sketch || source.saw_empty_sketch;
                 if (!source.HasData())
                     return;
                 auto &bind_data = aggr_input_data.bind_data->template Cast<DSAodBindData>();
@@ -340,10 +344,15 @@ namespace duckdb
                 {
                     target = DSAodTraits::Serialize(finalize_data.result, state.update_sketch->compact());
                 }
-                else
+                else if (state.saw_empty_sketch)
                 {
                     auto &bind_data = finalize_data.input.bind_data->template Cast<DSAodBindData>();
                     target = DSAodTraits::Serialize(finalize_data.result, DSAodEmptySketch(bind_data.lg_k, bind_data.seed, MaxValue<uint8_t>(state.num_values, 1)));
+                }
+                else
+                {
+                    // no input rows: NULL, as for the other sketches' aggregates
+                    finalize_data.ReturnNull();
                 }
             }
 
@@ -355,6 +364,7 @@ namespace duckdb
                 auto sketch = DSAodTraits::Deserialize(blob);
                 if (sketch.is_empty())
                 {
+                    state.saw_empty_sketch = true;
                     return;
                 }
                 if (state.union_sketch && sketch.get_seed_hash() != ThetaSeedHash(state.union_seed))

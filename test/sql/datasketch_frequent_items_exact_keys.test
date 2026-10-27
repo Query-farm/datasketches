@@ -161,3 +161,9 @@ query IIII
 SELECT typeof(NULL::sketch_theta), typeof(NULL::sketch_tuple_double), typeof(NULL::sketch_aod), typeof(NULL::sketch_frequent_items)
 ----
 sketch_theta	sketch_tuple_double	sketch_aod	sketch_frequent_items
+
+# No input rows gives NULL, as for every sketch aggregate
+query III
+SELECT datasketch_frequent_items(i) IS NULL, datasketch_frequent_items(10, i) IS NULL, datasketch_frequent_items_weighted(i, i) IS NULL FROM range(0) t(i)
+----
+true	true	true

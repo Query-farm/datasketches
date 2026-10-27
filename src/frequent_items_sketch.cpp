@@ -171,7 +171,7 @@ namespace duckdb
             }
         };
 
-        // Shared by the create, weighted create and merge aggregates. With no input, the result is an empty sketch.
+        // Shared by the create, weighted create and merge aggregates. With no input rows, the result is NULL.
         struct DSFreqItemsOperationBase
         {
             template <class STATE>
@@ -215,8 +215,7 @@ namespace duckdb
                 }
                 else
                 {
-                    auto &bind_data = finalize_data.input.bind_data->template Cast<DSFreqItemsBindData>();
-                    target = DSFreqItemsSerialize(finalize_data.result, FrequentItemsSketch(bind_data.lg_max_k));
+                    finalize_data.ReturnNull();
                 }
             }
         };

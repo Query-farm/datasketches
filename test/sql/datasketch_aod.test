@@ -42,10 +42,15 @@ FROM t;
 ----
 [20.0, 190.0]	[20.0, 190.0]	20.0	[20.0, 190.0]
 
-# empty input gives an empty sketch
+# no input rows gives NULL, as for every sketch aggregate; merging only empty sketches gives an empty sketch
+query II
+SELECT datasketch_aod(k, v) IS NULL, datasketch_aod(10, k, v) IS NULL FROM t WHERE false;
+----
+true	true
+
 query IIII
 SELECT datasketch_aod_is_empty(s), datasketch_aod_estimate(s), datasketch_aod_column_sums(s), datasketch_aod_column_means(s) IS NULL
-FROM (SELECT datasketch_aod(k, v) AS s FROM t WHERE false);
+FROM (SELECT datasketch_aod(e) AS s FROM (SELECT unhex('0101090314010000FFFFFFFFFFFFFF7F')::sketch_aod AS e));
 ----
 true	0.0	[0.0]	true
 
@@ -136,7 +141,7 @@ CREATE TABLE sets AS
 SELECT 'A' AS name, datasketch_aod(k, v) AS s FROM t WHERE k < 3               -- keys 0, 1, 2
 UNION ALL SELECT 'B', datasketch_aod(k, v) FROM t WHERE k >= 2                 -- keys 2, 3, 4
 UNION ALL SELECT 'C', datasketch_aod(k, [1.0, 1.0]) FROM t WHERE k IN (2, 4)   -- keys 2, 4: [4, 4]
-UNION ALL SELECT 'E', datasketch_aod(k, v) FROM t WHERE false
+UNION ALL SELECT 'E', unhex('0101090314010000FFFFFFFFFFFFFF7F')::sketch_aod      -- empty
 UNION ALL SELECT 'X', datasketch_aod(k, [1.0]) FROM t;                         -- one value per key
 
 statement ok
