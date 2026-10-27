@@ -145,14 +145,30 @@ private:
     }
 };
 
-// The list's elements as sketch items.
+// The list's elements as sketch items. A NULL element is an error: it has no place among split points.
 template <class T>
-static std::vector<DSItem<T>> DSItems(const DSListView<T> &list) {
+static std::vector<DSItem<T>> DSItems(const DSListView<T> &list, const char *function_name) {
     std::vector<DSItem<T>> items(list.size());
     for (idx_t i = 0; i < list.size(); i++) {
+        if (!list.IsValid(i)) {
+            throw InvalidInputException("%s: split points cannot be NULL", function_name);
+        }
         items[i] = DSItemIn(list[i]);
     }
     return items;
+}
+
+// Runs fun, reporting errors raised by a DataSketches library (std::exception, e.g. unsorted split points) as
+// invalid input of the function.
+template <class FUNC>
+static inline auto DSGuard(const char *function_name, FUNC &&fun) -> decltype(fun()) {
+    try {
+        return fun();
+    } catch (Exception &) {
+        throw;
+    } catch (std::exception &e) {
+        throw InvalidInputException("%s: %s", function_name, e.what());
+    }
 }
 
 // Appends `length` entries to a LIST result: `fill(child, offset)` writes child rows [offset, offset + length).

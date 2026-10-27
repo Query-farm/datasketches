@@ -314,12 +314,15 @@ class Function:
     """The example call's arguments after its sketches."""
     example: str = ""
     """A runnable query using the function, filled in by scalar_functions()."""
+    sql_name: str = ""
+    """datasketch_<sketch>_<name>, filled in by scalar_functions()."""
 
 
-def _distribution_body(kind: str, inclusive: bool) -> str:
+def _distribution_body(sketch: Sketch, kind: str, inclusive: bool) -> str:
     """The body of a CDF or PMF: the probabilities at the split points, as a LIST(DOUBLE)."""
     extra = ", inclusive_data" if inclusive else ""
-    return f"return DSAppendDoubles(result, sketch.get_{kind.upper()}(DSItems(split_points).data(), split_points.size(){extra}));"
+    items = f'DSItems(split_points, "datasketch_{sketch.sql}_{kind}")'
+    return f"return DSAppendDoubles(result, sketch.get_{kind.upper()}({items}.data(), split_points.size(){extra}));"
 
 
 def _all_functions(sketch: Sketch) -> list:
@@ -327,7 +330,7 @@ def _all_functions(sketch: Sketch) -> list:
     s = sketch.sql
     sk = sketch_arg(sketch)
     inclusive = fixed_arg("inclusive", "LogicalType::BOOLEAN")
-    std_dev = fixed_arg("std_dev", "LogicalType::UTINYINT")
+    num_std_devs = fixed_arg("num_std_devs", "LogicalType::INTEGER")
     tdigest = frozenset({"TDigest"})
     hll = frozenset({"HLL"})
     cpc = frozenset({"CPC"})
@@ -342,19 +345,19 @@ def _all_functions(sketch: Sketch) -> list:
                  (sk,), returns("LogicalType::USMALLINT"), "return sketch.get_k();"),
         Function("cdf", CLASSIC_QUANTILE_SKETCHES,
                  "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                 (sk, SPLIT_POINTS_ARG, inclusive), RETURNS_DOUBLE_LIST, _distribution_body("cdf", True),
+                 (sk, SPLIT_POINTS_ARG, inclusive), RETURNS_DOUBLE_LIST, _distribution_body(sketch, "cdf", True),
                  "[25.0, 50.0, 75.0], true"),
         Function("cdf", tdigest,
                  "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                 (sk, SPLIT_POINTS_ARG), RETURNS_DOUBLE_LIST, _distribution_body("cdf", False),
+                 (sk, SPLIT_POINTS_ARG), RETURNS_DOUBLE_LIST, _distribution_body(sketch, "cdf", False),
                  "[25.0, 50.0, 75.0]"),
         Function("pmf", CLASSIC_QUANTILE_SKETCHES,
                  "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                 (sk, SPLIT_POINTS_ARG, inclusive), RETURNS_DOUBLE_LIST, _distribution_body("pmf", True),
+                 (sk, SPLIT_POINTS_ARG, inclusive), RETURNS_DOUBLE_LIST, _distribution_body(sketch, "pmf", True),
                  "[25.0, 50.0, 75.0], true"),
         Function("pmf", tdigest,
                  "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                 (sk, SPLIT_POINTS_ARG), RETURNS_DOUBLE_LIST, _distribution_body("pmf", False),
+                 (sk, SPLIT_POINTS_ARG), RETURNS_DOUBLE_LIST, _distribution_body(sketch, "pmf", False),
                  "[25.0, 50.0, 75.0]"),
 
         # --- HLL ---
@@ -391,10 +394,10 @@ def _all_functions(sketch: Sketch) -> list:
                  (sk,), returns("LogicalType::DOUBLE"), "return sketch.get_estimate();"),
         Function("lower_bound", COUNTING_SKETCHES,
                  "Return the lower bound of the number of distinct items seen by the sketch",
-                 (sk, std_dev), returns("LogicalType::DOUBLE"), f'return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_{s}_lower_bound"));', "2"),
+                 (sk, num_std_devs), returns("LogicalType::DOUBLE"), f'return sketch.get_lower_bound(DSCheckNumStdDevs(num_std_devs_data, "datasketch_{s}_lower_bound"));', "2"),
         Function("upper_bound", COUNTING_SKETCHES,
                  "Return the upper bound of the number of distinct items seen by the sketch",
-                 (sk, std_dev), returns("LogicalType::DOUBLE"), f'return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_{s}_upper_bound"));', "2"),
+                 (sk, num_std_devs), returns("LogicalType::DOUBLE"), f'return sketch.get_upper_bound(DSCheckNumStdDevs(num_std_devs_data, "datasketch_{s}_upper_bound"));', "2"),
 
         # --- TDigest ---
         Function("describe", tdigest, "Return a description of this sketch",
@@ -407,7 +410,7 @@ def _all_functions(sketch: Sketch) -> list:
                  (sk,), returns("LogicalType::UBIGINT"), "return sketch.get_total_weight();"),
         Function("quantile", tdigest, "Return the quantile of a rank in the sketch",
                  (sk, fixed_arg("rank", "LogicalType::DOUBLE")), RETURNS_ITEM,
-                 "return DSItemOut<T>(result, sketch.get_quantile(rank_data));", "0.5"),
+                 "DSCheckRank(rank_data); return DSItemOut<T>(result, sketch.get_quantile(rank_data));", "0.5"),
 
         # --- Classic quantile sketches ---
         Function("normalized_rank_error", frozenset({"Quantiles", "KLL"}), "Return the normalized rank error of the sketch",
@@ -423,7 +426,7 @@ def _all_functions(sketch: Sketch) -> list:
                  "return sketch.get_rank(DSItemIn(item_data), inclusive_data);", "50.0, true"),
         Function("quantile", CLASSIC_QUANTILE_SKETCHES, "Return the quantile of a rank in the sketch",
                  (sk, fixed_arg("rank", "LogicalType::DOUBLE"), inclusive), RETURNS_ITEM,
-                 "return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));", "0.5, true"),
+                 "DSCheckRank(rank_data); return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));", "0.5, true"),
         Function("n", CLASSIC_QUANTILE_SKETCHES, "Return the number of items contained in the sketch",
                  (sk,), returns("LogicalType::UBIGINT"), "return sketch.get_n();"),
         Function("is_estimation_mode", CLASSIC_QUANTILE_SKETCHES, "Return a boolean indicating if the sketch is in estimation mode",
@@ -484,8 +487,9 @@ def scalar_functions(sketch: Sketch) -> list:
         call_args = [arg.name for arg in function.args if arg.is_sketch]
         if function.example_args:
             call_args.append(function.example_args)
-        call = f"datasketch_{sketch.sql}_{function.name}({', '.join(call_args)})"
-        result.append(replace(function, example=example_query(sketch, call)))
+        sql_name = f"datasketch_{sketch.sql}_{function.name}"
+        call = f"{sql_name}({', '.join(call_args)})"
+        result.append(replace(function, example=example_query(sketch, call), sql_name=sql_name))
     return result
 
 
@@ -608,7 +612,8 @@ def parameter_types(function: Function, item_type: Optional[str]) -> str:
 
 
 def function_block(function: Function) -> str:
-    """The C++ executing `function` over the argument vectors: one lambda call per row."""
+    """The C++ executing `function` over the argument vectors: one lambda call per row, guarded so that library
+    errors are reported as invalid input."""
     if len(function.args) not in EXECUTORS:
         raise NotImplementedError(f"Unhandled number of arguments {len(function.args)}")
     cpp_types = ", ".join([arg.cpp for arg in function.args] + [function.returns.cpp])
@@ -618,7 +623,9 @@ def function_block(function: Function) -> str:
     body = [arg.process for arg in function.args if arg.process] + [function.body]
     lines = pre_executor + [
         f"{EXECUTORS[len(function.args)]}::Execute<{cpp_types}>({vectors}, result, [&]({params}) {{",
-        textwrap.indent("\n".join(body), "    "),
+        f'    return DSGuard("{function.sql_name}", [&]() {{',
+        textwrap.indent("\n".join(body), "        "),
+        "    });",
         "});",
     ]
     return textwrap.indent("\n".join(lines), "    ")

@@ -77,8 +77,10 @@ static void DSQuantilesis_empty(DataChunk &args, ExpressionState &state, Vector 
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, bool>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        return sketch.is_empty();
+        return DSGuard("datasketch_quantiles_is_empty", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            return sketch.is_empty();
+        });
     });
 }
 
@@ -87,8 +89,10 @@ static void DSQuantilesk(DataChunk &args, ExpressionState &state, Vector &result
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, uint16_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        return sketch.get_k();
+        return DSGuard("datasketch_quantiles_k", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            return sketch.get_k();
+        });
     });
 }
 
@@ -102,9 +106,11 @@ static void DSQuantilescdf(DataChunk &args, ExpressionState &state, Vector &resu
     ListVector::GetChild(split_points_vector).ToUnifiedFormat(split_points_children_unified);
     auto split_points_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
     TernaryExecutor::Execute<string_t, list_entry_t, bool, list_entry_t>(sketch_vector, split_points_vector, inclusive_vector, result, [&](string_t sketch_data, list_entry_t split_points_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
-        return DSAppendDoubles(result, sketch.get_CDF(DSItems(split_points).data(), split_points.size(), inclusive_data));
+        return DSGuard("datasketch_quantiles_cdf", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
+            return DSAppendDoubles(result, sketch.get_CDF(DSItems(split_points, "datasketch_quantiles_cdf").data(), split_points.size(), inclusive_data));
+        });
     });
 }
 
@@ -118,9 +124,11 @@ static void DSQuantilespmf(DataChunk &args, ExpressionState &state, Vector &resu
     ListVector::GetChild(split_points_vector).ToUnifiedFormat(split_points_children_unified);
     auto split_points_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
     TernaryExecutor::Execute<string_t, list_entry_t, bool, list_entry_t>(sketch_vector, split_points_vector, inclusive_vector, result, [&](string_t sketch_data, list_entry_t split_points_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
-        return DSAppendDoubles(result, sketch.get_PMF(DSItems(split_points).data(), split_points.size(), inclusive_data));
+        return DSGuard("datasketch_quantiles_pmf", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
+            return DSAppendDoubles(result, sketch.get_PMF(DSItems(split_points, "datasketch_quantiles_pmf").data(), split_points.size(), inclusive_data));
+        });
     });
 }
 
@@ -130,8 +138,10 @@ static void DSQuantilesnormalized_rank_error(DataChunk &args, ExpressionState &s
     auto &sketch_vector = args.data[0];
     auto &is_pmf_vector = args.data[1];
     BinaryExecutor::Execute<string_t, bool, double>(sketch_vector, is_pmf_vector, result, [&](string_t sketch_data, bool is_pmf_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        return sketch.get_normalized_rank_error(is_pmf_data);
+        return DSGuard("datasketch_quantiles_normalized_rank_error", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            return sketch.get_normalized_rank_error(is_pmf_data);
+        });
     });
 }
 
@@ -142,8 +152,10 @@ static void DSQuantilesdescribe(DataChunk &args, ExpressionState &state, Vector 
     auto &include_levels_vector = args.data[1];
     auto &include_items_vector = args.data[2];
     TernaryExecutor::Execute<string_t, bool, bool, string_t>(sketch_vector, include_levels_vector, include_items_vector, result, [&](string_t sketch_data, bool include_levels_data, bool include_items_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));
+        return DSGuard("datasketch_quantiles_describe", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));
+        });
     });
 }
 
@@ -154,8 +166,10 @@ static void DSQuantilesrank(DataChunk &args, ExpressionState &state, Vector &res
     auto &item_vector = args.data[1];
     auto &inclusive_vector = args.data[2];
     TernaryExecutor::Execute<string_t, T, bool, double>(sketch_vector, item_vector, inclusive_vector, result, [&](string_t sketch_data, T item_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        return sketch.get_rank(DSItemIn(item_data), inclusive_data);
+        return DSGuard("datasketch_quantiles_rank", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            return sketch.get_rank(DSItemIn(item_data), inclusive_data);
+        });
     });
 }
 
@@ -166,8 +180,10 @@ static void DSQuantilesquantile(DataChunk &args, ExpressionState &state, Vector 
     auto &rank_vector = args.data[1];
     auto &inclusive_vector = args.data[2];
     TernaryExecutor::Execute<string_t, double, bool, T>(sketch_vector, rank_vector, inclusive_vector, result, [&](string_t sketch_data, double rank_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));
+        return DSGuard("datasketch_quantiles_quantile", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            DSCheckRank(rank_data); return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));
+        });
     });
 }
 
@@ -176,8 +192,10 @@ static void DSQuantilesn(DataChunk &args, ExpressionState &state, Vector &result
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, uint64_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        return sketch.get_n();
+        return DSGuard("datasketch_quantiles_n", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            return sketch.get_n();
+        });
     });
 }
 
@@ -186,8 +204,10 @@ static void DSQuantilesis_estimation_mode(DataChunk &args, ExpressionState &stat
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, bool>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        return sketch.is_estimation_mode();
+        return DSGuard("datasketch_quantiles_is_estimation_mode", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            return sketch.is_estimation_mode();
+        });
     });
 }
 
@@ -196,8 +216,10 @@ static void DSQuantilesnum_retained(DataChunk &args, ExpressionState &state, Vec
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, uint64_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        return sketch.get_num_retained();
+        return DSGuard("datasketch_quantiles_num_retained", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            return sketch.get_num_retained();
+        });
     });
 }
 
@@ -206,8 +228,10 @@ static void DSQuantilesmin_item(DataChunk &args, ExpressionState &state, Vector 
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, T>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        return DSItemOut<T>(result, sketch.get_min_item());
+        return DSGuard("datasketch_quantiles_min_item", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            return DSItemOut<T>(result, sketch.get_min_item());
+        });
     });
 }
 
@@ -216,8 +240,10 @@ static void DSQuantilesmax_item(DataChunk &args, ExpressionState &state, Vector 
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, T>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        return DSItemOut<T>(result, sketch.get_max_item());
+        return DSGuard("datasketch_quantiles_max_item", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            return DSItemOut<T>(result, sketch.get_max_item());
+        });
     });
 }
 
@@ -231,9 +257,11 @@ static void DSQuantilesquantiles(DataChunk &args, ExpressionState &state, Vector
     ListVector::GetChild(ranks_vector).ToUnifiedFormat(ranks_children_unified);
     auto ranks_children_data = UnifiedVectorFormat::GetData<double>(ranks_children_unified);
     TernaryExecutor::Execute<string_t, list_entry_t, bool, list_entry_t>(sketch_vector, ranks_vector, inclusive_vector, result, [&](string_t sketch_data, list_entry_t ranks_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        DSListView<double> ranks {ranks_data, ranks_children_unified, ranks_children_data};
-        return DSQuantiles<T>(result, sketch, ranks, inclusive_data, "datasketch_quantiles_quantiles");
+        return DSGuard("datasketch_quantiles_quantiles", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            DSListView<double> ranks {ranks_data, ranks_children_unified, ranks_children_data};
+            return DSQuantiles<T>(result, sketch, ranks, inclusive_data, "datasketch_quantiles_quantiles");
+        });
     });
 }
 
@@ -247,9 +275,11 @@ static void DSQuantilesranks(DataChunk &args, ExpressionState &state, Vector &re
     ListVector::GetChild(items_vector).ToUnifiedFormat(items_children_unified);
     auto items_children_data = UnifiedVectorFormat::GetData<T>(items_children_unified);
     TernaryExecutor::Execute<string_t, list_entry_t, bool, list_entry_t>(sketch_vector, items_vector, inclusive_vector, result, [&](string_t sketch_data, list_entry_t items_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        DSListView<T> items {items_data, items_children_unified, items_children_data};
-        return DSRanks<T>(result, sketch, items, inclusive_data);
+        return DSGuard("datasketch_quantiles_ranks", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            DSListView<T> items {items_data, items_children_unified, items_children_data};
+            return DSRanks<T>(result, sketch, items, inclusive_data);
+        });
     });
 }
 
@@ -258,8 +288,10 @@ static void DSQuantilessorted_view(DataChunk &args, ExpressionState &state, Vect
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, list_entry_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
-        return DSSortedView<T>(result, sketch);
+        return DSGuard("datasketch_quantiles_sorted_view", [&]() {
+            auto sketch = DSDeserialize<datasketches::quantiles_sketch<DSItem<T>>>(sketch_data, "Quantiles");
+            return DSSortedView<T>(result, sketch);
+        });
     });
 }
 
@@ -1421,8 +1453,10 @@ static void DSKLLis_empty(DataChunk &args, ExpressionState &state, Vector &resul
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, bool>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        return sketch.is_empty();
+        return DSGuard("datasketch_kll_is_empty", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            return sketch.is_empty();
+        });
     });
 }
 
@@ -1431,8 +1465,10 @@ static void DSKLLk(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, uint16_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        return sketch.get_k();
+        return DSGuard("datasketch_kll_k", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            return sketch.get_k();
+        });
     });
 }
 
@@ -1446,9 +1482,11 @@ static void DSKLLcdf(DataChunk &args, ExpressionState &state, Vector &result) {
     ListVector::GetChild(split_points_vector).ToUnifiedFormat(split_points_children_unified);
     auto split_points_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
     TernaryExecutor::Execute<string_t, list_entry_t, bool, list_entry_t>(sketch_vector, split_points_vector, inclusive_vector, result, [&](string_t sketch_data, list_entry_t split_points_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
-        return DSAppendDoubles(result, sketch.get_CDF(DSItems(split_points).data(), split_points.size(), inclusive_data));
+        return DSGuard("datasketch_kll_cdf", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
+            return DSAppendDoubles(result, sketch.get_CDF(DSItems(split_points, "datasketch_kll_cdf").data(), split_points.size(), inclusive_data));
+        });
     });
 }
 
@@ -1462,9 +1500,11 @@ static void DSKLLpmf(DataChunk &args, ExpressionState &state, Vector &result) {
     ListVector::GetChild(split_points_vector).ToUnifiedFormat(split_points_children_unified);
     auto split_points_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
     TernaryExecutor::Execute<string_t, list_entry_t, bool, list_entry_t>(sketch_vector, split_points_vector, inclusive_vector, result, [&](string_t sketch_data, list_entry_t split_points_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
-        return DSAppendDoubles(result, sketch.get_PMF(DSItems(split_points).data(), split_points.size(), inclusive_data));
+        return DSGuard("datasketch_kll_pmf", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
+            return DSAppendDoubles(result, sketch.get_PMF(DSItems(split_points, "datasketch_kll_pmf").data(), split_points.size(), inclusive_data));
+        });
     });
 }
 
@@ -1474,8 +1514,10 @@ static void DSKLLnormalized_rank_error(DataChunk &args, ExpressionState &state, 
     auto &sketch_vector = args.data[0];
     auto &is_pmf_vector = args.data[1];
     BinaryExecutor::Execute<string_t, bool, double>(sketch_vector, is_pmf_vector, result, [&](string_t sketch_data, bool is_pmf_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        return sketch.get_normalized_rank_error(is_pmf_data);
+        return DSGuard("datasketch_kll_normalized_rank_error", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            return sketch.get_normalized_rank_error(is_pmf_data);
+        });
     });
 }
 
@@ -1486,8 +1528,10 @@ static void DSKLLdescribe(DataChunk &args, ExpressionState &state, Vector &resul
     auto &include_levels_vector = args.data[1];
     auto &include_items_vector = args.data[2];
     TernaryExecutor::Execute<string_t, bool, bool, string_t>(sketch_vector, include_levels_vector, include_items_vector, result, [&](string_t sketch_data, bool include_levels_data, bool include_items_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));
+        return DSGuard("datasketch_kll_describe", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));
+        });
     });
 }
 
@@ -1498,8 +1542,10 @@ static void DSKLLrank(DataChunk &args, ExpressionState &state, Vector &result) {
     auto &item_vector = args.data[1];
     auto &inclusive_vector = args.data[2];
     TernaryExecutor::Execute<string_t, T, bool, double>(sketch_vector, item_vector, inclusive_vector, result, [&](string_t sketch_data, T item_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        return sketch.get_rank(DSItemIn(item_data), inclusive_data);
+        return DSGuard("datasketch_kll_rank", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            return sketch.get_rank(DSItemIn(item_data), inclusive_data);
+        });
     });
 }
 
@@ -1510,8 +1556,10 @@ static void DSKLLquantile(DataChunk &args, ExpressionState &state, Vector &resul
     auto &rank_vector = args.data[1];
     auto &inclusive_vector = args.data[2];
     TernaryExecutor::Execute<string_t, double, bool, T>(sketch_vector, rank_vector, inclusive_vector, result, [&](string_t sketch_data, double rank_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));
+        return DSGuard("datasketch_kll_quantile", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            DSCheckRank(rank_data); return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));
+        });
     });
 }
 
@@ -1520,8 +1568,10 @@ static void DSKLLn(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, uint64_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        return sketch.get_n();
+        return DSGuard("datasketch_kll_n", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            return sketch.get_n();
+        });
     });
 }
 
@@ -1530,8 +1580,10 @@ static void DSKLLis_estimation_mode(DataChunk &args, ExpressionState &state, Vec
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, bool>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        return sketch.is_estimation_mode();
+        return DSGuard("datasketch_kll_is_estimation_mode", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            return sketch.is_estimation_mode();
+        });
     });
 }
 
@@ -1540,8 +1592,10 @@ static void DSKLLnum_retained(DataChunk &args, ExpressionState &state, Vector &r
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, uint64_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        return sketch.get_num_retained();
+        return DSGuard("datasketch_kll_num_retained", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            return sketch.get_num_retained();
+        });
     });
 }
 
@@ -1550,8 +1604,10 @@ static void DSKLLmin_item(DataChunk &args, ExpressionState &state, Vector &resul
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, T>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        return DSItemOut<T>(result, sketch.get_min_item());
+        return DSGuard("datasketch_kll_min_item", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            return DSItemOut<T>(result, sketch.get_min_item());
+        });
     });
 }
 
@@ -1560,8 +1616,10 @@ static void DSKLLmax_item(DataChunk &args, ExpressionState &state, Vector &resul
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, T>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        return DSItemOut<T>(result, sketch.get_max_item());
+        return DSGuard("datasketch_kll_max_item", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            return DSItemOut<T>(result, sketch.get_max_item());
+        });
     });
 }
 
@@ -1575,9 +1633,11 @@ static void DSKLLquantiles(DataChunk &args, ExpressionState &state, Vector &resu
     ListVector::GetChild(ranks_vector).ToUnifiedFormat(ranks_children_unified);
     auto ranks_children_data = UnifiedVectorFormat::GetData<double>(ranks_children_unified);
     TernaryExecutor::Execute<string_t, list_entry_t, bool, list_entry_t>(sketch_vector, ranks_vector, inclusive_vector, result, [&](string_t sketch_data, list_entry_t ranks_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        DSListView<double> ranks {ranks_data, ranks_children_unified, ranks_children_data};
-        return DSQuantiles<T>(result, sketch, ranks, inclusive_data, "datasketch_kll_quantiles");
+        return DSGuard("datasketch_kll_quantiles", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            DSListView<double> ranks {ranks_data, ranks_children_unified, ranks_children_data};
+            return DSQuantiles<T>(result, sketch, ranks, inclusive_data, "datasketch_kll_quantiles");
+        });
     });
 }
 
@@ -1591,9 +1651,11 @@ static void DSKLLranks(DataChunk &args, ExpressionState &state, Vector &result) 
     ListVector::GetChild(items_vector).ToUnifiedFormat(items_children_unified);
     auto items_children_data = UnifiedVectorFormat::GetData<T>(items_children_unified);
     TernaryExecutor::Execute<string_t, list_entry_t, bool, list_entry_t>(sketch_vector, items_vector, inclusive_vector, result, [&](string_t sketch_data, list_entry_t items_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        DSListView<T> items {items_data, items_children_unified, items_children_data};
-        return DSRanks<T>(result, sketch, items, inclusive_data);
+        return DSGuard("datasketch_kll_ranks", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            DSListView<T> items {items_data, items_children_unified, items_children_data};
+            return DSRanks<T>(result, sketch, items, inclusive_data);
+        });
     });
 }
 
@@ -1602,8 +1664,10 @@ static void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vector &re
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, list_entry_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
-        return DSSortedView<T>(result, sketch);
+        return DSGuard("datasketch_kll_sorted_view", [&]() {
+            auto sketch = DSDeserialize<datasketches::kll_sketch<DSItem<T>>>(sketch_data, "KLL");
+            return DSSortedView<T>(result, sketch);
+        });
     });
 }
 
@@ -2775,8 +2839,10 @@ static void DSREQis_empty(DataChunk &args, ExpressionState &state, Vector &resul
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, bool>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        return sketch.is_empty();
+        return DSGuard("datasketch_req_is_empty", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            return sketch.is_empty();
+        });
     });
 }
 
@@ -2785,8 +2851,10 @@ static void DSREQk(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, uint16_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        return sketch.get_k();
+        return DSGuard("datasketch_req_k", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            return sketch.get_k();
+        });
     });
 }
 
@@ -2800,9 +2868,11 @@ static void DSREQcdf(DataChunk &args, ExpressionState &state, Vector &result) {
     ListVector::GetChild(split_points_vector).ToUnifiedFormat(split_points_children_unified);
     auto split_points_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
     TernaryExecutor::Execute<string_t, list_entry_t, bool, list_entry_t>(sketch_vector, split_points_vector, inclusive_vector, result, [&](string_t sketch_data, list_entry_t split_points_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
-        return DSAppendDoubles(result, sketch.get_CDF(DSItems(split_points).data(), split_points.size(), inclusive_data));
+        return DSGuard("datasketch_req_cdf", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
+            return DSAppendDoubles(result, sketch.get_CDF(DSItems(split_points, "datasketch_req_cdf").data(), split_points.size(), inclusive_data));
+        });
     });
 }
 
@@ -2816,9 +2886,11 @@ static void DSREQpmf(DataChunk &args, ExpressionState &state, Vector &result) {
     ListVector::GetChild(split_points_vector).ToUnifiedFormat(split_points_children_unified);
     auto split_points_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
     TernaryExecutor::Execute<string_t, list_entry_t, bool, list_entry_t>(sketch_vector, split_points_vector, inclusive_vector, result, [&](string_t sketch_data, list_entry_t split_points_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
-        return DSAppendDoubles(result, sketch.get_PMF(DSItems(split_points).data(), split_points.size(), inclusive_data));
+        return DSGuard("datasketch_req_pmf", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
+            return DSAppendDoubles(result, sketch.get_PMF(DSItems(split_points, "datasketch_req_pmf").data(), split_points.size(), inclusive_data));
+        });
     });
 }
 
@@ -2829,8 +2901,10 @@ static void DSREQdescribe(DataChunk &args, ExpressionState &state, Vector &resul
     auto &include_levels_vector = args.data[1];
     auto &include_items_vector = args.data[2];
     TernaryExecutor::Execute<string_t, bool, bool, string_t>(sketch_vector, include_levels_vector, include_items_vector, result, [&](string_t sketch_data, bool include_levels_data, bool include_items_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));
+        return DSGuard("datasketch_req_describe", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));
+        });
     });
 }
 
@@ -2841,8 +2915,10 @@ static void DSREQrank(DataChunk &args, ExpressionState &state, Vector &result) {
     auto &item_vector = args.data[1];
     auto &inclusive_vector = args.data[2];
     TernaryExecutor::Execute<string_t, T, bool, double>(sketch_vector, item_vector, inclusive_vector, result, [&](string_t sketch_data, T item_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        return sketch.get_rank(DSItemIn(item_data), inclusive_data);
+        return DSGuard("datasketch_req_rank", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            return sketch.get_rank(DSItemIn(item_data), inclusive_data);
+        });
     });
 }
 
@@ -2853,8 +2929,10 @@ static void DSREQquantile(DataChunk &args, ExpressionState &state, Vector &resul
     auto &rank_vector = args.data[1];
     auto &inclusive_vector = args.data[2];
     TernaryExecutor::Execute<string_t, double, bool, T>(sketch_vector, rank_vector, inclusive_vector, result, [&](string_t sketch_data, double rank_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));
+        return DSGuard("datasketch_req_quantile", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            DSCheckRank(rank_data); return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));
+        });
     });
 }
 
@@ -2863,8 +2941,10 @@ static void DSREQn(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, uint64_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        return sketch.get_n();
+        return DSGuard("datasketch_req_n", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            return sketch.get_n();
+        });
     });
 }
 
@@ -2873,8 +2953,10 @@ static void DSREQis_estimation_mode(DataChunk &args, ExpressionState &state, Vec
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, bool>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        return sketch.is_estimation_mode();
+        return DSGuard("datasketch_req_is_estimation_mode", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            return sketch.is_estimation_mode();
+        });
     });
 }
 
@@ -2883,8 +2965,10 @@ static void DSREQnum_retained(DataChunk &args, ExpressionState &state, Vector &r
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, uint64_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        return sketch.get_num_retained();
+        return DSGuard("datasketch_req_num_retained", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            return sketch.get_num_retained();
+        });
     });
 }
 
@@ -2893,8 +2977,10 @@ static void DSREQmin_item(DataChunk &args, ExpressionState &state, Vector &resul
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, T>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        return DSItemOut<T>(result, sketch.get_min_item());
+        return DSGuard("datasketch_req_min_item", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            return DSItemOut<T>(result, sketch.get_min_item());
+        });
     });
 }
 
@@ -2903,8 +2989,10 @@ static void DSREQmax_item(DataChunk &args, ExpressionState &state, Vector &resul
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, T>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        return DSItemOut<T>(result, sketch.get_max_item());
+        return DSGuard("datasketch_req_max_item", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            return DSItemOut<T>(result, sketch.get_max_item());
+        });
     });
 }
 
@@ -2915,8 +3003,10 @@ static void DSREQrank_lower_bound(DataChunk &args, ExpressionState &state, Vecto
     auto &rank_vector = args.data[1];
     auto &num_std_dev_vector = args.data[2];
     TernaryExecutor::Execute<string_t, double, uint8_t, double>(sketch_vector, rank_vector, num_std_dev_vector, result, [&](string_t sketch_data, double rank_data, uint8_t num_std_dev_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        DSCheckRank(rank_data); return sketch.get_rank_lower_bound(rank_data, num_std_dev_data);
+        return DSGuard("datasketch_req_rank_lower_bound", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            DSCheckRank(rank_data); return sketch.get_rank_lower_bound(rank_data, num_std_dev_data);
+        });
     });
 }
 
@@ -2927,8 +3017,10 @@ static void DSREQrank_upper_bound(DataChunk &args, ExpressionState &state, Vecto
     auto &rank_vector = args.data[1];
     auto &num_std_dev_vector = args.data[2];
     TernaryExecutor::Execute<string_t, double, uint8_t, double>(sketch_vector, rank_vector, num_std_dev_vector, result, [&](string_t sketch_data, double rank_data, uint8_t num_std_dev_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        DSCheckRank(rank_data); return sketch.get_rank_upper_bound(rank_data, num_std_dev_data);
+        return DSGuard("datasketch_req_rank_upper_bound", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            DSCheckRank(rank_data); return sketch.get_rank_upper_bound(rank_data, num_std_dev_data);
+        });
     });
 }
 
@@ -2937,8 +3029,10 @@ static void DSREQis_hra(DataChunk &args, ExpressionState &state, Vector &result)
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, bool>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        return sketch.is_HRA();
+        return DSGuard("datasketch_req_is_hra", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            return sketch.is_HRA();
+        });
     });
 }
 
@@ -2952,9 +3046,11 @@ static void DSREQquantiles(DataChunk &args, ExpressionState &state, Vector &resu
     ListVector::GetChild(ranks_vector).ToUnifiedFormat(ranks_children_unified);
     auto ranks_children_data = UnifiedVectorFormat::GetData<double>(ranks_children_unified);
     TernaryExecutor::Execute<string_t, list_entry_t, bool, list_entry_t>(sketch_vector, ranks_vector, inclusive_vector, result, [&](string_t sketch_data, list_entry_t ranks_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        DSListView<double> ranks {ranks_data, ranks_children_unified, ranks_children_data};
-        return DSQuantiles<T>(result, sketch, ranks, inclusive_data, "datasketch_req_quantiles");
+        return DSGuard("datasketch_req_quantiles", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            DSListView<double> ranks {ranks_data, ranks_children_unified, ranks_children_data};
+            return DSQuantiles<T>(result, sketch, ranks, inclusive_data, "datasketch_req_quantiles");
+        });
     });
 }
 
@@ -2968,9 +3064,11 @@ static void DSREQranks(DataChunk &args, ExpressionState &state, Vector &result) 
     ListVector::GetChild(items_vector).ToUnifiedFormat(items_children_unified);
     auto items_children_data = UnifiedVectorFormat::GetData<T>(items_children_unified);
     TernaryExecutor::Execute<string_t, list_entry_t, bool, list_entry_t>(sketch_vector, items_vector, inclusive_vector, result, [&](string_t sketch_data, list_entry_t items_data, bool inclusive_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        DSListView<T> items {items_data, items_children_unified, items_children_data};
-        return DSRanks<T>(result, sketch, items, inclusive_data);
+        return DSGuard("datasketch_req_ranks", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            DSListView<T> items {items_data, items_children_unified, items_children_data};
+            return DSRanks<T>(result, sketch, items, inclusive_data);
+        });
     });
 }
 
@@ -2979,8 +3077,10 @@ static void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vector &re
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, list_entry_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
-        return DSSortedView<T>(result, sketch);
+        return DSGuard("datasketch_req_sorted_view", [&]() {
+            auto sketch = DSDeserialize<datasketches::req_sketch<DSItem<T>>>(sketch_data, "REQ");
+            return DSSortedView<T>(result, sketch);
+        });
     });
 }
 
@@ -4203,8 +4303,10 @@ static void DSTDigestis_empty(DataChunk &args, ExpressionState &state, Vector &r
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, bool>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
-        return sketch.is_empty();
+        return DSGuard("datasketch_tdigest_is_empty", [&]() {
+            auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
+            return sketch.is_empty();
+        });
     });
 }
 
@@ -4213,8 +4315,10 @@ static void DSTDigestk(DataChunk &args, ExpressionState &state, Vector &result) 
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, uint16_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
-        return sketch.get_k();
+        return DSGuard("datasketch_tdigest_k", [&]() {
+            auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
+            return sketch.get_k();
+        });
     });
 }
 
@@ -4227,9 +4331,11 @@ static void DSTDigestcdf(DataChunk &args, ExpressionState &state, Vector &result
     ListVector::GetChild(split_points_vector).ToUnifiedFormat(split_points_children_unified);
     auto split_points_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
     BinaryExecutor::Execute<string_t, list_entry_t, list_entry_t>(sketch_vector, split_points_vector, result, [&](string_t sketch_data, list_entry_t split_points_data) {
-        auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
-        DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
-        return DSAppendDoubles(result, sketch.get_CDF(DSItems(split_points).data(), split_points.size()));
+        return DSGuard("datasketch_tdigest_cdf", [&]() {
+            auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
+            DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
+            return DSAppendDoubles(result, sketch.get_CDF(DSItems(split_points, "datasketch_tdigest_cdf").data(), split_points.size()));
+        });
     });
 }
 
@@ -4242,9 +4348,11 @@ static void DSTDigestpmf(DataChunk &args, ExpressionState &state, Vector &result
     ListVector::GetChild(split_points_vector).ToUnifiedFormat(split_points_children_unified);
     auto split_points_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
     BinaryExecutor::Execute<string_t, list_entry_t, list_entry_t>(sketch_vector, split_points_vector, result, [&](string_t sketch_data, list_entry_t split_points_data) {
-        auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
-        DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
-        return DSAppendDoubles(result, sketch.get_PMF(DSItems(split_points).data(), split_points.size()));
+        return DSGuard("datasketch_tdigest_pmf", [&]() {
+            auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
+            DSListView<T> split_points {split_points_data, split_points_children_unified, split_points_children_data};
+            return DSAppendDoubles(result, sketch.get_PMF(DSItems(split_points, "datasketch_tdigest_pmf").data(), split_points.size()));
+        });
     });
 }
 
@@ -4254,8 +4362,10 @@ static void DSTDigestdescribe(DataChunk &args, ExpressionState &state, Vector &r
     auto &sketch_vector = args.data[0];
     auto &include_centroids_vector = args.data[1];
     BinaryExecutor::Execute<string_t, bool, string_t>(sketch_vector, include_centroids_vector, result, [&](string_t sketch_data, bool include_centroids_data) {
-        auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
-        return StringVector::AddString(result, sketch.to_string(include_centroids_data));
+        return DSGuard("datasketch_tdigest_describe", [&]() {
+            auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
+            return StringVector::AddString(result, sketch.to_string(include_centroids_data));
+        });
     });
 }
 
@@ -4265,8 +4375,10 @@ static void DSTDigestrank(DataChunk &args, ExpressionState &state, Vector &resul
     auto &sketch_vector = args.data[0];
     auto &item_vector = args.data[1];
     BinaryExecutor::Execute<string_t, T, double>(sketch_vector, item_vector, result, [&](string_t sketch_data, T item_data) {
-        auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
-        return sketch.get_rank(DSItemIn(item_data));
+        return DSGuard("datasketch_tdigest_rank", [&]() {
+            auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
+            return sketch.get_rank(DSItemIn(item_data));
+        });
     });
 }
 
@@ -4275,8 +4387,10 @@ static void DSTDigesttotal_weight(DataChunk &args, ExpressionState &state, Vecto
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, uint64_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
-        return sketch.get_total_weight();
+        return DSGuard("datasketch_tdigest_total_weight", [&]() {
+            auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
+            return sketch.get_total_weight();
+        });
     });
 }
 
@@ -4286,8 +4400,10 @@ static void DSTDigestquantile(DataChunk &args, ExpressionState &state, Vector &r
     auto &sketch_vector = args.data[0];
     auto &rank_vector = args.data[1];
     BinaryExecutor::Execute<string_t, double, T>(sketch_vector, rank_vector, result, [&](string_t sketch_data, double rank_data) {
-        auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
-        return DSItemOut<T>(result, sketch.get_quantile(rank_data));
+        return DSGuard("datasketch_tdigest_quantile", [&]() {
+            auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
+            DSCheckRank(rank_data); return DSItemOut<T>(result, sketch.get_quantile(rank_data));
+        });
     });
 }
 
@@ -4296,8 +4412,10 @@ static void DSTDigestmin_value(DataChunk &args, ExpressionState &state, Vector &
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, T>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
-        return sketch.get_min_value();
+        return DSGuard("datasketch_tdigest_min_value", [&]() {
+            auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
+            return sketch.get_min_value();
+        });
     });
 }
 
@@ -4306,8 +4424,10 @@ static void DSTDigestmax_value(DataChunk &args, ExpressionState &state, Vector &
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, T>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
-        return sketch.get_max_value();
+        return DSGuard("datasketch_tdigest_max_value", [&]() {
+            auto sketch = DSDeserialize<datasketches::tdigest<DSItem<T>>>(sketch_data, "TDigest");
+            return sketch.get_max_value();
+        });
     });
 }
 
@@ -4580,8 +4700,10 @@ static void DSHLLis_empty(DataChunk &args, ExpressionState &state, Vector &resul
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, bool>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
-        return sketch.is_empty();
+        return DSGuard("datasketch_hll_is_empty", [&]() {
+            auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
+            return sketch.is_empty();
+        });
     });
 }
 
@@ -4591,8 +4713,10 @@ static void DSHLLdescribe(DataChunk &args, ExpressionState &state, Vector &resul
     auto &summary_vector = args.data[1];
     auto &detail_vector = args.data[2];
     TernaryExecutor::Execute<string_t, bool, bool, string_t>(sketch_vector, summary_vector, detail_vector, result, [&](string_t sketch_data, bool summary_data, bool detail_data) {
-        auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
-        return StringVector::AddString(result, sketch.to_string(summary_data, detail_data, false, false));
+        return DSGuard("datasketch_hll_describe", [&]() {
+            auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
+            return StringVector::AddString(result, sketch.to_string(summary_data, detail_data, false, false));
+        });
     });
 }
 
@@ -4600,8 +4724,10 @@ static void DSHLLlg_config_k(DataChunk &args, ExpressionState &state, Vector &re
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, uint8_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
-        return sketch.get_lg_config_k();
+        return DSGuard("datasketch_hll_lg_config_k", [&]() {
+            auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
+            return sketch.get_lg_config_k();
+        });
     });
 }
 
@@ -4609,8 +4735,10 @@ static void DSHLLis_compact(DataChunk &args, ExpressionState &state, Vector &res
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, bool>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
-        return sketch.is_compact();
+        return DSGuard("datasketch_hll_is_compact", [&]() {
+            auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
+            return sketch.is_compact();
+        });
     });
 }
 
@@ -4618,8 +4746,10 @@ static void DSHLLcomposite_estimate(DataChunk &args, ExpressionState &state, Vec
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, double>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
-        return sketch.get_composite_estimate();
+        return DSGuard("datasketch_hll_composite_estimate", [&]() {
+            auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
+            return sketch.get_composite_estimate();
+        });
     });
 }
 
@@ -4627,8 +4757,10 @@ static void DSHLLtarget_type(DataChunk &args, ExpressionState &state, Vector &re
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, string_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
-        return StringVector::AddString(result, DSHLLTargetTypeName(sketch.get_target_type()));
+        return DSGuard("datasketch_hll_target_type", [&]() {
+            auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
+            return StringVector::AddString(result, DSHLLTargetTypeName(sketch.get_target_type()));
+        });
     });
 }
 
@@ -4637,9 +4769,11 @@ static void DSHLLmerge(DataChunk &args, ExpressionState &state, Vector &result) 
     auto &sketch_a_vector = args.data[0];
     auto &sketch_b_vector = args.data[1];
     BinaryExecutor::Execute<string_t, string_t, string_t>(sketch_a_vector, sketch_b_vector, result, [&](string_t sketch_a_data, string_t sketch_b_data) {
-        auto sketch_a = DSDeserialize<datasketches::hll_sketch>(sketch_a_data, "HLL");
-        auto sketch_b = DSDeserialize<datasketches::hll_sketch>(sketch_b_data, "HLL");
-        return DSHLLMerge(result, sketch_a, sketch_b);
+        return DSGuard("datasketch_hll_merge", [&]() {
+            auto sketch_a = DSDeserialize<datasketches::hll_sketch>(sketch_a_data, "HLL");
+            auto sketch_b = DSDeserialize<datasketches::hll_sketch>(sketch_b_data, "HLL");
+            return DSHLLMerge(result, sketch_a, sketch_b);
+        });
     });
 }
 
@@ -4647,28 +4781,34 @@ static void DSHLLestimate(DataChunk &args, ExpressionState &state, Vector &resul
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, double>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
-        return sketch.get_estimate();
+        return DSGuard("datasketch_hll_estimate", [&]() {
+            auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
+            return sketch.get_estimate();
+        });
     });
 }
 
 static void DSHLLlower_bound(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 2);
     auto &sketch_vector = args.data[0];
-    auto &std_dev_vector = args.data[1];
-    BinaryExecutor::Execute<string_t, uint8_t, double>(sketch_vector, std_dev_vector, result, [&](string_t sketch_data, uint8_t std_dev_data) {
-        auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
-        return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_hll_lower_bound"));
+    auto &num_std_devs_vector = args.data[1];
+    BinaryExecutor::Execute<string_t, int32_t, double>(sketch_vector, num_std_devs_vector, result, [&](string_t sketch_data, int32_t num_std_devs_data) {
+        return DSGuard("datasketch_hll_lower_bound", [&]() {
+            auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
+            return sketch.get_lower_bound(DSCheckNumStdDevs(num_std_devs_data, "datasketch_hll_lower_bound"));
+        });
     });
 }
 
 static void DSHLLupper_bound(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 2);
     auto &sketch_vector = args.data[0];
-    auto &std_dev_vector = args.data[1];
-    BinaryExecutor::Execute<string_t, uint8_t, double>(sketch_vector, std_dev_vector, result, [&](string_t sketch_data, uint8_t std_dev_data) {
-        auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
-        return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_hll_upper_bound"));
+    auto &num_std_devs_vector = args.data[1];
+    BinaryExecutor::Execute<string_t, int32_t, double>(sketch_vector, num_std_devs_vector, result, [&](string_t sketch_data, int32_t num_std_devs_data) {
+        return DSGuard("datasketch_hll_upper_bound", [&]() {
+            auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
+            return sketch.get_upper_bound(DSCheckNumStdDevs(num_std_devs_data, "datasketch_hll_upper_bound"));
+        });
     });
 }
 
@@ -4776,9 +4916,9 @@ void LoadHLLSketch(ExtensionLoader &loader) {
         ScalarFunctionSet set("datasketch_hll_lower_bound");
         vector<FunctionDescription> descriptions;
         DSAddScalar(set, descriptions,
-                    ScalarFunction({ sketch_type, LogicalType::UTINYINT }, LogicalType::DOUBLE,
+                    ScalarFunction({ sketch_type, LogicalType::INTEGER }, LogicalType::DOUBLE,
                                    DSHLLlower_bound),
-                    { "sketch", "std_dev" }, "Return the lower bound of the number of distinct items seen by the sketch",
+                    { "sketch", "num_std_devs" }, "Return the lower bound of the number of distinct items seen by the sketch",
                     { "SELECT datasketch_hll_lower_bound(sketch, 2) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s" });
         DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
@@ -4786,9 +4926,9 @@ void LoadHLLSketch(ExtensionLoader &loader) {
         ScalarFunctionSet set("datasketch_hll_upper_bound");
         vector<FunctionDescription> descriptions;
         DSAddScalar(set, descriptions,
-                    ScalarFunction({ sketch_type, LogicalType::UTINYINT }, LogicalType::DOUBLE,
+                    ScalarFunction({ sketch_type, LogicalType::INTEGER }, LogicalType::DOUBLE,
                                    DSHLLupper_bound),
-                    { "sketch", "std_dev" }, "Return the upper bound of the number of distinct items seen by the sketch",
+                    { "sketch", "num_std_devs" }, "Return the upper bound of the number of distinct items seen by the sketch",
                     { "SELECT datasketch_hll_upper_bound(sketch, 2) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s" });
         DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
@@ -5022,8 +5162,10 @@ static void DSCPCis_empty(DataChunk &args, ExpressionState &state, Vector &resul
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, bool>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
-        return sketch.is_empty();
+        return DSGuard("datasketch_cpc_is_empty", [&]() {
+            auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
+            return sketch.is_empty();
+        });
     });
 }
 
@@ -5032,9 +5174,11 @@ static void DSCPCmerge(DataChunk &args, ExpressionState &state, Vector &result) 
     auto &sketch_a_vector = args.data[0];
     auto &sketch_b_vector = args.data[1];
     BinaryExecutor::Execute<string_t, string_t, string_t>(sketch_a_vector, sketch_b_vector, result, [&](string_t sketch_a_data, string_t sketch_b_data) {
-        auto sketch_a = DSDeserialize<datasketches::cpc_sketch>(sketch_a_data, "CPC");
-        auto sketch_b = DSDeserialize<datasketches::cpc_sketch>(sketch_b_data, "CPC");
-        return DSCPCMerge(result, sketch_a, sketch_b);
+        return DSGuard("datasketch_cpc_merge", [&]() {
+            auto sketch_a = DSDeserialize<datasketches::cpc_sketch>(sketch_a_data, "CPC");
+            auto sketch_b = DSDeserialize<datasketches::cpc_sketch>(sketch_b_data, "CPC");
+            return DSCPCMerge(result, sketch_a, sketch_b);
+        });
     });
 }
 
@@ -5042,8 +5186,10 @@ static void DSCPCdescribe(DataChunk &args, ExpressionState &state, Vector &resul
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, string_t>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
-        return StringVector::AddString(result, sketch.to_string());
+        return DSGuard("datasketch_cpc_describe", [&]() {
+            auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
+            return StringVector::AddString(result, sketch.to_string());
+        });
     });
 }
 
@@ -5051,28 +5197,34 @@ static void DSCPCestimate(DataChunk &args, ExpressionState &state, Vector &resul
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
     UnaryExecutor::Execute<string_t, double>(sketch_vector, result, [&](string_t sketch_data) {
-        auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
-        return sketch.get_estimate();
+        return DSGuard("datasketch_cpc_estimate", [&]() {
+            auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
+            return sketch.get_estimate();
+        });
     });
 }
 
 static void DSCPClower_bound(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 2);
     auto &sketch_vector = args.data[0];
-    auto &std_dev_vector = args.data[1];
-    BinaryExecutor::Execute<string_t, uint8_t, double>(sketch_vector, std_dev_vector, result, [&](string_t sketch_data, uint8_t std_dev_data) {
-        auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
-        return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_cpc_lower_bound"));
+    auto &num_std_devs_vector = args.data[1];
+    BinaryExecutor::Execute<string_t, int32_t, double>(sketch_vector, num_std_devs_vector, result, [&](string_t sketch_data, int32_t num_std_devs_data) {
+        return DSGuard("datasketch_cpc_lower_bound", [&]() {
+            auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
+            return sketch.get_lower_bound(DSCheckNumStdDevs(num_std_devs_data, "datasketch_cpc_lower_bound"));
+        });
     });
 }
 
 static void DSCPCupper_bound(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 2);
     auto &sketch_vector = args.data[0];
-    auto &std_dev_vector = args.data[1];
-    BinaryExecutor::Execute<string_t, uint8_t, double>(sketch_vector, std_dev_vector, result, [&](string_t sketch_data, uint8_t std_dev_data) {
-        auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
-        return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_cpc_upper_bound"));
+    auto &num_std_devs_vector = args.data[1];
+    BinaryExecutor::Execute<string_t, int32_t, double>(sketch_vector, num_std_devs_vector, result, [&](string_t sketch_data, int32_t num_std_devs_data) {
+        return DSGuard("datasketch_cpc_upper_bound", [&]() {
+            auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
+            return sketch.get_upper_bound(DSCheckNumStdDevs(num_std_devs_data, "datasketch_cpc_upper_bound"));
+        });
     });
 }
 
@@ -5140,9 +5292,9 @@ void LoadCPCSketch(ExtensionLoader &loader) {
         ScalarFunctionSet set("datasketch_cpc_lower_bound");
         vector<FunctionDescription> descriptions;
         DSAddScalar(set, descriptions,
-                    ScalarFunction({ sketch_type, LogicalType::UTINYINT }, LogicalType::DOUBLE,
+                    ScalarFunction({ sketch_type, LogicalType::INTEGER }, LogicalType::DOUBLE,
                                    DSCPClower_bound),
-                    { "sketch", "std_dev" }, "Return the lower bound of the number of distinct items seen by the sketch",
+                    { "sketch", "num_std_devs" }, "Return the lower bound of the number of distinct items seen by the sketch",
                     { "SELECT datasketch_cpc_lower_bound(sketch, 2) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s" });
         DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "cpc"});
     }
@@ -5150,9 +5302,9 @@ void LoadCPCSketch(ExtensionLoader &loader) {
         ScalarFunctionSet set("datasketch_cpc_upper_bound");
         vector<FunctionDescription> descriptions;
         DSAddScalar(set, descriptions,
-                    ScalarFunction({ sketch_type, LogicalType::UTINYINT }, LogicalType::DOUBLE,
+                    ScalarFunction({ sketch_type, LogicalType::INTEGER }, LogicalType::DOUBLE,
                                    DSCPCupper_bound),
-                    { "sketch", "std_dev" }, "Return the upper bound of the number of distinct items seen by the sketch",
+                    { "sketch", "num_std_devs" }, "Return the upper bound of the number of distinct items seen by the sketch",
                     { "SELECT datasketch_cpc_upper_bound(sketch, 2) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s" });
         DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "cpc"});
     }
