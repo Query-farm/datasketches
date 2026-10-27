@@ -1,16 +1,29 @@
-from jinja2 import Environment, FileSystemLoader
-from typing import Any
+"""Generates src/generated.cpp and test/sql/datasketch_generated_examples.test.
 
-# Set up the Jinja2 environment
-env = Environment(loader=FileSystemLoader(searchpath="./codegen/"), autoescape=False)
-template = env.get_template("generated.cpp.j2")
+The generated sketches are described in SKETCHES and their scalar functions in scalar_functions();
+codegen/generated.cpp.j2 renders them. Run it from anywhere: `python codegen/generator.py`.
+"""
+
+from __future__ import annotations
+
+import textwrap
+from dataclasses import dataclass, replace
+from pathlib import Path
+from typing import Callable, Optional
+
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
+
+CODEGEN_DIR = Path(__file__).resolve().parent
+ROOT = CODEGEN_DIR.parent
 
 
-counting_sketch_names = ["CPC", "HLL"]
-# Counting sketches whose union also accepts raw values, so their create aggregate builds the union directly.
-union_accepts_values = ["HLL"]
+# ---------------------------------------------------------------------------
+# Types
+# ---------------------------------------------------------------------------
 
-logical_type_mapping = {
+# The C++ type each DuckDB logical type's values are read as. UUIDs are stored as hugeint_t; DSUUIDInput marks
+# them so the counting sketches hash them as UUIDs (see DSCountingInput in the template).
+CPP_TYPE = {
     "LogicalType::BOOLEAN": "bool",
     "LogicalType::TINYINT": "int8_t",
     "LogicalType::SMALLINT": "int16_t",
@@ -22,788 +35,456 @@ logical_type_mapping = {
     "LogicalType::USMALLINT": "uint16_t",
     "LogicalType::UINTEGER": "uint32_t",
     "LogicalType::UBIGINT": "uint64_t",
+    "LogicalType::HUGEINT": "hugeint_t",
+    "LogicalType::UHUGEINT": "uhugeint_t",
+    "LogicalType::UUID": "DSUUIDInput",
     "LogicalType::VARCHAR": "string_t",
+    "LogicalType::BLOB": "string_t",
 }
 
-cpp_type_mapping = {value: key for key, value in logical_type_mapping.items()}
+NUMERIC_TYPES = (
+    "LogicalType::TINYINT",
+    "LogicalType::SMALLINT",
+    "LogicalType::INTEGER",
+    "LogicalType::BIGINT",
+    "LogicalType::FLOAT",
+    "LogicalType::DOUBLE",
+    "LogicalType::UTINYINT",
+    "LogicalType::USMALLINT",
+    "LogicalType::UINTEGER",
+    "LogicalType::UBIGINT",
+)
+
+# Every sketch's K argument.
+K_LOGICAL_TYPE = "LogicalType::INTEGER"
 
 
-def sketch_type_to_allowed_logical_types(sketch_type):
-    if sketch_type in counting_sketch_names:
-        return {
-            "LogicalType::TINYINT": "int8_t",
-            "LogicalType::SMALLINT": "int16_t",
-            "LogicalType::INTEGER": "int32_t",
-            "LogicalType::BIGINT": "int64_t",
-            "LogicalType::FLOAT": "float",
-            "LogicalType::DOUBLE": "double",
-            "LogicalType::UTINYINT": "uint8_t",
-            "LogicalType::USMALLINT": "uint16_t",
-            "LogicalType::UINTEGER": "uint32_t",
-            "LogicalType::UBIGINT": "uint64_t",
-            "LogicalType::HUGEINT": "hugeint_t",
-            "LogicalType::UHUGEINT": "uhugeint_t",
-            "LogicalType::UUID": "DSUUIDInput",
-            "LogicalType::VARCHAR": "string_t",
-            "LogicalType::BLOB": "string_t",
-        }
-
-    if sketch_type == "TDigest":
-        return {"LogicalType::FLOAT": "float", "LogicalType::DOUBLE": "double"}
-
-    numeric_types = {
-        "LogicalType::TINYINT": "int8_t",
-        "LogicalType::SMALLINT": "int16_t",
-        "LogicalType::INTEGER": "int32_t",
-        "LogicalType::BIGINT": "int64_t",
-        "LogicalType::FLOAT": "float",
-        "LogicalType::DOUBLE": "double",
-        "LogicalType::UTINYINT": "uint8_t",
-        "LogicalType::USMALLINT": "uint16_t",
-        "LogicalType::UINTEGER": "uint32_t",
-        "LogicalType::UBIGINT": "uint64_t",
-    }
-
-    if sketch_type in ("KLL", "Quantiles"):
-        # VARCHAR items are stored as std::string (see DSItem in the template) and ordered bytewise.
-        return {**numeric_types, "LogicalType::VARCHAR": "string_t"}
-
-    return numeric_types
+def to_type_id(logical_type: str) -> str:
+    return logical_type.replace("LogicalType", "LogicalTypeId")
 
 
-def get_sketch_class_name(sketch_type: str):
-    if sketch_type == "TDigest":
-        return "datasketches::tdigest"
-    return f"datasketches::{sketch_type.lower()}_sketch"
+def type_name(logical_type: str) -> str:
+    """The type's SQL name, e.g. DOUBLE for LogicalType::DOUBLE."""
+    return logical_type.split("::")[1]
 
 
-def get_union_class_name(sketch_type: str):
-    return f"datasketches::{sketch_type.lower()}_union"
+# ---------------------------------------------------------------------------
+# Sketches
+# ---------------------------------------------------------------------------
 
 
+@dataclass(frozen=True)
+class Option:
+    """An optional constant third argument of a sketch's aggregates, kept in its bind data."""
 
-def list_argument(name: str, child_logical_type, child_cpp_type: str) -> dict:
-    """A LIST argument whose child values are read through a UnifiedVectorFormat.
-
-    Inside the function body the list entry is `<name>_data`, the child values are
-    `<name>_children_data` and their format is `<name>_children_unified`.
-    """
-    return {
-        "cpp_type": "list_entry_t",
-        "duckdb_type": lambda contained_type: f"LogicalType::LIST({child_logical_type(contained_type)})",
-        "name": name,
-        "pre_executor": f"""
-                    auto &{name}_list_children = ListVector::GetChild({name}_vector);
-                    UnifiedVectorFormat {name}_children_unified;
-                    {name}_list_children.ToUnifiedFormat({name}_children_unified);
-                    const {child_cpp_type} *{name}_children_data = UnifiedVectorFormat::GetData<{child_cpp_type}>({name}_children_unified);
-                    """,
-    }
+    name: str
+    logical_type: str
+    member: str
+    """The bind data member's C++ declaration, with its default."""
+    member_comment: str
+    parse: str
+    """C++ converting the constant's Value `option` to the member's type."""
+    example: str
+    create_note: str
+    """What the option does, appended to the create aggregate's description."""
+    union_note: str = ""
+    """What the option does for the union aggregate; empty if the union does not take it."""
 
 
-def sorted_view_struct_type(item_logical_type: str) -> str:
-    return (
-        "LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{"
-        f'{{"item", {item_logical_type}}}, '
-        '{"weight", LogicalType::UBIGINT}, '
-        '{"cumulative_weight", LogicalType::UBIGINT}}))'
+@dataclass(frozen=True)
+class Sketch:
+    name: str
+    """The C++ identifier stem (DSKLLState, LoadKLLSketch, ...); lowercased, the SQL name."""
+    cpp_class: str
+    """The datasketches class; templated on the item type unless the sketch is a counting sketch."""
+    item_types: tuple
+    """The logical types of the values the sketch aggregates, in registration order."""
+    example_k: int
+    k_min: int
+    k_max: int
+    """The K values the library accepts (an invalid K would fail at runtime or be silently changed)."""
+    k_power_of_two: bool = False
+    k_label: str = "K"
+    """How K is described in errors."""
+    option: Optional[Option] = None
+    counting: bool = False
+    """Counting sketches have one sketch type for every input type; the others have one per item type."""
+    union_accepts_values: bool = False
+    """The library union also accepts raw values, so the create aggregate builds the union directly."""
+
+    @property
+    def sql(self) -> str:
+        return self.name.lower()
+
+    @property
+    def union_class(self) -> str:
+        return f"datasketches::{self.sql}_union"
+
+    @property
+    def state_class(self) -> str:
+        """The class of the sketches the aggregates build, for the item type T."""
+        return self.cpp_class if self.counting else f"{self.cpp_class}<DSItem<T>>"
+
+    @property
+    def constructor_args(self) -> str:
+        """The state_class constructor's arguments, from the bind data `bind`."""
+        return "bind.k, bind.hra" if self.option and self.option.name == "hra" else "bind.k"
+
+    @property
+    def overload_types(self) -> tuple:
+        """The item types the scalar functions are registered for; a counting sketch's take no item type."""
+        return (None,) if self.counting else self.item_types
+
+    @property
+    def k_check(self) -> str:
+        """A C++ condition that is true for an invalid K."""
+        return f"k < {self.k_min} || k > {self.k_max}" + (" || (k & (k - 1)) != 0" if self.k_power_of_two else "")
+
+    @property
+    def k_error(self) -> str:
+        power_of_two = "a power of 2 " if self.k_power_of_two else ""
+        return f"{self.name} {self.k_label} value must be {power_of_two}between {self.k_min} and {self.k_max}, got: "
+
+
+HLL_TARGET_TYPE = Option(
+    "target_type",
+    "LogicalType::VARCHAR",
+    "datasketches::target_hll_type target_type = datasketches::HLL_4;",
+    "The register encoding of the sketches the aggregate returns.",
+    "DSParseHLLTargetType(option.GetValue<string>())",
+    "'HLL_8'",
+    "target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
+    "target_type (a constant) selects the result's register encoding: 'HLL_4' (the default), 'HLL_6' or 'HLL_8'",
+)
+
+REQ_HRA = Option(
+    "hra",
+    "LogicalType::BOOLEAN",
+    "bool hra = true;",
+    "true: high-rank accuracy (the library default), false: low-rank accuracy.",
+    "option.GetValue<bool>()",
+    "false",
+    "hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)",
+)
+
+COUNTING_TYPES = NUMERIC_TYPES + (
+    "LogicalType::HUGEINT",
+    "LogicalType::UHUGEINT",
+    "LogicalType::UUID",
+    "LogicalType::VARCHAR",
+    "LogicalType::BLOB",
+)
+
+
+SKETCHES = [
+    Sketch("Quantiles", "datasketches::quantiles_sketch", NUMERIC_TYPES + ("LogicalType::VARCHAR",),
+           example_k=16, k_min=2, k_max=32768, k_power_of_two=True),
+    Sketch("KLL", "datasketches::kll_sketch", NUMERIC_TYPES + ("LogicalType::VARCHAR",),
+           example_k=200, k_min=8, k_max=65535),
+    # The library rounds an odd K down, and keeps K in 8 bits (req_sketch_impl.hpp), so a K above 255 would wrap.
+    Sketch("REQ", "datasketches::req_sketch", NUMERIC_TYPES,
+           example_k=12, k_min=4, k_max=255, option=REQ_HRA),
+    # The library's K is a uint16_t.
+    Sketch("TDigest", "datasketches::tdigest", ("LogicalType::FLOAT", "LogicalType::DOUBLE"),
+           example_k=100, k_min=10, k_max=65535, k_label="K (compression)"),
+    Sketch("HLL", "datasketches::hll_sketch", COUNTING_TYPES,
+           example_k=12, k_min=4, k_max=21, k_label="K (lg_k)", option=HLL_TARGET_TYPE,
+           counting=True, union_accepts_values=True),
+    Sketch("CPC", "datasketches::cpc_sketch", COUNTING_TYPES,
+           example_k=12, k_min=4, k_max=26, k_label="K (lg_k)", counting=True),
+]
+
+QUANTILE_SKETCHES = frozenset({"Quantiles", "KLL", "REQ", "TDigest"})
+COUNTING_SKETCHES = frozenset({"HLL", "CPC"})
+ALL_SKETCHES = QUANTILE_SKETCHES | COUNTING_SKETCHES
+# The quantile sketches built on the library's common quantiles API (TDigest has its own).
+CLASSIC_QUANTILE_SKETCHES = frozenset({"Quantiles", "KLL", "REQ"})
+
+
+# ---------------------------------------------------------------------------
+# Scalar function arguments and results
+# ---------------------------------------------------------------------------
+# A scalar function is registered once per item type of a quantile sketch (`item_type` below is that overload's
+# logical type, and `T` its C++ type), and once for a counting sketch (`item_type` is None).
+
+
+@dataclass(frozen=True)
+class Arg:
+    name: str
+    """In the function body, the argument's value is `<name>_data` and its vector `<name>_vector`."""
+    cpp: str
+    """The C++ type the executor passes to the function body."""
+    logical: Callable[[Optional[str]], str]
+    """The argument's DuckDB type, given the overload's item type."""
+    pre_executor: str = ""
+    """C++ that runs once per chunk, before the executor."""
+    process: str = ""
+    """C++ that runs once per row, before the function body."""
+    is_sketch: bool = False
+
+
+def fixed_arg(name: str, logical_type: str) -> Arg:
+    return Arg(name, CPP_TYPE[logical_type], lambda item_type: logical_type)
+
+
+def item_arg(name: str) -> Arg:
+    """An argument of the sketch's item type."""
+    return Arg(name, "T", lambda item_type: item_type)
+
+
+def sketch_arg(sketch: Sketch, name: str = "sketch") -> Arg:
+    """A serialized sketch; the function body sees it deserialized as `<name>`."""
+    if sketch.counting:
+        sketch_class = sketch.cpp_class
+        logical = lambda item_type: "sketch_type"
+    else:
+        sketch_class = f"{sketch.cpp_class}<DSItem<T>>"
+        logical = lambda item_type: f"sketch_map_types[{to_type_id(item_type)}]"
+    return Arg(
+        name,
+        "string_t",
+        logical,
+        process=f'auto {name} = DSDeserialize<{sketch_class}>({name}_data, "{sketch.name}");',
+        is_sketch=True,
     )
 
 
-def unary_functions_per_sketch_type(sketch_type: str):
-    def make_sketch_argument(name: str) -> dict:
-        """A serialized sketch argument; the body sees the deserialized sketch as `<name>`."""
-        if sketch_type in counting_sketch_names:
-            sketch_class = get_sketch_class_name(sketch_type)
-            duckdb_type = lambda contained_type: "sketch_type"
-        else:
-            sketch_class = f"{get_sketch_class_name(sketch_type)}<DSItem<T>>"
-            duckdb_type = lambda contained_type: f"sketch_map_types[{contained_type.replace('LogicalType', 'LogicalTypeId')}]"
-        return {
-            "cpp_type": "string_t",
-            "duckdb_type": duckdb_type,
-            "name": name,
-            "process": f"""
-            auto {name} = [&]() {{
-                try {{
-                    return {sketch_class}::deserialize({name}_data.GetDataUnsafe(), {name}_data.GetSize());
-                }} catch (const std::exception &e) {{
-                    throw InvalidInputException("Failed to deserialize {sketch_type} sketch: %s", e.what());
-                }}
-            }}();""",
-        }
+def list_arg(name: str, child_logical: Callable[[Optional[str]], str], child_cpp: str) -> Arg:
+    """A LIST argument; the function body sees the row's list as the DSListView `<name>`."""
+    return Arg(
+        name,
+        "list_entry_t",
+        lambda item_type: f"LogicalType::LIST({child_logical(item_type)})",
+        pre_executor=textwrap.dedent(f"""\
+            UnifiedVectorFormat {name}_children_unified;
+            ListVector::GetChild({name}_vector).ToUnifiedFormat({name}_children_unified);
+            auto {name}_children_data = UnifiedVectorFormat::GetData<{child_cpp}>({name}_children_unified);"""),
+        process=f"DSListView<{child_cpp}> {name} {{{name}_data, {name}_children_unified, {name}_children_data}};",
+    )
 
-    sketch_argument = make_sketch_argument("sketch")
 
-    cdf_points_argument = {
-        "cpp_type": "list_entry_t",
-        "duckdb_type": lambda contained_type: f"LogicalType::LIST({contained_type})",
-        "name": "split_points",
-        "pre_executor": """
-                    auto &split_points_list_children = ListVector::GetChild(split_points_vector);
+# The split points of a CDF or PMF.
+SPLIT_POINTS_ARG = list_arg("split_points", lambda item_type: item_type, "T")
 
-                    UnifiedVectorFormat split_points_children_unified;
-                    split_points_list_children.ToUnifiedFormat(split_points_children_unified);
 
-                    const T *split_points_list_children_data = UnifiedVectorFormat::GetData<T>(split_points_children_unified);
-                    """,
-        "process": """
-                    std::vector<DSItem<T>> passing_points(split_points_data.length);
-                    for (idx_t i = 0; i < split_points_data.length; i++)
-                    {
-                        passing_points[i] = DSItemIn(split_points_list_children_data[split_points_children_unified.sel->get_index(i + split_points_data.offset)]);
-                    }
-                    """,
-    }
-    pmf_points_argument = cdf_points_argument
+@dataclass(frozen=True)
+class Returns:
+    cpp: str
+    logical: Callable[[Optional[str]], str]
+    """The result's DuckDB type, given the overload's item type."""
 
-    result = [
-        {
-            "method": "return sketch.is_empty();",
-            "name": "is_empty",
-            "description": "Return a boolean indicating if the sketch is empty",
-            "example": f"datasketch_{sketch_type.lower()}_is_empty(sketch)",
-            "arguments": [
-                sketch_argument,
-            ],
-            "return_type": "LogicalType::BOOLEAN",
-        },
+
+def returns(logical_type: str) -> Returns:
+    return Returns(CPP_TYPE[logical_type], lambda item_type: logical_type)
+
+
+RETURNS_ITEM = Returns("T", lambda item_type: item_type)
+RETURNS_SKETCH = Returns("string_t", lambda item_type: "sketch_type")
+RETURNS_DOUBLE_LIST = Returns("list_entry_t", lambda item_type: "LogicalType::LIST(LogicalType::DOUBLE)")
+RETURNS_ITEM_LIST = Returns("list_entry_t", lambda item_type: f"LogicalType::LIST({item_type})")
+RETURNS_SORTED_VIEW = Returns(
+    "list_entry_t",
+    lambda item_type: (
+        "LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{"
+        f'{{"item", {item_type}}}, '
+        '{"weight", LogicalType::UBIGINT}, '
+        '{"cumulative_weight", LogicalType::UBIGINT}}))'
+    ),
+)
+
+
+# ---------------------------------------------------------------------------
+# Scalar functions
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Function:
+    name: str
+    """The SQL name is datasketch_<sketch>_<name>."""
+    sketches: frozenset
+    """The sketches that have this function."""
+    description: str
+    args: tuple
+    returns: Returns
+    body: str
+    """C++ computing the result; `sketch` is the deserialized sketch and `result` the result vector."""
+    example_args: str = ""
+    """The example call's arguments after its sketches."""
+    example: str = ""
+    """A runnable query using the function, filled in by scalar_functions()."""
+
+
+def _distribution_body(kind: str, inclusive: bool) -> str:
+    """The body of a CDF or PMF: the probabilities at the split points, as a LIST(DOUBLE)."""
+    extra = ", inclusive_data" if inclusive else ""
+    return f"return DSAppendDoubles(result, sketch.get_{kind.upper()}(DSItems(split_points).data(), split_points.size(){extra}));"
+
+
+def _all_functions(sketch: Sketch) -> list:
+    """Every scalar function, as `sketch` would have it, in registration order."""
+    s = sketch.sql
+    sk = sketch_arg(sketch)
+    inclusive = fixed_arg("inclusive", "LogicalType::BOOLEAN")
+    std_dev = fixed_arg("std_dev", "LogicalType::UTINYINT")
+    tdigest = frozenset({"TDigest"})
+    hll = frozenset({"HLL"})
+    cpc = frozenset({"CPC"})
+    req = frozenset({"REQ"})
+
+    return [
+        Function("is_empty", ALL_SKETCHES, "Return a boolean indicating if the sketch is empty",
+                 (sk,), returns("LogicalType::BOOLEAN"), "return sketch.is_empty();"),
+
+        # --- Quantile sketches ---
+        Function("k", QUANTILE_SKETCHES, "Return the value of K for this sketch",
+                 (sk,), returns("LogicalType::USMALLINT"), "return sketch.get_k();"),
+        Function("cdf", CLASSIC_QUANTILE_SKETCHES,
+                 "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
+                 (sk, SPLIT_POINTS_ARG, inclusive), RETURNS_DOUBLE_LIST, _distribution_body("cdf", True),
+                 "[25.0, 50.0, 75.0], true"),
+        Function("cdf", tdigest,
+                 "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
+                 (sk, SPLIT_POINTS_ARG), RETURNS_DOUBLE_LIST, _distribution_body("cdf", False),
+                 "[25.0, 50.0, 75.0]"),
+        Function("pmf", CLASSIC_QUANTILE_SKETCHES,
+                 "Return the Probability Mass Function (PMF) of the sketch for a series of points",
+                 (sk, SPLIT_POINTS_ARG, inclusive), RETURNS_DOUBLE_LIST, _distribution_body("pmf", True),
+                 "[25.0, 50.0, 75.0], true"),
+        Function("pmf", tdigest,
+                 "Return the Probability Mass Function (PMF) of the sketch for a series of points",
+                 (sk, SPLIT_POINTS_ARG), RETURNS_DOUBLE_LIST, _distribution_body("pmf", False),
+                 "[25.0, 50.0, 75.0]"),
+
+        # --- HLL ---
+        Function("describe", hll, "Return a string representation of the sketch",
+                 (sk, fixed_arg("summary", "LogicalType::BOOLEAN"), fixed_arg("detail", "LogicalType::BOOLEAN")),
+                 returns("LogicalType::VARCHAR"),
+                 "return StringVector::AddString(result, sketch.to_string(summary_data, detail_data, false, false));",
+                 "true, false"),
+        Function("lg_config_k", hll, "Return the value of log base 2 K for this sketch",
+                 (sk,), returns("LogicalType::UTINYINT"), "return sketch.get_lg_config_k();"),
+        Function("is_compact", hll, "Return whether the sketch is in compact form",
+                 (sk,), returns("LogicalType::BOOLEAN"), "return sketch.is_compact();"),
+        Function("composite_estimate", hll,
+                 "Return the composite estimate of the number of distinct items, computed from the registers alone (the raw HLL estimate blended with linear counting). datasketch_hll_estimate prefers the HIP estimator, which is only available for sketches that were not built by a union",
+                 (sk,), returns("LogicalType::DOUBLE"), "return sketch.get_composite_estimate();"),
+        Function("target_type", hll, "Return the sketch's register encoding: 'HLL_4', 'HLL_6' or 'HLL_8'",
+                 (sk,), returns("LogicalType::VARCHAR"),
+                 "return StringVector::AddString(result, DSHLLTargetTypeName(sketch.get_target_type()));"),
+        Function("merge", hll,
+                 "Return the union of two HLL sketches as a new sketch with the first sketch's target type. The union runs at the larger lg_config_k of the two; if either input is in HLL (dense) mode the result is reduced to the smaller lg_config_k",
+                 (sketch_arg(sketch, "sketch_a"), sketch_arg(sketch, "sketch_b")), RETURNS_SKETCH,
+                 "return DSHLLMerge(result, sketch_a, sketch_b);"),
+
+        # --- CPC ---
+        Function("merge", cpc,
+                 "Return the union of two CPC sketches as a new sketch. The result uses the smaller lg_k of the two inputs",
+                 (sketch_arg(sketch, "sketch_a"), sketch_arg(sketch, "sketch_b")), RETURNS_SKETCH,
+                 "return DSCPCMerge(result, sketch_a, sketch_b);"),
+        Function("describe", cpc, "Return a string representation of the sketch",
+                 (sk,), returns("LogicalType::VARCHAR"), "return StringVector::AddString(result, sketch.to_string());"),
+
+        # --- Counting sketches ---
+        Function("estimate", COUNTING_SKETCHES, "Return the estimate of the number of distinct items seen by the sketch",
+                 (sk,), returns("LogicalType::DOUBLE"), "return sketch.get_estimate();"),
+        Function("lower_bound", COUNTING_SKETCHES,
+                 "Return the lower bound of the number of distinct items seen by the sketch",
+                 (sk, std_dev), returns("LogicalType::DOUBLE"), "return sketch.get_lower_bound(std_dev_data);", "2"),
+        Function("upper_bound", COUNTING_SKETCHES,
+                 "Return the upper bound of the number of distinct items seen by the sketch",
+                 (sk, std_dev), returns("LogicalType::DOUBLE"), "return sketch.get_upper_bound(std_dev_data);", "2"),
+
+        # --- TDigest ---
+        Function("describe", tdigest, "Return a description of this sketch",
+                 (sk, fixed_arg("include_centroids", "LogicalType::BOOLEAN")), returns("LogicalType::VARCHAR"),
+                 "return StringVector::AddString(result, sketch.to_string(include_centroids_data));", "false"),
+        Function("rank", tdigest, "Return the rank of an item in the sketch",
+                 (sk, item_arg("item")), returns("LogicalType::DOUBLE"), "return sketch.get_rank(DSItemIn(item_data));",
+                 "50.0"),
+        Function("total_weight", tdigest, "Return the total weight of this sketch",
+                 (sk,), returns("LogicalType::UBIGINT"), "return sketch.get_total_weight();"),
+        Function("quantile", tdigest, "Return the quantile of a rank in the sketch",
+                 (sk, fixed_arg("rank", "LogicalType::DOUBLE")), RETURNS_ITEM,
+                 "return DSItemOut<T>(result, sketch.get_quantile(rank_data));", "0.5"),
+
+        # --- Classic quantile sketches ---
+        Function("normalized_rank_error", frozenset({"Quantiles", "KLL"}), "Return the normalized rank error of the sketch",
+                 (sk, fixed_arg("is_pmf", "LogicalType::BOOLEAN")), returns("LogicalType::DOUBLE"),
+                 "return sketch.get_normalized_rank_error(is_pmf_data);", "false"),
+        Function("describe", CLASSIC_QUANTILE_SKETCHES, "Return a description of this sketch",
+                 (sk, fixed_arg("include_levels", "LogicalType::BOOLEAN"), fixed_arg("include_items", "LogicalType::BOOLEAN")),
+                 returns("LogicalType::VARCHAR"),
+                 "return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));",
+                 "false, false"),
+        Function("rank", CLASSIC_QUANTILE_SKETCHES, "Return the rank of an item in the sketch",
+                 (sk, item_arg("item"), inclusive), returns("LogicalType::DOUBLE"),
+                 "return sketch.get_rank(DSItemIn(item_data), inclusive_data);", "50.0, true"),
+        Function("quantile", CLASSIC_QUANTILE_SKETCHES, "Return the quantile of a rank in the sketch",
+                 (sk, fixed_arg("rank", "LogicalType::DOUBLE"), inclusive), RETURNS_ITEM,
+                 "return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));", "0.5, true"),
+        Function("n", CLASSIC_QUANTILE_SKETCHES, "Return the number of items contained in the sketch",
+                 (sk,), returns("LogicalType::UBIGINT"), "return sketch.get_n();"),
+        Function("is_estimation_mode", CLASSIC_QUANTILE_SKETCHES, "Return a boolean indicating if the sketch is in estimation mode",
+                 (sk,), returns("LogicalType::BOOLEAN"), "return sketch.is_estimation_mode();"),
+        Function("num_retained", CLASSIC_QUANTILE_SKETCHES, "Return the number of retained items in the sketch",
+                 (sk,), returns("LogicalType::UBIGINT"), "return sketch.get_num_retained();"),
+        Function("min_item", CLASSIC_QUANTILE_SKETCHES, "Return the minimum item in the sketch",
+                 (sk,), RETURNS_ITEM, "return DSItemOut<T>(result, sketch.get_min_item());"),
+        Function("max_item", CLASSIC_QUANTILE_SKETCHES, "Return the maximum item in the sketch",
+                 (sk,), RETURNS_ITEM, "return DSItemOut<T>(result, sketch.get_max_item());"),
+
+        # --- REQ ---
+        Function("rank_lower_bound", req,
+                 "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
+                 (sk, fixed_arg("rank", "LogicalType::DOUBLE"), fixed_arg("num_std_dev", "LogicalType::UTINYINT")),
+                 returns("LogicalType::DOUBLE"),
+                 "DSCheckRank(rank_data); return sketch.get_rank_lower_bound(rank_data, num_std_dev_data);", "0.5, 2"),
+        Function("rank_upper_bound", req,
+                 "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
+                 (sk, fixed_arg("rank", "LogicalType::DOUBLE"), fixed_arg("num_std_dev", "LogicalType::UTINYINT")),
+                 returns("LogicalType::DOUBLE"),
+                 "DSCheckRank(rank_data); return sketch.get_rank_upper_bound(rank_data, num_std_dev_data);", "0.5, 2"),
+        Function("is_hra", req,
+                 "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)",
+                 (sk,), returns("LogicalType::BOOLEAN"), "return sketch.is_HRA();"),
+
+        # --- TDigest ---
+        Function("min_value", tdigest, "Return the minimum value seen by the sketch",
+                 (sk,), RETURNS_ITEM, "return sketch.get_min_value();"),
+        Function("max_value", tdigest, "Return the maximum value seen by the sketch",
+                 (sk,), RETURNS_ITEM, "return sketch.get_max_value();"),
+
+        # --- Classic quantile sketches: list results ---
+        Function("quantiles", CLASSIC_QUANTILE_SKETCHES,
+                 "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
+                 (sk, list_arg("ranks", lambda item_type: "LogicalType::DOUBLE", "double"), inclusive), RETURNS_ITEM_LIST,
+                 f'return DSQuantiles<T>(result, sketch, ranks, inclusive_data, "datasketch_{s}_quantiles");',
+                 "[0.25, 0.5, 0.75], true"),
+        Function("ranks", CLASSIC_QUANTILE_SKETCHES,
+                 "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
+                 (sk, list_arg("items", lambda item_type: item_type, "T"), inclusive),
+                 RETURNS_DOUBLE_LIST, "return DSRanks<T>(result, sketch, items, inclusive_data);",
+                 "[10.0, 20.0, 30.0], true"),
+        Function("sorted_view", CLASSIC_QUANTILE_SKETCHES,
+                 "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_"
+                 + s
+                 + "_n(sketch) for the normalized rank. An empty sketch yields an empty list",
+                 (sk,), RETURNS_SORTED_VIEW, "return DSSortedView<T>(result, sketch);"),
     ]
 
-    if sketch_type not in counting_sketch_names:
-        result.extend(
-            [
-                {
-                    "method": "return sketch.get_k();",
-                    "arguments": [sketch_argument],
-                    "name": "k",
-                    "description": "Return the value of K for this sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_k(sketch)",
-                    "return_type": "LogicalType::USMALLINT",
-                },
-                {
-                    "name": "cdf",
-                    "description": "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "example": f"datasketch_{sketch_type.lower()}_cdf(sketch, [25.0, 50.0, 75.0], true)"
-                    if sketch_type != "TDigest"
-                    else f"datasketch_{sketch_type.lower()}_cdf(sketch, [25.0, 50.0, 75.0])",
-                    "method": (
-                        "auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);"
-                        if sketch_type != "TDigest"
-                        else "auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length);"
-                    )
-                    + """
-                auto current_size = ListVector::GetListSize(result);
-                auto new_size = current_size + cdf_result.size();
-                if (ListVector::GetListCapacity(result) < new_size)
-                {
-                    ListVector::Reserve(result, new_size);
-                }
 
-                auto &child_entry = ListVector::GetChildMutable(result);
-                auto child_vals = FlatVector::GetDataMutable<double>(child_entry);
-                //auto &child_validity = FlatVector::Validity(child_entry);
-                for (idx_t i = 0; i < cdf_result.size(); i++)
-                {
-                    child_vals[current_size + i] = cdf_result[i];
-                }
-                ListVector::SetListSize(result, new_size);
-                return list_entry_t(current_size, cdf_result.size());
-                """,
-                    "arguments": [
-                        sketch_argument,
-                        cdf_points_argument,
-                        {
-                            "cpp_type": "bool",
-                            "name": "inclusive",
-                        },
-                    ]
-                    if sketch_type != "TDigest"
-                    else [sketch_argument, cdf_points_argument],
-                    "return_type_double_list": True,
-                },
-                {
-                    "name": "pmf",
-                    "description": "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "example": f"datasketch_{sketch_type.lower()}_pmf(sketch, [25.0, 50.0, 75.0], true)"
-                    if sketch_type != "TDigest"
-                    else f"datasketch_{sketch_type.lower()}_pmf(sketch, [25.0, 50.0, 75.0])",
-                    "method": (
-                        "auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);"
-                        if sketch_type != "TDigest"
-                        else "auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length);"
-                    )
-                    + """
-                auto current_size = ListVector::GetListSize(result);
-                auto new_size = current_size + pmf_result.size();
-                if (ListVector::GetListCapacity(result) < new_size)
-                {
-                    ListVector::Reserve(result, new_size);
-                }
-
-                auto &child_entry = ListVector::GetChildMutable(result);
-                auto child_vals = FlatVector::GetDataMutable<double>(child_entry);
-                //auto &child_validity = FlatVector::Validity(child_entry);
-                for (idx_t i = 0; i < pmf_result.size(); i++)
-                {
-                    child_vals[current_size + i] = pmf_result[i];
-                }
-                ListVector::SetListSize(result, new_size);
-                return list_entry_t(current_size, pmf_result.size());
-                """,
-                    "arguments": [
-                        sketch_argument,
-                        pmf_points_argument,
-                        {
-                            "cpp_type": "bool",
-                            "name": "inclusive",
-                        },
-                    ]
-                    if sketch_type != "TDigest"
-                    else [sketch_argument, pmf_points_argument],
-                    "return_type_double_list": True,
-                },
-            ]
-        )
-
-    if sketch_type == "HLL":
-        result.extend(
-            [
-                {
-                    "method": "return StringVector::AddString(result, sketch.to_string(summary_data, detail_data, false, false));",
-                    "description": "Return a string representation of the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_describe(sketch, true, false)",
-                    "arguments": [
-                        sketch_argument,
-                        {
-                            "cpp_type": "bool",
-                            "name": "summary",
-                        },
-                        {
-                            "cpp_type": "bool",
-                            "name": "detail",
-                        },
-                    ],
-                    "name": "describe",
-                    "return_type": "LogicalType::VARCHAR",
-                },
-                {
-                    "method": "return sketch.get_lg_config_k();",
-                    "description": "Return the value of log base 2 K for this sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_lg_config_k(sketch)",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "name": "lg_config_k",
-                    "return_type": "LogicalType::UTINYINT",
-                },
-                {
-                    "method": "return sketch.is_compact();",
-                    "description": "Return whether the sketch is in compact form",
-                    "example": f"datasketch_{sketch_type.lower()}_is_compact(sketch)",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "name": "is_compact",
-                    "return_type": "LogicalType::BOOLEAN",
-                },
-            ]
-        )
-
-    if sketch_type == "HLL":
-        result.extend(
-            [
-                {
-                    "method": "return sketch.get_composite_estimate();",
-                    "description": "Return the composite estimate of the number of distinct items, computed from the registers alone (the raw HLL estimate blended with linear counting). datasketch_hll_estimate prefers the HIP estimator, which is only available for sketches that were not built by a union",
-                    "example": "datasketch_hll_composite_estimate(sketch)",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "name": "composite_estimate",
-                    "return_type": "LogicalType::DOUBLE",
-                },
-                {
-                    "method": "return StringVector::AddString(result, DSHLLTargetTypeName(sketch.get_target_type()));",
-                    "description": "Return the sketch's register encoding: 'HLL_4', 'HLL_6' or 'HLL_8'",
-                    "example": "datasketch_hll_target_type(sketch)",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "name": "target_type",
-                    "return_type": "LogicalType::VARCHAR",
-                },
-                {
-                    "method": """
-                datasketches::hll_union u(std::max(sketch_a.get_lg_config_k(), sketch_b.get_lg_config_k()));
-                u.update(sketch_a);
-                u.update(sketch_b);
-                auto serialized_data = u.get_result(sketch_a.get_target_type()).serialize_updatable();
-                return StringVector::AddStringOrBlob(result, std::string(serialized_data.begin(), serialized_data.end()));
-                """,
-                    "description": "Return the union of two HLL sketches as a new sketch with the first sketch's target type. The union runs at the larger lg_config_k of the two; if either input is in HLL (dense) mode the result is reduced to the smaller lg_config_k",
-                    "example": "datasketch_hll_merge(sketch_a, sketch_b)",
-                    "arguments": [
-                        make_sketch_argument("sketch_a"),
-                        make_sketch_argument("sketch_b"),
-                    ],
-                    "name": "merge",
-                    "return_logical_type": lambda contained_type: "sketch_type",
-                    "return_cpp_type": "string_t",
-                },
-            ]
-        )
-
-    if sketch_type == "CPC":
-        result.append(
-            {
-                "method": """
-                datasketches::cpc_union u(std::max(sketch_a.get_lg_k(), sketch_b.get_lg_k()));
-                u.update(sketch_a);
-                u.update(sketch_b);
-                auto serialized_data = u.get_result().serialize();
-                return StringVector::AddStringOrBlob(result, std::string(serialized_data.begin(), serialized_data.end()));
-                """,
-                "description": "Return the union of two CPC sketches as a new sketch. The result uses the smaller lg_k of the two inputs",
-                "example": "datasketch_cpc_merge(sketch_a, sketch_b)",
-                "arguments": [
-                    make_sketch_argument("sketch_a"),
-                    make_sketch_argument("sketch_b"),
-                ],
-                "name": "merge",
-                "return_logical_type": lambda contained_type: "sketch_type",
-                "return_cpp_type": "string_t",
-            }
-        )
-
-    if sketch_type == "CPC":
-        result.append(
-            {
-                "method": "return StringVector::AddString(result, sketch.to_string());",
-                "description": "Return a string representation of the sketch",
-                "example": f"datasketch_{sketch_type.lower()}_describe(sketch)",
-                "arguments": [
-                    sketch_argument,
-                ],
-                "name": "describe",
-                "return_type": "LogicalType::VARCHAR",
-            },
-        )
-
-    if sketch_type in counting_sketch_names:
-        result.extend(
-            [
-                {
-                    "method": "return sketch.get_estimate();",
-                    "description": "Return the estimate of the number of distinct items seen by the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_estimate(sketch)",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "name": "estimate",
-                    "return_type": "LogicalType::DOUBLE",
-                },
-                {
-                    "description": "Return the lower bound of the number of distinct items seen by the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_lower_bound(sketch, 2)",
-                    "method": "return sketch.get_lower_bound(std_dev_data);",
-                    "arguments": [
-                        sketch_argument,
-                        {
-                            "cpp_type": "uint8_t",
-                            "name": "std_dev",
-                        },
-                    ],
-                    "name": "lower_bound",
-                    "return_type": "LogicalType::DOUBLE",
-                },
-                {
-                    "description": "Return the upper bound of the number of distinct items seen by the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_upper_bound(sketch, 2)",
-                    "method": "return sketch.get_upper_bound(std_dev_data);",
-                    "arguments": [
-                        sketch_argument,
-                        {
-                            "cpp_type": "uint8_t",
-                            "name": "std_dev",
-                        },
-                    ],
-                    "name": "upper_bound",
-                    "return_type": "LogicalType::DOUBLE",
-                },
-            ]
-        )
-
-    if sketch_type == "TDigest":
-        result.extend(
-            [
-                {
-                    "description": "Return a description of this sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_describe(sketch, false)",
-                    "method": "return StringVector::AddString(result, sketch.to_string(include_centroids_data));",
-                    "arguments": [
-                        sketch_argument,
-                        {
-                            "cpp_type": "bool",
-                            "name": "include_centroids",
-                        },
-                    ],
-                    "name": "describe",
-                    "return_type": "LogicalType::VARCHAR",
-                },
-                {
-                    "description": "Return the rank of an item in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_rank(sketch, 50.0)",
-                    "method": "return sketch.get_rank(DSItemIn(item_data));",
-                    "name": "rank",
-                    "arguments": [
-                        sketch_argument,
-                        {
-                            "cpp_type_dynamic": True,
-                            "name": "item",
-                        },
-                    ],
-                    "return_type": "LogicalType::DOUBLE",
-                },
-                {
-                    "description": "Return the total weight of this sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_total_weight(sketch)",
-                    "method": "return sketch.get_total_weight();",
-                    "name": "total_weight",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "return_type": "LogicalType::UBIGINT",
-                },
-                {
-                    "description": "Return the quantile of a rank in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_quantile(sketch, 0.5)",
-                    "method": "return DSItemOut<T>(result, sketch.get_quantile(rank_data));",
-                    "name": "quantile",
-                    "arguments": [
-                        sketch_argument,
-                        {
-                            "cpp_type": "double",
-                            "name": "rank",
-                        },
-                    ],
-                    "dynamic_return_type": True,
-                },
-            ]
-        )
-
-    if sketch_type not in ("TDigest", "REQ", "HLL", "CPC"):
-        result.extend(
-            [
-                {
-                    "description": "Return the normalized rank error of the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_normalized_rank_error(sketch, false)",
-                    "method": "return sketch.get_normalized_rank_error(is_pmf_data);",
-                    "name": "normalized_rank_error",
-                    "arguments": [
-                        sketch_argument,
-                        {
-                            "cpp_type": "bool",
-                            "name": "is_pmf",
-                        },
-                    ],
-                    "return_type": "LogicalType::DOUBLE",
-                },
-            ]
-        )
-
-    if sketch_type != "TDigest" and sketch_type not in counting_sketch_names:
-        result.extend(
-            [
-                {
-                    "description": "Return a description of this sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_describe(sketch, false, false)",
-                    "method": "return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));",
-                    "arguments": [
-                        sketch_argument,
-                        {
-                            "cpp_type": "bool",
-                            "name": "include_levels",
-                        },
-                        {
-                            "cpp_type": "bool",
-                            "name": "include_items",
-                        },
-                    ],
-                    "name": "describe",
-                    "return_type": "LogicalType::VARCHAR",
-                },
-                {
-                    "description": "Return the rank of an item in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_rank(sketch, 50.0, true)",
-                    "method": "return sketch.get_rank(DSItemIn(item_data), inclusive_data);",
-                    "name": "rank",
-                    "arguments": [
-                        sketch_argument,
-                        {
-                            "cpp_type_dynamic": True,
-                            "name": "item",
-                        },
-                        {
-                            "cpp_type": "bool",
-                            "name": "inclusive",
-                        },
-                    ],
-                    "return_type": "LogicalType::DOUBLE",
-                },
-                {
-                    "description": "Return the quantile of a rank in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_quantile(sketch, 0.5, true)",
-                    "method": "return DSItemOut<T>(result, sketch.get_quantile(rank_data, inclusive_data));",
-                    "name": "quantile",
-                    "arguments": [
-                        sketch_argument,
-                        {
-                            "cpp_type": "double",
-                            "name": "rank",
-                        },
-                        {
-                            "cpp_type": "bool",
-                            "name": "inclusive",
-                        },
-                    ],
-                    "dynamic_return_type": True,
-                },
-                {
-                    "description": "Return the number of items contained in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_n(sketch)",
-                    "method": "return sketch.get_n();",
-                    "name": "n",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "return_type": "LogicalType::UBIGINT",
-                },
-                {
-                    "description": "Return a boolean indicating if the sketch is in estimation mode",
-                    "example": f"datasketch_{sketch_type.lower()}_is_estimation_mode(sketch)",
-                    "method": "return sketch.is_estimation_mode();",
-                    "name": "is_estimation_mode",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "return_type": "LogicalType::BOOLEAN",
-                },
-                {
-                    "description": "Return the number of retained items in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_num_retained(sketch)",
-                    "method": "return sketch.get_num_retained();",
-                    "name": "num_retained",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "return_type": "LogicalType::UBIGINT",
-                },
-                {
-                    "description": "Return the minimum item in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_min_item(sketch)",
-                    "method": "return DSItemOut<T>(result, sketch.get_min_item());",
-                    "name": "min_item",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "dynamic_return_type": True,
-                },
-                {
-                    "description": "Return the maximum item in the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_max_item(sketch)",
-                    "method": "return DSItemOut<T>(result, sketch.get_max_item());",
-                    "name": "max_item",
-                    "arguments": [sketch_argument],
-                    "dynamic_return_type": True,
-                },
-            ]
-        )
-
-    if sketch_type == "REQ":
-        result.extend(
-            [
-                {
-                    "description": "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "example": "datasketch_req_rank_lower_bound(sketch, 0.5, 2)",
-                    "method": "DSCheckRank(rank_data); return sketch.get_rank_lower_bound(rank_data, num_std_dev_data);",
-                    "name": "rank_lower_bound",
-                    "arguments": [
-                        sketch_argument,
-                        {
-                            "cpp_type": "double",
-                            "name": "rank",
-                        },
-                        {
-                            "cpp_type": "uint8_t",
-                            "name": "num_std_dev",
-                        },
-                    ],
-                    "return_type": "LogicalType::DOUBLE",
-                },
-                {
-                    "description": "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "example": "datasketch_req_rank_upper_bound(sketch, 0.5, 2)",
-                    "method": "DSCheckRank(rank_data); return sketch.get_rank_upper_bound(rank_data, num_std_dev_data);",
-                    "name": "rank_upper_bound",
-                    "arguments": [
-                        sketch_argument,
-                        {
-                            "cpp_type": "double",
-                            "name": "rank",
-                        },
-                        {
-                            "cpp_type": "uint8_t",
-                            "name": "num_std_dev",
-                        },
-                    ],
-                    "return_type": "LogicalType::DOUBLE",
-                },
-                {
-                    "description": "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)",
-                    "example": "datasketch_req_is_hra(sketch)",
-                    "method": "return sketch.is_HRA();",
-                    "name": "is_hra",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "return_type": "LogicalType::BOOLEAN",
-                },
-            ]
-        )
-
-    if sketch_type == "TDigest":
-        result.extend(
-            [
-                {
-                    "description": "Return the minimum value seen by the sketch",
-                    "example": "datasketch_tdigest_min_value(sketch)",
-                    "method": "return sketch.get_min_value();",
-                    "name": "min_value",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "dynamic_return_type": True,
-                },
-                {
-                    "description": "Return the maximum value seen by the sketch",
-                    "example": "datasketch_tdigest_max_value(sketch)",
-                    "method": "return sketch.get_max_value();",
-                    "name": "max_value",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "dynamic_return_type": True,
-                },
-            ]
-        )
-
-    if sketch_type in ("Quantiles", "KLL", "REQ"):
-        result.extend(
-            [
-                {
-                    "description": "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "example": f"datasketch_{sketch_type.lower()}_quantiles(sketch, [0.25, 0.5, 0.75], true)",
-                    "method": """
-                if (sketch.is_empty())
-                {
-                    throw InvalidInputException("datasketch_%s_quantiles: operation is undefined for an empty sketch");
-                }
-                return DSAppendList(result, ranks_data.length, [&](Vector &child, idx_t offset) {
-                    auto child_values = FlatVector::GetDataMutable<T>(child);
-                    for (idx_t i = 0; i < ranks_data.length; i++)
-                    {
-                        auto rank_index = ranks_children_unified.sel->get_index(ranks_data.offset + i);
-                        if (!ranks_children_unified.validity.RowIsValid(rank_index))
-                        {
-                            FlatVector::SetNull(child, offset + i, true);
-                            continue;
-                        }
-                        auto rank = ranks_children_data[rank_index];
-                        DSCheckRank(rank);
-                        child_values[offset + i] = DSItemOut<T>(child, sketch.get_quantile(rank, inclusive_data));
-                    }
-                });
-                """ % sketch_type.lower(),
-                    "name": "quantiles",
-                    "arguments": [
-                        sketch_argument,
-                        list_argument("ranks", lambda contained_type: "LogicalType::DOUBLE", "double"),
-                        {
-                            "cpp_type": "bool",
-                            "name": "inclusive",
-                        },
-                    ],
-                    "return_logical_type": lambda contained_type: f"LogicalType::LIST({contained_type})",
-                    "return_cpp_type": "list_entry_t",
-                },
-                {
-                    "description": "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "example": f"datasketch_{sketch_type.lower()}_ranks(sketch, [10.0, 20.0, 30.0], true)",
-                    "method": """
-                return DSAppendList(result, items_data.length, [&](Vector &child, idx_t offset) {
-                    auto child_values = FlatVector::GetDataMutable<double>(child);
-                    for (idx_t i = 0; i < items_data.length; i++)
-                    {
-                        auto item_index = items_children_unified.sel->get_index(items_data.offset + i);
-                        if (!items_children_unified.validity.RowIsValid(item_index))
-                        {
-                            FlatVector::SetNull(child, offset + i, true);
-                            continue;
-                        }
-                        child_values[offset + i] = sketch.get_rank(DSItemIn(items_children_data[item_index]), inclusive_data);
-                    }
-                });
-                """,
-                    "name": "ranks",
-                    "arguments": [
-                        sketch_argument,
-                        list_argument("items", lambda contained_type: contained_type, "T"),
-                        {
-                            "cpp_type": "bool",
-                            "name": "inclusive",
-                        },
-                    ],
-                    "return_logical_type": lambda contained_type: "LogicalType::LIST(LogicalType::DOUBLE)",
-                    "return_cpp_type": "list_entry_t",
-                },
-                {
-                    "description": "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_"
-                    + sketch_type.lower()
-                    + "_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "example": f"datasketch_{sketch_type.lower()}_sorted_view(sketch)",
-                    "method": """
-                if (sketch.is_empty())
-                {
-                    return list_entry_t(ListVector::GetListSize(result), 0);
-                }
-                auto view = sketch.get_sorted_view();
-                return DSAppendList(result, view.size(), [&](Vector &child, idx_t offset) {
-                    auto &entries = StructVector::GetEntries(child);
-                    auto &item_vector = entries[0];
-                    auto item_values = FlatVector::GetDataMutable<T>(item_vector);
-                    auto weight_values = FlatVector::GetDataMutable<uint64_t>(entries[1]);
-                    auto cumulative_values = FlatVector::GetDataMutable<uint64_t>(entries[2]);
-                    idx_t i = offset;
-                    for (auto it = view.begin(); it != view.end(); ++it, ++i)
-                    {
-                        item_values[i] = DSItemOut<T>(item_vector, (*it).first);
-                        weight_values[i] = it.get_weight();
-                        cumulative_values[i] = it.get_cumulative_weight(true);
-                    }
-                });
-                """,
-                    "name": "sorted_view",
-                    "arguments": [
-                        sketch_argument,
-                    ],
-                    "return_logical_type": sorted_view_struct_type,
-                    "return_cpp_type": "list_entry_t",
-                },
-            ]
-        )
-    for function_info in result:
-        function_info["example"] = example_query(sketch_type, function_info["example"])
+def scalar_functions(sketch: Sketch) -> list:
+    """The sketch's scalar functions, in registration order, with their examples."""
+    result = []
+    for function in _all_functions(sketch):
+        if sketch.name not in function.sketches:
+            continue
+        call_args = [arg.name for arg in function.args if arg.is_sketch]
+        if function.example_args:
+            call_args.append(function.example_args)
+        call = f"datasketch_{sketch.sql}_{function.name}({', '.join(call_args)})"
+        result.append(replace(function, example=example_query(sketch, call)))
     return result
 
 
@@ -814,60 +495,55 @@ def unary_functions_per_sketch_type(sketch_type: str):
 # referring to columns of a table the reader does not have. test/sql/datasketch_generated_examples.test, which
 # this script also writes, runs each of them.
 
-example_k = {"Quantiles": 16, "KLL": 200, "REQ": 12, "TDigest": 100, "HLL": 12, "CPC": 12}
 
-
-def example_value(sketch_type: str) -> str:
+def example_value(sketch: Sketch) -> str:
     """The value aggregated into example sketches: integers for counting sketches, DOUBLE otherwise."""
-    return "i" if sketch_type in counting_sketch_names else "i::DOUBLE"
+    return "i" if sketch.counting else "i::DOUBLE"
 
 
-def example_create(sketch_type: str, extra_args: str = "") -> str:
-    return f"datasketch_{sketch_type.lower()}({example_k[sketch_type]}, {example_value(sketch_type)}{extra_args})"
+def example_create(sketch: Sketch, extra_args: str = "") -> str:
+    return f"datasketch_{sketch.sql}({sketch.example_k}, {example_value(sketch)}{extra_args})"
 
 
-def example_sketch_source(sketch_type: str, alias: str = "sketch", rows: str = "range(100)", group_by: str = "") -> str:
-    return f"(SELECT {example_create(sketch_type)} AS {alias} FROM {rows} t(i){group_by})"
+def example_sketch_source(sketch: Sketch, alias: str = "sketch", rows: str = "range(100)", group_by: str = "") -> str:
+    return f"(SELECT {example_create(sketch)} AS {alias} FROM {rows} t(i){group_by})"
 
 
-def example_query(sketch_type: str, call: str) -> str:
+def example_query(sketch: Sketch, call: str) -> str:
     """Wrap a scalar call on `sketch` (or `sketch_a` and `sketch_b`) in a query that builds the sketches."""
     if "sketch_a" in call:
         return (
-            f"SELECT {call} FROM {example_sketch_source(sketch_type, 'sketch_a')} a, "
-            f"{example_sketch_source(sketch_type, 'sketch_b', 'range(50, 150)')} b"
+            f"SELECT {call} FROM {example_sketch_source(sketch, 'sketch_a')} a, "
+            f"{example_sketch_source(sketch, 'sketch_b', 'range(50, 150)')} b"
         )
-    return f"SELECT {call} FROM {example_sketch_source(sketch_type)} s"
+    return f"SELECT {call} FROM {example_sketch_source(sketch)} s"
 
 
-def aggregate_examples(sketch_type: str) -> dict:
-    name = f"datasketch_{sketch_type.lower()}"
-    k = example_k[sketch_type]
-    partial_sketches = example_sketch_source(sketch_type, group_by=" GROUP BY i % 4")
-    hll_target_type_arg = ", 'HLL_8'"
+def aggregate_examples(sketch: Sketch) -> dict:
+    name = f"datasketch_{sketch.sql}"
+    k = sketch.example_k
+    partial_sketches = example_sketch_source(sketch, group_by=" GROUP BY i % 4")
+    option = f", {sketch.option.example}" if sketch.option else ""
     return {
-        "create": f"SELECT {example_create(sketch_type)} FROM range(100) t(i)",
-        "create_hll_target_type": f"SELECT {example_create(sketch_type, hll_target_type_arg)} FROM range(100) t(i)",
-        "create_req_hra": f"SELECT {example_create(sketch_type, ', false')} FROM range(100) t(i)",
+        "create": f"SELECT {example_create(sketch)} FROM range(100) t(i)",
+        "create_option": f"SELECT {example_create(sketch, option)} FROM range(100) t(i)",
         "merge": f"SELECT {name}({k}, sketch) FROM {partial_sketches} s",
         "union": f"SELECT {name}_union({k}, sketch) FROM {partial_sketches} s",
-        "union_hll_target_type": f"SELECT {name}_union({k}, sketch, 'HLL_8') FROM {partial_sketches} s",
+        "union_option": f"SELECT {name}_union({k}, sketch{option}) FROM {partial_sketches} s",
     }
 
 
-def all_examples(sketch_type: str) -> list:
-    """Every example the template registers for a sketch type, in registration order."""
-    examples = [fn["example"] for fn in unary_functions_per_sketch_type(sketch_type)]
-    aggregates = aggregate_examples(sketch_type)
+def all_examples(sketch: Sketch) -> list:
+    """Every example the template registers for a sketch, in registration order."""
+    examples = [function.example for function in scalar_functions(sketch)]
+    aggregates = aggregate_examples(sketch)
     examples.append(aggregates["create"])
-    if sketch_type == "HLL":
-        examples.append(aggregates["create_hll_target_type"])
-    if sketch_type == "REQ":
-        examples.append(aggregates["create_req_hra"])
-    if sketch_type in counting_sketch_names:
+    if sketch.option:
+        examples.append(aggregates["create_option"])
+    if sketch.counting:
         examples.append(aggregates["union"])
-        if sketch_type == "HLL":
-            examples.append(aggregates["union_hll_target_type"])
+        if sketch.option and sketch.option.union_note:
+            examples.append(aggregates["union_option"])
     else:
         examples.append(aggregates["merge"])
     return examples
@@ -877,13 +553,13 @@ def sql_string(value: str) -> str:
     return "'" + value.replace("'", "''") + "'"
 
 
-def render_examples_test(sketch_types: list) -> str:
+def render_examples_test() -> str:
     examples = []
-    for sketch_type in sketch_types:
-        for example in all_examples(sketch_type):
+    for sketch in SKETCHES:
+        for example in all_examples(sketch):
             if example not in examples:
                 examples.append(example)
-    family = "|".join(t.lower() for t in sketch_types)
+    family = "|".join(sketch.sql for sketch in SKETCHES)
     lines = [
         "# name: test/sql/datasketch_generated_examples.test",
         "# description: every example in the generated function descriptions runs",
@@ -914,163 +590,72 @@ def render_examples_test(sketch_types: list) -> str:
     return "\n".join(lines)
 
 
-def get_executor_name(arguments: list) -> str:
-    if len(arguments) == 1:
-        return "UnaryExecutor"
-    elif len(arguments) == 2:
-        return "BinaryExecutor"
-    elif len(arguments) == 3:
-        return "TernaryExecutor"
-    else:
-        raise NotImplementedError(f"Unhandled number of arguments {len(arguments)}")
+# ---------------------------------------------------------------------------
+# Rendering helpers used by the template
+# ---------------------------------------------------------------------------
 
 
-def get_scalar_parameter_types(
-    function_info: Any, logical_type: str, cpp_type: str
-) -> list:
-    input_parameters = []
-    for arg in function_info["arguments"]:
-        if "duckdb_type" in arg:
-            input_parameters.append(arg["duckdb_type"](logical_type))
-        elif "cpp_type_dynamic" in arg:
-            input_parameters.append(logical_type)
-        else:
-            input_parameters.append(cpp_type_mapping[arg["cpp_type"]])
-    return input_parameters
+EXECUTORS = {1: "UnaryExecutor", 2: "BinaryExecutor", 3: "TernaryExecutor"}
 
 
-def get_parameter_names(function_info: Any) -> str:
-    return ",".join(f'"{arg["name"]}"' for arg in function_info["arguments"])
+def parameter_names(function: Function) -> str:
+    return ", ".join(f'"{arg.name}"' for arg in function.args)
 
 
-def get_parameter_types_str(
-    function_info: Any, logical_type: str, cpp_type: str
-) -> str:
-    return ",".join(get_scalar_parameter_types(function_info, logical_type, cpp_type))
+def parameter_types(function: Function, item_type: Optional[str]) -> str:
+    return ", ".join(arg.logical(item_type) for arg in function.args)
 
 
-def get_scalar_function_args(
-    function_info: Any, logical_type: str, cpp_type: str
-) -> str:
-    input_parameters = get_scalar_parameter_types(function_info, logical_type, cpp_type)
-
-    joined_input_parameters = ",".join(input_parameters)
-
-    all_args = [f"{{{joined_input_parameters}}}"]
-
-    if "return_logical_type" in function_info:
-        all_args.append(function_info["return_logical_type"](logical_type))
-    elif function_info.get("dynamic_return_type"):
-        all_args.append(logical_type)
-    elif function_info.get("return_type_double_list"):
-        # CDF/PMF results are probabilities, so they are always DOUBLE regardless of the sketch item type.
-        all_args.append("LogicalType::LIST(LogicalType::DOUBLE)")
-    else:
-        all_args.append(function_info["return_type"])
-
-    return ",".join(all_args)
+def function_block(function: Function) -> str:
+    """The C++ executing `function` over the argument vectors: one lambda call per row."""
+    if len(function.args) not in EXECUTORS:
+        raise NotImplementedError(f"Unhandled number of arguments {len(function.args)}")
+    cpp_types = ", ".join([arg.cpp for arg in function.args] + [function.returns.cpp])
+    vectors = ", ".join(f"{arg.name}_vector" for arg in function.args)
+    params = ", ".join(f"{arg.cpp} {arg.name}_data" for arg in function.args)
+    pre_executor = [arg.pre_executor for arg in function.args if arg.pre_executor]
+    body = [arg.process for arg in function.args if arg.process] + [function.body]
+    lines = pre_executor + [
+        f"{EXECUTORS[len(function.args)]}::Execute<{cpp_types}>({vectors}, result, [&]({params}) {{",
+        textwrap.indent("\n".join(body), "    "),
+        "});",
+    ]
+    return textwrap.indent("\n".join(lines), "    ")
 
 
-def get_function_block(function_info: Any) -> str:
-    cpp_types = []
-    for value in function_info["arguments"]:
-        if value.get("cpp_type_dynamic"):
-            cpp_types.append("T")
-        else:
-            cpp_types.append(value["cpp_type"])
-
-    if "return_cpp_type" in function_info:
-        cpp_types.append(function_info["return_cpp_type"])
-    elif function_info.get("return_type_double_list"):
-        cpp_types.append("list_entry_t")
-    elif function_info.get("dynamic_return_type"):
-        cpp_types.append("T")
-    else:
-        cpp_types.append(logical_type_mapping[function_info["return_type"]])
-
-    joined_cpp_types = ",".join(cpp_types)
-
-    executor_args = []
-    lambda_args = []
-    lambda_lines = []
-    pre_executor_lines = []
-
-    for argument in function_info["arguments"]:
-        executor_args.append(f"{argument['name']}_vector")
-
-        if argument.get("cpp_type_dynamic"):
-            lambda_args.append(f"T {argument['name']}_data")
-        else:
-            lambda_args.append(f"{argument['cpp_type']} {argument['name']}_data")
-
-        if "process" in argument:
-            lambda_lines.append(argument["process"])
-
-        if "pre_executor" in argument:
-            pre_executor_lines.append(argument["pre_executor"])
-
-    executor_args.append("result")
-
-    joined_executor_args = ",".join(executor_args)
-    joined_lambda_args = ",".join(lambda_args)
-
-    lambda_lines.append(function_info["method"])
-
-    lambda_body = "\n".join(lambda_lines)
-    pre_executor_body = "\n".join(pre_executor_lines)
-
-    result = f"""
-        {pre_executor_body}
-        {get_executor_name(function_info["arguments"])}::Execute
-        <{joined_cpp_types}>
-        (
-        {joined_executor_args},
-        [&]({joined_lambda_args}) {{
-
-            {lambda_body}
-        }});"""
-
-    return result
+def cpp_string(value: str) -> str:
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-# Data to render the template
-data = {
-    "sketch_class_name": get_sketch_class_name,
-    "counting_sketch_names": counting_sketch_names,
-    "union_class_name": get_union_class_name,
-    "union_accepts_values": union_accepts_values,
-    #    "function_names_per_sketch": get_sketch_function_names,
-    "sketch_types": ["Quantiles", "KLL", "REQ", "TDigest", "HLL", "CPC"],
-    "logical_type_to_cplusplus_type": sketch_type_to_allowed_logical_types,
-    "functions_per_sketch_type": unary_functions_per_sketch_type,
-    "aggregate_examples": aggregate_examples,
-    "get_function_block": get_function_block,
-    "get_scalar_function_args": get_scalar_function_args,
-    "get_parameter_names": get_parameter_names,
-    "get_parameter_types_str": get_parameter_types_str,
-    "logical_type_mapping": logical_type_mapping,
-    "to_type_id": lambda v: v.replace("LogicalType", "LogicalTypeId"),
-    "sketch_k_cpp_type": {
-        "Quantiles": "int32_t",
-        "KLL": "int32_t",
-        "REQ": "int32_t",
-        "TDigest": "int32_t",
-        "HLL": "int32_t",
-        "CPC": "int32_t",
-    },
-    "cpp_type_mapping": cpp_type_mapping,
-}
+def main() -> None:
+    env = Environment(
+        loader=FileSystemLoader(CODEGEN_DIR),
+        autoescape=False,
+        undefined=StrictUndefined,
+        trim_blocks=True,
+        lstrip_blocks=True,
+        keep_trailing_newline=True,
+    )
+    env.filters["cpp_string"] = cpp_string
+    template = env.get_template("generated.cpp.j2")
+
+    data = {
+        "sketches": SKETCHES,
+        "scalar_functions": scalar_functions,
+        "aggregate_examples": aggregate_examples,
+        "function_block": function_block,
+        "parameter_names": parameter_names,
+        "parameter_types": parameter_types,
+        "cpp_type": CPP_TYPE,
+        "to_type_id": to_type_id,
+        "type_name": type_name,
+        "k_logical_type": K_LOGICAL_TYPE,
+    }
+
+    (ROOT / "src" / "generated.cpp").write_text(template.render(data))
+    (ROOT / "test" / "sql" / "datasketch_generated_examples.test").write_text(render_examples_test())
+    print("Generated src/generated.cpp and test/sql/datasketch_generated_examples.test")
 
 
-# Render the template
-output = template.render(data)
-
-# Write the generated C++ code to a file
-with open("src/generated.cpp", "w") as f:
-    f.write(output)
-
-# Write the test that runs every generated example
-with open("test/sql/datasketch_generated_examples.test", "w") as f:
-    f.write(render_examples_test(data["sketch_types"]))
-
-print("C++ file generated successfully!")
+if __name__ == "__main__":
+    main()

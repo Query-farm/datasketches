@@ -158,3 +158,9 @@ query I
 SELECT regexp_extract(datasketch_cpc_describe(datasketch_cpc_merge(sa, sb10)), 'lg_k\s*: (\d+)', 1) FROM cs;
 ----
 10
+
+# Casting to sketch_hll or sketch_cpc gives the sketch type, as casting to the quantile sketch types does
+query III
+SELECT typeof(NULL::sketch_hll), typeof(datasketch_cpc(12, 1)::BLOB::sketch_cpc), typeof(NULL::sketch_kll_double)
+----
+sketch_hll	sketch_cpc	sketch_kll_double
