@@ -10,7 +10,7 @@ SELECT 'A' AS name, datasketch_theta(i) AS sketch FROM range(1, 9) t(i)       --
 UNION ALL SELECT 'B', datasketch_theta(i) FROM range(5, 13) t(i)              -- {5..12}
 UNION ALL SELECT 'C', datasketch_theta(i) FROM range(7, 21) t(i)              -- {7..20}
 UNION ALL SELECT 'D', datasketch_theta(i) FROM range(100, 104) t(i)           -- {100..103}
-UNION ALL SELECT 'E', datasketch_theta(i) FROM range(0) t(i);                 -- {}
+UNION ALL SELECT 'E', unhex('01030300001E0000')::sketch_theta;               -- {}
 
 statement ok
 CREATE MACRO s(n) AS (SELECT sketch FROM sets WHERE name = n);
@@ -204,7 +204,7 @@ statement ok
 CREATE TABLE seeded AS
 SELECT 'A' AS name, datasketch_theta(i, seed := 42) AS sketch FROM range(1, 9) t(i)
 UNION ALL SELECT 'B', datasketch_theta(i, seed := 42) FROM range(5, 13) t(i)
-UNION ALL SELECT 'E', datasketch_theta(i, seed := 42) FROM range(0) t(i)
+UNION ALL SELECT 'E', unhex('01030300001E0000')::sketch_theta
 UNION ALL SELECT 'X', datasketch_theta(14, i, seed := -7) FROM range(1, 9) t(i);
 
 statement ok
@@ -478,3 +478,14 @@ SELECT count(DISTINCT datasketch_theta_seed_hash(s))
 FROM (SELECT datasketch_theta_blob(i::VARCHAR::BLOB, seed := 1) AS s FROM range(100) t(i) UNION ALL SELECT datasketch_theta_blob(i::VARCHAR::BLOB, seed := 2) FROM range(100) t(i));
 ----
 2
+
+# No input rows gives NULL, as for every sketch aggregate; merging only empty sketches gives an empty sketch
+query III
+SELECT datasketch_theta(i) IS NULL, datasketch_theta(14, i) IS NULL, datasketch_theta_blob(i::VARCHAR::BLOB) IS NULL FROM range(0) t(i)
+----
+true	true	true
+
+query II
+SELECT datasketch_theta(e) IS NULL, datasketch_theta_is_empty(datasketch_theta(e)) FROM (SELECT unhex('01030300001E0000')::sketch_theta AS e)
+----
+false	true

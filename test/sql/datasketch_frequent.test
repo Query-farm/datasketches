@@ -188,11 +188,11 @@ CREATE TABLE empty_table(item VARCHAR);
 statement ok
 CREATE TABLE empty_sketch AS SELECT datasketch_frequent_items(item) as sketch FROM empty_table;
 
-# Empty sketch should return 0 for any item
-query I
-SELECT datasketch_frequent_items_estimate(sketch, 'anything') FROM empty_sketch;
+# No input rows gives a NULL sketch, as for every sketch aggregate, so its estimates are NULL
+query II
+SELECT datasketch_frequent_items_estimate(sketch, 'anything'), coalesce(datasketch_frequent_items_estimate(sketch, 'anything'), 0) FROM empty_sketch;
 ----
-0
+NULL	0
 
 # Test NULL handling - NULLs should be skipped
 statement ok
@@ -298,9 +298,14 @@ SELECT datasketch_frequent_items_is_empty(sketch) FROM fruit_sketch;
 ----
 false
 
-# Test is_empty on empty sketch
+# Test is_empty on an empty sketch (a zero weight adds nothing; merging empty sketches gives an empty sketch, not NULL)
 query I
-SELECT datasketch_frequent_items_is_empty(sketch) FROM empty_sketch;
+SELECT sketch IS NULL FROM empty_sketch;
+----
+true
+
+query I
+SELECT datasketch_frequent_items_is_empty(datasketch_frequent_items(e)) FROM (SELECT datasketch_frequent_items_weighted('a', 0) AS e);
 ----
 true
 

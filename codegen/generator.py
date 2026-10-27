@@ -181,9 +181,10 @@ SKETCHES = [
            example_k=16, k_min=2, k_max=32768, k_power_of_two=True),
     Sketch("KLL", "datasketches::kll_sketch", NUMERIC_TYPES + ("LogicalType::VARCHAR",),
            example_k=200, k_min=8, k_max=65535),
-    # The library rounds an odd K down, and keeps K in 8 bits (req_sketch_impl.hpp), so a K above 255 would wrap.
+    # The library rounds an odd K down. (It kept K in 8 bits, so a larger K wrapped around: see
+    # vcpkg-overlay/apache-datasketches/req-k-16-bit.patch.)
     Sketch("REQ", "datasketches::req_sketch", NUMERIC_TYPES,
-           example_k=12, k_min=4, k_max=255, option=REQ_HRA),
+           example_k=12, k_min=4, k_max=1024, option=REQ_HRA),
     # The library's K is a uint16_t.
     Sketch("TDigest", "datasketches::tdigest", ("LogicalType::FLOAT", "LogicalType::DOUBLE"),
            example_k=100, k_min=10, k_max=65535, k_label="K (compression)"),
@@ -390,10 +391,10 @@ def _all_functions(sketch: Sketch) -> list:
                  (sk,), returns("LogicalType::DOUBLE"), "return sketch.get_estimate();"),
         Function("lower_bound", COUNTING_SKETCHES,
                  "Return the lower bound of the number of distinct items seen by the sketch",
-                 (sk, std_dev), returns("LogicalType::DOUBLE"), "return sketch.get_lower_bound(std_dev_data);", "2"),
+                 (sk, std_dev), returns("LogicalType::DOUBLE"), f'return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_{s}_lower_bound"));', "2"),
         Function("upper_bound", COUNTING_SKETCHES,
                  "Return the upper bound of the number of distinct items seen by the sketch",
-                 (sk, std_dev), returns("LogicalType::DOUBLE"), "return sketch.get_upper_bound(std_dev_data);", "2"),
+                 (sk, std_dev), returns("LogicalType::DOUBLE"), f'return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_{s}_upper_bound"));', "2"),
 
         # --- TDigest ---
         Function("describe", tdigest, "Return a description of this sketch",

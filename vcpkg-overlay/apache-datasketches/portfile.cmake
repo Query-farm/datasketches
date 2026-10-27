@@ -4,6 +4,9 @@ vcpkg_from_github(
     REF 5b5524f55d121225a7909c2851271327684585d7 # 5.3.0
     SHA512 f37a85be727782afae155126198f1839d2a67dd1bb6025b46d8a84eefc5629b5ae2695208c244acccb4aa646f0fd23740d763e169103812324315643c99b3488
     HEAD_REF master
+    PATCHES
+        # req_sketch kept K in 8 bits, so a K of 256 or more wrapped around (256 became 4). Not yet fixed upstream.
+        req-k-16-bit.patch
 )
 
 set(VCPKG_BUILD_TYPE release) # header-only port

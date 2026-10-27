@@ -300,58 +300,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_empty<int8_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_empty<int16_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_empty<int32_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_empty<int64_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_empty<float>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_empty<double>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_empty<uint8_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_empty<uint16_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_empty<uint32_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_empty<uint64_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_empty<string_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_k");
@@ -360,58 +360,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::USMALLINT,
                                    DSQuantilesk<int8_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::USMALLINT,
                                    DSQuantilesk<int16_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::USMALLINT,
                                    DSQuantilesk<int32_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::USMALLINT,
                                    DSQuantilesk<int64_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::USMALLINT,
                                    DSQuantilesk<float>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::USMALLINT,
                                    DSQuantilesk<double>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::USMALLINT,
                                    DSQuantilesk<uint8_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::USMALLINT,
                                    DSQuantilesk<uint16_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::USMALLINT,
                                    DSQuantilesk<uint32_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::USMALLINT,
                                    DSQuantilesk<uint64_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::USMALLINT,
                                    DSQuantilesk<string_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_cdf");
@@ -420,58 +420,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::LIST(LogicalType::TINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilescdf<int8_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::LIST(LogicalType::SMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilescdf<int16_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::LIST(LogicalType::INTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilescdf<int32_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::LIST(LogicalType::BIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilescdf<int64_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::FLOAT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilescdf<float>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilescdf<double>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::LIST(LogicalType::UTINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilescdf<uint8_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::LIST(LogicalType::USMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilescdf<uint16_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::LIST(LogicalType::UINTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilescdf<uint32_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilescdf<uint64_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::LIST(LogicalType::VARCHAR), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilescdf<string_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_pmf");
@@ -480,58 +480,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::LIST(LogicalType::TINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilespmf<int8_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::LIST(LogicalType::SMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilespmf<int16_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::LIST(LogicalType::INTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilespmf<int32_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::LIST(LogicalType::BIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilespmf<int64_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::FLOAT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilespmf<float>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilespmf<double>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::LIST(LogicalType::UTINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilespmf<uint8_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::LIST(LogicalType::USMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilespmf<uint16_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::LIST(LogicalType::UINTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilespmf<uint32_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilespmf<uint64_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::LIST(LogicalType::VARCHAR), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilespmf<string_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_normalized_rank_error");
@@ -540,58 +540,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesnormalized_rank_error<int8_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesnormalized_rank_error<int16_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesnormalized_rank_error<int32_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesnormalized_rank_error<int64_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesnormalized_rank_error<float>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesnormalized_rank_error<double>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesnormalized_rank_error<uint8_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesnormalized_rank_error<uint16_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesnormalized_rank_error<uint32_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesnormalized_rank_error<uint64_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesnormalized_rank_error<string_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_describe");
@@ -600,58 +600,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSQuantilesdescribe<int8_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSQuantilesdescribe<int16_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSQuantilesdescribe<int32_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSQuantilesdescribe<int64_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSQuantilesdescribe<float>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSQuantilesdescribe<double>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSQuantilesdescribe<uint8_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSQuantilesdescribe<uint16_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSQuantilesdescribe<uint32_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSQuantilesdescribe<uint64_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSQuantilesdescribe<string_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_rank");
@@ -660,58 +660,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::TINYINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesrank<int8_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::SMALLINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesrank<int16_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::INTEGER, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesrank<int32_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::BIGINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesrank<int64_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::FLOAT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesrank<float>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesrank<double>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::UTINYINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesrank<uint8_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::USMALLINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesrank<uint16_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::UINTEGER, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesrank<uint32_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::UBIGINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesrank<uint64_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::VARCHAR, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesrank<string_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_quantile");
@@ -720,58 +720,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::TINYINT,
                                    DSQuantilesquantile<int8_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::SMALLINT,
                                    DSQuantilesquantile<int16_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::INTEGER,
                                    DSQuantilesquantile<int32_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::BIGINT,
                                    DSQuantilesquantile<int64_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::FLOAT,
                                    DSQuantilesquantile<float>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSQuantilesquantile<double>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::UTINYINT,
                                    DSQuantilesquantile<uint8_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::USMALLINT,
                                    DSQuantilesquantile<uint16_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::UINTEGER,
                                    DSQuantilesquantile<uint32_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::UBIGINT,
                                    DSQuantilesquantile<uint64_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSQuantilesquantile<string_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_quantile(sketch, 0.5, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_n");
@@ -780,58 +780,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::UBIGINT,
                                    DSQuantilesn<int8_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::UBIGINT,
                                    DSQuantilesn<int16_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::UBIGINT,
                                    DSQuantilesn<int32_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::UBIGINT,
                                    DSQuantilesn<int64_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::UBIGINT,
                                    DSQuantilesn<float>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::UBIGINT,
                                    DSQuantilesn<double>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::UBIGINT,
                                    DSQuantilesn<uint8_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::UBIGINT,
                                    DSQuantilesn<uint16_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::UBIGINT,
                                    DSQuantilesn<uint32_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::UBIGINT,
                                    DSQuantilesn<uint64_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::UBIGINT,
                                    DSQuantilesn<string_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_n(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_is_estimation_mode");
@@ -840,58 +840,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_estimation_mode<int8_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_estimation_mode<int16_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_estimation_mode<int32_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_estimation_mode<int64_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_estimation_mode<float>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_estimation_mode<double>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_estimation_mode<uint8_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_estimation_mode<uint16_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_estimation_mode<uint32_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_estimation_mode<uint64_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::BOOLEAN,
                                    DSQuantilesis_estimation_mode<string_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_is_estimation_mode(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_num_retained");
@@ -900,58 +900,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::UBIGINT,
                                    DSQuantilesnum_retained<int8_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::UBIGINT,
                                    DSQuantilesnum_retained<int16_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::UBIGINT,
                                    DSQuantilesnum_retained<int32_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::UBIGINT,
                                    DSQuantilesnum_retained<int64_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::UBIGINT,
                                    DSQuantilesnum_retained<float>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::UBIGINT,
                                    DSQuantilesnum_retained<double>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::UBIGINT,
                                    DSQuantilesnum_retained<uint8_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::UBIGINT,
                                    DSQuantilesnum_retained<uint16_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::UBIGINT,
                                    DSQuantilesnum_retained<uint32_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::UBIGINT,
                                    DSQuantilesnum_retained<uint64_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::UBIGINT,
                                    DSQuantilesnum_retained<string_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_num_retained(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_min_item");
@@ -960,58 +960,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::TINYINT,
                                    DSQuantilesmin_item<int8_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::SMALLINT,
                                    DSQuantilesmin_item<int16_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::INTEGER,
                                    DSQuantilesmin_item<int32_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::BIGINT,
                                    DSQuantilesmin_item<int64_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::FLOAT,
                                    DSQuantilesmin_item<float>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::DOUBLE,
                                    DSQuantilesmin_item<double>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::UTINYINT,
                                    DSQuantilesmin_item<uint8_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::USMALLINT,
                                    DSQuantilesmin_item<uint16_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::UINTEGER,
                                    DSQuantilesmin_item<uint32_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::UBIGINT,
                                    DSQuantilesmin_item<uint64_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::VARCHAR,
                                    DSQuantilesmin_item<string_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_min_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_max_item");
@@ -1020,58 +1020,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::TINYINT,
                                    DSQuantilesmax_item<int8_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::SMALLINT,
                                    DSQuantilesmax_item<int16_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::INTEGER,
                                    DSQuantilesmax_item<int32_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::BIGINT,
                                    DSQuantilesmax_item<int64_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::FLOAT,
                                    DSQuantilesmax_item<float>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::DOUBLE,
                                    DSQuantilesmax_item<double>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::UTINYINT,
                                    DSQuantilesmax_item<uint8_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::USMALLINT,
                                    DSQuantilesmax_item<uint16_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::UINTEGER,
                                    DSQuantilesmax_item<uint32_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::UBIGINT,
                                    DSQuantilesmax_item<uint64_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::VARCHAR,
                                    DSQuantilesmax_item<string_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_max_item(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_quantiles");
@@ -1080,58 +1080,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::TINYINT),
                                    DSQuantilesquantiles<int8_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::SMALLINT),
                                    DSQuantilesquantiles<int16_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::INTEGER),
                                    DSQuantilesquantiles<int32_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::BIGINT),
                                    DSQuantilesquantiles<int64_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::FLOAT),
                                    DSQuantilesquantiles<float>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilesquantiles<double>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::UTINYINT),
                                    DSQuantilesquantiles<uint8_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::USMALLINT),
                                    DSQuantilesquantiles<uint16_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::UINTEGER),
                                    DSQuantilesquantiles<uint32_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::UBIGINT),
                                    DSQuantilesquantiles<uint64_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::VARCHAR),
                                    DSQuantilesquantiles<string_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_ranks");
@@ -1140,58 +1140,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::LIST(LogicalType::TINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilesranks<int8_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::LIST(LogicalType::SMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilesranks<int16_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::LIST(LogicalType::INTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilesranks<int32_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::LIST(LogicalType::BIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilesranks<int64_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::FLOAT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilesranks<float>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilesranks<double>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::LIST(LogicalType::UTINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilesranks<uint8_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::LIST(LogicalType::USMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilesranks<uint16_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::LIST(LogicalType::UINTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilesranks<uint32_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilesranks<uint64_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::LIST(LogicalType::VARCHAR), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSQuantilesranks<string_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
         ScalarFunctionSet set("datasketch_quantiles_sorted_view");
@@ -1200,58 +1200,58 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::TINYINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSQuantilessorted_view<int8_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::SMALLINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSQuantilessorted_view<int16_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::INTEGER}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSQuantilessorted_view<int32_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::BIGINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSQuantilessorted_view<int64_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::FLOAT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSQuantilessorted_view<float>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::DOUBLE}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSQuantilessorted_view<double>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UTINYINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSQuantilessorted_view<uint8_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::USMALLINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSQuantilessorted_view<uint16_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UINTEGER}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSQuantilessorted_view<uint32_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UBIGINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSQuantilessorted_view<uint64_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::VARCHAR}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSQuantilessorted_view<string_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_quantiles_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "quantiles");
+                    { "SELECT datasketch_quantiles_sorted_view(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
 
     {
@@ -1260,92 +1260,92 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
         DSAddAggregate(set, descriptions, DSQuantilesCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]), DSQuantilesBind,
                        { LogicalType::INTEGER, LogicalType::TINYINT }, {"k", "data"},
                        "Creates a sketch_quantiles data sketch by aggregating values",
-                       "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSQuantilesMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]), DSQuantilesBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::TINYINT] }, {"k", "sketch"},
                        "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches",
-                       "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSQuantilesCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]), DSQuantilesBind,
                        { LogicalType::INTEGER, LogicalType::SMALLINT }, {"k", "data"},
                        "Creates a sketch_quantiles data sketch by aggregating values",
-                       "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSQuantilesMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]), DSQuantilesBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::SMALLINT] }, {"k", "sketch"},
                        "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches",
-                       "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSQuantilesCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]), DSQuantilesBind,
                        { LogicalType::INTEGER, LogicalType::INTEGER }, {"k", "data"},
                        "Creates a sketch_quantiles data sketch by aggregating values",
-                       "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSQuantilesMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]), DSQuantilesBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER] }, {"k", "sketch"},
                        "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches",
-                       "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSQuantilesCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]), DSQuantilesBind,
                        { LogicalType::INTEGER, LogicalType::BIGINT }, {"k", "data"},
                        "Creates a sketch_quantiles data sketch by aggregating values",
-                       "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSQuantilesMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]), DSQuantilesBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::BIGINT] }, {"k", "sketch"},
                        "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches",
-                       "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSQuantilesCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]), DSQuantilesBind,
                        { LogicalType::INTEGER, LogicalType::FLOAT }, {"k", "data"},
                        "Creates a sketch_quantiles data sketch by aggregating values",
-                       "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSQuantilesMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]), DSQuantilesBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::FLOAT] }, {"k", "sketch"},
                        "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches",
-                       "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSQuantilesCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]), DSQuantilesBind,
                        { LogicalType::INTEGER, LogicalType::DOUBLE }, {"k", "data"},
                        "Creates a sketch_quantiles data sketch by aggregating values",
-                       "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSQuantilesMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]), DSQuantilesBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::DOUBLE] }, {"k", "sketch"},
                        "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches",
-                       "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSQuantilesCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]), DSQuantilesBind,
                        { LogicalType::INTEGER, LogicalType::UTINYINT }, {"k", "data"},
                        "Creates a sketch_quantiles data sketch by aggregating values",
-                       "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSQuantilesMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]), DSQuantilesBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UTINYINT] }, {"k", "sketch"},
                        "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches",
-                       "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSQuantilesCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]), DSQuantilesBind,
                        { LogicalType::INTEGER, LogicalType::USMALLINT }, {"k", "data"},
                        "Creates a sketch_quantiles data sketch by aggregating values",
-                       "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSQuantilesMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]), DSQuantilesBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::USMALLINT] }, {"k", "sketch"},
                        "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches",
-                       "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSQuantilesCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]), DSQuantilesBind,
                        { LogicalType::INTEGER, LogicalType::UINTEGER }, {"k", "data"},
                        "Creates a sketch_quantiles data sketch by aggregating values",
-                       "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSQuantilesMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]), DSQuantilesBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UINTEGER] }, {"k", "sketch"},
                        "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches",
-                       "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSQuantilesCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]), DSQuantilesBind,
                        { LogicalType::INTEGER, LogicalType::UBIGINT }, {"k", "data"},
                        "Creates a sketch_quantiles data sketch by aggregating values",
-                       "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSQuantilesMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]), DSQuantilesBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UBIGINT] }, {"k", "sketch"},
                        "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches",
-                       "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSQuantilesCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_map_types[LogicalTypeId::VARCHAR]), DSQuantilesBind,
                        { LogicalType::INTEGER, LogicalType::VARCHAR }, {"k", "data"},
                        "Creates a sketch_quantiles data sketch by aggregating values",
-                       "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_quantiles(16, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSQuantilesMergeAggregate<string_t>(LogicalType::VARCHAR, sketch_map_types[LogicalTypeId::VARCHAR]), DSQuantilesBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::VARCHAR] }, {"k", "sketch"},
                        "Creates a sketch_quantiles data sketch by merging other Quantiles data sketches",
-                       "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
-        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), "quantiles");
+                       { "SELECT datasketch_quantiles(16, sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
+        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
 }
 
@@ -1644,58 +1644,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::BOOLEAN,
                                    DSKLLis_empty<int8_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::BOOLEAN,
                                    DSKLLis_empty<int16_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::BOOLEAN,
                                    DSKLLis_empty<int32_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::BOOLEAN,
                                    DSKLLis_empty<int64_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::BOOLEAN,
                                    DSKLLis_empty<float>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::BOOLEAN,
                                    DSKLLis_empty<double>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::BOOLEAN,
                                    DSKLLis_empty<uint8_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::BOOLEAN,
                                    DSKLLis_empty<uint16_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::BOOLEAN,
                                    DSKLLis_empty<uint32_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::BOOLEAN,
                                    DSKLLis_empty<uint64_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::BOOLEAN,
                                    DSKLLis_empty<string_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_is_empty(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_k");
@@ -1704,58 +1704,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::USMALLINT,
                                    DSKLLk<int8_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::USMALLINT,
                                    DSKLLk<int16_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::USMALLINT,
                                    DSKLLk<int32_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::USMALLINT,
                                    DSKLLk<int64_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::USMALLINT,
                                    DSKLLk<float>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::USMALLINT,
                                    DSKLLk<double>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::USMALLINT,
                                    DSKLLk<uint8_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::USMALLINT,
                                    DSKLLk<uint16_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::USMALLINT,
                                    DSKLLk<uint32_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::USMALLINT,
                                    DSKLLk<uint64_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::USMALLINT,
                                    DSKLLk<string_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_cdf");
@@ -1764,58 +1764,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::LIST(LogicalType::TINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLcdf<int8_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::LIST(LogicalType::SMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLcdf<int16_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::LIST(LogicalType::INTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLcdf<int32_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::LIST(LogicalType::BIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLcdf<int64_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::FLOAT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLcdf<float>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLcdf<double>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::LIST(LogicalType::UTINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLcdf<uint8_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::LIST(LogicalType::USMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLcdf<uint16_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::LIST(LogicalType::UINTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLcdf<uint32_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLcdf<uint64_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::LIST(LogicalType::VARCHAR), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLcdf<string_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_pmf");
@@ -1824,58 +1824,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::LIST(LogicalType::TINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLpmf<int8_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::LIST(LogicalType::SMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLpmf<int16_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::LIST(LogicalType::INTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLpmf<int32_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::LIST(LogicalType::BIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLpmf<int64_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::FLOAT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLpmf<float>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLpmf<double>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::LIST(LogicalType::UTINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLpmf<uint8_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::LIST(LogicalType::USMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLpmf<uint16_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::LIST(LogicalType::UINTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLpmf<uint32_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLpmf<uint64_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::LIST(LogicalType::VARCHAR), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLpmf<string_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_normalized_rank_error");
@@ -1884,58 +1884,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLnormalized_rank_error<int8_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLnormalized_rank_error<int16_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLnormalized_rank_error<int32_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLnormalized_rank_error<int64_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLnormalized_rank_error<float>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLnormalized_rank_error<double>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLnormalized_rank_error<uint8_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLnormalized_rank_error<uint16_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLnormalized_rank_error<uint32_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLnormalized_rank_error<uint64_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLnormalized_rank_error<string_t>),
                     { "sketch", "is_pmf" }, "Return the normalized rank error of the sketch",
-                    "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_describe");
@@ -1944,58 +1944,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSKLLdescribe<int8_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSKLLdescribe<int16_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSKLLdescribe<int32_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSKLLdescribe<int64_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSKLLdescribe<float>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSKLLdescribe<double>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSKLLdescribe<uint8_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSKLLdescribe<uint16_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSKLLdescribe<uint32_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSKLLdescribe<uint64_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSKLLdescribe<string_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_rank");
@@ -2004,58 +2004,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::TINYINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLrank<int8_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::SMALLINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLrank<int16_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::INTEGER, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLrank<int32_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::BIGINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLrank<int64_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::FLOAT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLrank<float>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLrank<double>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::UTINYINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLrank<uint8_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::USMALLINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLrank<uint16_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::UINTEGER, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLrank<uint32_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::UBIGINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLrank<uint64_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::VARCHAR, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLrank<string_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_quantile");
@@ -2064,58 +2064,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::TINYINT,
                                    DSKLLquantile<int8_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::SMALLINT,
                                    DSKLLquantile<int16_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::INTEGER,
                                    DSKLLquantile<int32_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::BIGINT,
                                    DSKLLquantile<int64_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::FLOAT,
                                    DSKLLquantile<float>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSKLLquantile<double>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::UTINYINT,
                                    DSKLLquantile<uint8_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::USMALLINT,
                                    DSKLLquantile<uint16_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::UINTEGER,
                                    DSKLLquantile<uint32_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::UBIGINT,
                                    DSKLLquantile<uint64_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSKLLquantile<string_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_quantile(sketch, 0.5, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_n");
@@ -2124,58 +2124,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::UBIGINT,
                                    DSKLLn<int8_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::UBIGINT,
                                    DSKLLn<int16_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::UBIGINT,
                                    DSKLLn<int32_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::UBIGINT,
                                    DSKLLn<int64_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::UBIGINT,
                                    DSKLLn<float>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::UBIGINT,
                                    DSKLLn<double>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::UBIGINT,
                                    DSKLLn<uint8_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::UBIGINT,
                                    DSKLLn<uint16_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::UBIGINT,
                                    DSKLLn<uint32_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::UBIGINT,
                                    DSKLLn<uint64_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::UBIGINT,
                                    DSKLLn<string_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_n(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_is_estimation_mode");
@@ -2184,58 +2184,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::BOOLEAN,
                                    DSKLLis_estimation_mode<int8_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::BOOLEAN,
                                    DSKLLis_estimation_mode<int16_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::BOOLEAN,
                                    DSKLLis_estimation_mode<int32_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::BOOLEAN,
                                    DSKLLis_estimation_mode<int64_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::BOOLEAN,
                                    DSKLLis_estimation_mode<float>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::BOOLEAN,
                                    DSKLLis_estimation_mode<double>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::BOOLEAN,
                                    DSKLLis_estimation_mode<uint8_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::BOOLEAN,
                                    DSKLLis_estimation_mode<uint16_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::BOOLEAN,
                                    DSKLLis_estimation_mode<uint32_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::BOOLEAN,
                                    DSKLLis_estimation_mode<uint64_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::BOOLEAN,
                                    DSKLLis_estimation_mode<string_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_is_estimation_mode(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_num_retained");
@@ -2244,58 +2244,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::UBIGINT,
                                    DSKLLnum_retained<int8_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::UBIGINT,
                                    DSKLLnum_retained<int16_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::UBIGINT,
                                    DSKLLnum_retained<int32_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::UBIGINT,
                                    DSKLLnum_retained<int64_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::UBIGINT,
                                    DSKLLnum_retained<float>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::UBIGINT,
                                    DSKLLnum_retained<double>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::UBIGINT,
                                    DSKLLnum_retained<uint8_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::UBIGINT,
                                    DSKLLnum_retained<uint16_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::UBIGINT,
                                    DSKLLnum_retained<uint32_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::UBIGINT,
                                    DSKLLnum_retained<uint64_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::UBIGINT,
                                    DSKLLnum_retained<string_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_num_retained(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_min_item");
@@ -2304,58 +2304,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::TINYINT,
                                    DSKLLmin_item<int8_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::SMALLINT,
                                    DSKLLmin_item<int16_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::INTEGER,
                                    DSKLLmin_item<int32_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::BIGINT,
                                    DSKLLmin_item<int64_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::FLOAT,
                                    DSKLLmin_item<float>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::DOUBLE,
                                    DSKLLmin_item<double>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::UTINYINT,
                                    DSKLLmin_item<uint8_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::USMALLINT,
                                    DSKLLmin_item<uint16_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::UINTEGER,
                                    DSKLLmin_item<uint32_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::UBIGINT,
                                    DSKLLmin_item<uint64_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::VARCHAR,
                                    DSKLLmin_item<string_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_min_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_max_item");
@@ -2364,58 +2364,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::TINYINT,
                                    DSKLLmax_item<int8_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::SMALLINT,
                                    DSKLLmax_item<int16_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::INTEGER,
                                    DSKLLmax_item<int32_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::BIGINT,
                                    DSKLLmax_item<int64_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::FLOAT,
                                    DSKLLmax_item<float>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::DOUBLE,
                                    DSKLLmax_item<double>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::UTINYINT,
                                    DSKLLmax_item<uint8_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::USMALLINT,
                                    DSKLLmax_item<uint16_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::UINTEGER,
                                    DSKLLmax_item<uint32_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::UBIGINT,
                                    DSKLLmax_item<uint64_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::VARCHAR,
                                    DSKLLmax_item<string_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_max_item(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_quantiles");
@@ -2424,58 +2424,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::TINYINT),
                                    DSKLLquantiles<int8_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::SMALLINT),
                                    DSKLLquantiles<int16_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::INTEGER),
                                    DSKLLquantiles<int32_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::BIGINT),
                                    DSKLLquantiles<int64_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::FLOAT),
                                    DSKLLquantiles<float>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLquantiles<double>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::UTINYINT),
                                    DSKLLquantiles<uint8_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::USMALLINT),
                                    DSKLLquantiles<uint16_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::UINTEGER),
                                    DSKLLquantiles<uint32_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::UBIGINT),
                                    DSKLLquantiles<uint64_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::VARCHAR),
                                    DSKLLquantiles<string_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_ranks");
@@ -2484,58 +2484,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::LIST(LogicalType::TINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLranks<int8_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::LIST(LogicalType::SMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLranks<int16_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::LIST(LogicalType::INTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLranks<int32_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::LIST(LogicalType::BIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLranks<int64_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::FLOAT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLranks<float>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLranks<double>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::LIST(LogicalType::UTINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLranks<uint8_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::LIST(LogicalType::USMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLranks<uint16_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::LIST(LogicalType::UINTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLranks<uint32_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLranks<uint64_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], LogicalType::LIST(LogicalType::VARCHAR), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSKLLranks<string_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
         ScalarFunctionSet set("datasketch_kll_sorted_view");
@@ -2544,58 +2544,58 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::TINYINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSKLLsorted_view<int8_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::SMALLINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSKLLsorted_view<int16_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::INTEGER}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSKLLsorted_view<int32_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::BIGINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSKLLsorted_view<int64_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::FLOAT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSKLLsorted_view<float>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::DOUBLE}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSKLLsorted_view<double>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UTINYINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSKLLsorted_view<uint8_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::USMALLINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSKLLsorted_view<uint16_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UINTEGER}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSKLLsorted_view<uint32_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UBIGINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSKLLsorted_view<uint64_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::VARCHAR}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSKLLsorted_view<string_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_kll_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "kll");
+                    { "SELECT datasketch_kll_sorted_view(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
 
     {
@@ -2604,92 +2604,92 @@ void LoadKLLSketch(ExtensionLoader &loader) {
         DSAddAggregate(set, descriptions, DSKLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]), DSKLLBind,
                        { LogicalType::INTEGER, LogicalType::TINYINT }, {"k", "data"},
                        "Creates a sketch_kll data sketch by aggregating values",
-                       "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSKLLMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]), DSKLLBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::TINYINT] }, {"k", "sketch"},
                        "Creates a sketch_kll data sketch by merging other KLL data sketches",
-                       "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSKLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]), DSKLLBind,
                        { LogicalType::INTEGER, LogicalType::SMALLINT }, {"k", "data"},
                        "Creates a sketch_kll data sketch by aggregating values",
-                       "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSKLLMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]), DSKLLBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::SMALLINT] }, {"k", "sketch"},
                        "Creates a sketch_kll data sketch by merging other KLL data sketches",
-                       "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSKLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]), DSKLLBind,
                        { LogicalType::INTEGER, LogicalType::INTEGER }, {"k", "data"},
                        "Creates a sketch_kll data sketch by aggregating values",
-                       "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSKLLMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]), DSKLLBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER] }, {"k", "sketch"},
                        "Creates a sketch_kll data sketch by merging other KLL data sketches",
-                       "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSKLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]), DSKLLBind,
                        { LogicalType::INTEGER, LogicalType::BIGINT }, {"k", "data"},
                        "Creates a sketch_kll data sketch by aggregating values",
-                       "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSKLLMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]), DSKLLBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::BIGINT] }, {"k", "sketch"},
                        "Creates a sketch_kll data sketch by merging other KLL data sketches",
-                       "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSKLLCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]), DSKLLBind,
                        { LogicalType::INTEGER, LogicalType::FLOAT }, {"k", "data"},
                        "Creates a sketch_kll data sketch by aggregating values",
-                       "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSKLLMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]), DSKLLBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::FLOAT] }, {"k", "sketch"},
                        "Creates a sketch_kll data sketch by merging other KLL data sketches",
-                       "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSKLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]), DSKLLBind,
                        { LogicalType::INTEGER, LogicalType::DOUBLE }, {"k", "data"},
                        "Creates a sketch_kll data sketch by aggregating values",
-                       "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSKLLMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]), DSKLLBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::DOUBLE] }, {"k", "sketch"},
                        "Creates a sketch_kll data sketch by merging other KLL data sketches",
-                       "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSKLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]), DSKLLBind,
                        { LogicalType::INTEGER, LogicalType::UTINYINT }, {"k", "data"},
                        "Creates a sketch_kll data sketch by aggregating values",
-                       "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSKLLMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]), DSKLLBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UTINYINT] }, {"k", "sketch"},
                        "Creates a sketch_kll data sketch by merging other KLL data sketches",
-                       "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSKLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]), DSKLLBind,
                        { LogicalType::INTEGER, LogicalType::USMALLINT }, {"k", "data"},
                        "Creates a sketch_kll data sketch by aggregating values",
-                       "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSKLLMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]), DSKLLBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::USMALLINT] }, {"k", "sketch"},
                        "Creates a sketch_kll data sketch by merging other KLL data sketches",
-                       "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSKLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]), DSKLLBind,
                        { LogicalType::INTEGER, LogicalType::UINTEGER }, {"k", "data"},
                        "Creates a sketch_kll data sketch by aggregating values",
-                       "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSKLLMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]), DSKLLBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UINTEGER] }, {"k", "sketch"},
                        "Creates a sketch_kll data sketch by merging other KLL data sketches",
-                       "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSKLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]), DSKLLBind,
                        { LogicalType::INTEGER, LogicalType::UBIGINT }, {"k", "data"},
                        "Creates a sketch_kll data sketch by aggregating values",
-                       "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSKLLMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]), DSKLLBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UBIGINT] }, {"k", "sketch"},
                        "Creates a sketch_kll data sketch by merging other KLL data sketches",
-                       "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSKLLCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_map_types[LogicalTypeId::VARCHAR]), DSKLLBind,
                        { LogicalType::INTEGER, LogicalType::VARCHAR }, {"k", "data"},
                        "Creates a sketch_kll data sketch by aggregating values",
-                       "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_kll(200, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSKLLMergeAggregate<string_t>(LogicalType::VARCHAR, sketch_map_types[LogicalTypeId::VARCHAR]), DSKLLBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::VARCHAR] }, {"k", "sketch"},
                        "Creates a sketch_kll data sketch by merging other KLL data sketches",
-                       "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
-        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), "kll");
+                       { "SELECT datasketch_kll(200, sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
+        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
 }
 
@@ -2724,8 +2724,8 @@ unique_ptr<FunctionData> DSREQBind(BindAggregateFunctionInput &input) {
     auto &arguments = input.GetArguments();
     auto k = DSBindConstant(context, *arguments[0], "REQ can only take a constant K value",
                             "REQ K value cannot be NULL").GetValue<int32_t>();
-    if (k < 4 || k > 255) {
-        throw BinderException("REQ K value must be between 4 and 255, got: " + std::to_string(k));
+    if (k < 4 || k > 1024) {
+        throw BinderException("REQ K value must be between 4 and 1024, got: " + std::to_string(k));
     }
     auto bind_data = make_uniq<DSREQBindData>(k);
     // Optional trailing constant: datasketch_req(k, data, hra).
@@ -3020,53 +3020,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::BOOLEAN,
                                    DSREQis_empty<int8_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::BOOLEAN,
                                    DSREQis_empty<int16_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::BOOLEAN,
                                    DSREQis_empty<int32_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::BOOLEAN,
                                    DSREQis_empty<int64_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::BOOLEAN,
                                    DSREQis_empty<float>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::BOOLEAN,
                                    DSREQis_empty<double>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::BOOLEAN,
                                    DSREQis_empty<uint8_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::BOOLEAN,
                                    DSREQis_empty<uint16_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::BOOLEAN,
                                    DSREQis_empty<uint32_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::BOOLEAN,
                                    DSREQis_empty<uint64_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_is_empty(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_k");
@@ -3075,53 +3075,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::USMALLINT,
                                    DSREQk<int8_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::USMALLINT,
                                    DSREQk<int16_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::USMALLINT,
                                    DSREQk<int32_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::USMALLINT,
                                    DSREQk<int64_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::USMALLINT,
                                    DSREQk<float>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::USMALLINT,
                                    DSREQk<double>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::USMALLINT,
                                    DSREQk<uint8_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::USMALLINT,
                                    DSREQk<uint16_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::USMALLINT,
                                    DSREQk<uint32_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::USMALLINT,
                                    DSREQk<uint64_t>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_cdf");
@@ -3130,53 +3130,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::LIST(LogicalType::TINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQcdf<int8_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::LIST(LogicalType::SMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQcdf<int16_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::LIST(LogicalType::INTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQcdf<int32_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::LIST(LogicalType::BIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQcdf<int64_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::FLOAT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQcdf<float>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQcdf<double>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::LIST(LogicalType::UTINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQcdf<uint8_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::LIST(LogicalType::USMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQcdf<uint16_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::LIST(LogicalType::UINTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQcdf<uint32_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQcdf<uint64_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_pmf");
@@ -3185,53 +3185,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::LIST(LogicalType::TINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQpmf<int8_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::LIST(LogicalType::SMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQpmf<int16_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::LIST(LogicalType::INTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQpmf<int32_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::LIST(LogicalType::BIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQpmf<int64_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::FLOAT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQpmf<float>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQpmf<double>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::LIST(LogicalType::UTINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQpmf<uint8_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::LIST(LogicalType::USMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQpmf<uint16_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::LIST(LogicalType::UINTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQpmf<uint32_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQpmf<uint64_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_describe");
@@ -3240,53 +3240,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSREQdescribe<int8_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSREQdescribe<int16_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSREQdescribe<int32_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSREQdescribe<int64_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSREQdescribe<float>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSREQdescribe<double>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSREQdescribe<uint8_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSREQdescribe<uint16_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSREQdescribe<uint32_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSREQdescribe<uint64_t>),
                     { "sketch", "include_levels", "include_items" }, "Return a description of this sketch",
-                    "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_rank");
@@ -3295,53 +3295,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::TINYINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSREQrank<int8_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::SMALLINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSREQrank<int16_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::INTEGER, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSREQrank<int32_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::BIGINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSREQrank<int64_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::FLOAT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSREQrank<float>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSREQrank<double>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::UTINYINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSREQrank<uint8_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::USMALLINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSREQrank<uint16_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::UINTEGER, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSREQrank<uint32_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::UBIGINT, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSREQrank<uint64_t>),
                     { "sketch", "item", "inclusive" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_quantile");
@@ -3350,53 +3350,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::TINYINT,
                                    DSREQquantile<int8_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::SMALLINT,
                                    DSREQquantile<int16_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::INTEGER,
                                    DSREQquantile<int32_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::BIGINT,
                                    DSREQquantile<int64_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::FLOAT,
                                    DSREQquantile<float>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::DOUBLE,
                                    DSREQquantile<double>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::UTINYINT,
                                    DSREQquantile<uint8_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::USMALLINT,
                                    DSREQquantile<uint16_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::UINTEGER,
                                    DSREQquantile<uint32_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::DOUBLE, LogicalType::BOOLEAN }, LogicalType::UBIGINT,
                                    DSREQquantile<uint64_t>),
                     { "sketch", "rank", "inclusive" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_n");
@@ -3405,53 +3405,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::UBIGINT,
                                    DSREQn<int8_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::UBIGINT,
                                    DSREQn<int16_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::UBIGINT,
                                    DSREQn<int32_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::UBIGINT,
                                    DSREQn<int64_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::UBIGINT,
                                    DSREQn<float>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::UBIGINT,
                                    DSREQn<double>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::UBIGINT,
                                    DSREQn<uint8_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::UBIGINT,
                                    DSREQn<uint16_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::UBIGINT,
                                    DSREQn<uint32_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::UBIGINT,
                                    DSREQn<uint64_t>),
                     { "sketch" }, "Return the number of items contained in the sketch",
-                    "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_n(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_is_estimation_mode");
@@ -3460,53 +3460,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::BOOLEAN,
                                    DSREQis_estimation_mode<int8_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::BOOLEAN,
                                    DSREQis_estimation_mode<int16_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::BOOLEAN,
                                    DSREQis_estimation_mode<int32_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::BOOLEAN,
                                    DSREQis_estimation_mode<int64_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::BOOLEAN,
                                    DSREQis_estimation_mode<float>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::BOOLEAN,
                                    DSREQis_estimation_mode<double>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::BOOLEAN,
                                    DSREQis_estimation_mode<uint8_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::BOOLEAN,
                                    DSREQis_estimation_mode<uint16_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::BOOLEAN,
                                    DSREQis_estimation_mode<uint32_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::BOOLEAN,
                                    DSREQis_estimation_mode<uint64_t>),
                     { "sketch" }, "Return a boolean indicating if the sketch is in estimation mode",
-                    "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_is_estimation_mode(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_num_retained");
@@ -3515,53 +3515,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::UBIGINT,
                                    DSREQnum_retained<int8_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::UBIGINT,
                                    DSREQnum_retained<int16_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::UBIGINT,
                                    DSREQnum_retained<int32_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::UBIGINT,
                                    DSREQnum_retained<int64_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::UBIGINT,
                                    DSREQnum_retained<float>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::UBIGINT,
                                    DSREQnum_retained<double>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::UBIGINT,
                                    DSREQnum_retained<uint8_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::UBIGINT,
                                    DSREQnum_retained<uint16_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::UBIGINT,
                                    DSREQnum_retained<uint32_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::UBIGINT,
                                    DSREQnum_retained<uint64_t>),
                     { "sketch" }, "Return the number of retained items in the sketch",
-                    "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_num_retained(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_min_item");
@@ -3570,53 +3570,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::TINYINT,
                                    DSREQmin_item<int8_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::SMALLINT,
                                    DSREQmin_item<int16_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::INTEGER,
                                    DSREQmin_item<int32_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::BIGINT,
                                    DSREQmin_item<int64_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::FLOAT,
                                    DSREQmin_item<float>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::DOUBLE,
                                    DSREQmin_item<double>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::UTINYINT,
                                    DSREQmin_item<uint8_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::USMALLINT,
                                    DSREQmin_item<uint16_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::UINTEGER,
                                    DSREQmin_item<uint32_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::UBIGINT,
                                    DSREQmin_item<uint64_t>),
                     { "sketch" }, "Return the minimum item in the sketch",
-                    "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_min_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_max_item");
@@ -3625,53 +3625,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::TINYINT,
                                    DSREQmax_item<int8_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::SMALLINT,
                                    DSREQmax_item<int16_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::INTEGER,
                                    DSREQmax_item<int32_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::BIGINT,
                                    DSREQmax_item<int64_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::FLOAT,
                                    DSREQmax_item<float>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::DOUBLE,
                                    DSREQmax_item<double>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::UTINYINT,
                                    DSREQmax_item<uint8_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::USMALLINT,
                                    DSREQmax_item<uint16_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::UINTEGER,
                                    DSREQmax_item<uint32_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::UBIGINT,
                                    DSREQmax_item<uint64_t>),
                     { "sketch" }, "Return the maximum item in the sketch",
-                    "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_max_item(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_rank_lower_bound");
@@ -3680,53 +3680,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_lower_bound<int8_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_lower_bound<int16_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_lower_bound<int32_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_lower_bound<int64_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_lower_bound<float>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_lower_bound<double>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_lower_bound<uint8_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_lower_bound<uint16_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_lower_bound<uint32_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_lower_bound<uint64_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate lower bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_rank_lower_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_rank_upper_bound");
@@ -3735,53 +3735,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_upper_bound<int8_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_upper_bound<int16_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_upper_bound<int32_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_upper_bound<int64_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_upper_bound<float>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_upper_bound<double>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_upper_bound<uint8_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_upper_bound<uint16_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_upper_bound<uint32_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::DOUBLE, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSREQrank_upper_bound<uint64_t>),
                     { "sketch", "rank", "num_std_dev" }, "Return an approximate upper bound of the given normalized rank, with a confidence of num_std_dev standard deviations (1, 2 or 3)",
-                    "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_rank_upper_bound(sketch, 0.5, 2) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_is_hra");
@@ -3790,53 +3790,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::BOOLEAN,
                                    DSREQis_hra<int8_t>),
                     { "sketch" }, "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)",
-                    "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::BOOLEAN,
                                    DSREQis_hra<int16_t>),
                     { "sketch" }, "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)",
-                    "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::BOOLEAN,
                                    DSREQis_hra<int32_t>),
                     { "sketch" }, "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)",
-                    "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::BOOLEAN,
                                    DSREQis_hra<int64_t>),
                     { "sketch" }, "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)",
-                    "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::BOOLEAN,
                                    DSREQis_hra<float>),
                     { "sketch" }, "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)",
-                    "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::BOOLEAN,
                                    DSREQis_hra<double>),
                     { "sketch" }, "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)",
-                    "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::BOOLEAN,
                                    DSREQis_hra<uint8_t>),
                     { "sketch" }, "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)",
-                    "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::BOOLEAN,
                                    DSREQis_hra<uint16_t>),
                     { "sketch" }, "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)",
-                    "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::BOOLEAN,
                                    DSREQis_hra<uint32_t>),
                     { "sketch" }, "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)",
-                    "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::BOOLEAN,
                                    DSREQis_hra<uint64_t>),
                     { "sketch" }, "Return true if the sketch favors accuracy at high ranks (HRA), false if it favors low ranks (LRA)",
-                    "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_is_hra(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_quantiles");
@@ -3845,53 +3845,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::TINYINT),
                                    DSREQquantiles<int8_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::SMALLINT),
                                    DSREQquantiles<int16_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::INTEGER),
                                    DSREQquantiles<int32_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::BIGINT),
                                    DSREQquantiles<int64_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::FLOAT),
                                    DSREQquantiles<float>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQquantiles<double>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::UTINYINT),
                                    DSREQquantiles<uint8_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::USMALLINT),
                                    DSREQquantiles<uint16_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::UINTEGER),
                                    DSREQquantiles<uint32_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::UBIGINT),
                                    DSREQquantiles<uint64_t>),
                     { "sketch", "ranks", "inclusive" }, "Return the quantiles (items) at a list of normalized ranks in [0, 1]. A NULL rank yields a NULL quantile",
-                    "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_quantiles(sketch, [0.25, 0.5, 0.75], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_ranks");
@@ -3900,53 +3900,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], LogicalType::LIST(LogicalType::TINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQranks<int8_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], LogicalType::LIST(LogicalType::SMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQranks<int16_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], LogicalType::LIST(LogicalType::INTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQranks<int32_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], LogicalType::LIST(LogicalType::BIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQranks<int64_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::FLOAT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQranks<float>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQranks<double>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], LogicalType::LIST(LogicalType::UTINYINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQranks<uint8_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], LogicalType::LIST(LogicalType::USMALLINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQranks<uint16_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], LogicalType::LIST(LogicalType::UINTEGER), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQranks<uint32_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], LogicalType::LIST(LogicalType::UBIGINT), LogicalType::BOOLEAN }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSREQranks<uint64_t>),
                     { "sketch", "items", "inclusive" }, "Return the normalized ranks of a list of items. A NULL item yields a NULL rank",
-                    "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_ranks(sketch, [10.0, 20.0, 30.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
         ScalarFunctionSet set("datasketch_req_sorted_view");
@@ -3955,53 +3955,53 @@ void LoadREQSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::TINYINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSREQsorted_view<int8_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::SMALLINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSREQsorted_view<int16_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::INTEGER}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSREQsorted_view<int32_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::BIGINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSREQsorted_view<int64_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::FLOAT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSREQsorted_view<float>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::DOUBLE}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSREQsorted_view<double>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UTINYINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSREQsorted_view<uint8_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::USMALLINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSREQsorted_view<uint16_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UINTEGER}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSREQsorted_view<uint32_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT] }, LogicalType::LIST(LogicalType::STRUCT(child_list_t<LogicalType>{{"item", LogicalType::UBIGINT}, {"weight", LogicalType::UBIGINT}, {"cumulative_weight", LogicalType::UBIGINT}})),
                                    DSREQsorted_view<uint64_t>),
                     { "sketch" }, "Return the sketch's sorted view: one entry per retained item in ascending order (equal items can appear more than once), with the item's weight and the inclusive cumulative weight (the number of input items less than or equal to it; estimated once the sketch is in estimation mode). Divide cumulative_weight by datasketch_req_n(sketch) for the normalized rank. An empty sketch yields an empty list",
-                    "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "req");
+                    { "SELECT datasketch_req_sorted_view(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
 
     {
@@ -4010,124 +4010,124 @@ void LoadREQSketch(ExtensionLoader &loader) {
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::TINYINT }, {"k", "data"},
                        "Creates a sketch_req data sketch by aggregating values",
-                       "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::TINYINT, LogicalType::BOOLEAN }, {"k", "data", "hra"},
                        "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)",
-                       "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQMergeAggregate<int8_t>(LogicalType::TINYINT, sketch_map_types[LogicalTypeId::TINYINT]), DSREQBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::TINYINT] }, {"k", "sketch"},
                        "Creates a sketch_req data sketch by merging other REQ data sketches",
-                       "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::SMALLINT }, {"k", "data"},
                        "Creates a sketch_req data sketch by aggregating values",
-                       "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::SMALLINT, LogicalType::BOOLEAN }, {"k", "data", "hra"},
                        "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)",
-                       "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQMergeAggregate<int16_t>(LogicalType::SMALLINT, sketch_map_types[LogicalTypeId::SMALLINT]), DSREQBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::SMALLINT] }, {"k", "sketch"},
                        "Creates a sketch_req data sketch by merging other REQ data sketches",
-                       "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::INTEGER }, {"k", "data"},
                        "Creates a sketch_req data sketch by aggregating values",
-                       "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::INTEGER, LogicalType::BOOLEAN }, {"k", "data", "hra"},
                        "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)",
-                       "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQMergeAggregate<int32_t>(LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER]), DSREQBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::INTEGER] }, {"k", "sketch"},
                        "Creates a sketch_req data sketch by merging other REQ data sketches",
-                       "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::BIGINT }, {"k", "data"},
                        "Creates a sketch_req data sketch by aggregating values",
-                       "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::BIGINT, LogicalType::BOOLEAN }, {"k", "data", "hra"},
                        "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)",
-                       "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQMergeAggregate<int64_t>(LogicalType::BIGINT, sketch_map_types[LogicalTypeId::BIGINT]), DSREQBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::BIGINT] }, {"k", "sketch"},
                        "Creates a sketch_req data sketch by merging other REQ data sketches",
-                       "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::FLOAT }, {"k", "data"},
                        "Creates a sketch_req data sketch by aggregating values",
-                       "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::FLOAT, LogicalType::BOOLEAN }, {"k", "data", "hra"},
                        "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)",
-                       "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]), DSREQBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::FLOAT] }, {"k", "sketch"},
                        "Creates a sketch_req data sketch by merging other REQ data sketches",
-                       "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::DOUBLE }, {"k", "data"},
                        "Creates a sketch_req data sketch by aggregating values",
-                       "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::DOUBLE, LogicalType::BOOLEAN }, {"k", "data", "hra"},
                        "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)",
-                       "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]), DSREQBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::DOUBLE] }, {"k", "sketch"},
                        "Creates a sketch_req data sketch by merging other REQ data sketches",
-                       "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::UTINYINT }, {"k", "data"},
                        "Creates a sketch_req data sketch by aggregating values",
-                       "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::UTINYINT, LogicalType::BOOLEAN }, {"k", "data", "hra"},
                        "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)",
-                       "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQMergeAggregate<uint8_t>(LogicalType::UTINYINT, sketch_map_types[LogicalTypeId::UTINYINT]), DSREQBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UTINYINT] }, {"k", "sketch"},
                        "Creates a sketch_req data sketch by merging other REQ data sketches",
-                       "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::USMALLINT }, {"k", "data"},
                        "Creates a sketch_req data sketch by aggregating values",
-                       "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::USMALLINT, LogicalType::BOOLEAN }, {"k", "data", "hra"},
                        "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)",
-                       "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQMergeAggregate<uint16_t>(LogicalType::USMALLINT, sketch_map_types[LogicalTypeId::USMALLINT]), DSREQBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::USMALLINT] }, {"k", "sketch"},
                        "Creates a sketch_req data sketch by merging other REQ data sketches",
-                       "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::UINTEGER }, {"k", "data"},
                        "Creates a sketch_req data sketch by aggregating values",
-                       "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::UINTEGER, LogicalType::BOOLEAN }, {"k", "data", "hra"},
                        "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)",
-                       "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQMergeAggregate<uint32_t>(LogicalType::UINTEGER, sketch_map_types[LogicalTypeId::UINTEGER]), DSREQBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UINTEGER] }, {"k", "sketch"},
                        "Creates a sketch_req data sketch by merging other REQ data sketches",
-                       "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::UBIGINT }, {"k", "data"},
                        "Creates a sketch_req data sketch by aggregating values",
-                       "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]), DSREQBind,
                        { LogicalType::INTEGER, LogicalType::UBIGINT, LogicalType::BOOLEAN }, {"k", "data", "hra"},
                        "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)",
-                       "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)");
+                       { "SELECT datasketch_req(12, i::DOUBLE, false) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSREQMergeAggregate<uint64_t>(LogicalType::UBIGINT, sketch_map_types[LogicalTypeId::UBIGINT]), DSREQBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::UBIGINT] }, {"k", "sketch"},
                        "Creates a sketch_req data sketch by merging other REQ data sketches",
-                       "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
-        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), "req");
+                       { "SELECT datasketch_req(12, sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
+        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
 }
 
@@ -4339,13 +4339,13 @@ void LoadTDigestSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::BOOLEAN,
                                    DSTDigestis_empty<float>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_tdigest_is_empty(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_tdigest_is_empty(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::BOOLEAN,
                                    DSTDigestis_empty<double>),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_tdigest_is_empty(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "tdigest");
+                    { "SELECT datasketch_tdigest_is_empty(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "tdigest"});
     }
     {
         ScalarFunctionSet set("datasketch_tdigest_k");
@@ -4354,13 +4354,13 @@ void LoadTDigestSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::USMALLINT,
                                    DSTDigestk<float>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_tdigest_k(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_tdigest_k(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::USMALLINT,
                                    DSTDigestk<double>),
                     { "sketch" }, "Return the value of K for this sketch",
-                    "SELECT datasketch_tdigest_k(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "tdigest");
+                    { "SELECT datasketch_tdigest_k(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "tdigest"});
     }
     {
         ScalarFunctionSet set("datasketch_tdigest_cdf");
@@ -4369,13 +4369,13 @@ void LoadTDigestSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::FLOAT) }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSTDigestcdf<float>),
                     { "sketch", "split_points" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_tdigest_cdf(sketch, [25.0, 50.0, 75.0]) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_tdigest_cdf(sketch, [25.0, 50.0, 75.0]) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE) }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSTDigestcdf<double>),
                     { "sketch", "split_points" }, "Return the Cumulative Distribution Function (CDF) of the sketch for a series of points",
-                    "SELECT datasketch_tdigest_cdf(sketch, [25.0, 50.0, 75.0]) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "tdigest");
+                    { "SELECT datasketch_tdigest_cdf(sketch, [25.0, 50.0, 75.0]) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "tdigest"});
     }
     {
         ScalarFunctionSet set("datasketch_tdigest_pmf");
@@ -4384,13 +4384,13 @@ void LoadTDigestSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::LIST(LogicalType::FLOAT) }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSTDigestpmf<float>),
                     { "sketch", "split_points" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_tdigest_pmf(sketch, [25.0, 50.0, 75.0]) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_tdigest_pmf(sketch, [25.0, 50.0, 75.0]) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::LIST(LogicalType::DOUBLE) }, LogicalType::LIST(LogicalType::DOUBLE),
                                    DSTDigestpmf<double>),
                     { "sketch", "split_points" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
-                    "SELECT datasketch_tdigest_pmf(sketch, [25.0, 50.0, 75.0]) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "tdigest");
+                    { "SELECT datasketch_tdigest_pmf(sketch, [25.0, 50.0, 75.0]) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "tdigest"});
     }
     {
         ScalarFunctionSet set("datasketch_tdigest_describe");
@@ -4399,13 +4399,13 @@ void LoadTDigestSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSTDigestdescribe<float>),
                     { "sketch", "include_centroids" }, "Return a description of this sketch",
-                    "SELECT datasketch_tdigest_describe(sketch, false) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_tdigest_describe(sketch, false) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSTDigestdescribe<double>),
                     { "sketch", "include_centroids" }, "Return a description of this sketch",
-                    "SELECT datasketch_tdigest_describe(sketch, false) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "tdigest");
+                    { "SELECT datasketch_tdigest_describe(sketch, false) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "tdigest"});
     }
     {
         ScalarFunctionSet set("datasketch_tdigest_rank");
@@ -4414,13 +4414,13 @@ void LoadTDigestSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::FLOAT }, LogicalType::DOUBLE,
                                    DSTDigestrank<float>),
                     { "sketch", "item" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_tdigest_rank(sketch, 50.0) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_tdigest_rank(sketch, 50.0) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::DOUBLE }, LogicalType::DOUBLE,
                                    DSTDigestrank<double>),
                     { "sketch", "item" }, "Return the rank of an item in the sketch",
-                    "SELECT datasketch_tdigest_rank(sketch, 50.0) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "tdigest");
+                    { "SELECT datasketch_tdigest_rank(sketch, 50.0) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "tdigest"});
     }
     {
         ScalarFunctionSet set("datasketch_tdigest_total_weight");
@@ -4429,13 +4429,13 @@ void LoadTDigestSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::UBIGINT,
                                    DSTDigesttotal_weight<float>),
                     { "sketch" }, "Return the total weight of this sketch",
-                    "SELECT datasketch_tdigest_total_weight(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_tdigest_total_weight(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::UBIGINT,
                                    DSTDigesttotal_weight<double>),
                     { "sketch" }, "Return the total weight of this sketch",
-                    "SELECT datasketch_tdigest_total_weight(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "tdigest");
+                    { "SELECT datasketch_tdigest_total_weight(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "tdigest"});
     }
     {
         ScalarFunctionSet set("datasketch_tdigest_quantile");
@@ -4444,13 +4444,13 @@ void LoadTDigestSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], LogicalType::DOUBLE }, LogicalType::FLOAT,
                                    DSTDigestquantile<float>),
                     { "sketch", "rank" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_tdigest_quantile(sketch, 0.5) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_tdigest_quantile(sketch, 0.5) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], LogicalType::DOUBLE }, LogicalType::DOUBLE,
                                    DSTDigestquantile<double>),
                     { "sketch", "rank" }, "Return the quantile of a rank in the sketch",
-                    "SELECT datasketch_tdigest_quantile(sketch, 0.5) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "tdigest");
+                    { "SELECT datasketch_tdigest_quantile(sketch, 0.5) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "tdigest"});
     }
     {
         ScalarFunctionSet set("datasketch_tdigest_min_value");
@@ -4459,13 +4459,13 @@ void LoadTDigestSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::FLOAT,
                                    DSTDigestmin_value<float>),
                     { "sketch" }, "Return the minimum value seen by the sketch",
-                    "SELECT datasketch_tdigest_min_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_tdigest_min_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::DOUBLE,
                                    DSTDigestmin_value<double>),
                     { "sketch" }, "Return the minimum value seen by the sketch",
-                    "SELECT datasketch_tdigest_min_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "tdigest");
+                    { "SELECT datasketch_tdigest_min_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "tdigest"});
     }
     {
         ScalarFunctionSet set("datasketch_tdigest_max_value");
@@ -4474,13 +4474,13 @@ void LoadTDigestSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT] }, LogicalType::FLOAT,
                                    DSTDigestmax_value<float>),
                     { "sketch" }, "Return the maximum value seen by the sketch",
-                    "SELECT datasketch_tdigest_max_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
+                    { "SELECT datasketch_tdigest_max_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
         DSAddScalar(set, descriptions,
                     ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE] }, LogicalType::DOUBLE,
                                    DSTDigestmax_value<double>),
                     { "sketch" }, "Return the maximum value seen by the sketch",
-                    "SELECT datasketch_tdigest_max_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "tdigest");
+                    { "SELECT datasketch_tdigest_max_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "tdigest"});
     }
 
     {
@@ -4489,20 +4489,20 @@ void LoadTDigestSketch(ExtensionLoader &loader) {
         DSAddAggregate(set, descriptions, DSTDigestCreateAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]), DSTDigestBind,
                        { LogicalType::INTEGER, LogicalType::FLOAT }, {"k", "data"},
                        "Creates a sketch_tdigest data sketch by aggregating values",
-                       "SELECT datasketch_tdigest(100, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_tdigest(100, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSTDigestMergeAggregate<float>(LogicalType::FLOAT, sketch_map_types[LogicalTypeId::FLOAT]), DSTDigestBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::FLOAT] }, {"k", "sketch"},
                        "Creates a sketch_tdigest data sketch by merging other TDigest data sketches",
-                       "SELECT datasketch_tdigest(100, sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_tdigest(100, sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSTDigestCreateAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]), DSTDigestBind,
                        { LogicalType::INTEGER, LogicalType::DOUBLE }, {"k", "data"},
                        "Creates a sketch_tdigest data sketch by aggregating values",
-                       "SELECT datasketch_tdigest(100, i::DOUBLE) FROM range(100) t(i)");
+                       { "SELECT datasketch_tdigest(100, i::DOUBLE) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSTDigestMergeAggregate<double>(LogicalType::DOUBLE, sketch_map_types[LogicalTypeId::DOUBLE]), DSTDigestBind,
                        { LogicalType::INTEGER, sketch_map_types[LogicalTypeId::DOUBLE] }, {"k", "sketch"},
                        "Creates a sketch_tdigest data sketch by merging other TDigest data sketches",
-                       "SELECT datasketch_tdigest(100, sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
-        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), "tdigest");
+                       { "SELECT datasketch_tdigest(100, sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
+        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), {"sketch", "tdigest"});
     }
 }
 
@@ -4658,7 +4658,7 @@ static void DSHLLlower_bound(DataChunk &args, ExpressionState &state, Vector &re
     auto &std_dev_vector = args.data[1];
     BinaryExecutor::Execute<string_t, uint8_t, double>(sketch_vector, std_dev_vector, result, [&](string_t sketch_data, uint8_t std_dev_data) {
         auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
-        return sketch.get_lower_bound(std_dev_data);
+        return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_hll_lower_bound"));
     });
 }
 
@@ -4668,7 +4668,7 @@ static void DSHLLupper_bound(DataChunk &args, ExpressionState &state, Vector &re
     auto &std_dev_vector = args.data[1];
     BinaryExecutor::Execute<string_t, uint8_t, double>(sketch_vector, std_dev_vector, result, [&](string_t sketch_data, uint8_t std_dev_data) {
         auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
-        return sketch.get_upper_bound(std_dev_data);
+        return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_hll_upper_bound"));
     });
 }
 
@@ -4699,8 +4699,8 @@ void LoadHLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type }, LogicalType::BOOLEAN,
                                    DSHLLis_empty),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_hll_is_empty(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "hll");
+                    { "SELECT datasketch_hll_is_empty(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
     {
         ScalarFunctionSet set("datasketch_hll_describe");
@@ -4709,8 +4709,8 @@ void LoadHLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type, LogicalType::BOOLEAN, LogicalType::BOOLEAN }, LogicalType::VARCHAR,
                                    DSHLLdescribe),
                     { "sketch", "summary", "detail" }, "Return a string representation of the sketch",
-                    "SELECT datasketch_hll_describe(sketch, true, false) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "hll");
+                    { "SELECT datasketch_hll_describe(sketch, true, false) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
     {
         ScalarFunctionSet set("datasketch_hll_lg_config_k");
@@ -4719,8 +4719,8 @@ void LoadHLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type }, LogicalType::UTINYINT,
                                    DSHLLlg_config_k),
                     { "sketch" }, "Return the value of log base 2 K for this sketch",
-                    "SELECT datasketch_hll_lg_config_k(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "hll");
+                    { "SELECT datasketch_hll_lg_config_k(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
     {
         ScalarFunctionSet set("datasketch_hll_is_compact");
@@ -4729,8 +4729,8 @@ void LoadHLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type }, LogicalType::BOOLEAN,
                                    DSHLLis_compact),
                     { "sketch" }, "Return whether the sketch is in compact form",
-                    "SELECT datasketch_hll_is_compact(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "hll");
+                    { "SELECT datasketch_hll_is_compact(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
     {
         ScalarFunctionSet set("datasketch_hll_composite_estimate");
@@ -4739,8 +4739,8 @@ void LoadHLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type }, LogicalType::DOUBLE,
                                    DSHLLcomposite_estimate),
                     { "sketch" }, "Return the composite estimate of the number of distinct items, computed from the registers alone (the raw HLL estimate blended with linear counting). datasketch_hll_estimate prefers the HIP estimator, which is only available for sketches that were not built by a union",
-                    "SELECT datasketch_hll_composite_estimate(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "hll");
+                    { "SELECT datasketch_hll_composite_estimate(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
     {
         ScalarFunctionSet set("datasketch_hll_target_type");
@@ -4749,8 +4749,8 @@ void LoadHLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type }, LogicalType::VARCHAR,
                                    DSHLLtarget_type),
                     { "sketch" }, "Return the sketch's register encoding: 'HLL_4', 'HLL_6' or 'HLL_8'",
-                    "SELECT datasketch_hll_target_type(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "hll");
+                    { "SELECT datasketch_hll_target_type(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
     {
         ScalarFunctionSet set("datasketch_hll_merge");
@@ -4759,8 +4759,8 @@ void LoadHLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type, sketch_type }, sketch_type,
                                    DSHLLmerge),
                     { "sketch_a", "sketch_b" }, "Return the union of two HLL sketches as a new sketch with the first sketch's target type. The union runs at the larger lg_config_k of the two; if either input is in HLL (dense) mode the result is reduced to the smaller lg_config_k",
-                    "SELECT datasketch_hll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_hll(12, i) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_hll(12, i) AS sketch_b FROM range(50, 150) t(i)) b");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "hll");
+                    { "SELECT datasketch_hll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_hll(12, i) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_hll(12, i) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
     {
         ScalarFunctionSet set("datasketch_hll_estimate");
@@ -4769,8 +4769,8 @@ void LoadHLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type }, LogicalType::DOUBLE,
                                    DSHLLestimate),
                     { "sketch" }, "Return the estimate of the number of distinct items seen by the sketch",
-                    "SELECT datasketch_hll_estimate(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "hll");
+                    { "SELECT datasketch_hll_estimate(sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
     {
         ScalarFunctionSet set("datasketch_hll_lower_bound");
@@ -4779,8 +4779,8 @@ void LoadHLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSHLLlower_bound),
                     { "sketch", "std_dev" }, "Return the lower bound of the number of distinct items seen by the sketch",
-                    "SELECT datasketch_hll_lower_bound(sketch, 2) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "hll");
+                    { "SELECT datasketch_hll_lower_bound(sketch, 2) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
     {
         ScalarFunctionSet set("datasketch_hll_upper_bound");
@@ -4789,8 +4789,8 @@ void LoadHLLSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSHLLupper_bound),
                     { "sketch", "std_dev" }, "Return the upper bound of the number of distinct items seen by the sketch",
-                    "SELECT datasketch_hll_upper_bound(sketch, 2) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "hll");
+                    { "SELECT datasketch_hll_upper_bound(sketch, 2) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
 
     {
@@ -4799,124 +4799,124 @@ void LoadHLLSketch(ExtensionLoader &loader) {
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::TINYINT }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::TINYINT, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::SMALLINT }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::SMALLINT, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::INTEGER }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::INTEGER, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::BIGINT }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::BIGINT, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<float>(LogicalType::FLOAT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::FLOAT }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<float>(LogicalType::FLOAT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::FLOAT, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::DOUBLE }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<double>(LogicalType::DOUBLE, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::DOUBLE, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::UTINYINT }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::UTINYINT, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::USMALLINT }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::USMALLINT, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::UINTEGER }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::UINTEGER, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::UBIGINT }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::UBIGINT, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<hugeint_t>(LogicalType::HUGEINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::HUGEINT }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<hugeint_t>(LogicalType::HUGEINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::HUGEINT, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<uhugeint_t>(LogicalType::UHUGEINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::UHUGEINT }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<uhugeint_t>(LogicalType::UHUGEINT, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::UHUGEINT, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<DSUUIDInput>(LogicalType::UUID, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::UUID }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<DSUUIDInput>(LogicalType::UUID, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::UUID, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::VARCHAR }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::VARCHAR, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<string_t>(LogicalType::BLOB, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::BLOB }, {"k", "data"},
                        "Creates a sketch_hll data sketch by aggregating values",
-                       "SELECT datasketch_hll(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_hll(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSHLLCreateAggregate<string_t>(LogicalType::BLOB, sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, LogicalType::BLOB, LogicalType::VARCHAR }, {"k", "data", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)",
-                       "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)");
-        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), "hll");
+                       { "SELECT datasketch_hll(12, i, 'HLL_8') FROM range(100) t(i)" });
+        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
 
     {
@@ -4925,12 +4925,12 @@ void LoadHLLSketch(ExtensionLoader &loader) {
         DSAddAggregate(set, descriptions, DSHLLMergeAggregate(sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, sketch_type }, {"k", "sketch"},
                        "Creates a sketch_hll data sketch by aggregating other HLL data sketches",
-                       "SELECT datasketch_hll_union(12, sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
+                       { "SELECT datasketch_hll_union(12, sketch) FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
         DSAddAggregate(set, descriptions, DSHLLMergeAggregate(sketch_type), DSHLLBind,
                        { LogicalType::INTEGER, sketch_type, LogicalType::VARCHAR }, {"k", "sketch", "target_type"},
                        "Creates a sketch_hll data sketch by aggregating other HLL data sketches. target_type (a constant) selects the result's register encoding: 'HLL_4' (the default), 'HLL_6' or 'HLL_8'",
-                       "SELECT datasketch_hll_union(12, sketch, 'HLL_8') FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
-        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), "hll");
+                       { "SELECT datasketch_hll_union(12, sketch, 'HLL_8') FROM (SELECT datasketch_hll(12, i) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
+        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), {"sketch", "hll"});
     }
 }
 
@@ -5062,7 +5062,7 @@ static void DSCPClower_bound(DataChunk &args, ExpressionState &state, Vector &re
     auto &std_dev_vector = args.data[1];
     BinaryExecutor::Execute<string_t, uint8_t, double>(sketch_vector, std_dev_vector, result, [&](string_t sketch_data, uint8_t std_dev_data) {
         auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
-        return sketch.get_lower_bound(std_dev_data);
+        return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_cpc_lower_bound"));
     });
 }
 
@@ -5072,7 +5072,7 @@ static void DSCPCupper_bound(DataChunk &args, ExpressionState &state, Vector &re
     auto &std_dev_vector = args.data[1];
     BinaryExecutor::Execute<string_t, uint8_t, double>(sketch_vector, std_dev_vector, result, [&](string_t sketch_data, uint8_t std_dev_data) {
         auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
-        return sketch.get_upper_bound(std_dev_data);
+        return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_cpc_upper_bound"));
     });
 }
 
@@ -5103,8 +5103,8 @@ void LoadCPCSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type }, LogicalType::BOOLEAN,
                                    DSCPCis_empty),
                     { "sketch" }, "Return a boolean indicating if the sketch is empty",
-                    "SELECT datasketch_cpc_is_empty(sketch) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "cpc");
+                    { "SELECT datasketch_cpc_is_empty(sketch) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "cpc"});
     }
     {
         ScalarFunctionSet set("datasketch_cpc_merge");
@@ -5113,8 +5113,8 @@ void LoadCPCSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type, sketch_type }, sketch_type,
                                    DSCPCmerge),
                     { "sketch_a", "sketch_b" }, "Return the union of two CPC sketches as a new sketch. The result uses the smaller lg_k of the two inputs",
-                    "SELECT datasketch_cpc_merge(sketch_a, sketch_b) FROM (SELECT datasketch_cpc(12, i) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_cpc(12, i) AS sketch_b FROM range(50, 150) t(i)) b");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "cpc");
+                    { "SELECT datasketch_cpc_merge(sketch_a, sketch_b) FROM (SELECT datasketch_cpc(12, i) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_cpc(12, i) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "cpc"});
     }
     {
         ScalarFunctionSet set("datasketch_cpc_describe");
@@ -5123,8 +5123,8 @@ void LoadCPCSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type }, LogicalType::VARCHAR,
                                    DSCPCdescribe),
                     { "sketch" }, "Return a string representation of the sketch",
-                    "SELECT datasketch_cpc_describe(sketch) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "cpc");
+                    { "SELECT datasketch_cpc_describe(sketch) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "cpc"});
     }
     {
         ScalarFunctionSet set("datasketch_cpc_estimate");
@@ -5133,8 +5133,8 @@ void LoadCPCSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type }, LogicalType::DOUBLE,
                                    DSCPCestimate),
                     { "sketch" }, "Return the estimate of the number of distinct items seen by the sketch",
-                    "SELECT datasketch_cpc_estimate(sketch) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "cpc");
+                    { "SELECT datasketch_cpc_estimate(sketch) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "cpc"});
     }
     {
         ScalarFunctionSet set("datasketch_cpc_lower_bound");
@@ -5143,8 +5143,8 @@ void LoadCPCSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSCPClower_bound),
                     { "sketch", "std_dev" }, "Return the lower bound of the number of distinct items seen by the sketch",
-                    "SELECT datasketch_cpc_lower_bound(sketch, 2) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "cpc");
+                    { "SELECT datasketch_cpc_lower_bound(sketch, 2) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "cpc"});
     }
     {
         ScalarFunctionSet set("datasketch_cpc_upper_bound");
@@ -5153,8 +5153,8 @@ void LoadCPCSketch(ExtensionLoader &loader) {
                     ScalarFunction({ sketch_type, LogicalType::UTINYINT }, LogicalType::DOUBLE,
                                    DSCPCupper_bound),
                     { "sketch", "std_dev" }, "Return the upper bound of the number of distinct items seen by the sketch",
-                    "SELECT datasketch_cpc_upper_bound(sketch, 2) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s");
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "cpc");
+                    { "SELECT datasketch_cpc_upper_bound(sketch, 2) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "cpc"});
     }
 
     {
@@ -5163,64 +5163,64 @@ void LoadCPCSketch(ExtensionLoader &loader) {
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<int8_t>(LogicalType::TINYINT, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::TINYINT }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<int16_t>(LogicalType::SMALLINT, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::SMALLINT }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<int32_t>(LogicalType::INTEGER, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::INTEGER }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<int64_t>(LogicalType::BIGINT, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::BIGINT }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<float>(LogicalType::FLOAT, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::FLOAT }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<double>(LogicalType::DOUBLE, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::DOUBLE }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<uint8_t>(LogicalType::UTINYINT, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::UTINYINT }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<uint16_t>(LogicalType::USMALLINT, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::USMALLINT }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<uint32_t>(LogicalType::UINTEGER, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::UINTEGER }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<uint64_t>(LogicalType::UBIGINT, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::UBIGINT }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<hugeint_t>(LogicalType::HUGEINT, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::HUGEINT }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<uhugeint_t>(LogicalType::UHUGEINT, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::UHUGEINT }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<DSUUIDInput>(LogicalType::UUID, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::UUID }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::VARCHAR }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
         DSAddAggregate(set, descriptions, DSCPCCreateAggregate<string_t>(LogicalType::BLOB, sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, LogicalType::BLOB }, {"k", "data"},
                        "Creates a sketch_cpc data sketch by aggregating values",
-                       "SELECT datasketch_cpc(12, i) FROM range(100) t(i)");
-        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), "cpc");
+                       { "SELECT datasketch_cpc(12, i) FROM range(100) t(i)" });
+        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), {"sketch", "cpc"});
     }
 
     {
@@ -5229,8 +5229,8 @@ void LoadCPCSketch(ExtensionLoader &loader) {
         DSAddAggregate(set, descriptions, DSCPCMergeAggregate(sketch_type), DSCPCBind,
                        { LogicalType::INTEGER, sketch_type }, {"k", "sketch"},
                        "Creates a sketch_cpc data sketch by aggregating other CPC data sketches",
-                       "SELECT datasketch_cpc_union(12, sketch) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i) GROUP BY i % 4) s");
-        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), "cpc");
+                       { "SELECT datasketch_cpc_union(12, sketch) FROM (SELECT datasketch_cpc(12, i) AS sketch FROM range(100) t(i) GROUP BY i % 4) s" });
+        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), {"sketch", "cpc"});
     }
 }
 

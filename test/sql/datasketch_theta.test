@@ -159,11 +159,11 @@ true
 statement ok
 CREATE TABLE empty_table(id INTEGER);
 
-# Empty sketch should estimate 0
-query I
-SELECT datasketch_theta_estimate(datasketch_theta(id))::int FROM empty_table;
+# No input rows gives a NULL sketch, as for every sketch aggregate, so its estimate is NULL
+query II
+SELECT datasketch_theta_estimate(datasketch_theta(id))::int, coalesce(datasketch_theta_estimate(datasketch_theta(id)), 0)::int FROM empty_table;
 ----
-0
+NULL	0
 
 # Test NULL handling
 statement ok
@@ -185,10 +185,11 @@ CREATE TABLE all_nulls(id INTEGER);
 statement ok
 INSERT INTO all_nulls VALUES (NULL), (NULL), (NULL);
 
+# Only NULL values: no input rows, so NULL
 query I
 SELECT datasketch_theta_estimate(datasketch_theta(id))::int FROM all_nulls;
 ----
-0
+NULL
 
 # -------------------------------------------------------------------
 # 8. Single Item Edge Cases
@@ -240,7 +241,7 @@ WHERE s1.name = 'A';
 
 # Union with empty sketch should equal the non-empty sketch
 statement ok
-INSERT INTO sketches VALUES ('EMPTY', (SELECT datasketch_theta(id) FROM empty_table));
+INSERT INTO sketches VALUES ('EMPTY', unhex('01030300001E0000')::sketch_theta);
 
 query I
 SELECT datasketch_theta_estimate(
@@ -400,10 +401,10 @@ SELECT datasketch_theta_is_empty(sketch) FROM meta_sketch;
 ----
 false
 
-query I
-SELECT datasketch_theta_is_empty(datasketch_theta(id)) FROM empty_table;
+query II
+SELECT datasketch_theta_is_empty(datasketch_theta(id)), datasketch_theta_is_empty(unhex('01030300001E0000')::sketch_theta) FROM empty_table;
 ----
-true
+NULL	true
 
 # num_retained should be positive for data within sketch capacity
 query I

@@ -204,9 +204,9 @@ void Load{{ S }}Sketch(ExtensionLoader &loader) {
                     ScalarFunction({ {{ parameter_types(function, item_type) }} }, {{ function.returns.logical(item_type) }},
                                    DS{{ S }}{{ function.name }}{% if item_type %}<{{ cpp_type[item_type] }}>{% endif %}),
                     { {{ parameter_names(function) }} }, {{ function.description|cpp_string }},
-                    {{ function.example|cpp_string }});
+                    { {{ function.example|cpp_string }} });
 {% endfor %}
-        DSRegisterScalars(loader, std::move(set), std::move(descriptions), "{{ sketch.sql }}");
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "{{ sketch.sql }}"});
     }
 {% endfor %}
 
@@ -219,21 +219,21 @@ void Load{{ S }}Sketch(ExtensionLoader &loader) {
         DSAddAggregate(set, descriptions, {{ create }}, DS{{ S }}Bind,
                        { {{ k_logical_type }}, {{ item_type }} }, {"k", "data"},
                        "Creates a sketch_{{ sketch.sql }} data sketch by aggregating values",
-                       {{ examples.create|cpp_string }});
+                       { {{ examples.create|cpp_string }} });
 {% if option %}
         DSAddAggregate(set, descriptions, {{ create }}, DS{{ S }}Bind,
                        { {{ k_logical_type }}, {{ item_type }}, {{ option.logical_type }} }, {"k", "data", "{{ option.name }}"},
                        {{ ("Creates a sketch_" ~ sketch.sql ~ " data sketch by aggregating values. " ~ option.create_note)|cpp_string }},
-                       {{ examples.create_option|cpp_string }});
+                       { {{ examples.create_option|cpp_string }} });
 {% endif %}
 {% if not sketch.counting %}
         DSAddAggregate(set, descriptions, DS{{ S }}MergeAggregate<{{ cpp_type[item_type] }}>({{ item_type }}, {{ sketch_type }}), DS{{ S }}Bind,
                        { {{ k_logical_type }}, {{ sketch_type }} }, {"k", "sketch"},
                        "Creates a sketch_{{ sketch.sql }} data sketch by merging other {{ S }} data sketches",
-                       {{ examples.merge|cpp_string }});
+                       { {{ examples.merge|cpp_string }} });
 {% endif %}
 {% endfor %}
-        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), "{{ sketch.sql }}");
+        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), {"sketch", "{{ sketch.sql }}"});
     }
 {% if sketch.counting %}
 
@@ -243,14 +243,14 @@ void Load{{ S }}Sketch(ExtensionLoader &loader) {
         DSAddAggregate(set, descriptions, DS{{ S }}MergeAggregate(sketch_type), DS{{ S }}Bind,
                        { {{ k_logical_type }}, sketch_type }, {"k", "sketch"},
                        "Creates a sketch_{{ sketch.sql }} data sketch by aggregating other {{ S }} data sketches",
-                       {{ examples.union|cpp_string }});
+                       { {{ examples.union|cpp_string }} });
 {% if option %}
         DSAddAggregate(set, descriptions, DS{{ S }}MergeAggregate(sketch_type), DS{{ S }}Bind,
                        { {{ k_logical_type }}, sketch_type, {{ option.logical_type }} }, {"k", "sketch", "{{ option.name }}"},
                        {{ ("Creates a sketch_" ~ sketch.sql ~ " data sketch by aggregating other " ~ S ~ " data sketches. " ~ option.union_note)|cpp_string }},
-                       {{ examples.union_option|cpp_string }});
+                       { {{ examples.union_option|cpp_string }} });
 {% endif %}
-        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), "{{ sketch.sql }}");
+        DSRegisterAggregates(loader, std::move(set), std::move(descriptions), {"sketch", "{{ sketch.sql }}"});
     }
 {% endif %}
 }

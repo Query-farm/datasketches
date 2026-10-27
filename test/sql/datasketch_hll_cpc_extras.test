@@ -164,3 +164,14 @@ query III
 SELECT typeof(NULL::sketch_hll), typeof(datasketch_cpc(12, 1)::BLOB::sketch_cpc), typeof(NULL::sketch_kll_double)
 ----
 sketch_hll	sketch_cpc	sketch_kll_double
+
+# Bounds take 1, 2 or 3 standard deviations, as for the Theta and Tuple sketches
+statement error
+SELECT datasketch_hll_lower_bound(datasketch_hll(12, i), 5) FROM range(10) t(i)
+----
+datasketch_hll_lower_bound: num_std_devs must be 1, 2 or 3, got 5
+
+statement error
+SELECT datasketch_cpc_upper_bound(datasketch_cpc(12, i), 0) FROM range(10) t(i)
+----
+datasketch_cpc_upper_bound: num_std_devs must be 1, 2 or 3, got 0
