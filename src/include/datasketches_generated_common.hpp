@@ -499,16 +499,19 @@ struct DSCPCCreateOperation : DSSketchOperationBase {
 
     template <class STATE, class OP>
     static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data) {
+        // A partial that saw no rows has nothing to add. Passing the target through a union anyway would mark it
+        // merged, which drops its HIP estimator, the more accurate estimate of a sketch that was never merged.
+        if (!source.sketch) {
+            return;
+        }
         if (!target.sketch) {
             target.CreateSketch(source);
-        } else {
-            datasketches::cpc_union u(target.sketch->get_lg_k());
-            u.update(*target.sketch);
-            if (source.sketch) {
-                u.update(*source.sketch);
-            }
-            *target.sketch = u.get_result();
+            return;
         }
+        datasketches::cpc_union u(target.sketch->get_lg_k());
+        u.update(*target.sketch);
+        u.update(*source.sketch);
+        *target.sketch = u.get_result();
     }
 
     template <class T, class STATE>

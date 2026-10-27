@@ -411,3 +411,22 @@ SELECT round(datasketch_cpc_estimate(datasketch_cpc(12, x)))::INT FROM (VALUES
   (1267650600228229401496703205376::HUGEINT), (1267650600228229401496703205377::HUGEINT)) v(x)
 ----
 2
+
+# =============================================================================
+# EMPTY PARTIAL STATES
+# =============================================================================
+
+# Only the first row group matches, so every other thread's partial state is empty. Combining an empty partial
+# must leave the sketch unmerged (keeping its HIP estimator): the result equals the single-threaded sketch.
+statement ok
+SET threads = 8;
+
+statement ok
+CREATE TABLE cpc_sparse AS SELECT range AS i FROM range(2000000)
+
+query II
+SELECT datasketch_cpc(12, i) = (SELECT datasketch_cpc(12, i) FROM range(1000) r(i)),
+       datasketch_cpc_describe(datasketch_cpc(12, i)) LIKE '%HIP estimate%'
+FROM cpc_sparse WHERE i < 1000
+----
+true	true
