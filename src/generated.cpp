@@ -1202,7 +1202,7 @@ static inline void DSQuantilesis_empty(DataChunk &args, ExpressionState &state, 
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_quantiles_is_empty", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -1212,6 +1212,7 @@ static inline void DSQuantilesis_empty(DataChunk &args, ExpressionState &state, 
                 }
             }();
 return sketch.is_empty();
+            });
         });
 
 }
@@ -1236,7 +1237,7 @@ static inline void DSQuantilesk(DataChunk &args, ExpressionState &state, Vector 
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_quantiles_k", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -1246,6 +1247,7 @@ static inline void DSQuantilesk(DataChunk &args, ExpressionState &state, Vector 
                 }
             }();
 return sketch.get_k();
+            });
         });
 
 }
@@ -1285,7 +1287,7 @@ static inline void DSQuantilescdf(DataChunk &args, ExpressionState &state, Vecto
         (
         sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
-
+            return DSGuard("datasketch_quantiles_cdf", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -1298,7 +1300,13 @@ static inline void DSQuantilescdf(DataChunk &args, ExpressionState &state, Vecto
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        auto split_point_index = split_points_children_unified.sel->get_index(i + split_points_data.offset);
+                        if (!split_points_children_unified.validity.RowIsValid(split_point_index))
+                        {
+                            // reported by DSGuard as "<function>: split points cannot be NULL"
+                            throw std::invalid_argument("split points cannot be NULL");
+                        }
+                        passing_points[i] = split_points_list_children_data[split_point_index];
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -1319,6 +1327,7 @@ auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, cdf_result.size()};
                 
+            });
         });
 
 }
@@ -1358,7 +1367,7 @@ static inline void DSQuantilespmf(DataChunk &args, ExpressionState &state, Vecto
         (
         sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
-
+            return DSGuard("datasketch_quantiles_pmf", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -1371,7 +1380,13 @@ static inline void DSQuantilespmf(DataChunk &args, ExpressionState &state, Vecto
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        auto split_point_index = split_points_children_unified.sel->get_index(i + split_points_data.offset);
+                        if (!split_points_children_unified.validity.RowIsValid(split_point_index))
+                        {
+                            // reported by DSGuard as "<function>: split points cannot be NULL"
+                            throw std::invalid_argument("split points cannot be NULL");
+                        }
+                        passing_points[i] = split_points_list_children_data[split_point_index];
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -1392,6 +1407,7 @@ auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, pmf_result.size()};
                 
+            });
         });
 
 }
@@ -1417,7 +1433,7 @@ static inline void DSQuantilesnormalized_rank_error(DataChunk &args, ExpressionS
         (
         sketch_vector,is_pmf_vector,result,args.size(),
         [&](string_t sketch_data,bool is_pmf_data) {
-
+            return DSGuard("datasketch_quantiles_normalized_rank_error", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -1427,6 +1443,7 @@ static inline void DSQuantilesnormalized_rank_error(DataChunk &args, ExpressionS
                 }
             }();
 return sketch.get_normalized_rank_error(is_pmf_data);
+            });
         });
 
 }
@@ -1453,7 +1470,7 @@ static inline void DSQuantilesdescribe(DataChunk &args, ExpressionState &state, 
         (
         sketch_vector,include_levels_vector,include_items_vector,result,args.size(),
         [&](string_t sketch_data,bool include_levels_data,bool include_items_data) {
-
+            return DSGuard("datasketch_quantiles_describe", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -1463,6 +1480,7 @@ static inline void DSQuantilesdescribe(DataChunk &args, ExpressionState &state, 
                 }
             }();
 return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));
+            });
         });
 
 }
@@ -1489,7 +1507,7 @@ static inline void DSQuantilesrank(DataChunk &args, ExpressionState &state, Vect
         (
         sketch_vector,item_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,T item_data,bool inclusive_data) {
-
+            return DSGuard("datasketch_quantiles_rank", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -1499,6 +1517,7 @@ static inline void DSQuantilesrank(DataChunk &args, ExpressionState &state, Vect
                 }
             }();
 return sketch.get_rank(item_data, inclusive_data);
+            });
         });
 
 }
@@ -1525,7 +1544,7 @@ static inline void DSQuantilesquantile(DataChunk &args, ExpressionState &state, 
         (
         sketch_vector,rank_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,double rank_data,bool inclusive_data) {
-
+            return DSGuard("datasketch_quantiles_quantile", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -1534,7 +1553,8 @@ static inline void DSQuantilesquantile(DataChunk &args, ExpressionState &state, 
                     throw InvalidInputException("Failed to deserialize Quantiles sketch: %s", e.what());
                 }
             }();
-return sketch.get_quantile(rank_data, inclusive_data);
+DSCheckRank(rank_data); return sketch.get_quantile(rank_data, inclusive_data);
+            });
         });
 
 }
@@ -1559,7 +1579,7 @@ static inline void DSQuantilesn(DataChunk &args, ExpressionState &state, Vector 
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_quantiles_n", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -1569,6 +1589,7 @@ static inline void DSQuantilesn(DataChunk &args, ExpressionState &state, Vector 
                 }
             }();
 return sketch.get_n();
+            });
         });
 
 }
@@ -1593,7 +1614,7 @@ static inline void DSQuantilesis_estimation_mode(DataChunk &args, ExpressionStat
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_quantiles_is_estimation_mode", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -1603,6 +1624,7 @@ static inline void DSQuantilesis_estimation_mode(DataChunk &args, ExpressionStat
                 }
             }();
 return sketch.is_estimation_mode();
+            });
         });
 
 }
@@ -1627,7 +1649,7 @@ static inline void DSQuantilesnum_retained(DataChunk &args, ExpressionState &sta
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_quantiles_num_retained", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -1637,6 +1659,7 @@ static inline void DSQuantilesnum_retained(DataChunk &args, ExpressionState &sta
                 }
             }();
 return sketch.get_num_retained();
+            });
         });
 
 }
@@ -1661,7 +1684,7 @@ static inline void DSQuantilesmin_item(DataChunk &args, ExpressionState &state, 
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_quantiles_min_item", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -1671,6 +1694,7 @@ static inline void DSQuantilesmin_item(DataChunk &args, ExpressionState &state, 
                 }
             }();
 return sketch.get_min_item();
+            });
         });
 
 }
@@ -1695,7 +1719,7 @@ static inline void DSQuantilesmax_item(DataChunk &args, ExpressionState &state, 
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_quantiles_max_item", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -1705,6 +1729,7 @@ static inline void DSQuantilesmax_item(DataChunk &args, ExpressionState &state, 
                 }
             }();
 return sketch.get_max_item();
+            });
         });
 
 }
@@ -3762,7 +3787,7 @@ static inline void DSKLLis_empty(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_kll_is_empty", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -3772,6 +3797,7 @@ static inline void DSKLLis_empty(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return sketch.is_empty();
+            });
         });
 
 }
@@ -3796,7 +3822,7 @@ static inline void DSKLLk(DataChunk &args, ExpressionState &state, Vector &resul
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_kll_k", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -3806,6 +3832,7 @@ static inline void DSKLLk(DataChunk &args, ExpressionState &state, Vector &resul
                 }
             }();
 return sketch.get_k();
+            });
         });
 
 }
@@ -3845,7 +3872,7 @@ static inline void DSKLLcdf(DataChunk &args, ExpressionState &state, Vector &res
         (
         sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
-
+            return DSGuard("datasketch_kll_cdf", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -3858,7 +3885,13 @@ static inline void DSKLLcdf(DataChunk &args, ExpressionState &state, Vector &res
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        auto split_point_index = split_points_children_unified.sel->get_index(i + split_points_data.offset);
+                        if (!split_points_children_unified.validity.RowIsValid(split_point_index))
+                        {
+                            // reported by DSGuard as "<function>: split points cannot be NULL"
+                            throw std::invalid_argument("split points cannot be NULL");
+                        }
+                        passing_points[i] = split_points_list_children_data[split_point_index];
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -3879,6 +3912,7 @@ auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, cdf_result.size()};
                 
+            });
         });
 
 }
@@ -3918,7 +3952,7 @@ static inline void DSKLLpmf(DataChunk &args, ExpressionState &state, Vector &res
         (
         sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
-
+            return DSGuard("datasketch_kll_pmf", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -3931,7 +3965,13 @@ static inline void DSKLLpmf(DataChunk &args, ExpressionState &state, Vector &res
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        auto split_point_index = split_points_children_unified.sel->get_index(i + split_points_data.offset);
+                        if (!split_points_children_unified.validity.RowIsValid(split_point_index))
+                        {
+                            // reported by DSGuard as "<function>: split points cannot be NULL"
+                            throw std::invalid_argument("split points cannot be NULL");
+                        }
+                        passing_points[i] = split_points_list_children_data[split_point_index];
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -3952,6 +3992,7 @@ auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, pmf_result.size()};
                 
+            });
         });
 
 }
@@ -3977,7 +4018,7 @@ static inline void DSKLLnormalized_rank_error(DataChunk &args, ExpressionState &
         (
         sketch_vector,is_pmf_vector,result,args.size(),
         [&](string_t sketch_data,bool is_pmf_data) {
-
+            return DSGuard("datasketch_kll_normalized_rank_error", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -3987,6 +4028,7 @@ static inline void DSKLLnormalized_rank_error(DataChunk &args, ExpressionState &
                 }
             }();
 return sketch.get_normalized_rank_error(is_pmf_data);
+            });
         });
 
 }
@@ -4013,7 +4055,7 @@ static inline void DSKLLdescribe(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,include_levels_vector,include_items_vector,result,args.size(),
         [&](string_t sketch_data,bool include_levels_data,bool include_items_data) {
-
+            return DSGuard("datasketch_kll_describe", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -4023,6 +4065,7 @@ static inline void DSKLLdescribe(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));
+            });
         });
 
 }
@@ -4049,7 +4092,7 @@ static inline void DSKLLrank(DataChunk &args, ExpressionState &state, Vector &re
         (
         sketch_vector,item_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,T item_data,bool inclusive_data) {
-
+            return DSGuard("datasketch_kll_rank", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -4059,6 +4102,7 @@ static inline void DSKLLrank(DataChunk &args, ExpressionState &state, Vector &re
                 }
             }();
 return sketch.get_rank(item_data, inclusive_data);
+            });
         });
 
 }
@@ -4085,7 +4129,7 @@ static inline void DSKLLquantile(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,rank_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,double rank_data,bool inclusive_data) {
-
+            return DSGuard("datasketch_kll_quantile", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -4094,7 +4138,8 @@ static inline void DSKLLquantile(DataChunk &args, ExpressionState &state, Vector
                     throw InvalidInputException("Failed to deserialize KLL sketch: %s", e.what());
                 }
             }();
-return sketch.get_quantile(rank_data, inclusive_data);
+DSCheckRank(rank_data); return sketch.get_quantile(rank_data, inclusive_data);
+            });
         });
 
 }
@@ -4119,7 +4164,7 @@ static inline void DSKLLn(DataChunk &args, ExpressionState &state, Vector &resul
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_kll_n", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -4129,6 +4174,7 @@ static inline void DSKLLn(DataChunk &args, ExpressionState &state, Vector &resul
                 }
             }();
 return sketch.get_n();
+            });
         });
 
 }
@@ -4153,7 +4199,7 @@ static inline void DSKLLis_estimation_mode(DataChunk &args, ExpressionState &sta
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_kll_is_estimation_mode", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -4163,6 +4209,7 @@ static inline void DSKLLis_estimation_mode(DataChunk &args, ExpressionState &sta
                 }
             }();
 return sketch.is_estimation_mode();
+            });
         });
 
 }
@@ -4187,7 +4234,7 @@ static inline void DSKLLnum_retained(DataChunk &args, ExpressionState &state, Ve
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_kll_num_retained", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -4197,6 +4244,7 @@ static inline void DSKLLnum_retained(DataChunk &args, ExpressionState &state, Ve
                 }
             }();
 return sketch.get_num_retained();
+            });
         });
 
 }
@@ -4221,7 +4269,7 @@ static inline void DSKLLmin_item(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_kll_min_item", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -4231,6 +4279,7 @@ static inline void DSKLLmin_item(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return sketch.get_min_item();
+            });
         });
 
 }
@@ -4255,7 +4304,7 @@ static inline void DSKLLmax_item(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_kll_max_item", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -4265,6 +4314,7 @@ static inline void DSKLLmax_item(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return sketch.get_max_item();
+            });
         });
 
 }
@@ -6322,7 +6372,7 @@ static inline void DSREQis_empty(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_req_is_empty", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -6332,6 +6382,7 @@ static inline void DSREQis_empty(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return sketch.is_empty();
+            });
         });
 
 }
@@ -6356,7 +6407,7 @@ static inline void DSREQk(DataChunk &args, ExpressionState &state, Vector &resul
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_req_k", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -6366,6 +6417,7 @@ static inline void DSREQk(DataChunk &args, ExpressionState &state, Vector &resul
                 }
             }();
 return sketch.get_k();
+            });
         });
 
 }
@@ -6405,7 +6457,7 @@ static inline void DSREQcdf(DataChunk &args, ExpressionState &state, Vector &res
         (
         sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
-
+            return DSGuard("datasketch_req_cdf", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -6418,7 +6470,13 @@ static inline void DSREQcdf(DataChunk &args, ExpressionState &state, Vector &res
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        auto split_point_index = split_points_children_unified.sel->get_index(i + split_points_data.offset);
+                        if (!split_points_children_unified.validity.RowIsValid(split_point_index))
+                        {
+                            // reported by DSGuard as "<function>: split points cannot be NULL"
+                            throw std::invalid_argument("split points cannot be NULL");
+                        }
+                        passing_points[i] = split_points_list_children_data[split_point_index];
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -6439,6 +6497,7 @@ auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, cdf_result.size()};
                 
+            });
         });
 
 }
@@ -6478,7 +6537,7 @@ static inline void DSREQpmf(DataChunk &args, ExpressionState &state, Vector &res
         (
         sketch_vector,split_points_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data,bool inclusive_data) {
-
+            return DSGuard("datasketch_req_pmf", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -6491,7 +6550,13 @@ static inline void DSREQpmf(DataChunk &args, ExpressionState &state, Vector &res
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        auto split_point_index = split_points_children_unified.sel->get_index(i + split_points_data.offset);
+                        if (!split_points_children_unified.validity.RowIsValid(split_point_index))
+                        {
+                            // reported by DSGuard as "<function>: split points cannot be NULL"
+                            throw std::invalid_argument("split points cannot be NULL");
+                        }
+                        passing_points[i] = split_points_list_children_data[split_point_index];
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length, inclusive_data);
@@ -6512,6 +6577,7 @@ auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, pmf_result.size()};
                 
+            });
         });
 
 }
@@ -6538,7 +6604,7 @@ static inline void DSREQdescribe(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,include_levels_vector,include_items_vector,result,args.size(),
         [&](string_t sketch_data,bool include_levels_data,bool include_items_data) {
-
+            return DSGuard("datasketch_req_describe", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -6548,6 +6614,7 @@ static inline void DSREQdescribe(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));
+            });
         });
 
 }
@@ -6574,7 +6641,7 @@ static inline void DSREQrank(DataChunk &args, ExpressionState &state, Vector &re
         (
         sketch_vector,item_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,T item_data,bool inclusive_data) {
-
+            return DSGuard("datasketch_req_rank", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -6584,6 +6651,7 @@ static inline void DSREQrank(DataChunk &args, ExpressionState &state, Vector &re
                 }
             }();
 return sketch.get_rank(item_data, inclusive_data);
+            });
         });
 
 }
@@ -6610,7 +6678,7 @@ static inline void DSREQquantile(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,rank_vector,inclusive_vector,result,args.size(),
         [&](string_t sketch_data,double rank_data,bool inclusive_data) {
-
+            return DSGuard("datasketch_req_quantile", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -6619,7 +6687,8 @@ static inline void DSREQquantile(DataChunk &args, ExpressionState &state, Vector
                     throw InvalidInputException("Failed to deserialize REQ sketch: %s", e.what());
                 }
             }();
-return sketch.get_quantile(rank_data, inclusive_data);
+DSCheckRank(rank_data); return sketch.get_quantile(rank_data, inclusive_data);
+            });
         });
 
 }
@@ -6644,7 +6713,7 @@ static inline void DSREQn(DataChunk &args, ExpressionState &state, Vector &resul
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_req_n", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -6654,6 +6723,7 @@ static inline void DSREQn(DataChunk &args, ExpressionState &state, Vector &resul
                 }
             }();
 return sketch.get_n();
+            });
         });
 
 }
@@ -6678,7 +6748,7 @@ static inline void DSREQis_estimation_mode(DataChunk &args, ExpressionState &sta
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_req_is_estimation_mode", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -6688,6 +6758,7 @@ static inline void DSREQis_estimation_mode(DataChunk &args, ExpressionState &sta
                 }
             }();
 return sketch.is_estimation_mode();
+            });
         });
 
 }
@@ -6712,7 +6783,7 @@ static inline void DSREQnum_retained(DataChunk &args, ExpressionState &state, Ve
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_req_num_retained", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -6722,6 +6793,7 @@ static inline void DSREQnum_retained(DataChunk &args, ExpressionState &state, Ve
                 }
             }();
 return sketch.get_num_retained();
+            });
         });
 
 }
@@ -6746,7 +6818,7 @@ static inline void DSREQmin_item(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_req_min_item", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -6756,6 +6828,7 @@ static inline void DSREQmin_item(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return sketch.get_min_item();
+            });
         });
 
 }
@@ -6780,7 +6853,7 @@ static inline void DSREQmax_item(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_req_max_item", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -6790,6 +6863,7 @@ static inline void DSREQmax_item(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return sketch.get_max_item();
+            });
         });
 
 }
@@ -8719,7 +8793,7 @@ static inline void DSTDigestis_empty(DataChunk &args, ExpressionState &state, Ve
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_tdigest_is_empty", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -8729,6 +8803,7 @@ static inline void DSTDigestis_empty(DataChunk &args, ExpressionState &state, Ve
                 }
             }();
 return sketch.is_empty();
+            });
         });
 
 }
@@ -8753,7 +8828,7 @@ static inline void DSTDigestk(DataChunk &args, ExpressionState &state, Vector &r
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_tdigest_k", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -8763,6 +8838,7 @@ static inline void DSTDigestk(DataChunk &args, ExpressionState &state, Vector &r
                 }
             }();
 return sketch.get_k();
+            });
         });
 
 }
@@ -8801,7 +8877,7 @@ static inline void DSTDigestcdf(DataChunk &args, ExpressionState &state, Vector 
         (
         sketch_vector,split_points_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data) {
-
+            return DSGuard("datasketch_tdigest_cdf", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -8814,7 +8890,13 @@ static inline void DSTDigestcdf(DataChunk &args, ExpressionState &state, Vector 
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        auto split_point_index = split_points_children_unified.sel->get_index(i + split_points_data.offset);
+                        if (!split_points_children_unified.validity.RowIsValid(split_point_index))
+                        {
+                            // reported by DSGuard as "<function>: split points cannot be NULL"
+                            throw std::invalid_argument("split points cannot be NULL");
+                        }
+                        passing_points[i] = split_points_list_children_data[split_point_index];
                     }
                     
 auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length);
@@ -8835,6 +8917,7 @@ auto cdf_result = sketch.get_CDF(passing_points.data(), split_points_data.length
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, cdf_result.size()};
                 
+            });
         });
 
 }
@@ -8873,7 +8956,7 @@ static inline void DSTDigestpmf(DataChunk &args, ExpressionState &state, Vector 
         (
         sketch_vector,split_points_vector,result,args.size(),
         [&](string_t sketch_data,list_entry_t split_points_data) {
-
+            return DSGuard("datasketch_tdigest_pmf", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -8886,7 +8969,13 @@ static inline void DSTDigestpmf(DataChunk &args, ExpressionState &state, Vector 
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        auto split_point_index = split_points_children_unified.sel->get_index(i + split_points_data.offset);
+                        if (!split_points_children_unified.validity.RowIsValid(split_point_index))
+                        {
+                            // reported by DSGuard as "<function>: split points cannot be NULL"
+                            throw std::invalid_argument("split points cannot be NULL");
+                        }
+                        passing_points[i] = split_points_list_children_data[split_point_index];
                     }
                     
 auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length);
@@ -8907,6 +8996,7 @@ auto pmf_result = sketch.get_PMF(passing_points.data(), split_points_data.length
                 ListVector::SetListSize(result, new_size);
                 return list_entry_t{current_size, pmf_result.size()};
                 
+            });
         });
 
 }
@@ -8932,7 +9022,7 @@ static inline void DSTDigestdescribe(DataChunk &args, ExpressionState &state, Ve
         (
         sketch_vector,include_centroids_vector,result,args.size(),
         [&](string_t sketch_data,bool include_centroids_data) {
-
+            return DSGuard("datasketch_tdigest_describe", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -8942,6 +9032,7 @@ static inline void DSTDigestdescribe(DataChunk &args, ExpressionState &state, Ve
                 }
             }();
 return StringVector::AddString(result, sketch.to_string(include_centroids_data));
+            });
         });
 
 }
@@ -8967,7 +9058,7 @@ static inline void DSTDigestrank(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,item_vector,result,args.size(),
         [&](string_t sketch_data,T item_data) {
-
+            return DSGuard("datasketch_tdigest_rank", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -8977,6 +9068,7 @@ static inline void DSTDigestrank(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return sketch.get_rank(item_data);
+            });
         });
 
 }
@@ -9001,7 +9093,7 @@ static inline void DSTDigesttotal_weight(DataChunk &args, ExpressionState &state
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_tdigest_total_weight", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -9011,6 +9103,7 @@ static inline void DSTDigesttotal_weight(DataChunk &args, ExpressionState &state
                 }
             }();
 return sketch.get_total_weight();
+            });
         });
 
 }
@@ -9036,7 +9129,7 @@ static inline void DSTDigestquantile(DataChunk &args, ExpressionState &state, Ve
         (
         sketch_vector,rank_vector,result,args.size(),
         [&](string_t sketch_data,double rank_data) {
-
+            return DSGuard("datasketch_tdigest_quantile", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -9045,7 +9138,8 @@ static inline void DSTDigestquantile(DataChunk &args, ExpressionState &state, Ve
                     throw InvalidInputException("Failed to deserialize TDigest sketch: %s", e.what());
                 }
             }();
-return sketch.get_quantile(rank_data);
+DSCheckRank(rank_data); return sketch.get_quantile(rank_data);
+            });
         });
 
 }
@@ -9509,7 +9603,7 @@ static inline void DSHLLis_empty(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_hll_is_empty", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -9519,6 +9613,7 @@ static inline void DSHLLis_empty(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return sketch.is_empty();
+            });
         });
 
 }
@@ -9543,7 +9638,7 @@ static inline void DSHLLdescribe(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,summary_vector,detail_vector,result,args.size(),
         [&](string_t sketch_data,bool summary_data,bool detail_data) {
-
+            return DSGuard("datasketch_hll_describe", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -9553,6 +9648,7 @@ static inline void DSHLLdescribe(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return StringVector::AddString(result, sketch.to_string(summary_data, detail_data, false, false));
+            });
         });
 
 }
@@ -9575,7 +9671,7 @@ static inline void DSHLLlg_config_k(DataChunk &args, ExpressionState &state, Vec
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_hll_lg_config_k", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -9585,6 +9681,7 @@ static inline void DSHLLlg_config_k(DataChunk &args, ExpressionState &state, Vec
                 }
             }();
 return sketch.get_lg_config_k();
+            });
         });
 
 }
@@ -9607,7 +9704,7 @@ static inline void DSHLLis_compact(DataChunk &args, ExpressionState &state, Vect
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_hll_is_compact", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -9617,6 +9714,7 @@ static inline void DSHLLis_compact(DataChunk &args, ExpressionState &state, Vect
                 }
             }();
 return sketch.is_compact();
+            });
         });
 
 }
@@ -9639,7 +9737,7 @@ static inline void DSHLLestimate(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_hll_estimate", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -9649,6 +9747,7 @@ static inline void DSHLLestimate(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return sketch.get_estimate();
+            });
         });
 
 }
@@ -9663,16 +9762,16 @@ static inline void DSHLLlower_bound(DataChunk &args, ExpressionState &state, Vec
 
     
         auto &sketch_vector = args.data[0];
-        auto &std_dev_vector = args.data[1];
+        auto &num_std_devs_vector = args.data[1];
 
     
         
         BinaryExecutor::Execute
-        <string_t,uint8_t,double>
+        <string_t,int32_t,double>
         (
-        sketch_vector,std_dev_vector,result,args.size(),
-        [&](string_t sketch_data,uint8_t std_dev_data) {
-
+        sketch_vector,num_std_devs_vector,result,args.size(),
+        [&](string_t sketch_data,int32_t num_std_devs_data) {
+            return DSGuard("datasketch_hll_lower_bound", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -9681,7 +9780,8 @@ static inline void DSHLLlower_bound(DataChunk &args, ExpressionState &state, Vec
                     throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
                 }
             }();
-return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_hll_lower_bound"));
+return sketch.get_lower_bound(DSCheckNumStdDevs(num_std_devs_data, "datasketch_hll_lower_bound"));
+            });
         });
 
 }
@@ -9696,16 +9796,16 @@ static inline void DSHLLupper_bound(DataChunk &args, ExpressionState &state, Vec
 
     
         auto &sketch_vector = args.data[0];
-        auto &std_dev_vector = args.data[1];
+        auto &num_std_devs_vector = args.data[1];
 
     
         
         BinaryExecutor::Execute
-        <string_t,uint8_t,double>
+        <string_t,int32_t,double>
         (
-        sketch_vector,std_dev_vector,result,args.size(),
-        [&](string_t sketch_data,uint8_t std_dev_data) {
-
+        sketch_vector,num_std_devs_vector,result,args.size(),
+        [&](string_t sketch_data,int32_t num_std_devs_data) {
+            return DSGuard("datasketch_hll_upper_bound", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -9714,7 +9814,8 @@ static inline void DSHLLupper_bound(DataChunk &args, ExpressionState &state, Vec
                     throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
                 }
             }();
-return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_hll_upper_bound"));
+return sketch.get_upper_bound(DSCheckNumStdDevs(num_std_devs_data, "datasketch_hll_upper_bound"));
+            });
         });
 
 }
@@ -9901,14 +10002,14 @@ return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_hll_up
         std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
-                {sketch_type,LogicalType::UTINYINT},LogicalType::DOUBLE
+                {sketch_type,LogicalType::INTEGER},LogicalType::DOUBLE
                 ,    DSHLLlower_bound));
                 {
                     FunctionDescription desc;
                     desc.description = "Return the lower bound of the number of distinct items seen by the sketch";
-                    desc.examples.push_back("datasketch_hll_lower_bound(sketch, std_dev)");
-                    desc.parameter_names = { "sketch","std_dev" };
-                    desc.parameter_types = { sketch_type,LogicalType::UTINYINT };
+                    desc.examples.push_back("datasketch_hll_lower_bound(sketch, num_std_devs)");
+                    desc.parameter_names = { "sketch","num_std_devs" };
+                    desc.parameter_types = { sketch_type,LogicalType::INTEGER };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -9929,14 +10030,14 @@ return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_hll_up
         std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
-                {sketch_type,LogicalType::UTINYINT},LogicalType::DOUBLE
+                {sketch_type,LogicalType::INTEGER},LogicalType::DOUBLE
                 ,    DSHLLupper_bound));
                 {
                     FunctionDescription desc;
                     desc.description = "Return the upper bound of the number of distinct items seen by the sketch";
-                    desc.examples.push_back("datasketch_hll_upper_bound(sketch, std_dev)");
-                    desc.parameter_names = { "sketch","std_dev" };
-                    desc.parameter_types = { sketch_type,LogicalType::UTINYINT };
+                    desc.examples.push_back("datasketch_hll_upper_bound(sketch, num_std_devs)");
+                    desc.parameter_names = { "sketch","num_std_devs" };
+                    desc.parameter_types = { sketch_type,LogicalType::INTEGER };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -10255,7 +10356,7 @@ static inline void DSCPCis_empty(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_cpc_is_empty", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -10265,6 +10366,7 @@ static inline void DSCPCis_empty(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return sketch.is_empty();
+            });
         });
 
 }
@@ -10287,7 +10389,7 @@ static inline void DSCPCdescribe(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_cpc_describe", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -10297,6 +10399,7 @@ static inline void DSCPCdescribe(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return StringVector::AddString(result, sketch.to_string());
+            });
         });
 
 }
@@ -10319,7 +10422,7 @@ static inline void DSCPCestimate(DataChunk &args, ExpressionState &state, Vector
         (
         sketch_vector,result,args.size(),
         [&](string_t sketch_data) {
-
+            return DSGuard("datasketch_cpc_estimate", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -10329,6 +10432,7 @@ static inline void DSCPCestimate(DataChunk &args, ExpressionState &state, Vector
                 }
             }();
 return sketch.get_estimate();
+            });
         });
 
 }
@@ -10343,16 +10447,16 @@ static inline void DSCPClower_bound(DataChunk &args, ExpressionState &state, Vec
 
     
         auto &sketch_vector = args.data[0];
-        auto &std_dev_vector = args.data[1];
+        auto &num_std_devs_vector = args.data[1];
 
     
         
         BinaryExecutor::Execute
-        <string_t,uint8_t,double>
+        <string_t,int32_t,double>
         (
-        sketch_vector,std_dev_vector,result,args.size(),
-        [&](string_t sketch_data,uint8_t std_dev_data) {
-
+        sketch_vector,num_std_devs_vector,result,args.size(),
+        [&](string_t sketch_data,int32_t num_std_devs_data) {
+            return DSGuard("datasketch_cpc_lower_bound", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -10361,7 +10465,8 @@ static inline void DSCPClower_bound(DataChunk &args, ExpressionState &state, Vec
                     throw InvalidInputException("Failed to deserialize CPC sketch: %s", e.what());
                 }
             }();
-return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_cpc_lower_bound"));
+return sketch.get_lower_bound(DSCheckNumStdDevs(num_std_devs_data, "datasketch_cpc_lower_bound"));
+            });
         });
 
 }
@@ -10376,16 +10481,16 @@ static inline void DSCPCupper_bound(DataChunk &args, ExpressionState &state, Vec
 
     
         auto &sketch_vector = args.data[0];
-        auto &std_dev_vector = args.data[1];
+        auto &num_std_devs_vector = args.data[1];
 
     
         
         BinaryExecutor::Execute
-        <string_t,uint8_t,double>
+        <string_t,int32_t,double>
         (
-        sketch_vector,std_dev_vector,result,args.size(),
-        [&](string_t sketch_data,uint8_t std_dev_data) {
-
+        sketch_vector,num_std_devs_vector,result,args.size(),
+        [&](string_t sketch_data,int32_t num_std_devs_data) {
+            return DSGuard("datasketch_cpc_upper_bound", [&]() {
             
             auto sketch = [&]() {
                 try {
@@ -10394,7 +10499,8 @@ static inline void DSCPCupper_bound(DataChunk &args, ExpressionState &state, Vec
                     throw InvalidInputException("Failed to deserialize CPC sketch: %s", e.what());
                 }
             }();
-return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_cpc_upper_bound"));
+return sketch.get_upper_bound(DSCheckNumStdDevs(num_std_devs_data, "datasketch_cpc_upper_bound"));
+            });
         });
 
 }
@@ -10525,14 +10631,14 @@ return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_cpc_up
         std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
-                {sketch_type,LogicalType::UTINYINT},LogicalType::DOUBLE
+                {sketch_type,LogicalType::INTEGER},LogicalType::DOUBLE
                 ,    DSCPClower_bound));
                 {
                     FunctionDescription desc;
                     desc.description = "Return the lower bound of the number of distinct items seen by the sketch";
-                    desc.examples.push_back("datasketch_cpc_lower_bound(sketch, std_dev)");
-                    desc.parameter_names = { "sketch","std_dev" };
-                    desc.parameter_types = { sketch_type,LogicalType::UTINYINT };
+                    desc.examples.push_back("datasketch_cpc_lower_bound(sketch, num_std_devs)");
+                    desc.parameter_names = { "sketch","num_std_devs" };
+                    desc.parameter_types = { sketch_type,LogicalType::INTEGER };
                     fn_descs.push_back(std::move(desc));
                 }
         
@@ -10553,14 +10659,14 @@ return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_cpc_up
         std::vector<FunctionDescription> fn_descs;
         
                 fs.AddFunction(ScalarFunction(
-                {sketch_type,LogicalType::UTINYINT},LogicalType::DOUBLE
+                {sketch_type,LogicalType::INTEGER},LogicalType::DOUBLE
                 ,    DSCPCupper_bound));
                 {
                     FunctionDescription desc;
                     desc.description = "Return the upper bound of the number of distinct items seen by the sketch";
-                    desc.examples.push_back("datasketch_cpc_upper_bound(sketch, std_dev)");
-                    desc.parameter_names = { "sketch","std_dev" };
-                    desc.parameter_types = { sketch_type,LogicalType::UTINYINT };
+                    desc.examples.push_back("datasketch_cpc_upper_bound(sketch, num_std_devs)");
+                    desc.parameter_names = { "sketch","num_std_devs" };
+                    desc.parameter_types = { sketch_type,LogicalType::INTEGER };
                     fn_descs.push_back(std::move(desc));
                 }
         
