@@ -132,7 +132,13 @@ def unary_functions_per_sketch_type(sketch_type: str):
                     std::vector<T> passing_points(split_points_data.length);
                     for (idx_t i = 0; i < split_points_data.length; i++)
                     {
-                        passing_points[i] = split_points_list_children_data[i + split_points_data.offset];
+                        auto split_point_index = split_points_children_unified.sel->get_index(i + split_points_data.offset);
+                        if (!split_points_children_unified.validity.RowIsValid(split_point_index))
+                        {
+                            // reported by DSGuard as "<function>: split points cannot be NULL"
+                            throw std::invalid_argument("split points cannot be NULL");
+                        }
+                        passing_points[i] = split_points_list_children_data[split_point_index];
                     }
                     """,
     }
@@ -320,13 +326,13 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "description": "Return the lower bound of the number of distinct items seen by the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_lower_bound(sketch, std_dev)",
-                    "method": f'return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_{sketch_type.lower()}_lower_bound"));',
+                    "example": f"datasketch_{sketch_type.lower()}_lower_bound(sketch, num_std_devs)",
+                    "method": f'return sketch.get_lower_bound(DSCheckNumStdDevs(num_std_devs_data, "datasketch_{sketch_type.lower()}_lower_bound"));',
                     "arguments": [
                         sketch_argument,
                         {
-                            "cpp_type": "uint8_t",
-                            "name": "std_dev",
+                            "cpp_type": "int32_t",
+                            "name": "num_std_devs",
                         },
                     ],
                     "name": "lower_bound",
@@ -334,13 +340,13 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
                 {
                     "description": "Return the upper bound of the number of distinct items seen by the sketch",
-                    "example": f"datasketch_{sketch_type.lower()}_upper_bound(sketch, std_dev)",
-                    "method": f'return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_{sketch_type.lower()}_upper_bound"));',
+                    "example": f"datasketch_{sketch_type.lower()}_upper_bound(sketch, num_std_devs)",
+                    "method": f'return sketch.get_upper_bound(DSCheckNumStdDevs(num_std_devs_data, "datasketch_{sketch_type.lower()}_upper_bound"));',
                     "arguments": [
                         sketch_argument,
                         {
-                            "cpp_type": "uint8_t",
-                            "name": "std_dev",
+                            "cpp_type": "int32_t",
+                            "name": "num_std_devs",
                         },
                     ],
                     "name": "upper_bound",
@@ -393,7 +399,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 {
                     "description": "Return the quantile of a rank in the sketch",
                     "example": f"datasketch_{sketch_type.lower()}_quantile(sketch, rank)",
-                    "method": "return sketch.get_quantile(rank_data);",
+                    "method": "DSCheckRank(rank_data); return sketch.get_quantile(rank_data);",
                     "name": "quantile",
                     "arguments": [
                         sketch_argument,
@@ -469,7 +475,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 {
                     "description": "Return the quantile of a rank in the sketch",
                     "example": f"datasketch_{sketch_type.lower()}_rank(sketch, rank, inclusive)",
-                    "method": "return sketch.get_quantile(rank_data, inclusive_data);",
+                    "method": "DSCheckRank(rank_data); return sketch.get_quantile(rank_data, inclusive_data);",
                     "name": "quantile",
                     "arguments": [
                         sketch_argument,
@@ -534,6 +540,8 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 },
             ]
         )
+    for function_info in result:
+        function_info["sql_name"] = f"datasketch_{sketch_type.lower()}_{function_info['name'].lower()}"
     return result
 
 
@@ -645,8 +653,9 @@ def get_function_block(function_info: Any) -> str:
         (
         {joined_executor_args},
         [&]({joined_lambda_args}) {{
-
+            return DSGuard("{function_info["sql_name"]}", [&]() {{
             {lambda_body}
+            }});
         }});"""
 
     return result

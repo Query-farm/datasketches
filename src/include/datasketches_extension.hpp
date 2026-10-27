@@ -133,4 +133,31 @@ namespace duckdb
 		return static_cast<uint8_t>(num_std_devs);
 	}
 
+	static inline void DSCheckRank(double rank)
+	{
+		if (!(rank >= 0.0 && rank <= 1.0))
+		{
+			throw InvalidInputException("Normalized rank must be between 0 and 1, got: %f", rank);
+		}
+	}
+
+	// Runs fun, reporting errors raised by a DataSketches library (std::exception, e.g. unsorted split points) as
+	// invalid input of the function.
+	template <class FUNC>
+	static inline auto DSGuard(const char *function_name, FUNC &&fun) -> decltype(fun())
+	{
+		try
+		{
+			return fun();
+		}
+		catch (Exception &)
+		{
+			throw;
+		}
+		catch (std::exception &e)
+		{
+			throw InvalidInputException("%s: %s", function_name, e.what());
+		}
+	}
+
 } // namespace duckdb
