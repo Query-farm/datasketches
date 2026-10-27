@@ -1,0 +1,68 @@
+# name: test/sql/datasketch_scalar_errors.test
+# description: scalar functions reject invalid arguments with clear errors
+# group: [datasketches]
+
+require datasketches
+
+statement ok
+CREATE TABLE s AS SELECT datasketch_kll(200, i::DOUBLE) AS kll, datasketch_quantiles(16, i::DOUBLE) AS q,
+    datasketch_req(12, i::DOUBLE) AS req, datasketch_tdigest(100, i::DOUBLE) AS td FROM range(100) t(i)
+
+# A NULL split point is an error (it used to be read as 0.0, silently changing the result)
+statement error
+SELECT datasketch_kll_cdf(kll, [NULL, 50.0], true) FROM s
+----
+datasketch_kll_cdf: split points cannot be NULL
+
+statement error
+SELECT datasketch_req_pmf(req, [10.0, NULL], true) FROM s
+----
+datasketch_req_pmf: split points cannot be NULL
+
+statement error
+SELECT datasketch_tdigest_cdf(td, [NULL]) FROM s
+----
+datasketch_tdigest_cdf: split points cannot be NULL
+
+# Library errors are reported as invalid input of the function
+statement error
+SELECT datasketch_quantiles_cdf(q, [90.0, 10.0], true) FROM s
+----
+Invalid Input Error: datasketch_quantiles_cdf: Values must be unique and monotonically increasing
+
+# A rank outside [0, 1] is rejected by every quantile function
+statement error
+SELECT datasketch_kll_quantile(kll, 1.5, true) FROM s
+----
+Normalized rank must be between 0 and 1, got: 1.5
+
+statement error
+SELECT datasketch_quantiles_quantile(q, -0.1, true) FROM s
+----
+Normalized rank must be between 0 and 1
+
+statement error
+SELECT datasketch_tdigest_quantile(td, 2.0) FROM s
+----
+Normalized rank must be between 0 and 1, got: 2.0
+
+query II
+SELECT datasketch_kll_quantile(kll, 0.0, true), datasketch_kll_quantile(kll, 1.0, true) FROM s
+----
+0.0	99.0
+
+# HLL and CPC bounds take num_std_devs INTEGER, as the Theta and Tuple bounds do
+query I
+SELECT DISTINCT parameters::VARCHAR || ' ' || parameter_types::VARCHAR FROM duckdb_functions()
+WHERE function_name IN ('datasketch_hll_lower_bound', 'datasketch_hll_upper_bound', 'datasketch_cpc_lower_bound',
+                        'datasketch_cpc_upper_bound', 'datasketch_theta_lower_bound')
+ORDER BY 1
+----
+[sketch, num_std_devs] [sketch_cpc, INTEGER]
+[sketch, num_std_devs] [sketch_hll, INTEGER]
+[sketch, num_std_devs] [sketch_theta, INTEGER]
+
+query I
+SELECT datasketch_hll_lower_bound(datasketch_hll(12, i), 2) <= 100 FROM range(100) t(i)
+----
+true
