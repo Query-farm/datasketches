@@ -101,7 +101,9 @@ class Sketch:
     """The logical types of the values the sketch aggregates, in registration order."""
     example_k: int
     k_min: int
-    k_max: Optional[int]
+    k_max: int
+    """The K values the library accepts (an invalid K would fail at runtime or be silently changed)."""
+    k_power_of_two: bool = False
     k_label: str = "K"
     """How K is described in errors."""
     option: Optional[Option] = None
@@ -136,12 +138,12 @@ class Sketch:
     @property
     def k_check(self) -> str:
         """A C++ condition that is true for an invalid K."""
-        return f"k < {self.k_min}" + (f" || k > {self.k_max}" if self.k_max is not None else "")
+        return f"k < {self.k_min} || k > {self.k_max}" + (" || (k & (k - 1)) != 0" if self.k_power_of_two else "")
 
     @property
     def k_error(self) -> str:
-        valid = f"between {self.k_min} and {self.k_max}" if self.k_max is not None else "positive"
-        return f"{self.name} {self.k_label} value must be {valid}, got: "
+        power_of_two = "a power of 2 " if self.k_power_of_two else ""
+        return f"{self.name} {self.k_label} value must be {power_of_two}between {self.k_min} and {self.k_max}, got: "
 
 
 HLL_TARGET_TYPE = Option(
@@ -176,13 +178,15 @@ COUNTING_TYPES = NUMERIC_TYPES + (
 
 SKETCHES = [
     Sketch("Quantiles", "datasketches::quantiles_sketch", NUMERIC_TYPES + ("LogicalType::VARCHAR",),
-           example_k=16, k_min=1, k_max=32768),
+           example_k=16, k_min=2, k_max=32768, k_power_of_two=True),
     Sketch("KLL", "datasketches::kll_sketch", NUMERIC_TYPES + ("LogicalType::VARCHAR",),
-           example_k=200, k_min=1, k_max=32768),
+           example_k=200, k_min=8, k_max=65535),
+    # The library rounds an odd K down, and keeps K in 8 bits (req_sketch_impl.hpp), so a K above 255 would wrap.
     Sketch("REQ", "datasketches::req_sketch", NUMERIC_TYPES,
-           example_k=12, k_min=4, k_max=1024, option=REQ_HRA),
+           example_k=12, k_min=4, k_max=255, option=REQ_HRA),
+    # The library's K is a uint16_t.
     Sketch("TDigest", "datasketches::tdigest", ("LogicalType::FLOAT", "LogicalType::DOUBLE"),
-           example_k=100, k_min=1, k_max=None, k_label="K (compression)"),
+           example_k=100, k_min=10, k_max=65535, k_label="K (compression)"),
     Sketch("HLL", "datasketches::hll_sketch", COUNTING_TYPES,
            example_k=12, k_min=4, k_max=21, k_label="K (lg_k)", option=HLL_TARGET_TYPE,
            counting=True, union_accepts_values=True),

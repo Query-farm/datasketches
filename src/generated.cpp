@@ -33,8 +33,8 @@ unique_ptr<FunctionData> DSQuantilesBind(BindAggregateFunctionInput &input) {
     auto &arguments = input.GetArguments();
     auto k = DSBindConstant(context, *arguments[0], "Quantiles can only take a constant K value",
                             "Quantiles K value cannot be NULL").GetValue<int32_t>();
-    if (k < 1 || k > 32768) {
-        throw BinderException("Quantiles K value must be between 1 and 32768, got: " + std::to_string(k));
+    if (k < 2 || k > 32768 || (k & (k - 1)) != 0) {
+        throw BinderException("Quantiles K value must be a power of 2 between 2 and 32768, got: " + std::to_string(k));
     }
     auto bind_data = make_uniq<DSQuantilesBindData>(k);
     // The constant arguments stay in the argument list (DuckDB 2.0 plan serialization and the common subplan
@@ -1377,8 +1377,8 @@ unique_ptr<FunctionData> DSKLLBind(BindAggregateFunctionInput &input) {
     auto &arguments = input.GetArguments();
     auto k = DSBindConstant(context, *arguments[0], "KLL can only take a constant K value",
                             "KLL K value cannot be NULL").GetValue<int32_t>();
-    if (k < 1 || k > 32768) {
-        throw BinderException("KLL K value must be between 1 and 32768, got: " + std::to_string(k));
+    if (k < 8 || k > 65535) {
+        throw BinderException("KLL K value must be between 8 and 65535, got: " + std::to_string(k));
     }
     auto bind_data = make_uniq<DSKLLBindData>(k);
     // The constant arguments stay in the argument list (DuckDB 2.0 plan serialization and the common subplan
@@ -2724,8 +2724,8 @@ unique_ptr<FunctionData> DSREQBind(BindAggregateFunctionInput &input) {
     auto &arguments = input.GetArguments();
     auto k = DSBindConstant(context, *arguments[0], "REQ can only take a constant K value",
                             "REQ K value cannot be NULL").GetValue<int32_t>();
-    if (k < 4 || k > 1024) {
-        throw BinderException("REQ K value must be between 4 and 1024, got: " + std::to_string(k));
+    if (k < 4 || k > 255) {
+        throw BinderException("REQ K value must be between 4 and 255, got: " + std::to_string(k));
     }
     auto bind_data = make_uniq<DSREQBindData>(k);
     // Optional trailing constant: datasketch_req(k, data, hra).
@@ -4159,8 +4159,8 @@ unique_ptr<FunctionData> DSTDigestBind(BindAggregateFunctionInput &input) {
     auto &arguments = input.GetArguments();
     auto k = DSBindConstant(context, *arguments[0], "TDigest can only take a constant K value",
                             "TDigest K value cannot be NULL").GetValue<int32_t>();
-    if (k < 1) {
-        throw BinderException("TDigest K (compression) value must be positive, got: " + std::to_string(k));
+    if (k < 10 || k > 65535) {
+        throw BinderException("TDigest K (compression) value must be between 10 and 65535, got: " + std::to_string(k));
     }
     auto bind_data = make_uniq<DSTDigestBindData>(k);
     // The constant arguments stay in the argument list (DuckDB 2.0 plan serialization and the common subplan
