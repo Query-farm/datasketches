@@ -127,7 +127,7 @@ static inline void DSCheckRank(double rank) {
 struct DS{{sketch_type}}BindData : public FunctionData {
 	DS{{sketch_type}}BindData() {
 	}
-	explicit DS{{sketch_type}}BindData({{sketch_k_cpp_type[sketch_type]}} k) : k(k) {
+	explicit DS{{sketch_type}}BindData({{k_cpp_type}} k) : k(k) {
 	}
 
 	unique_ptr<FunctionData> Copy() const override {
@@ -151,7 +151,7 @@ struct DS{{sketch_type}}BindData : public FunctionData {
 		{% endif %}
 	}
 
-    {{sketch_k_cpp_type[sketch_type]}} k;
+    {{k_cpp_type}} k;
     {% if sketch_type == "REQ" %}
     // true: high-rank accuracy (the library default), false: low-rank accuracy.
     bool hra = true;
@@ -175,7 +175,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(BindAggregateFunctionInput &input
 		throw BinderException("{{sketch_type}} K value cannot be NULL");
 	}
 
-	auto actual_k = k_val.GetValue<{{sketch_k_cpp_type[sketch_type]}}>();
+	auto actual_k = k_val.GetValue<{{k_cpp_type}}>();
 
 	{% if sketch_type in ["Quantiles", "KLL"] %}
 	// Validate K parameter: must be in range (0, 32768]
@@ -794,9 +794,9 @@ template <class T>
 static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, ExpressionState &state, Vector &result)
 {
     // Get the references to the incoming vectors.
-    D_ASSERT(args.ColumnCount() == {{unary_function.arguments|length}});
+    D_ASSERT(args.ColumnCount() == {{unary_function.args|length}});
 
-    {% for a in unary_function.arguments %}
+    {% for a in unary_function.args %}
         auto &{{a.name}}_vector = args.data[{{loop.index0}}];
     {%- endfor %}
 
@@ -868,27 +868,27 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         std::vector<FunctionDescription> fn_descs;
         {% if sketch_type in counting_sketch_names %}
                 fs.AddFunction(ScalarFunction(
-                {{get_scalar_function_args(unary_function, None, None)}}
+                {{get_scalar_function_args(unary_function, None)}}
                 ,    DS{{sketch_type}}{{unary_function.name}}));
                 {
                     FunctionDescription desc;
                     desc.description = "{{unary_function.description}}";
                     desc.examples.push_back("{{unary_function.example}}");
                     desc.parameter_names = { {{get_parameter_names(unary_function)}} };
-                    desc.parameter_types = { {{get_parameter_types_str(unary_function, None, None)}} };
+                    desc.parameter_types = { {{get_parameter_types_str(unary_function, None)}} };
                     fn_descs.push_back(std::move(desc));
                 }
         {% else %}
             {% for logical_type, cpp_type in logical_type_to_cplusplus_type(sketch_type).items() %}
                 fs.AddFunction(ScalarFunction(
-                {{get_scalar_function_args(unary_function, logical_type, cpp_type)}}
+                {{get_scalar_function_args(unary_function, logical_type)}}
                 ,    DS{{sketch_type}}{{unary_function.name}}<{{cpp_type}}>));
                 {
                     FunctionDescription desc;
                     desc.description = "{{unary_function.description}}";
                     desc.examples.push_back("{{unary_function.example}}");
                     desc.parameter_names = { {{get_parameter_names(unary_function)}} };
-                    desc.parameter_types = { {{get_parameter_types_str(unary_function, logical_type, cpp_type)}} };
+                    desc.parameter_types = { {{get_parameter_types_str(unary_function, logical_type)}} };
                     fn_descs.push_back(std::move(desc));
                 }
             {%- endfor %}
@@ -919,14 +919,14 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
                 auto fun = DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_type);
                 fun.SetBindCallback(DS{{sketch_type}}Bind);
                 fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
-                DSPrependArgument(fun, {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
+                DSPrependArgument(fun, {{k_logical_type}});
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_{{sketch_type|lower}} data sketch by aggregating values";
                 desc.examples.push_back("{{aggregate_examples(sketch_type).create}}");
                 desc.parameter_names = {"k", "data"};
-                desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}} };
+                desc.parameter_types = { {{k_logical_type}}, {{logical_type}} };
                 agg_descs.push_back(std::move(desc));
             }
             {% if sketch_type == "HLL" %}
@@ -934,14 +934,14 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
                 auto fun = DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_type);
                 fun.SetBindCallback(DS{{sketch_type}}Bind);
                 fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
-                DSSetArguments(fun, { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}}, LogicalType::VARCHAR });
+                DSSetArguments(fun, { {{k_logical_type}}, {{logical_type}}, LogicalType::VARCHAR });
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_hll data sketch by aggregating values. target_type (a constant) selects the register encoding: 'HLL_4' (the default, smallest), 'HLL_6' or 'HLL_8' (largest, fastest)";
                 desc.examples.push_back("{{aggregate_examples(sketch_type).create_hll_target_type}}");
                 desc.parameter_names = {"k", "data", "target_type"};
-                desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}}, LogicalType::VARCHAR };
+                desc.parameter_types = { {{k_logical_type}}, {{logical_type}}, LogicalType::VARCHAR };
                 agg_descs.push_back(std::move(desc));
             }
             {% endif %}
@@ -950,14 +950,14 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
                 auto fun = DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]);
                 fun.SetBindCallback(DS{{sketch_type}}Bind);
                 fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
-                DSPrependArgument(fun, {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
+                DSPrependArgument(fun, {{k_logical_type}});
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_{{sketch_type|lower}} data sketch by aggregating values";
                 desc.examples.push_back("{{aggregate_examples(sketch_type).create}}");
                 desc.parameter_names = {"k", "data"};
-                desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}} };
+                desc.parameter_types = { {{k_logical_type}}, {{logical_type}} };
                 agg_descs.push_back(std::move(desc));
             }
             {% if sketch_type == "REQ" %}
@@ -965,14 +965,14 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
                 auto fun = DS{{sketch_type}}CreateAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]);
                 fun.SetBindCallback(DS{{sketch_type}}Bind);
                 fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
-                DSSetArguments(fun, { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}}, LogicalType::BOOLEAN });
+                DSSetArguments(fun, { {{k_logical_type}}, {{logical_type}}, LogicalType::BOOLEAN });
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_req data sketch by aggregating values. hra (a constant) selects high-rank accuracy (true, the default) or low-rank accuracy (false)";
                 desc.examples.push_back("{{aggregate_examples(sketch_type).create_req_hra}}");
                 desc.parameter_names = {"k", "data", "hra"};
-                desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, {{logical_type}}, LogicalType::BOOLEAN };
+                desc.parameter_types = { {{k_logical_type}}, {{logical_type}}, LogicalType::BOOLEAN };
                 agg_descs.push_back(std::move(desc));
             }
             {% endif %}
@@ -980,14 +980,14 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
                 auto fun = DS{{sketch_type}}MergeAggregate<{{cpp_type}}>({{logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}]);
                 fun.SetBindCallback(DS{{sketch_type}}Bind);
                 fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
-                DSPrependArgument(fun, {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
+                DSPrependArgument(fun, {{k_logical_type}});
                 sketch.AddFunction(fun);
 
                 FunctionDescription desc;
                 desc.description = "Creates a sketch_{{sketch_type|lower}} data sketch by merging other {{sketch_type}} data sketches";
                 desc.examples.push_back("{{aggregate_examples(sketch_type).merge}}");
                 desc.parameter_names = {"k", "sketch"};
-                desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, sketch_map_types[{{to_type_id(logical_type)}}] };
+                desc.parameter_types = { {{k_logical_type}}, sketch_map_types[{{to_type_id(logical_type)}}] };
                 agg_descs.push_back(std::move(desc));
             }
         {% endif %}
@@ -1010,10 +1010,10 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
       auto fun = DS{{sketch_type}}MergeAggregate(sketch_type);
       fun.SetBindCallback(DS{{sketch_type}}Bind);
       fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
-      DSPrependArgument(fun, {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}});
+      DSPrependArgument(fun, {{k_logical_type}});
       sketch.AddFunction(fun);
       {% if sketch_type == "HLL" %}
-      DSSetArguments(fun, { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, sketch_type, LogicalType::VARCHAR });
+      DSSetArguments(fun, { {{k_logical_type}}, sketch_type, LogicalType::VARCHAR });
       sketch.AddFunction(fun);
       {% endif %}
       CreateAggregateFunctionInfo sketch_info(sketch);
@@ -1023,7 +1023,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         desc.description = "Creates a sketch_{{sketch_type}} data sketch by aggregating other {{sketch_type}} data sketches";
         desc.examples.push_back("{{aggregate_examples(sketch_type).union}}");
         desc.parameter_names = {"k", "sketch"};
-        desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, sketch_type };
+        desc.parameter_types = { {{k_logical_type}}, sketch_type };
         sketch_info.descriptions.push_back(desc);
     }
       {% if sketch_type == "HLL" %}
@@ -1032,7 +1032,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
         desc.description = "Creates a sketch_HLL data sketch by aggregating other HLL data sketches. target_type (a constant) selects the result's register encoding: 'HLL_4' (the default), 'HLL_6' or 'HLL_8'";
         desc.examples.push_back("{{aggregate_examples(sketch_type).union_hll_target_type}}");
         desc.parameter_names = {"k", "sketch", "target_type"};
-        desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, sketch_type, LogicalType::VARCHAR };
+        desc.parameter_types = { {{k_logical_type}}, sketch_type, LogicalType::VARCHAR };
         sketch_info.descriptions.push_back(desc);
     }
       {% endif %}
