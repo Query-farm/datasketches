@@ -4,7 +4,6 @@
 #include "duckdb/parser/parsed_data/create_scalar_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_aggregate_function_info.hpp"
 #include "duckdb/function/scalar_function.hpp"
-#include "duckdb/common/operator/cast_operators.hpp"
 #include "duckdb/common/bswap.hpp"
 
 #include <DataSketches/quantiles_sketch.hpp>
@@ -846,18 +845,23 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
         }
         else if constexpr (std::is_same_v<T, hugeint_t> || std::is_same_v<T, uhugeint_t>)
         {
-            // These inputs used to reach the sketch through an implicit cast to DOUBLE. A value that converts to
-            // DOUBLE exactly keeps that hash, so existing sketches still merge; the rest hash all 128 bits instead of
-            // collapsing into one DOUBLE.
-            double as_double;
-            T round_trip;
-            if (TryCast::Operation<T, double>(value, as_double, false) &&
-                TryCast::Operation<double, T>(as_double, round_trip, false) && round_trip == value)
+            // A value that fits in a BIGINT hashes like that BIGINT, as every narrower integer type does, so e.g.
+            // sketches of sum() results (HUGEINT) merge with sketches of the same BIGINT values.
+            bool fits_int64;
+            if constexpr (std::is_same_v<T, hugeint_t>)
             {
-                sketch.update(as_double);
+                fits_int64 = value.upper == (static_cast<int64_t>(value.lower) >> 63);
+            }
+            else
+            {
+                fits_int64 = value.upper == 0 && value.lower <= static_cast<uint64_t>(NumericLimits<int64_t>::Maximum());
+            }
+            if (fits_int64)
+            {
+                sketch.update(static_cast<int64_t>(value.lower));
                 return;
             }
-            // Little-endian, lower half first, on every platform.
+            // Wider values hash all 16 bytes, little-endian, lower half first, on every platform.
             const uint64_t halves[2] = {BSwapIfBE(value.lower), BSwapIfBE(static_cast<uint64_t>(value.upper))};
             sketch.update(halves, sizeof(halves));
         }
