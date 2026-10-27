@@ -390,10 +390,10 @@ def _all_functions(sketch: Sketch) -> list:
                  (sk,), returns("LogicalType::DOUBLE"), "return sketch.get_estimate();"),
         Function("lower_bound", COUNTING_SKETCHES,
                  "Return the lower bound of the number of distinct items seen by the sketch",
-                 (sk, std_dev), returns("LogicalType::DOUBLE"), "return sketch.get_lower_bound(std_dev_data);", "2"),
+                 (sk, std_dev), returns("LogicalType::DOUBLE"), f'return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_{s}_lower_bound"));', "2"),
         Function("upper_bound", COUNTING_SKETCHES,
                  "Return the upper bound of the number of distinct items seen by the sketch",
-                 (sk, std_dev), returns("LogicalType::DOUBLE"), "return sketch.get_upper_bound(std_dev_data);", "2"),
+                 (sk, std_dev), returns("LogicalType::DOUBLE"), f'return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_{s}_upper_bound"));', "2"),
 
         # --- TDigest ---
         Function("describe", tdigest, "Return a description of this sketch",

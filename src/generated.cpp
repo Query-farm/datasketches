@@ -4658,7 +4658,7 @@ static void DSHLLlower_bound(DataChunk &args, ExpressionState &state, Vector &re
     auto &std_dev_vector = args.data[1];
     BinaryExecutor::Execute<string_t, uint8_t, double>(sketch_vector, std_dev_vector, result, [&](string_t sketch_data, uint8_t std_dev_data) {
         auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
-        return sketch.get_lower_bound(std_dev_data);
+        return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_hll_lower_bound"));
     });
 }
 
@@ -4668,7 +4668,7 @@ static void DSHLLupper_bound(DataChunk &args, ExpressionState &state, Vector &re
     auto &std_dev_vector = args.data[1];
     BinaryExecutor::Execute<string_t, uint8_t, double>(sketch_vector, std_dev_vector, result, [&](string_t sketch_data, uint8_t std_dev_data) {
         auto sketch = DSDeserialize<datasketches::hll_sketch>(sketch_data, "HLL");
-        return sketch.get_upper_bound(std_dev_data);
+        return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_hll_upper_bound"));
     });
 }
 
@@ -5062,7 +5062,7 @@ static void DSCPClower_bound(DataChunk &args, ExpressionState &state, Vector &re
     auto &std_dev_vector = args.data[1];
     BinaryExecutor::Execute<string_t, uint8_t, double>(sketch_vector, std_dev_vector, result, [&](string_t sketch_data, uint8_t std_dev_data) {
         auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
-        return sketch.get_lower_bound(std_dev_data);
+        return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_cpc_lower_bound"));
     });
 }
 
@@ -5072,7 +5072,7 @@ static void DSCPCupper_bound(DataChunk &args, ExpressionState &state, Vector &re
     auto &std_dev_vector = args.data[1];
     BinaryExecutor::Execute<string_t, uint8_t, double>(sketch_vector, std_dev_vector, result, [&](string_t sketch_data, uint8_t std_dev_data) {
         auto sketch = DSDeserialize<datasketches::cpc_sketch>(sketch_data, "CPC");
-        return sketch.get_upper_bound(std_dev_data);
+        return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_cpc_upper_bound"));
     });
 }
 

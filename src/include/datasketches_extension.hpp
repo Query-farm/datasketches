@@ -288,6 +288,16 @@ namespace duckdb
 		}
 	}
 
+	// Checks the number of standard deviations of a bound: the libraries accept 1, 2 or 3.
+	inline uint8_t DSCheckNumStdDevs(int64_t num_std_devs, const char *function_name)
+	{
+		if (num_std_devs < 1 || num_std_devs > 3)
+		{
+			throw InvalidInputException("%s: num_std_devs must be 1, 2 or 3, got %lld", function_name, (long long)num_std_devs);
+		}
+		return static_cast<uint8_t>(num_std_devs);
+	}
+
 	// Example queries for function descriptions. Each example is a complete query that runs as-is: the sketches it
 	// refers to (sketch, sketch_a, sketch_b, sketch_c, actual, expected) are built from inline data with `build`, an
 	// aggregate over the BIGINT column i of range().

@@ -620,14 +620,9 @@ namespace duckdb
         {
             BinaryExecutor::Execute<string_t, int32_t, double>(args.data[0], args.data[1], result, [&](string_t sketch_blob, int32_t num_std_devs)
                                                                {
-                                                                   if (num_std_devs < 1 || num_std_devs > 3)
-                                                                   {
-                                                                       throw InvalidInputException("%s: num_std_devs must be 1, 2 or 3, got %d",
-                                                                                                   LOWER ? "datasketch_theta_lower_bound" : "datasketch_theta_upper_bound", num_std_devs);
-                                                                   }
+                                                                   auto std_devs = DSCheckNumStdDevs(num_std_devs, LOWER ? "datasketch_theta_lower_bound" : "datasketch_theta_upper_bound");
                                                                    return ThetaWithWrapped(sketch_blob, [&](const wrapped_compact_theta_sketch &sketch)
-                                                                                           { return LOWER ? sketch.get_lower_bound(static_cast<uint8_t>(num_std_devs))
-                                                                                                          : sketch.get_upper_bound(static_cast<uint8_t>(num_std_devs)); }); });
+                                                                                           { return LOWER ? sketch.get_lower_bound(std_devs) : sketch.get_upper_bound(std_devs); }); });
         }
 
         void DSThetaDescribe(DataChunk &args, ExpressionState &state, Vector &result)
