@@ -71,10 +71,15 @@ namespace duckdb
             if (k_val.IsNull())
                 throw BinderException("Theta Sketch lg_k cannot be NULL");
 
-            auto lg_k = (uint8_t)k_val.GetValue<int32_t>();
+            auto lg_k = k_val.GetValue<int64_t>();
+            if (lg_k < datasketches::theta_constants::MIN_LG_K || lg_k > datasketches::theta_constants::MAX_LG_K)
+            {
+                throw BinderException("Theta sketch lg_k must be between %d and %d, got %lld",
+                                      datasketches::theta_constants::MIN_LG_K, datasketches::theta_constants::MAX_LG_K, (long long)lg_k);
+            }
             // lg_k stays in the argument list (the update reads the data at index 1): bind data is not part of the
             // serialized plan, so the optimizer would otherwise treat aggregates that differ only in lg_k as identical.
-            return make_uniq<DSThetaBindData>(lg_k);
+            return make_uniq<DSThetaBindData>(static_cast<uint8_t>(lg_k));
         }
 
         unique_ptr<FunctionData> DSThetaBindDefault(ClientContext &context, AggregateFunction &function,
@@ -88,6 +93,11 @@ namespace duckdb
                                                     vector<unique_ptr<Expression>> &arguments)
         {
             return make_uniq<DSThetaBindData>(DS_THETA_DEFAULT_LG_K, true);
+        }
+
+        datasketches::compact_theta_sketch ThetaDeserialize(const string_t &blob)
+        {
+            return DSDeserialize<datasketches::compact_theta_sketch>(blob, "Theta");
         }
 
         // ============================================================
@@ -193,13 +203,8 @@ namespace duckdb
                 }
                 else
                 {
-                    auto &bind_data = finalize_data.input.bind_data->template Cast<DSThetaBindData>();
-                    datasketches::update_theta_sketch::builder b;
-                    b.set_lg_k(bind_data.lg_k);
-                    auto empty_sketch = b.build();
-                    auto compact = empty_sketch.compact();
-                    auto serialized = compact.serialize();
-                    target = StringVector::AddStringOrBlob(finalize_data.result, std::string(serialized.begin(), serialized.end()));
+                    // no input rows: NULL, as for every sketch aggregate (merging empty sketches gives an empty sketch)
+                    finalize_data.ReturnNull();
                 }
             }
         };
@@ -237,7 +242,7 @@ namespace duckdb
             static void Operation(STATE &state, const A_TYPE &a_data, AggregateUnaryInput &idata)
             {
                 auto &bind_data = idata.input.bind_data->template Cast<DSThetaBindData>();
-                auto sketch = datasketches::compact_theta_sketch::deserialize(a_data.GetDataUnsafe(), a_data.GetSize());
+                auto sketch = ThetaDeserialize(a_data);
                 auto lg_k = bind_data.infer_lg_k ? MaxValue(bind_data.lg_k, ThetaInferLgK(sketch)) : bind_data.lg_k;
                 state.CreateUnionSketch(lg_k);
                 state.union_sketch->update(sketch);
@@ -263,8 +268,8 @@ namespace duckdb
                 args.data[0], args.data[1], result, args.size(),
                 [&](string_t a_blob, string_t b_blob)
                 {
-                    auto sketch_a = datasketches::compact_theta_sketch::deserialize(a_blob.GetDataUnsafe(), a_blob.GetSize());
-                    auto sketch_b = datasketches::compact_theta_sketch::deserialize(b_blob.GetDataUnsafe(), b_blob.GetSize());
+                    auto sketch_a = ThetaDeserialize(a_blob);
+                    auto sketch_b = ThetaDeserialize(b_blob);
                     // keep as many entries as the larger input (lg_k was hard-coded to 12, truncating larger sketches)
                     datasketches::theta_union::builder b;
                     b.set_lg_k(MaxValue(ThetaInferLgK(sketch_a), ThetaInferLgK(sketch_b)));
@@ -283,8 +288,8 @@ namespace duckdb
                 args.data[0], args.data[1], result, args.size(),
                 [&](string_t a_blob, string_t b_blob)
                 {
-                    auto sketch_a = datasketches::compact_theta_sketch::deserialize(a_blob.GetDataUnsafe(), a_blob.GetSize());
-                    auto sketch_b = datasketches::compact_theta_sketch::deserialize(b_blob.GetDataUnsafe(), b_blob.GetSize());
+                    auto sketch_a = ThetaDeserialize(a_blob);
+                    auto sketch_b = ThetaDeserialize(b_blob);
                     datasketches::theta_intersection intersection;
                     intersection.update(sketch_a);
                     intersection.update(sketch_b);
@@ -300,8 +305,8 @@ namespace duckdb
                 args.data[0], args.data[1], result, args.size(),
                 [&](string_t a_blob, string_t b_blob)
                 {
-                    auto sketch_a = datasketches::compact_theta_sketch::deserialize(a_blob.GetDataUnsafe(), a_blob.GetSize());
-                    auto sketch_b = datasketches::compact_theta_sketch::deserialize(b_blob.GetDataUnsafe(), b_blob.GetSize());
+                    auto sketch_a = ThetaDeserialize(a_blob);
+                    auto sketch_b = ThetaDeserialize(b_blob);
                     datasketches::theta_a_not_b a_not_b;
                     auto res = a_not_b.compute(sketch_a, sketch_b);
                     auto serialized = res.serialize();
@@ -314,7 +319,7 @@ namespace duckdb
             UnaryExecutor::Execute<string_t, double>(args.data[0], result, args.size(),
                                                      [&](string_t sketch_blob)
                                                      {
-                                                         return datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).get_estimate();
+                                                         return ThetaDeserialize(sketch_blob).get_estimate();
                                                      });
         }
 
@@ -323,7 +328,7 @@ namespace duckdb
             BinaryExecutor::Execute<string_t, int32_t, double>(args.data[0], args.data[1], result, args.size(),
                                                                [&](string_t sketch_blob, int32_t num_std_devs)
                                                                {
-                                                                   return datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).get_lower_bound(static_cast<uint8_t>(num_std_devs));
+                                                                   return ThetaDeserialize(sketch_blob).get_lower_bound(DSCheckNumStdDevs(num_std_devs, "datasketch_theta_lower_bound"));
                                                                });
         }
 
@@ -332,7 +337,7 @@ namespace duckdb
             BinaryExecutor::Execute<string_t, int32_t, double>(args.data[0], args.data[1], result, args.size(),
                                                                [&](string_t sketch_blob, int32_t num_std_devs)
                                                                {
-                                                                   return datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).get_upper_bound(static_cast<uint8_t>(num_std_devs));
+                                                                   return ThetaDeserialize(sketch_blob).get_upper_bound(DSCheckNumStdDevs(num_std_devs, "datasketch_theta_upper_bound"));
                                                                });
         }
 
@@ -341,7 +346,7 @@ namespace duckdb
             UnaryExecutor::Execute<string_t, string_t>(args.data[0], result, args.size(),
                                                        [&](string_t sketch_blob)
                                                        {
-                                                           return StringVector::AddString(result, datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).to_string(false));
+                                                           return StringVector::AddString(result, ThetaDeserialize(sketch_blob).to_string(false));
                                                        });
         }
 
@@ -352,7 +357,7 @@ namespace duckdb
             UnaryExecutor::Execute<string_t, bool>(args.data[0], result, args.size(),
                                                    [&](string_t sketch_blob)
                                                    {
-                                                       return datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).is_empty();
+                                                       return ThetaDeserialize(sketch_blob).is_empty();
                                                    });
         }
 
@@ -361,7 +366,7 @@ namespace duckdb
             UnaryExecutor::Execute<string_t, bool>(args.data[0], result, args.size(),
                                                    [&](string_t sketch_blob)
                                                    {
-                                                       return datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).is_estimation_mode();
+                                                       return ThetaDeserialize(sketch_blob).is_estimation_mode();
                                                    });
         }
 
@@ -370,7 +375,7 @@ namespace duckdb
             UnaryExecutor::Execute<string_t, double>(args.data[0], result, args.size(),
                                                      [&](string_t sketch_blob)
                                                      {
-                                                         return datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).get_theta();
+                                                         return ThetaDeserialize(sketch_blob).get_theta();
                                                      });
         }
 
@@ -379,7 +384,7 @@ namespace duckdb
             UnaryExecutor::Execute<string_t, int64_t>(args.data[0], result, args.size(),
                                                       [&](string_t sketch_blob)
                                                       {
-                                                          return (int64_t)datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).get_num_retained();
+                                                          return (int64_t)ThetaDeserialize(sketch_blob).get_num_retained();
                                                       });
         }
 
@@ -389,32 +394,13 @@ namespace duckdb
             UnaryExecutor::Execute<string_t, int64_t>(args.data[0], result, args.size(),
                                                       [&](string_t sketch_blob)
                                                       {
-                                                          return (int64_t)datasketches::compact_theta_sketch::deserialize(sketch_blob.GetDataUnsafe(), sketch_blob.GetSize()).get_seed_hash();
+                                                          return (int64_t)ThetaDeserialize(sketch_blob).get_seed_hash();
                                                       });
         }
 
         // ============================================================
         // 4. Type Creation & Registration Helpers
         // ============================================================
-
-        static LogicalType CreateThetaSketchType(ExtensionLoader &loader)
-        {
-            auto new_type = LogicalType(LogicalTypeId::BLOB);
-            auto new_type_name = "sketch_theta";
-            auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
-            type_info.temporary = false;
-            type_info.internal = true;
-            type_info.comment = "Sketch type for Theta Sketch";
-            new_type.SetAlias(new_type_name);
-
-            auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
-            auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
-            system_catalog.CreateType(data, type_info);
-
-            loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
-            loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
-            return new_type;
-        }
 
         template <typename T>
         static void RegisterThetaAggregates(AggregateFunctionSet &set, std::vector<FunctionDescription> &descs, const LogicalType &input_type, const LogicalType &result_type)
@@ -457,7 +443,7 @@ namespace duckdb
 
     void LoadThetaSketch(ExtensionLoader &loader)
     {
-        auto sketch_type = CreateThetaSketchType(loader);
+        auto sketch_type = DSCreateSketchType(loader, "sketch_theta", "Sketch type for Theta Sketch");
         AggregateFunctionSet sketch_agg("datasketch_theta");
         std::vector<FunctionDescription> agg_descs;
 

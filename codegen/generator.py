@@ -321,7 +321,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 {
                     "description": "Return the lower bound of the number of distinct items seen by the sketch",
                     "example": f"datasketch_{sketch_type.lower()}_lower_bound(sketch, std_dev)",
-                    "method": "return sketch.get_lower_bound(std_dev_data);",
+                    "method": f'return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_{sketch_type.lower()}_lower_bound"));',
                     "arguments": [
                         sketch_argument,
                         {
@@ -335,7 +335,7 @@ def unary_functions_per_sketch_type(sketch_type: str):
                 {
                     "description": "Return the upper bound of the number of distinct items seen by the sketch",
                     "example": f"datasketch_{sketch_type.lower()}_upper_bound(sketch, std_dev)",
-                    "method": "return sketch.get_upper_bound(std_dev_data);",
+                    "method": f'return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_{sketch_type.lower()}_upper_bound"));',
                     "arguments": [
                         sketch_argument,
                         {

@@ -64,20 +64,26 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
 
 	auto actual_k = k_val.GetValue<{{sketch_k_cpp_type[sketch_type]}}>();
 
-	{% if sketch_type in ["Quantiles", "KLL"] %}
-	// Validate K parameter: must be in range (0, 32768]
-	if (actual_k <= 0 || actual_k > 32768) {
-		throw BinderException("{{sketch_type}} K value must be between 1 and 32768, got: " + std::to_string(actual_k));
+	// Validate K against the range the library accepts: an invalid K would fail at runtime or be silently changed.
+	{% if sketch_type == "Quantiles" %}
+	// A power of 2 between 2 and 32768
+	if (actual_k < 2 || actual_k > 32768 || (actual_k & (actual_k - 1)) != 0) {
+		throw BinderException("Quantiles K value must be a power of 2 between 2 and 32768, got: " + std::to_string(actual_k));
+	}
+	{% elif sketch_type == "KLL" %}
+	if (actual_k < 8 || actual_k > 65535) {
+		throw BinderException("KLL K value must be between 8 and 65535, got: " + std::to_string(actual_k));
 	}
 	{% elif sketch_type == "REQ" %}
-	// Validate K parameter: must be in range [4, 1024]
+	// The library rounds an odd K down. (It kept K in 8 bits, so a larger K wrapped around: see
+	// vcpkg-overlay/apache-datasketches/req-k-16-bit.patch.)
 	if (actual_k < 4 || actual_k > 1024) {
 		throw BinderException("REQ K value must be between 4 and 1024, got: " + std::to_string(actual_k));
 	}
 	{% elif sketch_type == "TDigest" %}
-	// Validate K parameter: must be positive (TDigest compression parameter)
-	if (actual_k <= 0) {
-		throw BinderException("TDigest K (compression) value must be positive, got: " + std::to_string(actual_k));
+	// The library's K is a uint16_t
+	if (actual_k < 10 || actual_k > 65535) {
+		throw BinderException("TDigest K (compression) value must be between 10 and 65535, got: " + std::to_string(actual_k));
 	}
 	{% elif sketch_type == "HLL" %}
 	// Validate K parameter: lg_k must be in range [4, 21] for HLL
@@ -121,7 +127,7 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
         {
             D_ASSERT(!sketch);
             D_ASSERT(k > 0);
-            D_ASSERT(k <= 32768);
+            D_ASSERT(k <= 65535);
             sketch = new {{sketch_class_name(sketch_type)}}<T>(k);
         }
         {% elif sketch_type == "REQ" %}
@@ -226,11 +232,12 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
     {
         auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto new_type_name = "sketch_{{sketch_type|lower}}";
-        auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
+        new_type.SetAlias(new_type_name);
+        // The catalog entry carries the alias, so a cast to the type (e.g. NULL::sketch_hll) has the sketch type.
+        auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
         type_info.comment = "Sketch type for {{sketch_type}} sketch";
-        new_type.SetAlias(new_type_name);
         auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
         auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
@@ -609,19 +616,21 @@ unique_ptr<FunctionData> DS{{sketch_type}}Bind(ClientContext &context, Aggregate
         static void Combine(const STATE &source, STATE &target,
                             AggregateInputData &aggr_input_data)
         {
+            // A partial that saw no rows has nothing to add. Passing the target through a union anyway would mark it
+            // merged, which drops its HIP estimator, the more accurate estimate of a sketch that was never merged.
+            if (!source.sketch)
+            {
+                return;
+            }
             if (!target.sketch)
             {
                 target.CreateSketch(source);
+                return;
             }
-            else
-            {
-                datasketches::cpc_union u(target.sketch->get_lg_k());
-                u.update(*target.sketch);
-                if(source.sketch) {
-                    u.update(*source.sketch);
-                }
-                *target.sketch = u.get_result();
-            }
+            datasketches::cpc_union u(target.sketch->get_lg_k());
+            u.update(*target.sketch);
+            u.update(*source.sketch);
+            *target.sketch = u.get_result();
         }
 
 
@@ -845,7 +854,7 @@ static inline void DS{{sketch_type}}{{unary_function.name}}(DataChunk &args, Exp
 
     {
         FunctionDescription desc;
-        desc.description = "Creates a sketch_{{sketch_type}} data sketch by aggregating other {{sketch_type}} data sketches";
+        desc.description = "Creates a sketch_{{sketch_type|lower}} data sketch by aggregating other {{sketch_type}} data sketches";
         desc.examples.push_back("datasketch_{{sketch_type|lower}}_union(k, sketch)");
         desc.parameter_names = {"k", "sketch"};
         desc.parameter_types = { {{cpp_type_mapping[sketch_k_cpp_type[sketch_type]]}}, sketch_type };

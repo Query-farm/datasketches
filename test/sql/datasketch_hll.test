@@ -479,3 +479,15 @@ SELECT round(datasketch_hll_estimate(datasketch_hll(12, x)))::INT FROM (VALUES
   (1267650600228229401496703205376::HUGEINT), (1267650600228229401496703205377::HUGEINT)) v(x)
 ----
 2
+
+# Bounds take 1, 2 or 3 standard deviations
+statement error
+SELECT datasketch_hll_lower_bound(datasketch_hll(12, i), 5) FROM range(10) t(i)
+----
+datasketch_hll_lower_bound: num_std_devs must be 1, 2 or 3, got 5
+
+# Casting to sketch_hll gives the sketch type
+query I
+SELECT typeof(NULL::sketch_hll)
+----
+sketch_hll
