@@ -403,9 +403,42 @@ true
 
 # From 2^127 up, a UHUGEINT has the 16 bytes of a negative HUGEINT, so it hashes like one
 query I
-SELECT datasketch_cpc(12, 340282366920938463463374607431768211455::UHUGEINT) = datasketch_cpc(12, (-1)::HUGEINT)
+SELECT datasketch_cpc(12, 340282365653287863235145205935065006080::UHUGEINT) = datasketch_cpc(12, (-1267650600228229401496703205376)::HUGEINT)
 ----
 true
+
+# A HUGEINT or UHUGEINT that fits in a BIGINT hashes like that BIGINT, as narrower integers do
+query III
+SELECT datasketch_cpc(12, range::HUGEINT) = datasketch_cpc(12, range::BIGINT),
+       datasketch_cpc(12, (range + 50000)::UHUGEINT) = datasketch_cpc(12, (range + 50000)::BIGINT),
+       datasketch_cpc(12, range::HUGEINT) = datasketch_cpc(12, range::INTEGER)
+FROM range(-50000, 50000)
+----
+true	true	true
+
+query II
+SELECT datasketch_cpc(12, x::HUGEINT) = datasketch_cpc(12, x), datasketch_cpc(12, x::UHUGEINT) = datasketch_cpc(12, x) FROM (VALUES (9223372036854775807::BIGINT)) v(x)
+----
+true	true
+
+query I
+SELECT datasketch_cpc(12, (-9223372036854775808)::HUGEINT) = datasketch_cpc(12, (-9223372036854775808)::BIGINT)
+----
+true
+
+# so sketches of sum() results (HUGEINT) merge with sketches of the same BIGINT values
+query I
+SELECT datasketch_cpc(12, s) = datasketch_cpc(12, s::BIGINT) FROM (SELECT sum(i) AS s FROM range(30000) t(i) GROUP BY i % 1000)
+----
+true
+
+# just past BIGINT's range, values hash their 16 bytes and stay distinct from the BIGINT extremes
+query I
+SELECT round(datasketch_cpc_estimate(datasketch_cpc(12, x)))::INT FROM (VALUES
+  (9223372036854775807::HUGEINT), (9223372036854775808::HUGEINT), ((-9223372036854775808)::HUGEINT), ((-9223372036854775809)::HUGEINT),
+  (9223372036854775807::BIGINT::HUGEINT), ((-9223372036854775808)::BIGINT::HUGEINT)) v(x)
+----
+4
 
 # Values that share their low 64 bits, or sit on either side of a 64-bit boundary, count separately
 query I
