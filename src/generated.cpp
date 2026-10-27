@@ -64,10 +64,11 @@ unique_ptr<FunctionData> DSQuantilesBind(ClientContext &context, AggregateFuncti
 
 	auto actual_k = k_val.GetValue<int32_t>();
 
+	// Validate K against the range the library accepts: an invalid K would fail at runtime or be silently changed.
 	
-	// Validate K parameter: must be in range (0, 32768]
-	if (actual_k <= 0 || actual_k > 32768) {
-		throw BinderException("Quantiles K value must be between 1 and 32768, got: " + std::to_string(actual_k));
+	// A power of 2 between 2 and 32768
+	if (actual_k < 2 || actual_k > 32768 || (actual_k & (actual_k - 1)) != 0) {
+		throw BinderException("Quantiles K value must be a power of 2 between 2 and 32768, got: " + std::to_string(actual_k));
 	}
 	
 
@@ -99,7 +100,7 @@ unique_ptr<FunctionData> DSQuantilesBind(ClientContext &context, AggregateFuncti
         {
             D_ASSERT(!sketch);
             D_ASSERT(k > 0);
-            D_ASSERT(k <= 32768);
+            D_ASSERT(k <= 65535);
             sketch = new datasketches::quantiles_sketch<T>(k);
         }
         
@@ -188,10 +189,10 @@ unique_ptr<FunctionData> DSKLLBind(ClientContext &context, AggregateFunction &fu
 
 	auto actual_k = k_val.GetValue<int32_t>();
 
+	// Validate K against the range the library accepts: an invalid K would fail at runtime or be silently changed.
 	
-	// Validate K parameter: must be in range (0, 32768]
-	if (actual_k <= 0 || actual_k > 32768) {
-		throw BinderException("KLL K value must be between 1 and 32768, got: " + std::to_string(actual_k));
+	if (actual_k < 8 || actual_k > 65535) {
+		throw BinderException("KLL K value must be between 8 and 65535, got: " + std::to_string(actual_k));
 	}
 	
 
@@ -223,7 +224,7 @@ unique_ptr<FunctionData> DSKLLBind(ClientContext &context, AggregateFunction &fu
         {
             D_ASSERT(!sketch);
             D_ASSERT(k > 0);
-            D_ASSERT(k <= 32768);
+            D_ASSERT(k <= 65535);
             sketch = new datasketches::kll_sketch<T>(k);
         }
         
@@ -312,8 +313,10 @@ unique_ptr<FunctionData> DSREQBind(ClientContext &context, AggregateFunction &fu
 
 	auto actual_k = k_val.GetValue<int32_t>();
 
+	// Validate K against the range the library accepts: an invalid K would fail at runtime or be silently changed.
 	
-	// Validate K parameter: must be in range [4, 1024]
+	// The library rounds an odd K down. (It kept K in 8 bits, so a larger K wrapped around: see
+	// vcpkg-overlay/apache-datasketches/req-k-16-bit.patch.)
 	if (actual_k < 4 || actual_k > 1024) {
 		throw BinderException("REQ K value must be between 4 and 1024, got: " + std::to_string(actual_k));
 	}
@@ -436,10 +439,11 @@ unique_ptr<FunctionData> DSTDigestBind(ClientContext &context, AggregateFunction
 
 	auto actual_k = k_val.GetValue<int32_t>();
 
+	// Validate K against the range the library accepts: an invalid K would fail at runtime or be silently changed.
 	
-	// Validate K parameter: must be positive (TDigest compression parameter)
-	if (actual_k <= 0) {
-		throw BinderException("TDigest K (compression) value must be positive, got: " + std::to_string(actual_k));
+	// The library's K is a uint16_t
+	if (actual_k < 10 || actual_k > 65535) {
+		throw BinderException("TDigest K (compression) value must be between 10 and 65535, got: " + std::to_string(actual_k));
 	}
 	
 
@@ -558,6 +562,7 @@ unique_ptr<FunctionData> DSHLLBind(ClientContext &context, AggregateFunction &fu
 
 	auto actual_k = k_val.GetValue<int32_t>();
 
+	// Validate K against the range the library accepts: an invalid K would fail at runtime or be silently changed.
 	
 	// Validate K parameter: lg_k must be in range [4, 21] for HLL
 	if (actual_k < 4 || actual_k > 21) {
@@ -618,11 +623,12 @@ unique_ptr<FunctionData> DSHLLBind(ClientContext &context, AggregateFunction &fu
     {
         auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto new_type_name = "sketch_hll";
-        auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
+        new_type.SetAlias(new_type_name);
+        // The catalog entry carries the alias, so a cast to the type (e.g. NULL::sketch_hll) has the sketch type.
+        auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
         type_info.comment = "Sketch type for HLL sketch";
-        new_type.SetAlias(new_type_name);
         auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
         auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
@@ -667,6 +673,7 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
 
 	auto actual_k = k_val.GetValue<int32_t>();
 
+	// Validate K against the range the library accepts: an invalid K would fail at runtime or be silently changed.
 	
 	// Validate K parameter: lg_k must be in range [4, 26] for CPC
 	if (actual_k < 4 || actual_k > 26) {
@@ -772,11 +779,12 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
     {
         auto new_type = LogicalType(LogicalTypeId::BLOB);
         auto new_type_name = "sketch_cpc";
-        auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
+        new_type.SetAlias(new_type_name);
+        // The catalog entry carries the alias, so a cast to the type (e.g. NULL::sketch_hll) has the sketch type.
+        auto type_info = CreateTypeInfo(new_type_name, new_type);
         type_info.temporary = false;
         type_info.internal = true;
         type_info.comment = "Sketch type for CPC sketch";
-        new_type.SetAlias(new_type_name);
         auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
         auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
         system_catalog.CreateType(data, type_info);
@@ -1132,19 +1140,21 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
         static void Combine(const STATE &source, STATE &target,
                             AggregateInputData &aggr_input_data)
         {
+            // A partial that saw no rows has nothing to add. Passing the target through a union anyway would mark it
+            // merged, which drops its HIP estimator, the more accurate estimate of a sketch that was never merged.
+            if (!source.sketch)
+            {
+                return;
+            }
             if (!target.sketch)
             {
                 target.CreateSketch(source);
+                return;
             }
-            else
-            {
-                datasketches::cpc_union u(target.sketch->get_lg_k());
-                u.update(*target.sketch);
-                if(source.sketch) {
-                    u.update(*source.sketch);
-                }
-                *target.sketch = u.get_result();
-            }
+            datasketches::cpc_union u(target.sketch->get_lg_k());
+            u.update(*target.sketch);
+            u.update(*source.sketch);
+            *target.sketch = u.get_result();
         }
 
 
@@ -9667,7 +9677,7 @@ static inline void DSHLLlower_bound(DataChunk &args, ExpressionState &state, Vec
                     throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
                 }
             }();
-return sketch.get_lower_bound(std_dev_data);
+return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_hll_lower_bound"));
         });
 
 }
@@ -9700,7 +9710,7 @@ static inline void DSHLLupper_bound(DataChunk &args, ExpressionState &state, Vec
                     throw InvalidInputException("Failed to deserialize HLL sketch: %s", e.what());
                 }
             }();
-return sketch.get_upper_bound(std_dev_data);
+return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_hll_upper_bound"));
         });
 
 }
@@ -10208,7 +10218,7 @@ return sketch.get_upper_bound(std_dev_data);
 
     {
         FunctionDescription desc;
-        desc.description = "Creates a sketch_HLL data sketch by aggregating other HLL data sketches";
+        desc.description = "Creates a sketch_hll data sketch by aggregating other HLL data sketches";
         desc.examples.push_back("datasketch_hll_union(k, sketch)");
         desc.parameter_names = {"k", "sketch"};
         desc.parameter_types = { LogicalType::INTEGER, sketch_type };
@@ -10347,7 +10357,7 @@ static inline void DSCPClower_bound(DataChunk &args, ExpressionState &state, Vec
                     throw InvalidInputException("Failed to deserialize CPC sketch: %s", e.what());
                 }
             }();
-return sketch.get_lower_bound(std_dev_data);
+return sketch.get_lower_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_cpc_lower_bound"));
         });
 
 }
@@ -10380,7 +10390,7 @@ static inline void DSCPCupper_bound(DataChunk &args, ExpressionState &state, Vec
                     throw InvalidInputException("Failed to deserialize CPC sketch: %s", e.what());
                 }
             }();
-return sketch.get_upper_bound(std_dev_data);
+return sketch.get_upper_bound(DSCheckNumStdDevs(std_dev_data, "datasketch_cpc_upper_bound"));
         });
 
 }
@@ -10832,7 +10842,7 @@ return sketch.get_upper_bound(std_dev_data);
 
     {
         FunctionDescription desc;
-        desc.description = "Creates a sketch_CPC data sketch by aggregating other CPC data sketches";
+        desc.description = "Creates a sketch_cpc data sketch by aggregating other CPC data sketches";
         desc.examples.push_back("datasketch_cpc_union(k, sketch)");
         desc.parameter_names = {"k", "sketch"};
         desc.parameter_types = { LogicalType::INTEGER, sketch_type };

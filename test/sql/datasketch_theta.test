@@ -160,10 +160,11 @@ statement ok
 CREATE TABLE empty_table(id INTEGER);
 
 # Empty sketch should estimate 0
-query I
-SELECT datasketch_theta_estimate(datasketch_theta(id))::int FROM empty_table;
+# No input rows gives a NULL sketch, as for every sketch aggregate, so its estimate is NULL
+query II
+SELECT datasketch_theta_estimate(datasketch_theta(id))::int, coalesce(datasketch_theta_estimate(datasketch_theta(id)), 0)::int FROM empty_table;
 ----
-0
+NULL	0
 
 # Test NULL handling
 statement ok
@@ -185,10 +186,11 @@ CREATE TABLE all_nulls(id INTEGER);
 statement ok
 INSERT INTO all_nulls VALUES (NULL), (NULL), (NULL);
 
+# Only NULL values: no input rows, so NULL
 query I
 SELECT datasketch_theta_estimate(datasketch_theta(id))::int FROM all_nulls;
 ----
-0
+NULL
 
 # -------------------------------------------------------------------
 # 8. Single Item Edge Cases
@@ -240,7 +242,7 @@ WHERE s1.name = 'A';
 
 # Union with empty sketch should equal the non-empty sketch
 statement ok
-INSERT INTO sketches VALUES ('EMPTY', (SELECT datasketch_theta(id) FROM empty_table));
+INSERT INTO sketches VALUES ('EMPTY', unhex('01030300001E0000')::sketch_theta);
 
 query I
 SELECT datasketch_theta_estimate(
@@ -400,10 +402,10 @@ SELECT datasketch_theta_is_empty(sketch) FROM meta_sketch;
 ----
 false
 
-query I
-SELECT datasketch_theta_is_empty(datasketch_theta(id)) FROM empty_table;
+query II
+SELECT datasketch_theta_is_empty(datasketch_theta(id)), datasketch_theta_is_empty(unhex('01030300001E0000')::sketch_theta) FROM empty_table;
 ----
-true
+NULL	true
 
 # num_retained should be positive for data within sketch capacity
 query I
@@ -926,3 +928,38 @@ query II
 SELECT datasketch_theta_num_retained(datasketch_theta(10, sketch)), datasketch_theta_num_retained(datasketch_theta(12, sketch)) FROM const_sketches;
 ----
 1024	4096
+
+# =============================================================================
+# VALIDATION, CORRUPT SKETCHES AND EMPTY INPUT
+# =============================================================================
+
+statement error
+SELECT datasketch_theta(30, i) FROM range(10) t(i)
+----
+Theta sketch lg_k must be between
+
+statement error
+SELECT datasketch_theta_lower_bound(datasketch_theta(i), 5) FROM range(10) t(i)
+----
+datasketch_theta_lower_bound: num_std_devs must be 1, 2 or 3, got 5
+
+statement error
+SELECT datasketch_theta_estimate('\x01\x02\x03'::BLOB::sketch_theta)
+----
+Failed to deserialize Theta sketch
+
+# No input rows gives NULL, as for every sketch aggregate; merging only empty sketches gives an empty sketch
+query II
+SELECT datasketch_theta(i) IS NULL, datasketch_theta(14, i) IS NULL FROM range(0) t(i)
+----
+true	true
+
+query II
+SELECT datasketch_theta(e) IS NULL, datasketch_theta_is_empty(datasketch_theta(e)) FROM (SELECT unhex('01030300001E0000')::sketch_theta AS e)
+----
+false	true
+
+query I
+SELECT typeof(NULL::sketch_theta)
+----
+sketch_theta

@@ -1,0 +1,93 @@
+# name: test/sql/datasketch_k_ranges.test
+# description: K is validated at bind time against the range the library accepts
+# group: [datasketches]
+
+require datasketches
+
+# Quantiles: a power of 2 between 2 and 32768
+query II
+SELECT datasketch_quantiles_k(datasketch_quantiles(2, i::DOUBLE)), datasketch_quantiles_k(datasketch_quantiles(32768, i::DOUBLE)) FROM range(10) r(i)
+----
+2	32768
+
+statement error
+SELECT datasketch_quantiles(1, i::DOUBLE) FROM range(10) r(i)
+----
+Quantiles K value must be a power of 2 between 2 and 32768, got: 1
+
+statement error
+SELECT datasketch_quantiles(12, i::DOUBLE) FROM range(10) r(i)
+----
+Quantiles K value must be a power of 2 between 2 and 32768, got: 12
+
+statement error
+SELECT datasketch_quantiles(65536, i::DOUBLE) FROM range(10) r(i)
+----
+Quantiles K value must be a power of 2 between 2 and 32768, got: 65536
+
+# KLL: 8 to 65535
+query II
+SELECT datasketch_kll_k(datasketch_kll(8, i::DOUBLE)), datasketch_kll_k(datasketch_kll(65535, i::DOUBLE)) FROM range(10) r(i)
+----
+8	65535
+
+statement error
+SELECT datasketch_kll(7, i::DOUBLE) FROM range(10) r(i)
+----
+KLL K value must be between 8 and 65535, got: 7
+
+statement error
+SELECT datasketch_kll(65536, i::DOUBLE) FROM range(10) r(i)
+----
+KLL K value must be between 8 and 65535, got: 65536
+
+# REQ: 4 to 1024 (the library rounds an odd K down). K of 256 or more used to wrap around to a much smaller one
+# (256 became 4, 500 became 244); see vcpkg-overlay/apache-datasketches/req-k-16-bit.patch.
+query IIIII
+SELECT datasketch_req_k(datasketch_req(4, i::DOUBLE)), datasketch_req_k(datasketch_req(13, i::DOUBLE)), datasketch_req_k(datasketch_req(256, i::DOUBLE)),
+       datasketch_req_k(datasketch_req(500, i::DOUBLE)), datasketch_req_k(datasketch_req(1024, i::DOUBLE)) FROM range(10) r(i)
+----
+4	12	256	500	1024
+
+# A large K survives serialization and merging
+query II
+SELECT datasketch_req_k(datasketch_req(1024, s)), datasketch_req_n(datasketch_req(1024, s)) FROM (SELECT datasketch_req(1024, i::DOUBLE) AS s FROM range(100000) r(i))
+----
+1024	100000
+
+statement error
+SELECT datasketch_req(3, i::DOUBLE) FROM range(10) r(i)
+----
+REQ K value must be between 4 and 1024, got: 3
+
+statement error
+SELECT datasketch_req(1025, i::DOUBLE) FROM range(10) r(i)
+----
+REQ K value must be between 4 and 1024, got: 1025
+
+# TDigest: 10 to 65535; a larger K used to be truncated to 16 bits
+query II
+SELECT datasketch_tdigest_k(datasketch_tdigest(10, i::DOUBLE)), datasketch_tdigest_k(datasketch_tdigest(65535, i::DOUBLE)) FROM range(10) r(i)
+----
+10	65535
+
+statement error
+SELECT datasketch_tdigest(9, i::DOUBLE) FROM range(10) r(i)
+----
+TDigest K (compression) value must be between 10 and 65535, got: 9
+
+statement error
+SELECT datasketch_tdigest(70000, i::DOUBLE) FROM range(10) r(i)
+----
+TDigest K (compression) value must be between 10 and 65535, got: 70000
+
+# HLL and CPC: lg_k between 4 and 21, and 4 and 26
+statement error
+SELECT datasketch_hll(22, i) FROM range(10) r(i)
+----
+HLL K (lg_k) value must be between 4 and 21, got: 22
+
+statement error
+SELECT datasketch_cpc(3, i) FROM range(10) r(i)
+----
+CPC K (lg_k) value must be between 4 and 26, got: 3

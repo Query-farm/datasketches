@@ -1,4 +1,5 @@
 #include "datasketches_extension.hpp"
+#include "duckdb/common/string_util.hpp"
 #include "duckdb/function/scalar_function.hpp"
 #include "duckdb/parser/parsed_data/create_scalar_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_aggregate_function_info.hpp"
@@ -78,11 +79,14 @@ namespace duckdb
             uint8_t lg_max_k = 10;
             if (arguments.size() == 2)
             {
+                if (arguments[0]->HasParameter())
+                    throw ParameterNotResolvedException();
                 if (!arguments[0]->IsFoldable())
                     throw BinderException("Frequent Items lg_max_k must be constant");
                 Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
-                if (!k_val.IsNull())
-                    lg_max_k = DSFreqItemsCheckLgMaxK(k_val.GetValue<int64_t>());
+                if (k_val.IsNull())
+                    throw BinderException("Frequent Items lg_max_k cannot be NULL");
+                lg_max_k = DSFreqItemsCheckLgMaxK(k_val.GetValue<int64_t>());
             }
             return make_uniq<DSFreqItemsBindData>(lg_max_k);
         }
@@ -93,11 +97,14 @@ namespace duckdb
             uint8_t lg_max_k = 10;
             if (arguments.size() == 3)
             {
+                if (arguments[0]->HasParameter())
+                    throw ParameterNotResolvedException();
                 if (!arguments[0]->IsFoldable())
                     throw BinderException("Frequent Items lg_max_k must be constant");
                 Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
-                if (!k_val.IsNull())
-                    lg_max_k = DSFreqItemsCheckLgMaxK(k_val.GetValue<int64_t>());
+                if (k_val.IsNull())
+                    throw BinderException("Frequent Items lg_max_k cannot be NULL");
+                lg_max_k = DSFreqItemsCheckLgMaxK(k_val.GetValue<int64_t>());
             }
             return make_uniq<DSFreqItemsBindData>(lg_max_k);
         }
@@ -174,10 +181,8 @@ namespace duckdb
                 }
                 else
                 {
-                    auto &bind_data = finalize_data.input.bind_data->template Cast<DSFreqItemsBindData>();
-                    FrequentItemsSketch empty_sketch(bind_data.lg_max_k);
-                    auto serialized = empty_sketch.serialize();
-                    target = StringVector::AddStringOrBlob(finalize_data.result, std::string(serialized.begin(), serialized.end()));
+                    // no input rows: NULL, as for every sketch aggregate
+                    finalize_data.ReturnNull();
                 }
             }
         };
@@ -209,7 +214,7 @@ namespace duckdb
             {
                 auto &bind_data = idata.input.bind_data->template Cast<DSFreqItemsBindData>();
                 state.Create(bind_data.lg_max_k);
-                auto input_sketch = FrequentItemsSketch::deserialize(input.GetDataUnsafe(), input.GetSize());
+                auto input_sketch = DSDeserialize<FrequentItemsSketch>(input, "Frequent Items");
                 state.sketch->merge(input_sketch);
             }
 
@@ -271,7 +276,7 @@ namespace duckdb
         // ============================================================
         static FrequentItemsSketch DeserializeSketch(const string_t &blob)
         {
-            return FrequentItemsSketch::deserialize(blob.GetDataUnsafe(), blob.GetSize());
+            return DSDeserialize<FrequentItemsSketch>(blob, "Frequent Items");
         }
 
         // --- TEMPLATED SCALAR FUNCTIONS (Support all types) ---
@@ -345,6 +350,22 @@ namespace duckdb
                                                       });
         }
 
+        datasketches::frequent_items_error_type DSFreqItemsErrorType(const string &name)
+        {
+            auto upper = StringUtil::Upper(name);
+            if (upper == "NO_FALSE_POSITIVES")
+            {
+                return datasketches::NO_FALSE_POSITIVES;
+            }
+            if (upper == "NO_FALSE_NEGATIVES")
+            {
+                return datasketches::NO_FALSE_NEGATIVES;
+            }
+            throw InvalidInputException("datasketch_frequent_items_get_frequent: error_type must be 'NO_FALSE_POSITIVES' or "
+                                        "'NO_FALSE_NEGATIVES', got '%s'",
+                                        name);
+        }
+
         static void DSFreqItemsGetFrequent(DataChunk &args, ExpressionState &state, Vector &result)
         {
             idx_t count = args.size();
@@ -376,7 +397,7 @@ namespace duckdb
                 }
 
                 string_t type_str = ((string_t *)type_data.data)[type_idx];
-                auto err_type = (type_str.GetString() == "NO_FALSE_NEGATIVES") ? datasketches::NO_FALSE_NEGATIVES : datasketches::NO_FALSE_POSITIVES;
+                auto err_type = DSFreqItemsErrorType(type_str.GetString());
 
                 string_t sketch_blob = ((string_t *)sketch_data.data)[sketch_idx];
                 auto sketch = DeserializeSketch(sketch_blob);
@@ -403,26 +424,7 @@ namespace duckdb
         // ============================================================
         // 4. Registration Helpers
         // ============================================================
-        static LogicalType CreateFrequentItemsSketchType(ExtensionLoader &loader)
-        {
-            auto new_type = LogicalType(LogicalTypeId::BLOB);
-            auto new_type_name = "sketch_frequent_items";
 
-            auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
-            type_info.temporary = false;
-            type_info.internal = true;
-            type_info.comment = "Sketch type for Frequent Items Sketch";
-            new_type.SetAlias(new_type_name);
-
-            auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
-            auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
-            system_catalog.CreateType(data, type_info);
-
-            loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
-            loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
-
-            return new_type;
-        }
 
         template <typename T>
         void RegisterFreqItems(AggregateFunctionSet &set, std::vector<FunctionDescription> &descs, LogicalType input_type, LogicalType result_type)
@@ -499,7 +501,7 @@ namespace duckdb
     // ============================================================
     void LoadFrequentItemsSketch(ExtensionLoader &loader)
     {
-        auto sketch_type = CreateFrequentItemsSketchType(loader);
+        auto sketch_type = DSCreateSketchType(loader, "sketch_frequent_items", "Sketch type for Frequent Items Sketch");
 
         AggregateFunctionSet sketch_agg("datasketch_frequent_items");
         std::vector<FunctionDescription> agg_descs;

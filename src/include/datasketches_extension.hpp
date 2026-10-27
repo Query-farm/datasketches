@@ -3,6 +3,8 @@
 #include "duckdb.hpp"
 #include "duckdb/function/aggregate_function.hpp"
 #include "duckdb/parser/parsed_data/create_function_info.hpp"
+#include "duckdb/parser/parsed_data/create_type_info.hpp"
+#include "duckdb/catalog/catalog.hpp"
 
 namespace duckdb
 {
@@ -87,6 +89,48 @@ namespace duckdb
 				desc.categories = categories;
 			}
 		}
+	}
+
+	// Registers a BLOB-backed sketch type with casts to and from BLOB. The catalog entry carries the alias, so a cast
+	// to the type (e.g. NULL::sketch_theta) has the sketch type rather than BLOB.
+	inline LogicalType DSCreateSketchType(ExtensionLoader &loader, const string &name, const string &comment)
+	{
+		auto new_type = LogicalType(LogicalTypeId::BLOB);
+		new_type.SetAlias(name);
+		auto type_info = CreateTypeInfo(name, new_type);
+		type_info.temporary = false;
+		type_info.internal = true;
+		type_info.comment = comment;
+		auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
+		auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
+		system_catalog.CreateType(data, type_info);
+		loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
+		loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
+		return new_type;
+	}
+
+	// Deserializes a sketch, reporting a corrupt or foreign blob as invalid input.
+	template <class SKETCH>
+	SKETCH DSDeserialize(const string_t &data, const char *sketch_name)
+	{
+		try
+		{
+			return SKETCH::deserialize(data.GetDataUnsafe(), data.GetSize());
+		}
+		catch (const std::exception &e)
+		{
+			throw InvalidInputException("Failed to deserialize %s sketch: %s", sketch_name, e.what());
+		}
+	}
+
+	// Checks the number of standard deviations of a bound: the libraries accept 1, 2 or 3.
+	inline uint8_t DSCheckNumStdDevs(int64_t num_std_devs, const char *function_name)
+	{
+		if (num_std_devs < 1 || num_std_devs > 3)
+		{
+			throw InvalidInputException("%s: num_std_devs must be 1, 2 or 3, got %lld", function_name, (long long)num_std_devs);
+		}
+		return static_cast<uint8_t>(num_std_devs);
 	}
 
 } // namespace duckdb
