@@ -1,17 +1,12 @@
 #include "datasketches_extension.hpp"
-#include "duckdb/function/scalar_function.hpp"
-#include "duckdb/parser/parsed_data/create_scalar_function_info.hpp"
-#include "duckdb/parser/parsed_data/create_aggregate_function_info.hpp"
-#include "duckdb/parser/parsed_data/create_type_info.hpp"
-#include "duckdb/catalog/catalog.hpp"
 #include "duckdb/common/exception.hpp"
+#include "duckdb/common/string_util.hpp"
 #include "duckdb/common/types/vector.hpp"
 #include "duckdb/common/vector/flat_vector.hpp"
 #include "duckdb/common/vector/list_vector.hpp"
 #include "duckdb/common/vector/string_vector.hpp"
 #include "duckdb/common/vector/struct_vector.hpp"
 #include "duckdb/common/vector/unified_vector_format.hpp"
-#include "duckdb/common/vector_operations/vector_operations.hpp"
 #include "duckdb/common/types/cast_helpers.hpp" // duckdb_fmt
 
 #include <DataSketches/frequent_items_sketch.hpp>
@@ -34,13 +29,33 @@ namespace duckdb
     {
         using FrequentItemsSketch = datasketches::frequent_items_sketch<std::string>;
 
+        const vector<string> DS_FREQ_ITEMS_CATEGORIES = {"sketch", "frequent_items"};
+
+        // Calls fun(T(), logical_type) for every item type the sketch accepts. BLOB is not one of them: a BLOB
+        // argument is a serialized sketch to merge.
+        template <class FUNC>
+        void DSFreqItemsForEachItemType(FUNC &&fun)
+        {
+            fun(int8_t(), LogicalType::TINYINT);
+            fun(int16_t(), LogicalType::SMALLINT);
+            fun(int32_t(), LogicalType::INTEGER);
+            fun(int64_t(), LogicalType::BIGINT);
+            fun(uint8_t(), LogicalType::UTINYINT);
+            fun(uint16_t(), LogicalType::USMALLINT);
+            fun(uint32_t(), LogicalType::UINTEGER);
+            fun(uint64_t(), LogicalType::UBIGINT);
+            fun(float(), LogicalType::FLOAT);
+            fun(double(), LogicalType::DOUBLE);
+            fun(string_t(), LogicalType::VARCHAR);
+        }
+
         // Converts an item to the string key stored in the sketch. Every item type is stored as a string so one
         // sketch type serves all inputs; the conversion must therefore be injective, or distinct items would be
         // counted together. Integers use their exact decimal form. FLOAT and DOUBLE are formatted the way DuckDB's
         // VARCHAR cast formats them (duckdb_fmt "{}"): the shortest string that round-trips to the same value
         // (e.g. 0.1, 1e-07), so items look exactly like CAST(x AS VARCHAR) and distinct values get distinct strings.
         template <typename T>
-        static std::string DSFreqItemsToString(const T &input)
+        std::string DSFreqItemsToString(const T &input)
         {
             if constexpr (std::is_same_v<T, string_t>)
             {
@@ -61,8 +76,48 @@ namespace duckdb
             }
         }
 
+        template <typename T>
+        uint64_t DSFreqItemsToWeight(const T &weight)
+        {
+            if constexpr (std::is_signed_v<T>)
+            {
+                if (weight < 0)
+                {
+                    throw InvalidInputException("Frequent Items weight must be non-negative");
+                }
+            }
+            return static_cast<uint64_t>(weight);
+        }
+
+        FrequentItemsSketch DSFreqItemsDeserialize(const string_t &blob)
+        {
+            return DSDeserialize<FrequentItemsSketch>(blob, "Frequent Items");
+        }
+
+        string_t DSFreqItemsSerialize(Vector &result, const FrequentItemsSketch &sketch)
+        {
+            auto bytes = sketch.serialize();
+            return StringVector::AddStringOrBlob(result, reinterpret_cast<const char *>(bytes.data()), bytes.size());
+        }
+
+        datasketches::frequent_items_error_type DSFreqItemsErrorType(const string &name)
+        {
+            auto upper = StringUtil::Upper(name);
+            if (upper == "NO_FALSE_POSITIVES")
+            {
+                return datasketches::NO_FALSE_POSITIVES;
+            }
+            if (upper == "NO_FALSE_NEGATIVES")
+            {
+                return datasketches::NO_FALSE_NEGATIVES;
+            }
+            throw InvalidInputException("datasketch_frequent_items_get_frequent: error_type must be 'NO_FALSE_POSITIVES' or "
+                                        "'NO_FALSE_NEGATIVES', got '%s'",
+                                        name);
+        }
+
         // ============================================================
-        // 1. Helpers & Bind Data
+        // 1. Bind Data
         // ============================================================
         struct DSFreqItemsBindData : public FunctionData
         {
@@ -76,47 +131,25 @@ namespace duckdb
             uint8_t lg_max_k;
         };
 
-        // lg_max_k is the log2 of the sketch's maximum hash map size. The library computes 1 << lg_max_k and treats
-        // values below 3 as an error, so reject out-of-range values instead of silently truncating them to uint8_t.
-        static uint8_t DSFreqItemsCheckLgMaxK(int64_t lg_max_k)
+        // lg_max_k, when given, is the first of `full_arity` arguments. It is the log2 of the sketch's maximum hash map
+        // size: the library computes 1 << lg_max_k and treats values below 3 as an error, so reject out-of-range values
+        // instead of silently truncating them to uint8_t.
+        template <idx_t FULL_ARITY>
+        unique_ptr<FunctionData> DSFreqItemsBind(BindAggregateFunctionInput &input)
         {
+            auto &arguments = input.GetArguments();
+            if (arguments.size() < FULL_ARITY)
+            {
+                return make_uniq<DSFreqItemsBindData>();
+            }
+            auto lg_max_k = DSBindConstant(input.GetClientContext(), *arguments[0], "Frequent Items lg_max_k must be constant",
+                                           "Frequent Items lg_max_k cannot be NULL")
+                                .GetValue<int64_t>();
             if (lg_max_k < 3 || lg_max_k > 30)
             {
                 throw BinderException("Frequent Items lg_max_k must be between 3 and 30, got: %lld", (long long)lg_max_k);
             }
-            return static_cast<uint8_t>(lg_max_k);
-        }
-
-        unique_ptr<FunctionData> DSFreqItemsBind(BindAggregateFunctionInput &input)
-        {
-            auto &context = input.GetClientContext();
-            auto &arguments = input.GetArguments();
-            uint8_t lg_max_k = 10;
-            if (arguments.size() == 2)
-            {
-                if (!arguments[0]->IsFoldable())
-                    throw BinderException("Frequent Items lg_max_k must be constant");
-                Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
-                if (!k_val.IsNull())
-                    lg_max_k = DSFreqItemsCheckLgMaxK(k_val.GetValue<int64_t>());
-            }
-            return make_uniq<DSFreqItemsBindData>(lg_max_k);
-        }
-
-        unique_ptr<FunctionData> DSFreqItemsWeightedBind(BindAggregateFunctionInput &input)
-        {
-            auto &context = input.GetClientContext();
-            auto &arguments = input.GetArguments();
-            uint8_t lg_max_k = 10;
-            if (arguments.size() == 3)
-            {
-                if (!arguments[0]->IsFoldable())
-                    throw BinderException("Frequent Items lg_max_k must be constant");
-                Value k_val = ExpressionExecutor::EvaluateScalar(context, *arguments[0]);
-                if (!k_val.IsNull())
-                    lg_max_k = DSFreqItemsCheckLgMaxK(k_val.GetValue<int64_t>());
-            }
-            return make_uniq<DSFreqItemsBindData>(lg_max_k);
+            return make_uniq<DSFreqItemsBindData>(static_cast<uint8_t>(lg_max_k));
         }
 
         // ============================================================
@@ -127,44 +160,38 @@ namespace duckdb
             FrequentItemsSketch *sketch = nullptr;
             ~DSFreqItemsState()
             {
-                if (sketch)
-                    delete sketch;
+                delete sketch;
             }
-            void Create(uint8_t lg_max_k)
+            void Create(const AggregateInputData &input)
             {
                 if (!sketch)
-                    sketch = new FrequentItemsSketch(lg_max_k);
+                {
+                    sketch = new FrequentItemsSketch(input.bind_data->Cast<DSFreqItemsBindData>().lg_max_k);
+                }
             }
         };
 
-        // Operation for RAW ITEMS (all supported types)
-        struct DSFreqItemsOperation
+        // Shared by the create, weighted create and merge aggregates. With no input, the result is an empty sketch.
+        struct DSFreqItemsOperationBase
         {
             template <class STATE>
             static void Initialize(STATE &state) { state.sketch = nullptr; }
+
             template <class STATE>
             static void Destroy(STATE &state, AggregateInputData &)
             {
-                if (state.sketch)
-                    delete state.sketch;
+                delete state.sketch;
+                state.sketch = nullptr;
             }
+
             static bool IgnoreNull() { return true; }
-
-            template <class A_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &input, AggregateUnaryInput &idata)
-            {
-                auto &bind_data = idata.input.bind_data->template Cast<DSFreqItemsBindData>();
-                state.Create(bind_data.lg_max_k);
-
-                state.sketch->update(DSFreqItemsToString(input), 1);
-            }
 
             template <class INPUT_TYPE, class STATE, class OP>
             static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t count)
             {
                 for (idx_t i = 0; i < count; i++)
                 {
-                    Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
+                    OP::template Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
                 }
             }
 
@@ -172,12 +199,10 @@ namespace duckdb
             static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr)
             {
                 if (!source.sketch)
-                    return;
-                if (!target.sketch)
                 {
-                    auto &bind_data = aggr.bind_data->template Cast<DSFreqItemsBindData>();
-                    target.Create(bind_data.lg_max_k);
+                    return;
                 }
+                target.Create(aggr);
                 target.sketch->merge(*source.sketch);
             }
 
@@ -186,579 +211,252 @@ namespace duckdb
             {
                 if (state.sketch)
                 {
-                    auto serialized = state.sketch->serialize();
-                    target = StringVector::AddStringOrBlob(finalize_data.result, std::string(serialized.begin(), serialized.end()));
+                    target = DSFreqItemsSerialize(finalize_data.result, *state.sketch);
                 }
                 else
                 {
                     auto &bind_data = finalize_data.input.bind_data->template Cast<DSFreqItemsBindData>();
-                    FrequentItemsSketch empty_sketch(bind_data.lg_max_k);
-                    auto serialized = empty_sketch.serialize();
-                    target = StringVector::AddStringOrBlob(finalize_data.result, std::string(serialized.begin(), serialized.end()));
+                    target = DSFreqItemsSerialize(finalize_data.result, FrequentItemsSketch(bind_data.lg_max_k));
                 }
             }
         };
 
-        template <typename T>
-        static uint64_t DSFreqItemsToWeight(const T &weight)
+        // Raw items, each counted once.
+        struct DSFreqItemsOperation : DSFreqItemsOperationBase
         {
-            if constexpr (std::is_signed_v<T>)
-            {
-                if (weight < 0)
-                {
-                    throw InvalidInputException("Frequent Items weight must be non-negative");
-                }
-            }
-            return static_cast<uint64_t>(weight);
-        }
-
-        // Operation for MERGING SKETCHES (sketch_type / BLOB)
-        struct DSFreqItemsMergeOperation
-        {
-            template <class STATE>
-            static void Initialize(STATE &state) { DSFreqItemsOperation::Initialize<STATE>(state); }
-            template <class STATE>
-            static void Destroy(STATE &state, AggregateInputData &aggr) { DSFreqItemsOperation::Destroy<STATE>(state, aggr); }
-            static bool IgnoreNull() { return true; }
-
             template <class A_TYPE, class STATE, class OP>
             static void Operation(STATE &state, const A_TYPE &input, AggregateUnaryInput &idata)
             {
-                auto &bind_data = idata.input.bind_data->template Cast<DSFreqItemsBindData>();
-                state.Create(bind_data.lg_max_k);
-                auto input_sketch = FrequentItemsSketch::deserialize(input.GetDataUnsafe(), input.GetSize());
-                state.sketch->merge(input_sketch);
-            }
-
-            template <class INPUT_TYPE, class STATE, class OP>
-            static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t count)
-            {
-                for (idx_t i = 0; i < count; i++)
-                {
-                    Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-                }
-            }
-
-            template <class STATE, class OP>
-            static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr)
-            {
-                DSFreqItemsOperation::Combine<STATE, OP>(source, target, aggr);
-            }
-
-            template <class T, class STATE>
-            static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize)
-            {
-                DSFreqItemsOperation::Finalize<T, STATE>(state, target, finalize);
+                state.Create(idata.input);
+                state.sketch->update(DSFreqItemsToString(input), 1);
             }
         };
 
-        // Operation for WEIGHTED RAW ITEMS. This is the SQL equivalent of
-        // Apache DataSketches frequent_items_sketch::update(item, weight).
-        struct DSFreqItemsWeightedOperation
+        // Serialized sketches, merged.
+        struct DSFreqItemsMergeOperation : DSFreqItemsOperationBase
         {
-            template <class STATE>
-            static void Initialize(STATE &state) { DSFreqItemsOperation::Initialize<STATE>(state); }
-            template <class STATE>
-            static void Destroy(STATE &state, AggregateInputData &aggr) { DSFreqItemsOperation::Destroy<STATE>(state, aggr); }
-            static bool IgnoreNull() { return true; }
+            template <class A_TYPE, class STATE, class OP>
+            static void Operation(STATE &state, const A_TYPE &input, AggregateUnaryInput &idata)
+            {
+                state.Create(idata.input);
+                state.sketch->merge(DSFreqItemsDeserialize(input));
+            }
+        };
 
+        // Raw items with weights: the SQL equivalent of frequent_items_sketch::update(item, weight).
+        struct DSFreqItemsWeightedOperation : DSFreqItemsOperationBase
+        {
             template <class A_TYPE, class W_TYPE, class STATE, class OP>
             static void Operation(STATE &state, const A_TYPE &input, const W_TYPE &weight, AggregateBinaryInput &idata)
             {
-                auto &bind_data = idata.input.bind_data->template Cast<DSFreqItemsBindData>();
-                state.Create(bind_data.lg_max_k);
+                state.Create(idata.input);
                 state.sketch->update(DSFreqItemsToString(input), DSFreqItemsToWeight(weight));
-            }
-
-            template <class STATE, class OP>
-            static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr)
-            {
-                DSFreqItemsOperation::Combine<STATE, OP>(source, target, aggr);
-            }
-
-            template <class T, class STATE>
-            static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize)
-            {
-                DSFreqItemsOperation::Finalize<T, STATE>(state, target, finalize);
             }
         };
 
         // ============================================================
-        // 3. Scalar Helpers
+        // 3. Scalar Functions
         // ============================================================
-        static FrequentItemsSketch DeserializeSketch(const string_t &blob)
-        {
-            return FrequentItemsSketch::deserialize(blob.GetDataUnsafe(), blob.GetSize());
-        }
 
-        // --- TEMPLATED SCALAR FUNCTIONS (Support all types) ---
-
-        template <typename T>
-        static void DSFreqItemsEstimate(DataChunk &args, ExpressionState &state, Vector &result)
+        // An item's estimate or bound: fun(sketch, key).
+        template <typename T, class FUNC>
+        void DSFreqItemsItemFunction(DataChunk &args, Vector &result, FUNC &&fun)
         {
-            BinaryExecutor::Execute<string_t, T, int64_t>(args.data[0], args.data[1], result,
-                                                          [&](string_t sketch_blob, T item)
-                                                          {
-                                                              auto sketch = DeserializeSketch(sketch_blob);
-                                                              return (int64_t)sketch.get_estimate(DSFreqItemsToString(item));
-                                                          });
+            BinaryExecutor::Execute<string_t, T, int64_t>(args.data[0], args.data[1], result, [&](string_t sketch_blob, T item)
+                                                          { return static_cast<int64_t>(fun(DSFreqItemsDeserialize(sketch_blob), DSFreqItemsToString(item))); });
         }
 
         template <typename T>
-        static void DSFreqItemsLowerBound(DataChunk &args, ExpressionState &state, Vector &result)
+        void DSFreqItemsEstimate(DataChunk &args, ExpressionState &, Vector &result)
         {
-            BinaryExecutor::Execute<string_t, T, int64_t>(args.data[0], args.data[1], result,
-                                                          [&](string_t sketch_blob, T item)
-                                                          {
-                                                              auto sketch = DeserializeSketch(sketch_blob);
-                                                              return (int64_t)sketch.get_lower_bound(DSFreqItemsToString(item));
-                                                          });
+            DSFreqItemsItemFunction<T>(args, result, [](const FrequentItemsSketch &sketch, const std::string &key)
+                                       { return sketch.get_estimate(key); });
         }
 
         template <typename T>
-        static void DSFreqItemsUpperBound(DataChunk &args, ExpressionState &state, Vector &result)
+        void DSFreqItemsLowerBound(DataChunk &args, ExpressionState &, Vector &result)
         {
-            BinaryExecutor::Execute<string_t, T, int64_t>(args.data[0], args.data[1], result,
-                                                          [&](string_t sketch_blob, T item)
-                                                          {
-                                                              auto sketch = DeserializeSketch(sketch_blob);
-                                                              return (int64_t)sketch.get_upper_bound(DSFreqItemsToString(item));
-                                                          });
+            DSFreqItemsItemFunction<T>(args, result, [](const FrequentItemsSketch &sketch, const std::string &key)
+                                       { return sketch.get_lower_bound(key); });
         }
 
-        static void DSFreqItemsEpsilon(DataChunk &args, ExpressionState &state, Vector &result)
+        template <typename T>
+        void DSFreqItemsUpperBound(DataChunk &args, ExpressionState &, Vector &result)
         {
-            UnaryExecutor::Execute<string_t, double>(args.data[0], result,
-                                                     [&](string_t sketch_blob)
-                                                     {
-                                                         return DeserializeSketch(sketch_blob).get_epsilon();
-                                                     });
+            DSFreqItemsItemFunction<T>(args, result, [](const FrequentItemsSketch &sketch, const std::string &key)
+                                       { return sketch.get_upper_bound(key); });
         }
 
-        static void DSFreqItemsTotalWeight(DataChunk &args, ExpressionState &state, Vector &result)
+        template <class RESULT_TYPE, class FUNC>
+        void DSFreqItemsSketchFunction(DataChunk &args, Vector &result, FUNC &&fun)
         {
-            UnaryExecutor::Execute<string_t, int64_t>(args.data[0], result,
-                                                      [&](string_t sketch_blob)
-                                                      {
-                                                          return (int64_t)DeserializeSketch(sketch_blob).get_total_weight();
-                                                      });
+            UnaryExecutor::Execute<string_t, RESULT_TYPE>(args.data[0], result, [&](string_t sketch_blob)
+                                                          { return static_cast<RESULT_TYPE>(fun(DSFreqItemsDeserialize(sketch_blob))); });
         }
 
-        static void DSFreqItemsIsEmpty(DataChunk &args, ExpressionState &state, Vector &result)
+        void DSFreqItemsEpsilon(DataChunk &args, ExpressionState &, Vector &result)
         {
-            UnaryExecutor::Execute<string_t, bool>(args.data[0], result,
-                                                   [&](string_t sketch_blob)
-                                                   {
-                                                       return DeserializeSketch(sketch_blob).is_empty();
-                                                   });
+            DSFreqItemsSketchFunction<double>(args, result, [](const FrequentItemsSketch &sketch)
+                                              { return sketch.get_epsilon(); });
         }
 
-        static void DSFreqItemsNumActive(DataChunk &args, ExpressionState &state, Vector &result)
+        void DSFreqItemsTotalWeight(DataChunk &args, ExpressionState &, Vector &result)
         {
-            UnaryExecutor::Execute<string_t, int64_t>(args.data[0], result,
-                                                      [&](string_t sketch_blob)
-                                                      {
-                                                          return (int64_t)DeserializeSketch(sketch_blob).get_num_active_items();
-                                                      });
+            DSFreqItemsSketchFunction<int64_t>(args, result, [](const FrequentItemsSketch &sketch)
+                                               { return sketch.get_total_weight(); });
         }
 
-        static void DSFreqItemsGetFrequent(DataChunk &args, ExpressionState &state, Vector &result)
+        void DSFreqItemsIsEmpty(DataChunk &args, ExpressionState &, Vector &result)
         {
-            idx_t count = args.size();
-            UnifiedVectorFormat sketch_data, type_data;
-            args.data[0].ToUnifiedFormat(sketch_data);
-            args.data[1].ToUnifiedFormat(type_data);
+            DSFreqItemsSketchFunction<bool>(args, result, [](const FrequentItemsSketch &sketch)
+                                            { return sketch.is_empty(); });
+        }
 
-            ListVector::Reserve(result, count * 5);
-            ListVector::SetListSize(result, 0);
+        void DSFreqItemsNumActive(DataChunk &args, ExpressionState &, Vector &result)
+        {
+            DSFreqItemsSketchFunction<int64_t>(args, result, [](const FrequentItemsSketch &sketch)
+                                               { return sketch.get_num_active_items(); });
+        }
 
-            auto &child_entry = ListVector::GetChildMutable(result);
-            auto &struct_children = StructVector::GetEntries(child_entry);
-            auto item_vec = &struct_children[0];
-            auto est_vec = &struct_children[1];
-            auto lb_vec = &struct_children[2];
-            auto ub_vec = &struct_children[3];
-
-            idx_t current_offset = 0;
-
-            for (idx_t i = 0; i < count; i++)
-            {
-                idx_t sketch_idx = sketch_data.sel->get_index(i);
-                idx_t type_idx = type_data.sel->get_index(i);
-
-                if (!sketch_data.validity.RowIsValid(sketch_idx))
+        void DSFreqItemsGetFrequent(DataChunk &args, ExpressionState &, Vector &result)
+        {
+            BinaryExecutor::Execute<string_t, string_t, list_entry_t>(
+                args.data[0], args.data[1], result, [&](string_t sketch_blob, string_t error_type)
                 {
-                    FlatVector::SetNull(result, i, true);
-                    continue;
-                }
-
-                if (!type_data.validity.RowIsValid(type_idx))
-                {
-                    FlatVector::SetNull(result, i, true);
-                    continue;
-                }
-                string_t type_str = UnifiedVectorFormat::GetData<string_t>(type_data)[type_idx];
-                auto err_type = (type_str.GetString() == "NO_FALSE_NEGATIVES") ? datasketches::NO_FALSE_NEGATIVES : datasketches::NO_FALSE_POSITIVES;
-
-                string_t sketch_blob = UnifiedVectorFormat::GetData<string_t>(sketch_data)[sketch_idx];
-                auto sketch = DeserializeSketch(sketch_blob);
-                auto rows = sketch.get_frequent_items(err_type);
-
-                auto list_data = FlatVector::GetDataMutable<list_entry_t>(result);
-                list_data[i].offset = current_offset;
-                list_data[i].length = rows.size();
-
-                ListVector::Reserve(result, current_offset + rows.size());
-
-                for (auto &row : rows)
-                {
-                    FlatVector::GetDataMutable<string_t>(*item_vec)[current_offset] = StringVector::AddString(*item_vec, row.get_item());
-                    FlatVector::GetDataMutable<int64_t>(*est_vec)[current_offset] = row.get_estimate();
-                    FlatVector::GetDataMutable<int64_t>(*lb_vec)[current_offset] = row.get_lower_bound();
-                    FlatVector::GetDataMutable<int64_t>(*ub_vec)[current_offset] = row.get_upper_bound();
-                    current_offset++;
-                }
-            }
-            ListVector::SetListSize(result, current_offset);
-        }
-
-        // ============================================================
-        // 4. Registration Helpers
-        // ============================================================
-        static LogicalType CreateFrequentItemsSketchType(ExtensionLoader &loader)
-        {
-            auto new_type = LogicalType(LogicalTypeId::BLOB);
-            auto new_type_name = "sketch_frequent_items";
-
-            auto type_info = CreateTypeInfo(new_type_name, LogicalType::BLOB);
-            type_info.temporary = false;
-            type_info.internal = true;
-            type_info.comment = "Sketch type for Frequent Items Sketch";
-            new_type = new_type.WithAlias(new_type_name);
-
-            auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
-            auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
-            system_catalog.CreateType(data, type_info);
-
-            loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
-            loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
-
-            return new_type;
-        }
-
-        template <typename T>
-        void RegisterFreqItems(AggregateFunctionSet &set, std::vector<FunctionDescription> &descs, LogicalType input_type, LogicalType result_type)
-        {
-            auto fun = AggregateFunction::UnaryAggregate<DSFreqItemsState, T, string_t, DSFreqItemsOperation, AggregateDestructorType::LEGACY>(
-                input_type, result_type);
-            fun.SetBindCallback(DSFreqItemsBind);
-            fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
-            DSSetArguments(fun, {input_type});
-            set.AddFunction(fun);
-            {
-                FunctionDescription desc;
-                desc.description = "Creates a Frequent Items sketch to find heavy hitters in a data stream";
-                desc.examples.push_back(std::string("SELECT datasketch_frequent_items(item)") + DS_FREQ_ITEMS_EXAMPLE_ROWS);
-                desc.parameter_names = {"data"};
-                desc.parameter_types = {input_type};
-                descs.push_back(std::move(desc));
-            }
-            // lg_max_k stays in the argument list (see DSReadDataArgumentAt); the data follows it.
-            DSSetArguments(fun, {LogicalType::INTEGER, input_type});
-            DSReadDataArgumentAt<1, DSFreqItemsState, T, DSFreqItemsOperation>(fun);
-            set.AddFunction(fun);
-            {
-                FunctionDescription desc;
-                desc.description = "Creates a Frequent Items sketch with the given log2 of max map size (lg_max_k)";
-                desc.examples.push_back(std::string("SELECT datasketch_frequent_items(10, item)") + DS_FREQ_ITEMS_EXAMPLE_ROWS);
-                desc.parameter_names = {"lg_max_k", "data"};
-                desc.parameter_types = {LogicalType::INTEGER, input_type};
-                descs.push_back(std::move(desc));
-            }
-        }
-
-        template <typename T, typename W>
-        void RegisterWeightedFreqItems(AggregateFunctionSet &set, std::vector<FunctionDescription> &descs, LogicalType input_type, LogicalType weight_type, LogicalType result_type)
-        {
-            auto fun = AggregateFunction::BinaryAggregate<DSFreqItemsState, T, W, string_t, DSFreqItemsWeightedOperation, AggregateDestructorType::LEGACY>(
-                input_type, weight_type, result_type);
-            fun.SetStateDestructorCallback(AggregateFunction::StateDestroy<DSFreqItemsState, DSFreqItemsWeightedOperation>);
-            fun.SetBindCallback(DSFreqItemsWeightedBind);
-            fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
-            DSSetArguments(fun, {input_type, weight_type});
-            set.AddFunction(fun);
-            {
-                FunctionDescription desc;
-                desc.description = "Creates a weighted Frequent Items sketch to find heavy hitters by total item weight; each row adds its weight to the item's count";
-                desc.examples.push_back(std::string("SELECT datasketch_frequent_items_weighted(item, weight)") + DS_FREQ_ITEMS_EXAMPLE_ROWS);
-                desc.parameter_names = {"data", "weight"};
-                desc.parameter_types = {input_type, weight_type};
-                descs.push_back(std::move(desc));
-            }
-            DSSetArguments(fun, {LogicalType::INTEGER, input_type, weight_type});
-            DSReadDataArgumentsAt<1, 2, DSFreqItemsState, T, W, DSFreqItemsWeightedOperation>(fun);
-            set.AddFunction(fun);
-            {
-                FunctionDescription desc;
-                desc.description = "Creates a weighted Frequent Items sketch with the given log2 of max map size (lg_max_k); each row adds its weight to the item's count";
-                desc.examples.push_back(std::string("SELECT datasketch_frequent_items_weighted(10, item, weight)") + DS_FREQ_ITEMS_EXAMPLE_ROWS);
-                desc.parameter_names = {"lg_max_k", "data", "weight"};
-                desc.parameter_types = {LogicalType::INTEGER, input_type, weight_type};
-                descs.push_back(std::move(desc));
-            }
-        }
-
-        template <typename T>
-        void RegisterWeightedFreqItems(AggregateFunctionSet &set, std::vector<FunctionDescription> &descs, LogicalType input_type, LogicalType result_type)
-        {
-            RegisterWeightedFreqItems<T, int64_t>(set, descs, input_type, LogicalType::BIGINT, result_type);
-            RegisterWeightedFreqItems<T, uint64_t>(set, descs, input_type, LogicalType::UBIGINT, result_type);
+                    // The rows point into the sketch, so it must outlive them.
+                    auto sketch = DSFreqItemsDeserialize(sketch_blob);
+                    auto rows = sketch.get_frequent_items(DSFreqItemsErrorType(error_type.GetString()));
+                    auto offset = ListVector::GetListSize(result);
+                    ListVector::Reserve(result, offset + rows.size());
+                    auto &entries = StructVector::GetEntries(ListVector::GetChildMutable(result));
+                    auto items = FlatVector::GetDataMutable<string_t>(entries[0]);
+                    auto estimates = FlatVector::GetDataMutable<int64_t>(entries[1]);
+                    auto lower_bounds = FlatVector::GetDataMutable<int64_t>(entries[2]);
+                    auto upper_bounds = FlatVector::GetDataMutable<int64_t>(entries[3]);
+                    for (idx_t i = 0; i < rows.size(); i++)
+                    {
+                        items[offset + i] = StringVector::AddString(entries[0], rows[i].get_item());
+                        estimates[offset + i] = static_cast<int64_t>(rows[i].get_estimate());
+                        lower_bounds[offset + i] = static_cast<int64_t>(rows[i].get_lower_bound());
+                        upper_bounds[offset + i] = static_cast<int64_t>(rows[i].get_upper_bound());
+                    }
+                    ListVector::SetListSize(result, offset + rows.size());
+                    return list_entry_t(offset, rows.size());
+                });
         }
     }
 
     // ============================================================
-    // 5. Main Loader
+    // 4. Main Loader
     // ============================================================
     void LoadFrequentItemsSketch(ExtensionLoader &loader)
     {
-        auto sketch_type = CreateFrequentItemsSketchType(loader);
+        auto sketch_type = DSCreateSketchType(loader, "sketch_frequent_items", "Sketch type for Frequent Items Sketch");
+        const auto &ex = DSFreqItemsExamples();
+        const string rows = DS_FREQ_ITEMS_EXAMPLE_ROWS;
 
-        AggregateFunctionSet sketch_agg("datasketch_frequent_items");
-        std::vector<FunctionDescription> agg_descs;
-
-        // --- 1. REGISTER ALL SUPPORTED RAW INPUT TYPES ---
-        // NOTE: Do NOT work for BLOB - it conflicts with the sketch merge operation!
-
-        // Signed integers
-        RegisterFreqItems<int8_t>(sketch_agg, agg_descs, LogicalType::TINYINT, sketch_type);
-        RegisterFreqItems<int16_t>(sketch_agg, agg_descs, LogicalType::SMALLINT, sketch_type);
-        RegisterFreqItems<int32_t>(sketch_agg, agg_descs, LogicalType::INTEGER, sketch_type);
-        RegisterFreqItems<int64_t>(sketch_agg, agg_descs, LogicalType::BIGINT, sketch_type);
-
-        // Unsigned integers
-        RegisterFreqItems<uint8_t>(sketch_agg, agg_descs, LogicalType::UTINYINT, sketch_type);
-        RegisterFreqItems<uint16_t>(sketch_agg, agg_descs, LogicalType::USMALLINT, sketch_type);
-        RegisterFreqItems<uint32_t>(sketch_agg, agg_descs, LogicalType::UINTEGER, sketch_type);
-        RegisterFreqItems<uint64_t>(sketch_agg, agg_descs, LogicalType::UBIGINT, sketch_type);
-
-        // Floating point
-        RegisterFreqItems<float>(sketch_agg, agg_descs, LogicalType::FLOAT, sketch_type);
-        RegisterFreqItems<double>(sketch_agg, agg_descs, LogicalType::DOUBLE, sketch_type);
-
-        // String type - only VARCHAR, NOT BLOB!
-        RegisterFreqItems<string_t>(sketch_agg, agg_descs, LogicalType::VARCHAR, sketch_type);
-
-        // --- 2. MERGE SKETCHES (uses sketch_type which is aliased BLOB) ---
-        auto fun_merge = AggregateFunction::UnaryAggregate<DSFreqItemsState, string_t, string_t, DSFreqItemsMergeOperation, AggregateDestructorType::LEGACY>(
-            sketch_type, sketch_type);
-        fun_merge.SetBindCallback(DSFreqItemsBind);
-        fun_merge.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
-        DSSetArguments(fun_merge, {sketch_type});
-        sketch_agg.AddFunction(fun_merge);
+        // --- datasketch_frequent_items([lg_max_k,] data): build from items, or merge sketches. lg_max_k stays in the
+        // argument list (see DSReadDataArgumentAt); the data follows it.
         {
-            FunctionDescription desc;
-            desc.description = "Merges existing Frequent Items sketches into a single sketch";
-            desc.examples.push_back(DSFreqItemsExamples().QueryPartials("datasketch_frequent_items(sketch)"));
-            desc.parameter_names = {"sketch"};
-            desc.parameter_types = {sketch_type};
-            agg_descs.push_back(std::move(desc));
-        }
-        DSSetArguments(fun_merge, {LogicalType::INTEGER, sketch_type});
-        DSReadDataArgumentAt<1, DSFreqItemsState, string_t, DSFreqItemsMergeOperation>(fun_merge);
-        sketch_agg.AddFunction(fun_merge);
-        {
-            FunctionDescription desc;
-            desc.description = "Merges existing Frequent Items sketches into a single sketch with the given log2 of max map size (lg_max_k)";
-            desc.examples.push_back(DSFreqItemsExamples().QueryPartials("datasketch_frequent_items(10, sketch)"));
-            desc.parameter_names = {"lg_max_k", "sketch"};
-            desc.parameter_types = {LogicalType::INTEGER, sketch_type};
-            agg_descs.push_back(std::move(desc));
+            AggregateFunctionSet set("datasketch_frequent_items");
+            vector<FunctionDescription> descs;
+            DSFreqItemsForEachItemType([&](auto item, const LogicalType &item_type)
+                                       {
+                using T = decltype(item);
+                auto fun = AggregateFunction::UnaryAggregate<DSFreqItemsState, T, string_t, DSFreqItemsOperation, AggregateDestructorType::LEGACY>(item_type, sketch_type);
+                DSAddAggregate(set, descs, fun, DSFreqItemsBind<2>, {item_type}, {"data"},
+                               "Creates a Frequent Items sketch to find heavy hitters in a data stream",
+                               {"SELECT datasketch_frequent_items(item)" + rows});
+                DSReadDataArgumentAt<1, DSFreqItemsState, T, DSFreqItemsOperation>(fun);
+                DSAddAggregate(set, descs, fun, DSFreqItemsBind<2>, {LogicalType::INTEGER, item_type}, {"lg_max_k", "data"},
+                               "Creates a Frequent Items sketch with the given log2 of max map size (lg_max_k)",
+                               {"SELECT datasketch_frequent_items(10, item)" + rows}); });
+
+            auto merge = AggregateFunction::UnaryAggregate<DSFreqItemsState, string_t, string_t, DSFreqItemsMergeOperation, AggregateDestructorType::LEGACY>(sketch_type, sketch_type);
+            DSAddAggregate(set, descs, merge, DSFreqItemsBind<2>, {sketch_type}, {"sketch"},
+                           "Merges existing Frequent Items sketches into a single sketch",
+                           {ex.QueryPartials("datasketch_frequent_items(sketch)")});
+            DSReadDataArgumentAt<1, DSFreqItemsState, string_t, DSFreqItemsMergeOperation>(merge);
+            DSAddAggregate(set, descs, merge, DSFreqItemsBind<2>, {LogicalType::INTEGER, sketch_type}, {"lg_max_k", "sketch"},
+                           "Merges existing Frequent Items sketches into a single sketch with the given log2 of max map size (lg_max_k)",
+                           {ex.QueryPartials("datasketch_frequent_items(10, sketch)")});
+            DSRegisterAggregates(loader, std::move(set), std::move(descs), DS_FREQ_ITEMS_CATEGORIES);
         }
 
+        // --- datasketch_frequent_items_weighted([lg_max_k,] data, weight)
         {
-            CreateAggregateFunctionInfo info(sketch_agg);
-            for (auto &d : agg_descs) {
-                info.descriptions.push_back(std::move(d));
-            }
-            DSSetCategories(info, {"sketch", "frequent_items"});
-            DSRegister(loader, info);
+            AggregateFunctionSet set("datasketch_frequent_items_weighted");
+            vector<FunctionDescription> descs;
+            DSFreqItemsForEachItemType([&](auto item, const LogicalType &item_type)
+                                       {
+                using T = decltype(item);
+                auto add = [&](auto weight, const LogicalType &weight_type)
+                {
+                    using W = decltype(weight);
+                    using OP = DSFreqItemsWeightedOperation;
+                    auto fun = AggregateFunction::BinaryAggregate<DSFreqItemsState, T, W, string_t, OP, AggregateDestructorType::LEGACY>(item_type, weight_type, sketch_type);
+                    fun.SetStateDestructorCallback(AggregateFunction::StateDestroy<DSFreqItemsState, OP>);
+                    DSAddAggregate(set, descs, fun, DSFreqItemsBind<3>, {item_type, weight_type}, {"data", "weight"},
+                                   "Creates a weighted Frequent Items sketch to find heavy hitters by total item weight; each row adds its weight to the item's count",
+                                   {"SELECT datasketch_frequent_items_weighted(item, weight)" + rows});
+                    DSReadDataArgumentsAt<1, 2, DSFreqItemsState, T, W, OP>(fun);
+                    DSAddAggregate(set, descs, fun, DSFreqItemsBind<3>, {LogicalType::INTEGER, item_type, weight_type}, {"lg_max_k", "data", "weight"},
+                                   "Creates a weighted Frequent Items sketch with the given log2 of max map size (lg_max_k); each row adds its weight to the item's count",
+                                   {"SELECT datasketch_frequent_items_weighted(10, item, weight)" + rows});
+                };
+                add(int64_t(), LogicalType::BIGINT);
+                add(uint64_t(), LogicalType::UBIGINT); });
+            DSRegisterAggregates(loader, std::move(set), std::move(descs), DS_FREQ_ITEMS_CATEGORIES);
         }
 
-        AggregateFunctionSet weighted_sketch_agg("datasketch_frequent_items_weighted");
-        std::vector<FunctionDescription> weighted_descs;
-
-        RegisterWeightedFreqItems<int8_t>(weighted_sketch_agg, weighted_descs, LogicalType::TINYINT, sketch_type);
-        RegisterWeightedFreqItems<int16_t>(weighted_sketch_agg, weighted_descs, LogicalType::SMALLINT, sketch_type);
-        RegisterWeightedFreqItems<int32_t>(weighted_sketch_agg, weighted_descs, LogicalType::INTEGER, sketch_type);
-        RegisterWeightedFreqItems<int64_t>(weighted_sketch_agg, weighted_descs, LogicalType::BIGINT, sketch_type);
-        RegisterWeightedFreqItems<uint8_t>(weighted_sketch_agg, weighted_descs, LogicalType::UTINYINT, sketch_type);
-        RegisterWeightedFreqItems<uint16_t>(weighted_sketch_agg, weighted_descs, LogicalType::USMALLINT, sketch_type);
-        RegisterWeightedFreqItems<uint32_t>(weighted_sketch_agg, weighted_descs, LogicalType::UINTEGER, sketch_type);
-        RegisterWeightedFreqItems<uint64_t>(weighted_sketch_agg, weighted_descs, LogicalType::UBIGINT, sketch_type);
-        RegisterWeightedFreqItems<float>(weighted_sketch_agg, weighted_descs, LogicalType::FLOAT, sketch_type);
-        RegisterWeightedFreqItems<double>(weighted_sketch_agg, weighted_descs, LogicalType::DOUBLE, sketch_type);
-        RegisterWeightedFreqItems<string_t>(weighted_sketch_agg, weighted_descs, LogicalType::VARCHAR, sketch_type);
-
+        // --- An item's estimate and bounds, for every item type
+        auto register_item_function = [&](const string &name, const string &description, auto make_function)
         {
-            CreateAggregateFunctionInfo info(weighted_sketch_agg);
-            for (auto &d : weighted_descs) {
-                info.descriptions.push_back(std::move(d));
-            }
-            DSSetCategories(info, {"sketch", "frequent_items"});
-            DSRegister(loader, info);
-        }
-
-        // --- SCALAR FUNCTIONS (ESTIMATES & BOUNDS) ---
-        auto register_freq_items_scalar_set = [&](const char *name, const char *description,
-                                                   ScalarFunctionSet &&set,
-                                                   const std::vector<LogicalType> &item_types) {
-            set.SetFallible();
-            CreateScalarFunctionInfo info(std::move(set));
-            for (const auto &item_type : item_types) {
-                FunctionDescription desc;
-                desc.description = description;
-                desc.examples.push_back(DSFreqItemsExamples().Query(std::string(name) + "(sketch, '3')"));
-                desc.parameter_names = {"sketch", "item"};
-                desc.parameter_types = {sketch_type, item_type};
-                info.descriptions.push_back(std::move(desc));
-            }
-            DSSetCategories(info, {"sketch", "frequent_items"});
-            DSRegister(loader, info);
+            ScalarFunctionSet set {Identifier(name)};
+            vector<FunctionDescription> descs;
+            DSFreqItemsForEachItemType([&](auto item, const LogicalType &item_type)
+                                       { DSAddScalar(set, descs, ScalarFunction({sketch_type, item_type}, LogicalType::BIGINT, make_function(item)),
+                                                     {"sketch", "item"}, description, {ex.Query(name + "(sketch, '3')")}); });
+            DSRegisterScalars(loader, std::move(set), std::move(descs), DS_FREQ_ITEMS_CATEGORIES);
         };
+        register_item_function("datasketch_frequent_items_estimate", "Returns the estimated frequency count for a specific item",
+                               [](auto item) { return DSFreqItemsEstimate<decltype(item)>; });
+        register_item_function("datasketch_frequent_items_lower_bound", "Returns the lower bound frequency estimate for a specific item",
+                               [](auto item) { return DSFreqItemsLowerBound<decltype(item)>; });
+        register_item_function("datasketch_frequent_items_upper_bound", "Returns the upper bound frequency estimate for a specific item",
+                               [](auto item) { return DSFreqItemsUpperBound<decltype(item)>; });
 
-        const std::vector<LogicalType> item_types = {
-            LogicalType::TINYINT, LogicalType::SMALLINT, LogicalType::INTEGER, LogicalType::BIGINT,
-            LogicalType::UTINYINT, LogicalType::USMALLINT, LogicalType::UINTEGER, LogicalType::UBIGINT,
-            LogicalType::FLOAT, LogicalType::DOUBLE, LogicalType::VARCHAR
+        // --- Sketch metadata
+        auto register_sketch_function = [&](const string &name, const LogicalType &return_type, scalar_function_t function,
+                                            const string &description)
+        {
+            DSRegisterScalar(loader, ScalarFunction(Identifier(name), {sketch_type}, return_type, std::move(function)),
+                             DSDescription(description, {ex.Query(name + "(sketch)")}, {"sketch"}, {sketch_type}),
+                             DS_FREQ_ITEMS_CATEGORIES);
         };
+        register_sketch_function("datasketch_frequent_items_epsilon", LogicalType::DOUBLE, DSFreqItemsEpsilon,
+                                 "Returns the epsilon value (relative error) of the sketch");
+        register_sketch_function("datasketch_frequent_items_total_weight", LogicalType::BIGINT, DSFreqItemsTotalWeight,
+                                 "Returns the total weight (sum of all item counts) processed by the sketch");
+        register_sketch_function("datasketch_frequent_items_is_empty", LogicalType::BOOLEAN, DSFreqItemsIsEmpty,
+                                 "Returns true if the sketch is empty");
+        register_sketch_function("datasketch_frequent_items_num_active", LogicalType::BIGINT, DSFreqItemsNumActive,
+                                 "Returns the number of active items currently tracked by the sketch");
 
-        // ESTIMATE
+        // --- The frequent items, with their estimates and bounds
         {
-            ScalarFunctionSet set("datasketch_frequent_items_estimate");
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::TINYINT}, LogicalType::BIGINT, DSFreqItemsEstimate<int8_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::SMALLINT}, LogicalType::BIGINT, DSFreqItemsEstimate<int16_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::INTEGER}, LogicalType::BIGINT, DSFreqItemsEstimate<int32_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::BIGINT}, LogicalType::BIGINT, DSFreqItemsEstimate<int64_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UTINYINT}, LogicalType::BIGINT, DSFreqItemsEstimate<uint8_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::USMALLINT}, LogicalType::BIGINT, DSFreqItemsEstimate<uint16_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UINTEGER}, LogicalType::BIGINT, DSFreqItemsEstimate<uint32_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UBIGINT}, LogicalType::BIGINT, DSFreqItemsEstimate<uint64_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::FLOAT}, LogicalType::BIGINT, DSFreqItemsEstimate<float>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::DOUBLE}, LogicalType::BIGINT, DSFreqItemsEstimate<double>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::VARCHAR}, LogicalType::BIGINT, DSFreqItemsEstimate<string_t>));
-            register_freq_items_scalar_set("datasketch_frequent_items_estimate",
-                "Returns the estimated frequency count for a specific item",
-                std::move(set), item_types);
-        }
-
-        // LOWER BOUND
-        {
-            ScalarFunctionSet set("datasketch_frequent_items_lower_bound");
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::TINYINT}, LogicalType::BIGINT, DSFreqItemsLowerBound<int8_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::SMALLINT}, LogicalType::BIGINT, DSFreqItemsLowerBound<int16_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::INTEGER}, LogicalType::BIGINT, DSFreqItemsLowerBound<int32_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::BIGINT}, LogicalType::BIGINT, DSFreqItemsLowerBound<int64_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UTINYINT}, LogicalType::BIGINT, DSFreqItemsLowerBound<uint8_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::USMALLINT}, LogicalType::BIGINT, DSFreqItemsLowerBound<uint16_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UINTEGER}, LogicalType::BIGINT, DSFreqItemsLowerBound<uint32_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UBIGINT}, LogicalType::BIGINT, DSFreqItemsLowerBound<uint64_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::FLOAT}, LogicalType::BIGINT, DSFreqItemsLowerBound<float>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::DOUBLE}, LogicalType::BIGINT, DSFreqItemsLowerBound<double>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::VARCHAR}, LogicalType::BIGINT, DSFreqItemsLowerBound<string_t>));
-            register_freq_items_scalar_set("datasketch_frequent_items_lower_bound",
-                "Returns the lower bound frequency estimate for a specific item",
-                std::move(set), item_types);
-        }
-
-        // UPPER BOUND
-        {
-            ScalarFunctionSet set("datasketch_frequent_items_upper_bound");
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::TINYINT}, LogicalType::BIGINT, DSFreqItemsUpperBound<int8_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::SMALLINT}, LogicalType::BIGINT, DSFreqItemsUpperBound<int16_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::INTEGER}, LogicalType::BIGINT, DSFreqItemsUpperBound<int32_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::BIGINT}, LogicalType::BIGINT, DSFreqItemsUpperBound<int64_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UTINYINT}, LogicalType::BIGINT, DSFreqItemsUpperBound<uint8_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::USMALLINT}, LogicalType::BIGINT, DSFreqItemsUpperBound<uint16_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UINTEGER}, LogicalType::BIGINT, DSFreqItemsUpperBound<uint32_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::UBIGINT}, LogicalType::BIGINT, DSFreqItemsUpperBound<uint64_t>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::FLOAT}, LogicalType::BIGINT, DSFreqItemsUpperBound<float>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::DOUBLE}, LogicalType::BIGINT, DSFreqItemsUpperBound<double>));
-            set.AddFunction(ScalarFunction({sketch_type, LogicalType::VARCHAR}, LogicalType::BIGINT, DSFreqItemsUpperBound<string_t>));
-            register_freq_items_scalar_set("datasketch_frequent_items_upper_bound",
-                "Returns the upper bound frequency estimate for a specific item",
-                std::move(set), item_types);
-        }
-
-        // --- METADATA FUNCTIONS ---
-        {
-            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_frequent_items_epsilon",
-                                                         {sketch_type}, LogicalType::DOUBLE, DSFreqItemsEpsilon)));
-            FunctionDescription desc;
-            desc.description = "Returns the epsilon value (relative error) of the sketch";
-            desc.examples.push_back(DSFreqItemsExamples().Query("datasketch_frequent_items_epsilon(sketch)"));
-            desc.parameter_names = {"sketch"};
-            desc.parameter_types = {sketch_type};
-            info.descriptions.push_back(desc);
-            DSSetCategories(info, {"sketch", "frequent_items"});
-            DSRegister(loader, info);
-        }
-        {
-            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_frequent_items_total_weight",
-                                                         {sketch_type}, LogicalType::BIGINT, DSFreqItemsTotalWeight)));
-            FunctionDescription desc;
-            desc.description = "Returns the total weight (sum of all item counts) processed by the sketch";
-            desc.examples.push_back(DSFreqItemsExamples().Query("datasketch_frequent_items_total_weight(sketch)"));
-            desc.parameter_names = {"sketch"};
-            desc.parameter_types = {sketch_type};
-            info.descriptions.push_back(desc);
-            DSSetCategories(info, {"sketch", "frequent_items"});
-            DSRegister(loader, info);
-        }
-        {
-            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_frequent_items_is_empty",
-                                                         {sketch_type}, LogicalType::BOOLEAN, DSFreqItemsIsEmpty)));
-            FunctionDescription desc;
-            desc.description = "Returns true if the sketch is empty";
-            desc.examples.push_back(DSFreqItemsExamples().Query("datasketch_frequent_items_is_empty(sketch)"));
-            desc.parameter_names = {"sketch"};
-            desc.parameter_types = {sketch_type};
-            info.descriptions.push_back(desc);
-            DSSetCategories(info, {"sketch", "frequent_items"});
-            DSRegister(loader, info);
-        }
-        {
-            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_frequent_items_num_active",
-                                                         {sketch_type}, LogicalType::BIGINT, DSFreqItemsNumActive)));
-            FunctionDescription desc;
-            desc.description = "Returns the number of active items currently tracked by the sketch";
-            desc.examples.push_back(DSFreqItemsExamples().Query("datasketch_frequent_items_num_active(sketch)"));
-            desc.parameter_names = {"sketch"};
-            desc.parameter_types = {sketch_type};
-            info.descriptions.push_back(desc);
-            DSSetCategories(info, {"sketch", "frequent_items"});
-            DSRegister(loader, info);
-        }
-
-        // --- GET FREQUENT LIST ---
-        {
-            child_list_t<LogicalType> struct_fields;
-            struct_fields.push_back({"item", LogicalType::VARCHAR});
-            struct_fields.push_back({"estimate", LogicalType::BIGINT});
-            struct_fields.push_back({"lower_bound", LogicalType::BIGINT});
-            struct_fields.push_back({"upper_bound", LogicalType::BIGINT});
-
-            CreateScalarFunctionInfo info(DSFallible(ScalarFunction("datasketch_frequent_items_get_frequent",
-                                                         {sketch_type, LogicalType::VARCHAR},
-                                                         LogicalType::LIST(LogicalType::STRUCT(struct_fields)),
-                                                         DSFreqItemsGetFrequent)));
-            FunctionDescription desc;
-            desc.description = "Returns a list of frequent items with their estimates and bounds. Use 'NO_FALSE_POSITIVES' or 'NO_FALSE_NEGATIVES' for error type";
-            desc.examples.push_back(DSFreqItemsExamples().Query("datasketch_frequent_items_get_frequent(sketch, 'NO_FALSE_POSITIVES')"));
-            desc.parameter_names = {"sketch", "error_type"};
-            desc.parameter_types = {sketch_type, LogicalType::VARCHAR};
-            info.descriptions.push_back(desc);
-            DSSetCategories(info, {"sketch", "frequent_items"});
-            DSRegister(loader, info);
+            child_list_t<LogicalType> fields;
+            fields.push_back({"item", LogicalType::VARCHAR});
+            fields.push_back({"estimate", LogicalType::BIGINT});
+            fields.push_back({"lower_bound", LogicalType::BIGINT});
+            fields.push_back({"upper_bound", LogicalType::BIGINT});
+            DSRegisterScalar(loader,
+                             ScalarFunction("datasketch_frequent_items_get_frequent", {sketch_type, LogicalType::VARCHAR},
+                                            LogicalType::LIST(LogicalType::STRUCT(std::move(fields))), DSFreqItemsGetFrequent),
+                             DSDescription("Returns a list of frequent items with their estimates and bounds. Use 'NO_FALSE_POSITIVES' or 'NO_FALSE_NEGATIVES' for error type",
+                                           {ex.Query("datasketch_frequent_items_get_frequent(sketch, 'NO_FALSE_POSITIVES')")},
+                                           {"sketch", "error_type"}, {sketch_type, LogicalType::VARCHAR}),
+                             DS_FREQ_ITEMS_CATEGORIES);
         }
     }
 

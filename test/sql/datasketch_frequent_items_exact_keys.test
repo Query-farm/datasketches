@@ -119,3 +119,45 @@ query I
 SELECT datasketch_frequent_items_estimate(datasketch_frequent_items(3, v), 1e-9::DOUBLE) FROM d;
 ----
 3
+
+# =============================================================================
+# ERROR TYPES, CORRUPT SKETCHES AND NULL lg_max_k
+# =============================================================================
+
+# The error type is case-insensitive, and anything else is an error rather than silently NO_FALSE_POSITIVES
+query II
+SELECT len(datasketch_frequent_items_get_frequent(s, 'no_false_negatives')), len(datasketch_frequent_items_get_frequent(s, 'NO_FALSE_NEGATIVES'))
+FROM (SELECT datasketch_frequent_items(3, (i % 50)::VARCHAR) AS s FROM range(5000) t(i))
+----
+2	2
+
+statement error
+SELECT datasketch_frequent_items_get_frequent(datasketch_frequent_items(i), 'bogus') FROM range(3) t(i)
+----
+error_type must be 'NO_FALSE_POSITIVES' or 'NO_FALSE_NEGATIVES', got 'bogus'
+
+# Many frequent items, from a sketch computed in the same query
+query I
+SELECT len(datasketch_frequent_items_get_frequent(datasketch_frequent_items((i % 500)::VARCHAR), 'NO_FALSE_NEGATIVES')) FROM range(100000) t(i)
+----
+500
+
+statement error
+SELECT datasketch_frequent_items_estimate('\x01\x02\x03'::BLOB::sketch_frequent_items, 'a')
+----
+Failed to deserialize Frequent Items sketch
+
+statement error
+SELECT datasketch_frequent_items(s) FROM (SELECT '\x01\x02\x03\x04\x05\x06\x07\x08'::BLOB::sketch_frequent_items AS s)
+----
+Failed to deserialize Frequent Items sketch
+
+statement error
+SELECT datasketch_frequent_items(NULL, i) FROM range(3) t(i)
+----
+Frequent Items lg_max_k cannot be NULL
+
+query IIII
+SELECT typeof(NULL::sketch_theta), typeof(NULL::sketch_tuple_double), typeof(NULL::sketch_aod), typeof(NULL::sketch_frequent_items)
+----
+sketch_theta	sketch_tuple_double	sketch_aod	sketch_frequent_items
