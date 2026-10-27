@@ -237,36 +237,36 @@ namespace duckdb
                     {
                         queries.push_back(ex.Query(example));
                     }
-                    return DSSketchDescription(description, std::move(queries), names, types, categories);
+                    return DSDescription(description, std::move(queries), names, types, categories);
                 };
                 const vector<string> one = {"sketch"};
                 const vector<LogicalType> one_type = {sketch_type};
 
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_a_not_b"), {sketch_type, sketch_type}, sketch_type, ANotB),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_a_not_b"), {sketch_type, sketch_type}, sketch_type, ANotB),
                                     desc("Returns a new " + noun + " with the keys (and their summaries) of sketch A that are not in sketch B (set difference)",
                                          {p + "_a_not_b(sketch_a, sketch_b)"}, {"sketch_a", "sketch_b"}, {sketch_type, sketch_type}));
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_estimate"), one_type, LogicalType::DOUBLE, Estimate),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_estimate"), one_type, LogicalType::DOUBLE, Estimate),
                                     desc("Returns the estimated number of distinct keys in the " + noun, {p + "_estimate(sketch)"}, one, one_type));
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_lower_bound"), {sketch_type, LogicalType::INTEGER}, LogicalType::DOUBLE, Bound<true>),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_lower_bound"), {sketch_type, LogicalType::INTEGER}, LogicalType::DOUBLE, Bound<true>),
                                     desc("Returns the lower bound of the estimated number of distinct keys at the given number of standard deviations (1, 2, or 3)",
                                          {p + "_lower_bound(sketch, 2)"}, {"sketch", "num_std_devs"}, {sketch_type, LogicalType::INTEGER}));
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_upper_bound"), {sketch_type, LogicalType::INTEGER}, LogicalType::DOUBLE, Bound<false>),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_upper_bound"), {sketch_type, LogicalType::INTEGER}, LogicalType::DOUBLE, Bound<false>),
                                     desc("Returns the upper bound of the estimated number of distinct keys at the given number of standard deviations (1, 2, or 3)",
                                          {p + "_upper_bound(sketch, 2)"}, {"sketch", "num_std_devs"}, {sketch_type, LogicalType::INTEGER}));
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_num_retained"), one_type, LogicalType::BIGINT, NumRetained),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_num_retained"), one_type, LogicalType::BIGINT, NumRetained),
                                     desc("Returns the number of entries (keys with their summaries) retained in the " + noun, {p + "_num_retained(sketch)"}, one, one_type));
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_get_theta"), one_type, LogicalType::DOUBLE, GetTheta),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_get_theta"), one_type, LogicalType::DOUBLE, GetTheta),
                                     desc("Returns the theta value of the " + noun + " (the fraction of the key hash space it retains)", {p + "_get_theta(sketch)"}, one, one_type));
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_seed_hash"), one_type, LogicalType::BIGINT, SeedHash),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_seed_hash"), one_type, LogicalType::BIGINT, SeedHash),
                                     desc("Returns the 16-bit hash of the seed the " + noun + " was built with; sketches can only be combined if their seed hashes match",
                                          {p + "_seed_hash(sketch)"}, one, one_type));
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_is_empty"), one_type, LogicalType::BOOLEAN, IsEmpty),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_is_empty"), one_type, LogicalType::BOOLEAN, IsEmpty),
                                     desc("Returns true if the " + noun + " is empty", {p + "_is_empty(sketch)"}, one, one_type));
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_is_estimation_mode"), one_type, LogicalType::BOOLEAN, IsEstimationMode),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_is_estimation_mode"), one_type, LogicalType::BOOLEAN, IsEstimationMode),
                                     desc("Returns true if the " + noun + " is in estimation mode (it has sampled the keys)", {p + "_is_estimation_mode(sketch)"}, one, one_type));
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_describe"), one_type, LogicalType::VARCHAR, Describe),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_describe"), one_type, LogicalType::VARCHAR, Describe),
                                     desc("Returns a human-readable description of the " + noun, {p + "_describe(sketch)"}, one, one_type));
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_to_theta"), one_type, theta_type, ToTheta),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_to_theta"), one_type, theta_type, ToTheta),
                                     desc("Converts the " + noun + " to a Theta sketch of its keys (dropping the summaries), usable with the datasketch_theta functions",
                                          {p + "_to_theta(sketch)"}, one, one_type));
 
@@ -274,17 +274,17 @@ namespace duckdb
                 bounds.emplace_back("lower", LogicalType::DOUBLE);
                 bounds.emplace_back("estimate", LogicalType::DOUBLE);
                 bounds.emplace_back("upper", LogicalType::DOUBLE);
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_jaccard"), {sketch_type, sketch_type}, LogicalType::STRUCT(std::move(bounds)), Jaccard),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_jaccard"), {sketch_type, sketch_type}, LogicalType::STRUCT(std::move(bounds)), Jaccard),
                                     desc("Returns the Jaccard similarity of the key sets of two sketches as a struct of its estimate and approximate lower and upper "
                                          "bounds (about 2 standard deviations). Two empty sketches are identical (1.0)",
                                          {p + "_jaccard(sketch_a, sketch_b)", p + "_jaccard(sketch_a, sketch_b).estimate"}, {"sketch_a", "sketch_b"}, {sketch_type, sketch_type}));
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_exactly_equal"), {sketch_type, sketch_type}, LogicalType::BOOLEAN, ExactlyEqual),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_exactly_equal"), {sketch_type, sketch_type}, LogicalType::BOOLEAN, ExactlyEqual),
                                     desc("Returns true if the two sketches retain exactly the same keys with the same theta (summaries are not compared)",
                                          {p + "_exactly_equal(sketch_a, sketch_b)"}, {"sketch_a", "sketch_b"}, {sketch_type, sketch_type}));
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_similarity_test"), {sketch_type, sketch_type, LogicalType::DOUBLE}, LogicalType::BOOLEAN, SimilarityTest<true>),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_similarity_test"), {sketch_type, sketch_type, LogicalType::DOUBLE}, LogicalType::BOOLEAN, SimilarityTest<true>),
                                     desc("Returns true if the Jaccard similarity of the key sets is at least the threshold, with high confidence (its lower bound is >= threshold)",
                                          {p + "_similarity_test(actual, expected, 0.9)"}, {"actual", "expected", "threshold"}, {sketch_type, sketch_type, LogicalType::DOUBLE}));
-                ThetaRegisterScalar(loader, ScalarFunction(Identifier(p + "_dissimilarity_test"), {sketch_type, sketch_type, LogicalType::DOUBLE}, LogicalType::BOOLEAN, SimilarityTest<false>),
+                DSRegisterScalar(loader, ScalarFunction(Identifier(p + "_dissimilarity_test"), {sketch_type, sketch_type, LogicalType::DOUBLE}, LogicalType::BOOLEAN, SimilarityTest<false>),
                                     desc("Returns true if the Jaccard similarity of the key sets is at most the threshold, with high confidence (its upper bound is <= threshold)",
                                          {p + "_dissimilarity_test(actual, expected, 0.1)"}, {"actual", "expected", "threshold"}, {sketch_type, sketch_type, LogicalType::DOUBLE}));
             }

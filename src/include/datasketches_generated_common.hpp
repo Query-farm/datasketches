@@ -69,16 +69,6 @@ static inline T DSItemOut(Vector &vector, const V &value) {
 // Sketches
 // ---------------------------------------------------------------------------
 
-// Deserializes a sketch, reporting a corrupt or foreign blob as invalid input.
-template <class SKETCH>
-static SKETCH DSDeserialize(const string_t &data, const char *sketch_name) {
-    try {
-        return SKETCH::deserialize(data.GetDataUnsafe(), data.GetSize());
-    } catch (const std::exception &e) {
-        throw InvalidInputException("Failed to deserialize %s sketch: %s", sketch_name, e.what());
-    }
-}
-
 // Stores serialized sketch bytes in `vector`.
 template <class BYTES>
 static inline string_t DSAddBytes(Vector &vector, const BYTES &bytes) {
@@ -523,98 +513,5 @@ struct DSCPCCreateOperation : DSSketchOperationBase {
         }
     }
 };
-
-// ---------------------------------------------------------------------------
-// Binding and registration
-// ---------------------------------------------------------------------------
-
-// The value of a constant argument (K or an option) of an aggregate.
-static inline Value DSBindConstant(ClientContext &context, Expression &argument, const string &not_constant_message,
-                                   const string &null_message) {
-    if (argument.HasParameter()) {
-        throw ParameterNotResolvedException();
-    }
-    if (!argument.IsFoldable()) {
-        throw BinderException(not_constant_message);
-    }
-    auto value = ExpressionExecutor::EvaluateScalar(context, argument);
-    if (value.IsNull()) {
-        throw BinderException(null_message);
-    }
-    return value;
-}
-
-// Registers a BLOB-backed sketch type with casts to and from BLOB.
-static inline LogicalType DSCreateSketchType(ExtensionLoader &loader, const string &name, const string &comment) {
-    auto new_type = LogicalType(LogicalTypeId::BLOB).WithAlias(name);
-    auto type_info = CreateTypeInfo(name, new_type);
-    type_info.temporary = false;
-    type_info.internal = true;
-    type_info.comment = comment;
-    auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
-    auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
-    system_catalog.CreateType(data, type_info);
-    loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
-    loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
-    return new_type;
-}
-
-static inline FunctionDescription DSDescription(vector<LogicalType> parameter_types, vector<string> parameter_names,
-                                                string description, string example) {
-    FunctionDescription desc;
-    desc.description = std::move(description);
-    desc.examples.push_back(std::move(example));
-    desc.parameter_names = std::move(parameter_names);
-    desc.parameter_types = std::move(parameter_types);
-    return desc;
-}
-
-// Adds an aggregate overload taking `arguments` (its constants included) to `set`, with its description.
-static inline void DSAddAggregate(AggregateFunctionSet &set, vector<FunctionDescription> &descriptions,
-                                  AggregateFunction fun, bind_aggregate_function_t bind, vector<LogicalType> arguments,
-                                  vector<string> parameter_names, string description, string example) {
-    fun.SetBindCallback(bind);
-    fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
-    DSSetArguments(fun, arguments);
-    set.AddFunction(fun);
-    descriptions.push_back(
-        DSDescription(std::move(arguments), std::move(parameter_names), std::move(description), std::move(example)));
-}
-
-// Adds a scalar overload to `set`, with its description.
-static inline void DSAddScalar(ScalarFunctionSet &set, vector<FunctionDescription> &descriptions, ScalarFunction fun,
-                               vector<string> parameter_names, string description, string example) {
-    vector<LogicalType> parameter_types;
-    for (auto &param : fun.GetSignature().GetParameters()) {
-        parameter_types.push_back(param.GetType());
-    }
-    set.AddFunction(std::move(fun));
-    descriptions.push_back(DSDescription(std::move(parameter_types), std::move(parameter_names), std::move(description),
-                                         std::move(example)));
-}
-
-template <class INFO>
-static inline void DSRegisterWithDescriptions(ExtensionLoader &loader, INFO &info,
-                                              vector<FunctionDescription> descriptions, const string &sketch) {
-    for (auto &desc : descriptions) {
-        info.descriptions.push_back(std::move(desc));
-    }
-    DSSetCategories(info, {"sketch", sketch});
-    DSRegister(loader, info);
-}
-
-static inline void DSRegisterScalars(ExtensionLoader &loader, ScalarFunctionSet set,
-                                     vector<FunctionDescription> descriptions, const string &sketch) {
-    // Every scalar function deserializes a sketch, which throws on invalid input.
-    set.SetFallible();
-    CreateScalarFunctionInfo info(std::move(set));
-    DSRegisterWithDescriptions(loader, info, std::move(descriptions), sketch);
-}
-
-static inline void DSRegisterAggregates(ExtensionLoader &loader, AggregateFunctionSet set,
-                                        vector<FunctionDescription> descriptions, const string &sketch) {
-    CreateAggregateFunctionInfo info(std::move(set));
-    DSRegisterWithDescriptions(loader, info, std::move(descriptions), sketch);
-}
 
 } // namespace duckdb

@@ -646,7 +646,7 @@ namespace duckdb
         FunctionDescription DSTupleDescription(const string &description, const vector<string> &examples, const vector<string> &names,
                                                const vector<LogicalType> &types)
         {
-            return DSSketchDescription(description, examples, names, types, DSTupleCategories());
+            return DSDescription(description, examples, names, types, DSTupleCategories());
         }
 
         void DSTupleAddMode(FunctionSignature &signature)
@@ -762,7 +762,7 @@ namespace duckdb
                 fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
                 set.AddFunction(fun);
             }
-            ThetaRegisterAggregate(loader, set, descs);
+            DSRegisterAggregates(loader, std::move(set), std::move(descs));
         }
 
         // --- datasketch_tuple_intersect_agg
@@ -782,7 +782,7 @@ namespace duckdb
                                                "by mode := 'sum' (default), 'min', 'max' or 'one'. NULL sketches are skipped; returns NULL if there are no sketches",
                                                {ex.QueryOverlapping("datasketch_tuple_intersect_agg(sketch)"), ex.QueryOverlapping("datasketch_tuple_intersect_agg(sketch, mode := 'min')")},
                                                {"sketch", "mode"}, {sketch_type, LogicalType::VARCHAR}));
-            ThetaRegisterAggregate(loader, set, descs);
+            DSRegisterAggregates(loader, std::move(set), std::move(descs));
         }
 
         // --- set operations
@@ -792,7 +792,7 @@ namespace duckdb
                                             {"sketch_a", "sketch_b"}, sketch_type));
             set.AddFunction(DSTupleVariadic(ScalarFunction("datasketch_tuple_union", {LogicalType::INTEGER, sketch_type, sketch_type}, sketch_type, DSTupleUnionWithKFunction),
                                             {"lg_k", "sketch_a", "sketch_b"}, sketch_type));
-            ThetaRegisterScalar(loader, std::move(set),
+            DSRegisterScalars(loader, std::move(set),
                                 {DSTupleDescription("Returns the union of two or more Tuple sketches, keeping as many entries as the largest input (at least lg_k 12); "
                                                     "the summaries of a key are combined by mode := 'sum' (default), 'min', 'max' or 'one'",
                                                     {ex.Query("datasketch_tuple_union(sketch_a, sketch_b)"), ex.Query("datasketch_tuple_union(sketch_a, sketch_b, sketch_c, mode := 'max')")},
@@ -802,7 +802,7 @@ namespace duckdb
                                                     {ex.Query("datasketch_tuple_union(16, sketch_a, sketch_b)")},
                                                     {"lg_k", "sketch_a", "sketch_b", "mode"}, {LogicalType::INTEGER, sketch_type, sketch_type, LogicalType::VARCHAR})});
         }
-        ThetaRegisterScalar(loader, DSTupleVariadic(ScalarFunction("datasketch_tuple_intersect", {sketch_type, sketch_type}, sketch_type, DSTupleIntersectFunction), {"sketch_a", "sketch_b"}, sketch_type),
+        DSRegisterScalar(loader, DSTupleVariadic(ScalarFunction("datasketch_tuple_intersect", {sketch_type, sketch_type}, sketch_type, DSTupleIntersectFunction), {"sketch_a", "sketch_b"}, sketch_type),
                             DSTupleDescription("Returns the intersection of two or more Tuple sketches: the keys present in every sketch, with their summaries "
                                                "combined by mode := 'sum' (default), 'min', 'max' or 'one'",
                                                {ex.Query("datasketch_tuple_intersect(sketch_a, sketch_b)"), ex.Query("datasketch_tuple_intersect(sketch_a, sketch_b, mode := 'min')")},
@@ -813,15 +813,15 @@ namespace duckdb
             child_list_t<LogicalType> entry;
             entry.emplace_back("hash", LogicalType::UBIGINT);
             entry.emplace_back("summary", LogicalType::DOUBLE);
-            ThetaRegisterScalar(loader, ScalarFunction("datasketch_tuple_summaries", {sketch_type}, LogicalType::LIST(LogicalType::STRUCT(std::move(entry))), DSTupleSummaries),
+            DSRegisterScalar(loader, ScalarFunction("datasketch_tuple_summaries", {sketch_type}, LogicalType::LIST(LogicalType::STRUCT(std::move(entry))), DSTupleSummaries),
                                 DSTupleDescription("Returns the retained entries of the Tuple sketch as a list of {hash, summary} structs (the key hash and its summary)",
                                                    {ex.Query("datasketch_tuple_summaries(sketch)")}, {"sketch"}, {sketch_type}));
         }
-        ThetaRegisterScalar(loader, ScalarFunction("datasketch_tuple_sum", {sketch_type}, LogicalType::DOUBLE, DSTupleSum),
+        DSRegisterScalar(loader, ScalarFunction("datasketch_tuple_sum", {sketch_type}, LogicalType::DOUBLE, DSTupleSum),
                             DSTupleDescription("Returns the estimated total of the summaries over all distinct keys: the sum of the retained summaries divided by "
                                                "theta (with mode 'sum', the estimated sum of the values; exact when the sketch is not in estimation mode)",
                                                {ex.Query("datasketch_tuple_sum(sketch)")}, {"sketch"}, {sketch_type}));
-        ThetaRegisterScalar(loader, ScalarFunction("datasketch_tuple_mean", {sketch_type}, LogicalType::DOUBLE, DSTupleMean),
+        DSRegisterScalar(loader, ScalarFunction("datasketch_tuple_mean", {sketch_type}, LogicalType::DOUBLE, DSTupleMean),
                             DSTupleDescription("Returns the mean summary per distinct key (the mean of the retained summaries), or NULL if the sketch retains no entries",
                                                {ex.Query("datasketch_tuple_mean(sketch)")}, {"sketch"}, {sketch_type}));
 

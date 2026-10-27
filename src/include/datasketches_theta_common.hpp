@@ -209,24 +209,6 @@ namespace duckdb
             }
         }
 
-        inline void ThetaRegisterScalar(ExtensionLoader &loader, ScalarFunctionSet set, vector<FunctionDescription> descriptions)
-        {
-            set.SetFallible();
-            CreateScalarFunctionInfo info(std::move(set));
-            for (auto &desc : descriptions)
-            {
-                info.descriptions.push_back(std::move(desc));
-            }
-            DSRegister(loader, info);
-        }
-
-        inline void ThetaRegisterScalar(ExtensionLoader &loader, ScalarFunction fun, FunctionDescription description)
-        {
-            ScalarFunctionSet set(fun.GetName());
-            set.AddFunction(std::move(fun));
-            ThetaRegisterScalar(loader, std::move(set), {std::move(description)});
-        }
-
         // Names the parameters of a variadic function: DuckDB matches descriptions to overloads by their fixed
         // parameters, so the descriptions list those only and DSRegister cannot name the variadic parameter.
         inline ScalarFunction ThetaVariadic(ScalarFunction fun, const vector<string> &names, const LogicalType &sketch_type)
@@ -239,45 +221,4 @@ namespace duckdb
             return fun;
         }
 
-        inline void ThetaRegisterAggregate(ExtensionLoader &loader, AggregateFunctionSet &set, vector<FunctionDescription> &descriptions)
-        {
-            set.ApplyToFunctions([](AggregateFunction &fun)
-                                 { fun.SetFallible(); });
-            CreateAggregateFunctionInfo info(set);
-            for (auto &desc : descriptions)
-            {
-                info.descriptions.push_back(std::move(desc));
-            }
-            DSRegister(loader, info);
-        }
-
-        inline FunctionDescription DSSketchDescription(string description, vector<string> examples, vector<string> parameter_names,
-                                                       vector<LogicalType> parameter_types, vector<string> categories)
-        {
-            FunctionDescription desc;
-            desc.description = std::move(description);
-            desc.examples = std::move(examples);
-            desc.parameter_names = std::move(parameter_names);
-            desc.parameter_types = std::move(parameter_types);
-            desc.categories = std::move(categories);
-            return desc;
-        }
-
-        // Registers a BLOB alias type for a sketch, castable from and to BLOB.
-        inline LogicalType DSCreateSketchType(ExtensionLoader &loader, const string &name, const string &comment)
-        {
-            auto type_info = CreateTypeInfo(name, LogicalType::BLOB);
-            type_info.temporary = false;
-            type_info.internal = true;
-            type_info.comment = comment;
-            auto new_type = LogicalType(LogicalTypeId::BLOB).WithAlias(name);
-
-            auto &system_catalog = Catalog::GetSystemCatalog(loader.GetDatabaseInstance());
-            auto data = CatalogTransaction::GetSystemTransaction(loader.GetDatabaseInstance());
-            system_catalog.CreateType(data, type_info);
-
-            loader.RegisterCastFunction(LogicalType::BLOB, new_type, DefaultCasts::ReinterpretCast, 1);
-            loader.RegisterCastFunction(new_type, LogicalType::BLOB, DefaultCasts::ReinterpretCast, 1);
-            return new_type;
-        }
 } // namespace duckdb
