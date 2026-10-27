@@ -4,6 +4,8 @@
 #include "duckdb/parser/parsed_data/create_scalar_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_aggregate_function_info.hpp"
 #include "duckdb/function/scalar_function.hpp"
+#include "duckdb/common/operator/cast_operators.hpp"
+#include "duckdb/common/bswap.hpp"
 
 #include <DataSketches/quantiles_sketch.hpp>
 #include <DataSketches/kll_sketch.hpp>
@@ -802,6 +804,61 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
         static bool IgnoreNull() { return true; }
     };
 
+    // Marks the UUID overload: its values are read as hugeint_t but hashed as UUIDs.
+    struct DSUUIDInput
+    {
+    };
+    template <class T>
+    struct DSCountingInput
+    {
+        using physical_type = T;
+        static constexpr bool is_uuid = false;
+    };
+    template <>
+    struct DSCountingInput<DSUUIDInput>
+    {
+        using physical_type = hugeint_t;
+        static constexpr bool is_uuid = true;
+    };
+
+    // Feeds one input value to a counting sketch or union.
+    template <bool IS_UUID, class SKETCH, class T>
+    static inline void DSCountingUpdate(SKETCH &sketch, const T &value)
+    {
+        if constexpr (std::is_same_v<T, string_t>)
+        {
+            sketch.update(value.GetData(), value.GetSize());
+        }
+        else if constexpr (IS_UUID)
+        {
+            // The canonical 16 bytes (big-endian, as in UUID::ToBlob), so these sketches equal sketches of `uuid::BLOB`.
+            const uint64_t halves[2] = {BSwapIfLE(static_cast<uint64_t>(value.upper) ^ (uint64_t(1) << 63)),
+                                        BSwapIfLE(value.lower)};
+            sketch.update(halves, sizeof(halves));
+        }
+        else if constexpr (std::is_same_v<T, hugeint_t> || std::is_same_v<T, uhugeint_t>)
+        {
+            // These inputs used to reach the sketch through an implicit cast to DOUBLE. A value that converts to
+            // DOUBLE exactly keeps that hash, so existing sketches still merge; the rest hash all 128 bits instead of
+            // collapsing into one DOUBLE.
+            double as_double;
+            T round_trip;
+            if (TryCast::Operation<T, double>(value, as_double, false) &&
+                TryCast::Operation<double, T>(as_double, round_trip, false) && round_trip == value)
+            {
+                sketch.update(as_double);
+                return;
+            }
+            // Little-endian, lower half first, on every platform.
+            const uint64_t halves[2] = {BSwapIfBE(value.lower), BSwapIfBE(static_cast<uint64_t>(value.upper))};
+            sketch.update(halves, sizeof(halves));
+        }
+        else
+        {
+            sketch.update(value);
+        }
+    }
+
     // A union's contents as a sketch another union can absorb, and its result in each type's wire format.
     static inline datasketches::hll_sketch UnionContents(const datasketches::hll_union &u)
     {
@@ -1027,7 +1084,7 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
         }
     };
 
-    template <class BIND_DATA_TYPE>
+    template <class BIND_DATA_TYPE, bool IS_UUID = false>
     struct DSHLLCreateOperation : DSUnionOperationBase
     {
         template <class A_TYPE, class STATE, class OP>
@@ -1041,15 +1098,11 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
                 state.CreateSketch(bind_data.k);
             }
 
-            if constexpr (std::is_same_v<A_TYPE, duckdb::string_t>) {
-                state.sketch->update(a_data.GetData(), a_data.GetSize());
-            } else {
-                state.sketch->update(a_data);
-            }
+            DSCountingUpdate<IS_UUID>(*state.sketch, a_data);
         }
     };
 
-    template <class BIND_DATA_TYPE>
+    template <class BIND_DATA_TYPE, bool IS_UUID = false>
     struct DSCPCCreateOperation : DSSketchOperationBase
     {
         template <class A_TYPE, class STATE, class OP>
@@ -1063,11 +1116,7 @@ unique_ptr<FunctionData> DSCPCBind(ClientContext &context, AggregateFunction &fu
                 state.CreateSketch(bind_data.k);
             }
 
-            if constexpr (std::is_same_v<A_TYPE, duckdb::string_t>) {
-                state.sketch->update(a_data.GetData(), a_data.GetSize());
-            } else {
-                state.sketch->update(a_data);
-            }
+            DSCountingUpdate<IS_UUID>(*state.sketch, a_data);
         }
 
         template <class INPUT_TYPE, class STATE, class OP>
@@ -9676,8 +9725,10 @@ return sketch.get_upper_bound(std_dev_data);
     auto static DSHLLCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        auto fun = AggregateFunction::UnaryAggregateDestructor<DSHLLUnionState, T, string_t, DSHLLCreateOperation<DSHLLBindData>, AggregateDestructorType::LEGACY>(type, result_type);
-        DSReadDataArgumentAt<1, DSHLLUnionState, T, DSHLLCreateOperation<DSHLLBindData>>(fun);
+        using INPUT = DSCountingInput<T>;
+        using OP = DSHLLCreateOperation<DSHLLBindData, INPUT::is_uuid>;
+        auto fun = AggregateFunction::UnaryAggregateDestructor<DSHLLUnionState, typename INPUT::physical_type, string_t, OP, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DSHLLUnionState, typename INPUT::physical_type, OP>(fun);
         return fun;
         
     }
@@ -10055,6 +10106,54 @@ return sketch.get_upper_bound(std_dev_data);
         
         
             {
+                auto fun = DSHLLCreateAggregate<hugeint_t>(LogicalType::HUGEINT, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::HUGEINT };
+                agg_descs.push_back(std::move(desc));
+            }
+        
+        
+            {
+                auto fun = DSHLLCreateAggregate<uhugeint_t>(LogicalType::UHUGEINT, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UHUGEINT };
+                agg_descs.push_back(std::move(desc));
+            }
+        
+        
+            {
+                auto fun = DSHLLCreateAggregate<DSUUIDInput>(LogicalType::UUID, sketch_type);
+                fun.bind = DSHLLBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_hll data sketch by aggregating values";
+                desc.examples.push_back("datasketch_hll(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UUID };
+                agg_descs.push_back(std::move(desc));
+            }
+        
+        
+            {
                 auto fun = DSHLLCreateAggregate<string_t>(LogicalType::VARCHAR, sketch_type);
                 fun.bind = DSHLLBind;
                 fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
@@ -10306,8 +10405,10 @@ return sketch.get_upper_bound(std_dev_data);
     auto static DSCPCCreateAggregate(const LogicalType &type, const LogicalType &result_type) -> AggregateFunction
     {
         
-        auto fun = AggregateFunction::UnaryAggregateDestructor<DSCPCState, T, string_t, DSCPCCreateOperation<DSCPCBindData>, AggregateDestructorType::LEGACY>(type, result_type);
-        DSReadDataArgumentAt<1, DSCPCState, T, DSCPCCreateOperation<DSCPCBindData>>(fun);
+        using INPUT = DSCountingInput<T>;
+        using OP = DSCPCCreateOperation<DSCPCBindData, INPUT::is_uuid>;
+        auto fun = AggregateFunction::UnaryAggregateDestructor<DSCPCState, typename INPUT::physical_type, string_t, OP, AggregateDestructorType::LEGACY>(type, result_type);
+        DSReadDataArgumentAt<1, DSCPCState, typename INPUT::physical_type, OP>(fun);
         return fun;
         
     }
@@ -10624,6 +10725,54 @@ return sketch.get_upper_bound(std_dev_data);
                 desc.examples.push_back("datasketch_cpc(k, data)");
                 desc.parameter_names = {"k", "data"};
                 desc.parameter_types = { LogicalType::INTEGER, LogicalType::UBIGINT };
+                agg_descs.push_back(std::move(desc));
+            }
+        
+        
+            {
+                auto fun = DSCPCCreateAggregate<hugeint_t>(LogicalType::HUGEINT, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::HUGEINT };
+                agg_descs.push_back(std::move(desc));
+            }
+        
+        
+            {
+                auto fun = DSCPCCreateAggregate<uhugeint_t>(LogicalType::UHUGEINT, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UHUGEINT };
+                agg_descs.push_back(std::move(desc));
+            }
+        
+        
+            {
+                auto fun = DSCPCCreateAggregate<DSUUIDInput>(LogicalType::UUID, sketch_type);
+                fun.bind = DSCPCBind;
+                fun.order_dependent = AggregateOrderDependent::NOT_ORDER_DEPENDENT;
+                fun.arguments.insert(fun.arguments.begin(), LogicalType::INTEGER);
+                sketch.AddFunction(fun);
+
+                FunctionDescription desc;
+                desc.description = "Creates a sketch_cpc data sketch by aggregating values";
+                desc.examples.push_back("datasketch_cpc(k, data)");
+                desc.parameter_names = {"k", "data"};
+                desc.parameter_types = { LogicalType::INTEGER, LogicalType::UUID };
                 agg_descs.push_back(std::move(desc));
             }
         

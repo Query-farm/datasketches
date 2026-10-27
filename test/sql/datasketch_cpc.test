@@ -321,3 +321,93 @@ query I
 SELECT count(*) FROM (SELECT datasketch_cpc_estimate(datasketch_cpc(12, v) OVER (ORDER BY v ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)) AS e, row_number() OVER (ORDER BY v) AS n FROM (SELECT v FROM cpc_par WHERE v < 5000)) WHERE abs(e - n) / n > 0.05
 ----
 0
+
+# =============================================================================
+# UUID, HUGEINT AND UHUGEINT INPUTS
+# =============================================================================
+
+query I
+SELECT round(datasketch_cpc_estimate(datasketch_cpc(12, '00000000-0000-0000-0000-000000000001'::UUID)))::INT
+----
+1
+
+# The extreme UUID values are distinct, NULLs are ignored and repeats count once
+query I
+SELECT round(datasketch_cpc_estimate(datasketch_cpc(12, x)))::INT FROM (VALUES
+  ('00000000-0000-0000-0000-000000000000'::UUID),
+  ('ffffffff-ffff-ffff-ffff-ffffffffffff'::UUID),
+  ('80000000-0000-0000-0000-000000000000'::UUID),
+  (NULL),
+  ('ffffffff-ffff-ffff-ffff-ffffffffffff'::UUID)) v(x)
+----
+3
+
+statement ok
+CREATE TABLE cpc_uuid AS SELECT md5(range::VARCHAR)::UUID AS u, range % 4 AS g FROM range(200000)
+
+query I
+SELECT abs(datasketch_cpc_estimate(datasketch_cpc(12, u)) - 200000) / 200000 < 0.05 FROM cpc_uuid
+----
+true
+
+# A UUID hashes its canonical 16 bytes, so its sketch equals the sketch of uuid::BLOB
+query I
+SELECT datasketch_cpc(12, u) = datasketch_cpc(12, u::BLOB) FROM cpc_uuid
+----
+true
+
+query I
+SELECT abs(datasketch_cpc_estimate(datasketch_cpc_union(12, s)) - 200000) / 200000 < 0.05 FROM (SELECT datasketch_cpc(12, u) AS s FROM cpc_uuid GROUP BY g)
+----
+true
+
+query I
+SELECT count(*) FROM (SELECT g, datasketch_cpc_estimate(datasketch_cpc(12, u)) AS e FROM cpc_uuid GROUP BY g) WHERE abs(e - 50000) / 50000 > 0.05
+----
+0
+
+# HUGEINT and UHUGEINT used to be cast to DOUBLE, which collapsed values beyond 2^53: these 100000 counted as 1
+query I
+SELECT abs(datasketch_cpc_estimate(datasketch_cpc(12, 1267650600228229401496703205376::HUGEINT + range::HUGEINT)) - 100000) / 100000 < 0.05 FROM range(100000)
+----
+true
+
+query I
+SELECT abs(datasketch_cpc_estimate(datasketch_cpc(12, 1267650600228229401496703205376::UHUGEINT + range::UHUGEINT)) - 100000) / 100000 < 0.05 FROM range(100000)
+----
+true
+
+query I
+SELECT round(datasketch_cpc_estimate(datasketch_cpc(12, x)))::INT FROM (VALUES
+  ((-170141183460469231731687303715884105728)::HUGEINT), (170141183460469231731687303715884105727::HUGEINT), (0::HUGEINT), (NULL), (0::HUGEINT)) v(x)
+----
+3
+
+query I
+SELECT round(datasketch_cpc_estimate(datasketch_cpc(12, x)))::INT FROM (VALUES
+  (0::UHUGEINT), (340282366920938463463374607431768211455::UHUGEINT), (NULL), (0::UHUGEINT)) v(x)
+----
+2
+
+# A value that converts to DOUBLE exactly keeps its DOUBLE hash, so existing HUGEINT sketches still merge
+query I
+SELECT datasketch_cpc(12, range::HUGEINT) = datasketch_cpc(12, range::DOUBLE) FROM range(-1000, 100000)
+----
+true
+
+query I
+SELECT datasketch_cpc(12, range::UHUGEINT) = datasketch_cpc(12, range::DOUBLE) FROM range(100000)
+----
+true
+
+query I
+SELECT datasketch_cpc(12, 1267650600228229401496703205376::HUGEINT) = datasketch_cpc(12, 1267650600228229401496703205376::DOUBLE)
+----
+true
+
+# ... while a neighbour that DOUBLE can't represent counts separately
+query I
+SELECT round(datasketch_cpc_estimate(datasketch_cpc(12, x)))::INT FROM (VALUES
+  (1267650600228229401496703205376::HUGEINT), (1267650600228229401496703205377::HUGEINT)) v(x)
+----
+2
