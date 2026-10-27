@@ -27,6 +27,17 @@ INSTALL datasketches FROM community;
 LOAD datasketches;
 ```
 
+## Merging HLL and CPC sketches
+
+A sketch hashes each value according to its column type, so merge (`datasketch_hll_union`, `datasketch_cpc_union`) only sketches built from the same type. Across types, equal values can hash differently and different values the same:
+
+- Integers up to 64 bits are widened after an unsigned value is read as the signed value of the same width: `5::UTINYINT` and `5::BIGINT` match, but `200::UTINYINT` hashes like `-56` and `18446744073709551615::UBIGINT` like `-1`.
+- HUGEINT and UHUGEINT hash all 16 bytes. They match each other only for values from 0 to 2^127 - 1 (a larger UHUGEINT hashes like a negative HUGEINT), and never match narrower integers: `5::HUGEINT` and `5::BIGINT` differ.
+- Integers and floating-point values never match: `5::BIGINT` and `5::DOUBLE` differ.
+- A UUID hashes the same 16 bytes as `uuid::BLOB`.
+
+If values arrive in different types, cast them to one type before sketching.
+
 ## Weighted Frequent Items
 
 This extension provides `datasketch_frequent_items_weighted([lg_k,] value, weight)`,
