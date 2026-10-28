@@ -1,7 +1,7 @@
 // The weighted sampling sketches: VarOpt (a variance-optimal sample of K items, with an estimate of the total
 // weight of any subset) and EBPPS (a sample whose inclusion probabilities are exactly proportional to the weights).
 
-#include "datasketches_generated_common.hpp"
+#include "datasketches_arena_buffer.hpp"
 
 #include <DataSketches/ebpps_sketch.hpp>
 #include <DataSketches/var_opt_sketch.hpp>
@@ -50,6 +50,15 @@ namespace duckdb
             static constexpr const char *NAME = "VarOpt";
             static constexpr const char *SQL = "varopt";
 
+            // The library's check of an item's weight (see var_opt_sketch::update), for weights that are buffered.
+            static void CheckWeight(double weight)
+            {
+                if (weight <= 0.0 || std::isnan(weight) || std::isinf(weight))
+                {
+                    throw std::invalid_argument("Item weights must be positive and finite. Found: " + std::to_string(weight));
+                }
+            }
+
             // Merging goes through a union of at most `k` samples.
             static void Merge(Sketch &target, Sketch &&source, uint32_t k)
             {
@@ -73,6 +82,15 @@ namespace duckdb
             using Sketch = DSEbppsSketch<T>;
             static constexpr const char *NAME = "EBPPS";
             static constexpr const char *SQL = "ebpps";
+
+            // The library's check of an item's weight (see ebpps_sketch::update), for weights that are buffered.
+            static void CheckWeight(double weight)
+            {
+                if (weight < 0.0 || std::isnan(weight) || std::isinf(weight))
+                {
+                    throw std::invalid_argument("Item weights must be nonnegative and finite. Found: " + std::to_string(weight));
+                }
+            }
 
             // The merged sample has the smaller K of the two.
             static void Merge(Sketch &target, Sketch &&source, uint32_t)
@@ -256,6 +274,273 @@ namespace duckdb
                 TRAITS::Merge(*state.sketch, std::move(incoming), idata.input.bind_data->template Cast<DSSampleBindData>().k);
             }
         };
+
+        // The aggregates' state over items that own no heap memory (every item type but VARCHAR, which keeps
+        // DSSampleState), in the aggregate arena (see datasketches_arena_buffer.hpp): the first items with their
+        // weights, or the sample they were fed to, in order. An EBPPS sketch reserves room for K items up front.
+        template <class TRAITS, class T>
+        struct DSSamplePolicyBase
+        {
+            using BIND = DSSampleBindData;
+            using VALUE = T;
+            using WEIGHT = double;
+            using ENTRY = DSBufferedEntry<T, double>;
+            static constexpr const char *NAME = TRAITS::NAME;
+            static constexpr uint32_t BUFFERED = 32;
+
+            static DSAllocator<T> ArenaMode()
+            {
+                return DSAllocator<T>(DSArenaMode());
+            }
+            static idx_t Budget(const BIND &) { return NumericLimits<idx_t>::Maximum(); }
+            static ENTRY Entry(const T &value) { return ENTRY {value, 1.0}; }
+            // The weight is checked now, as the library would: a buffered item reaches a sketch only later.
+            static ENTRY Entry(const T &value, double weight)
+            {
+                DSSampleGuard<TRAITS>([&]() { TRAITS::CheckWeight(weight); });
+                return ENTRY {value, weight};
+            }
+        };
+
+        // A VarOpt state's sample: a sketch, which takes items, until it is combined with another sample. Combining
+        // goes through a union of at most K samples, which the state then keeps, so that combining more samples
+        // updates it in place (in the arena, replacing a sketch leaves the old one behind).
+        template <class T>
+        struct DSVarOptArenaSample
+        {
+            DSVarOptSketch<T> *sketch;
+            DSVarOptUnion<T> *u;
+            uint32_t k;
+        };
+
+        template <class T>
+        struct DSVarOptArenaPolicy : DSSamplePolicyBase<DSVarOptTraits<T>, T>
+        {
+            using BASE = DSSamplePolicyBase<DSVarOptTraits<T>, T>;
+            using typename BASE::BIND;
+            using typename BASE::ENTRY;
+            using Sketch = DSVarOptSketch<T>;
+            using Union = DSVarOptUnion<T>;
+            using SKETCH = DSVarOptArenaSample<T>;
+
+            static SKETCH *Make(ArenaAllocator &arena, uint32_t k)
+            {
+                auto sample = arena.Make<SKETCH>();
+                sample->sketch = nullptr;
+                sample->u = nullptr;
+                sample->k = k;
+                return sample;
+            }
+            static SKETCH *Create(const BIND &bind, ArenaAllocator &arena)
+            {
+                auto sample = Make(arena, bind.k);
+                sample->sketch = arena.Make<Sketch>(bind.k, Sketch::DEFAULT_RESIZE_FACTOR, BASE::ArenaMode());
+                return sample;
+            }
+            static Sketch Temporary(const BIND &bind) { return Sketch(bind.k); }
+            static void Update(Sketch &sketch, const ENTRY &entry) { sketch.update(entry.value, entry.weight); }
+            static void Update(SKETCH &sample, const ENTRY &entry)
+            {
+                if (sample.sketch)
+                {
+                    sample.sketch->update(entry.value, entry.weight);
+                    return;
+                }
+                // A union takes samples only: the item's, on the heap.
+                Sketch one(sample.k);
+                one.update(entry.value, entry.weight);
+                sample.u->update(std::move(one));
+            }
+            static auto Serialize(const Sketch &sketch) { return sketch.serialize(); }
+            static auto Serialize(const SKETCH &sample)
+            {
+                return sample.sketch ? sample.sketch->serialize() : sample.u->get_result().serialize();
+            }
+            static SKETCH *Deserialize(const string_t &blob, ArenaAllocator &arena)
+            {
+                auto sketch = arena.Make<Sketch>(DSDeserialize<Sketch>(blob, BASE::NAME, datasketches::serde<T>(), BASE::ArenaMode()));
+                auto sample = Make(arena, sketch->get_k());
+                sample->sketch = sketch;
+                return sample;
+            }
+            // Copies allocate through the source's allocator, which in arena mode is the current (target's) arena.
+            static SKETCH *Copy(const SKETCH &source, ArenaAllocator &arena)
+            {
+                auto sample = Make(arena, source.k);
+                if (source.sketch)
+                {
+                    sample->sketch = arena.Make<Sketch>(*source.sketch);
+                }
+                else
+                {
+                    sample->u = arena.Make<Union>(*source.u);
+                }
+                return sample;
+            }
+            static void ToUnion(SKETCH &sample, const BIND &bind, ArenaAllocator &arena)
+            {
+                if (sample.u)
+                {
+                    return;
+                }
+                sample.u = arena.Make<Union>(bind.k, BASE::ArenaMode());
+                if (sample.sketch)
+                {
+                    sample.u->update(*sample.sketch);
+                    sample.sketch = nullptr;
+                }
+                sample.k = bind.k;
+            }
+            static void Combine(SKETCH &target, const SKETCH &source, const BIND &bind, ArenaAllocator &arena)
+            {
+                ToUnion(target, bind, arena);
+                if (source.sketch)
+                {
+                    target.u->update(*source.sketch);
+                    return;
+                }
+                // The source union's result is a temporary, built in a scratch arena; the target grows in its own.
+                DSArenaScratch scratch;
+                auto result = source.u->get_result();
+                DSArenaScope scope(arena);
+                target.u->update(std::move(result));
+            }
+            // An input sample is read on the heap and freed once merged into the state's union.
+            static void Merge(SKETCH *&sample, const string_t &blob, const BIND &bind, ArenaAllocator &arena)
+            {
+                auto incoming = DSDeserialize<Sketch>(blob, BASE::NAME);
+                if (!sample)
+                {
+                    sample = Make(arena, bind.k);
+                }
+                ToUnion(*sample, bind, arena);
+                sample->u->update(std::move(incoming));
+            }
+        };
+
+        template <class T>
+        struct DSEbppsArenaPolicy : DSSamplePolicyBase<DSEbppsTraits<T>, T>
+        {
+            using BASE = DSSamplePolicyBase<DSEbppsTraits<T>, T>;
+            using typename BASE::BIND;
+            using typename BASE::ENTRY;
+            using SKETCH = DSEbppsSketch<T>;
+
+            static SKETCH *Create(const BIND &bind, ArenaAllocator &arena)
+            {
+                return arena.Make<SKETCH>(bind.k, BASE::ArenaMode());
+            }
+            static SKETCH Temporary(const BIND &bind) { return SKETCH(bind.k); }
+            static void Update(SKETCH &sketch, const ENTRY &entry) { sketch.update(entry.value, entry.weight); }
+            static auto Serialize(const SKETCH &sketch) { return sketch.serialize(); }
+            static SKETCH *Deserialize(const string_t &blob, ArenaAllocator &arena)
+            {
+                return arena.Make<SKETCH>(DSDeserialize<SKETCH>(blob, BASE::NAME, datasketches::serde<T>(), BASE::ArenaMode()));
+            }
+            // Copies allocate through the source's allocator, which in arena mode is the current (target's) arena:
+            // also the copy merge() makes of a heavier source, which the target then keeps.
+            static SKETCH *Copy(const SKETCH &source, ArenaAllocator &arena)
+            {
+                return arena.Make<SKETCH>(source);
+            }
+            static void Combine(SKETCH &target, const SKETCH &source, const BIND &, ArenaAllocator &)
+            {
+                target.merge(source);
+            }
+            // As the heap state's merge into a sketch of K: the lighter sample is merged into the heavier one, and the
+            // result has the smaller K. A lighter input is read on the heap and freed once merged. A heavier one
+            // becomes the state's sample, so it is read into the arena: merging into the state's sketch would swap
+            // the heap sketch in.
+            static void Merge(SKETCH *&sketch, const string_t &blob, const BIND &bind, ArenaAllocator &arena)
+            {
+                auto incoming = DSDeserialize<SKETCH>(blob, BASE::NAME);
+                if (incoming.get_cumulative_weight() == 0.0)
+                {
+                    if (!sketch)
+                    {
+                        sketch = Create(bind, arena);
+                    }
+                    return;
+                }
+                if (sketch && incoming.get_cumulative_weight() <= sketch->get_cumulative_weight())
+                {
+                    sketch->merge(std::move(incoming));
+                    return;
+                }
+                auto base = Deserialize(blob, arena);
+                if (sketch && sketch->get_cumulative_weight() > 0.0)
+                {
+                    base->merge(*sketch);
+                }
+                else
+                {
+                    // Merging a sample of no weight only lowers K to its K.
+                    const uint32_t k = sketch ? sketch->get_k() : bind.k;
+                    if (base->get_k() > k)
+                    {
+                        auto shrunk = arena.Make<SKETCH>(k, BASE::ArenaMode());
+                        shrunk->merge(*base);
+                        base = shrunk;
+                    }
+                }
+                sketch = base;
+            }
+        };
+
+        template <class TRAITS>
+        struct DSSampleArena;
+        template <class T>
+        struct DSSampleArena<DSVarOptTraits<T>>
+        {
+            using type = DSVarOptArenaPolicy<T>;
+        };
+        template <class T>
+        struct DSSampleArena<DSEbppsTraits<T>>
+        {
+            using type = DSEbppsArenaPolicy<T>;
+        };
+
+        // The create, merge and weighted create aggregates.
+        template <class TR, class T>
+        vector<AggregateFunction> DSSampleAggregates(const LogicalType &item_type, const LogicalType &sketch_type)
+        {
+            if constexpr (std::is_same_v<T, string_t>)
+            {
+                using STATE = DSSampleState<TR>;
+                using OP = DSSampleOperation<TR>;
+                auto fun = AggregateFunction::UnaryAggregate<STATE, T, string_t, OP, AggregateDestructorType::LEGACY>(item_type, sketch_type);
+                DSReadDataArgumentAt<1, STATE, T, OP>(fun);
+
+                using MERGE = DSSampleMergeOperation<TR>;
+                auto merge = AggregateFunction::UnaryAggregate<STATE, string_t, string_t, MERGE, AggregateDestructorType::LEGACY>(sketch_type, sketch_type);
+                DSReadDataArgumentAt<1, STATE, string_t, MERGE>(merge);
+
+                using WEIGHTED = DSSampleWeightedOperation<TR>;
+                auto weighted = AggregateFunction::BinaryAggregate<STATE, T, double, string_t, WEIGHTED, AggregateDestructorType::LEGACY>(item_type, LogicalType::DOUBLE, sketch_type);
+                weighted.SetStateDestructorCallback(AggregateFunction::StateDestroy<STATE, WEIGHTED>);
+                DSReadDataArgumentsAt<1, 2, STATE, T, double, WEIGHTED>(weighted);
+                return {fun, merge, weighted};
+            }
+            else
+            {
+                using STATE = DSBufferedArenaState<typename DSSampleArena<TR>::type>;
+                using OP = DSArenaCreateOperation<DSSampleBindData>;
+                auto fun = AggregateFunction::UnaryAggregate<STATE, T, string_t, OP>(item_type, sketch_type);
+                DSReadDataArgumentAt<1, STATE, T, OP>(fun);
+                DSSetArenaStateExport<STATE, DSSampleBindData>(fun);
+
+                using MERGE = DSArenaMergeOperation<DSSampleBindData>;
+                auto merge = AggregateFunction::UnaryAggregate<STATE, string_t, string_t, MERGE>(sketch_type, sketch_type);
+                DSReadDataArgumentAt<1, STATE, string_t, MERGE>(merge);
+                DSSetArenaStateExport<STATE, DSSampleBindData>(merge);
+
+                using WEIGHTED = DSArenaWeightedOperation<DSSampleBindData>;
+                auto weighted = AggregateFunction::BinaryAggregate<STATE, T, double, string_t, WEIGHTED>(item_type, LogicalType::DOUBLE, sketch_type);
+                DSReadDataArgumentsAt<1, 2, STATE, T, double, WEIGHTED>(weighted);
+                DSSetArenaStateExport<STATE, DSSampleBindData>(weighted);
+                return {fun, merge, weighted};
+            }
+        }
 
         // ============================================================
         // 3. Scalar Functions
@@ -448,29 +733,17 @@ namespace duckdb
                                     {
                 using T = decltype(item);
                 using TR = TRAITS<T>;
-                using STATE = DSSampleState<TR>;
                 auto sketch_type = DSCreateSketchType(loader, "sketch_" + sql + "_" + StringUtil::Lower(item_type.ToString()),
                                                       type_description + " with embedded type " + item_type.ToString());
+                auto functions = DSSampleAggregates<TR, T>(item_type, sketch_type);
 
-                using OP = DSSampleOperation<TR>;
-                auto fun = AggregateFunction::UnaryAggregate<STATE, T, string_t, OP, AggregateDestructorType::LEGACY>(item_type, sketch_type);
-                DSReadDataArgumentAt<1, STATE, T, OP>(fun);
-                DSAddAggregate(aggregates, aggregate_descs, fun, DSSampleBind<TR>, {LogicalType::INTEGER, item_type}, {"k", "data"},
+                DSAddAggregate(aggregates, aggregate_descs, functions[0], DSSampleBind<TR>, {LogicalType::INTEGER, item_type}, {"k", "data"},
                                "Creates a sketch_" + sql + " sample of at most K of the values, each of weight 1",
                                {"SELECT " + build + " FROM range(1000) t(i)"});
-
-                using MERGE = DSSampleMergeOperation<TR>;
-                auto merge = AggregateFunction::UnaryAggregate<STATE, string_t, string_t, MERGE, AggregateDestructorType::LEGACY>(sketch_type, sketch_type);
-                DSReadDataArgumentAt<1, STATE, string_t, MERGE>(merge);
-                DSAddAggregate(aggregates, aggregate_descs, merge, DSSampleBind<TR>, {LogicalType::INTEGER, sketch_type}, {"k", "sketch"},
+                DSAddAggregate(aggregates, aggregate_descs, functions[1], DSSampleBind<TR>, {LogicalType::INTEGER, sketch_type}, {"k", "sketch"},
                                "Merges sketch_" + sql + " samples into one sample of at most K items",
                                {"SELECT " + name + "(16, sketch) FROM " + partials});
-
-                using WEIGHTED = DSSampleWeightedOperation<TR>;
-                auto weighted = AggregateFunction::BinaryAggregate<STATE, T, double, string_t, WEIGHTED, AggregateDestructorType::LEGACY>(item_type, LogicalType::DOUBLE, sketch_type);
-                weighted.SetStateDestructorCallback(AggregateFunction::StateDestroy<STATE, WEIGHTED>);
-                DSReadDataArgumentsAt<1, 2, STATE, T, double, WEIGHTED>(weighted);
-                DSAddAggregate(weighted_aggregates, weighted_descs, weighted, DSSampleBind<TR>, {LogicalType::INTEGER, item_type, LogicalType::DOUBLE},
+                DSAddAggregate(weighted_aggregates, weighted_descs, functions[2], DSSampleBind<TR>, {LogicalType::INTEGER, item_type, LogicalType::DOUBLE},
                                {"k", "data", "weight"},
                                "Creates a sketch_" + sql + " sample of at most K of the values, sampled in proportion to their weights",
                                {"SELECT " + name + "_weighted(16, i::DOUBLE, (i % 10 + 1)::DOUBLE) FROM range(1000) t(i)"});
