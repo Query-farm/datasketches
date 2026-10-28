@@ -21,14 +21,16 @@ namespace duckdb
 {
     namespace
     {
-        using datasketches::compact_theta_sketch;
-        using datasketches::theta_a_not_b;
-        using datasketches::theta_intersection;
-        using datasketches::theta_jaccard_similarity;
-        using datasketches::theta_union;
-        using datasketches::update_theta_sketch;
-        using datasketches::wrapped_compact_theta_sketch;
-        using ThetaSketchBase = datasketches::base_theta_sketch_alloc<std::allocator<uint64_t>>;
+        // The library's classes, allocating through DuckDB's allocator (see DSAllocator).
+        using ThetaAllocator = DSAllocator<uint64_t>;
+        using compact_theta_sketch = datasketches::compact_theta_sketch_alloc<ThetaAllocator>;
+        using theta_a_not_b = datasketches::theta_a_not_b_alloc<ThetaAllocator>;
+        using theta_intersection = datasketches::theta_intersection_alloc<ThetaAllocator>;
+        using theta_jaccard_similarity = datasketches::theta_jaccard_similarity_alloc<ThetaAllocator>;
+        using theta_union = datasketches::theta_union_alloc<ThetaAllocator>;
+        using update_theta_sketch = datasketches::update_theta_sketch_alloc<ThetaAllocator>;
+        using wrapped_compact_theta_sketch = datasketches::wrapped_compact_theta_sketch_alloc<ThetaAllocator>;
+        using ThetaSketchBase = datasketches::base_theta_sketch_alloc<ThetaAllocator>;
 
 
         // ============================================================

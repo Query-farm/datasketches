@@ -96,7 +96,8 @@ class Sketch:
     name: str
     """The C++ identifier stem (DSKLLState, LoadKLLSketch, ...); lowercased, the SQL name."""
     cpp_class: str
-    """The datasketches class; templated on the item type unless the sketch is a counting sketch."""
+    """The sketch class (an alias of the datasketches class allocating through DSAllocator, see
+    datasketches_generated_common.hpp); templated on the item type unless the sketch is a counting sketch."""
     item_types: tuple
     """The logical types of the values the sketch aggregates, in registration order."""
     example_k: int
@@ -118,7 +119,7 @@ class Sketch:
 
     @property
     def union_class(self) -> str:
-        return f"datasketches::{self.sql}_union"
+        return f"DS{self.name}Union"
 
     @property
     def state_class(self) -> str:
@@ -177,21 +178,21 @@ COUNTING_TYPES = NUMERIC_TYPES + (
 
 
 SKETCHES = [
-    Sketch("Quantiles", "datasketches::quantiles_sketch", NUMERIC_TYPES + ("LogicalType::VARCHAR",),
+    Sketch("Quantiles", "DSQuantilesSketch", NUMERIC_TYPES + ("LogicalType::VARCHAR",),
            example_k=16, k_min=2, k_max=32768, k_power_of_two=True),
-    Sketch("KLL", "datasketches::kll_sketch", NUMERIC_TYPES + ("LogicalType::VARCHAR",),
+    Sketch("KLL", "DSKLLSketch", NUMERIC_TYPES + ("LogicalType::VARCHAR",),
            example_k=200, k_min=8, k_max=65535),
     # The library rounds an odd K down. (It kept K in 8 bits, so a larger K wrapped around: see
     # vcpkg-overlay/apache-datasketches/req-k-16-bit.patch.)
-    Sketch("REQ", "datasketches::req_sketch", NUMERIC_TYPES,
+    Sketch("REQ", "DSREQSketch", NUMERIC_TYPES,
            example_k=12, k_min=4, k_max=1024, option=REQ_HRA),
     # The library's K is a uint16_t.
-    Sketch("TDigest", "datasketches::tdigest", ("LogicalType::FLOAT", "LogicalType::DOUBLE"),
+    Sketch("TDigest", "DSTDigestSketch", ("LogicalType::FLOAT", "LogicalType::DOUBLE"),
            example_k=100, k_min=10, k_max=65535, k_label="K (compression)"),
-    Sketch("HLL", "datasketches::hll_sketch", COUNTING_TYPES,
+    Sketch("HLL", "DSHLLSketch", COUNTING_TYPES,
            example_k=12, k_min=4, k_max=21, k_label="K (lg_k)", option=HLL_TARGET_TYPE,
            counting=True, union_accepts_values=True),
-    Sketch("CPC", "datasketches::cpc_sketch", COUNTING_TYPES,
+    Sketch("CPC", "DSCPCSketch", COUNTING_TYPES,
            example_k=12, k_min=4, k_max=26, k_label="K (lg_k)", counting=True),
 ]
 
@@ -365,7 +366,7 @@ def _all_functions(sketch: Sketch) -> list:
         Function("describe", hll, "Return a string representation of the sketch",
                  (sk, fixed_arg("summary", "LogicalType::BOOLEAN"), fixed_arg("detail", "LogicalType::BOOLEAN")),
                  returns("LogicalType::VARCHAR"),
-                 "return StringVector::AddString(result, sketch.to_string(summary_data, detail_data, false, false));",
+                 "return DSAddText(result, sketch.to_string(summary_data, detail_data, false, false));",
                  "true, false"),
         Function("lg_config_k", hll, "Return the value of log base 2 K for this sketch",
                  (sk,), returns("LogicalType::UTINYINT"), "return sketch.get_lg_config_k();"),
@@ -388,7 +389,7 @@ def _all_functions(sketch: Sketch) -> list:
                  (sketch_arg(sketch, "sketch_a"), sketch_arg(sketch, "sketch_b")), RETURNS_SKETCH,
                  "return DSCPCMerge(result, sketch_a, sketch_b);"),
         Function("describe", cpc, "Return a string representation of the sketch",
-                 (sk,), returns("LogicalType::VARCHAR"), "return StringVector::AddString(result, sketch.to_string());"),
+                 (sk,), returns("LogicalType::VARCHAR"), "return DSAddText(result, sketch.to_string());"),
 
         # --- Counting sketches ---
         Function("estimate", COUNTING_SKETCHES, "Return the estimate of the number of distinct items seen by the sketch",
@@ -403,7 +404,7 @@ def _all_functions(sketch: Sketch) -> list:
         # --- TDigest ---
         Function("describe", tdigest, "Return a description of this sketch",
                  (sk, fixed_arg("include_centroids", "LogicalType::BOOLEAN")), returns("LogicalType::VARCHAR"),
-                 "return StringVector::AddString(result, sketch.to_string(include_centroids_data));", "false"),
+                 "return DSAddText(result, sketch.to_string(include_centroids_data));", "false"),
         Function("rank", tdigest, "Return the rank of an item in the sketch",
                  (sk, item_arg("item")), returns("LogicalType::DOUBLE"), "return sketch.get_rank(DSItemIn(item_data));",
                  "50.0"),
@@ -420,7 +421,7 @@ def _all_functions(sketch: Sketch) -> list:
         Function("describe", CLASSIC_QUANTILE_SKETCHES, "Return a description of this sketch",
                  (sk, fixed_arg("include_levels", "LogicalType::BOOLEAN"), fixed_arg("include_items", "LogicalType::BOOLEAN")),
                  returns("LogicalType::VARCHAR"),
-                 "return StringVector::AddString(result, sketch.to_string(include_levels_data, include_items_data));",
+                 "return DSAddText(result, sketch.to_string(include_levels_data, include_items_data));",
                  "false, false"),
         Function("rank", CLASSIC_QUANTILE_SKETCHES, "Return the rank of an item in the sketch",
                  (sk, item_arg("item"), inclusive), returns("LogicalType::DOUBLE"),

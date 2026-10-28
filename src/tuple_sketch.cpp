@@ -85,11 +85,13 @@ namespace duckdb
             DSTupleMode mode = DSTupleMode::SUM;
         };
 
-        using DSTupleUpdate = datasketches::update_tuple_sketch<double, double, DSTupleDoublePolicy>;
-        using DSTupleCompact = datasketches::compact_tuple_sketch<double>;
-        using DSTupleUnion = datasketches::tuple_union<double, DSTupleDoublePolicy>;
-        using DSTupleIntersection = datasketches::tuple_intersection<double, DSTupleDoublePolicy>;
-        using DSTupleANotB = datasketches::tuple_a_not_b<double>;
+        // The library's classes, allocating through DuckDB's allocator (see DSAllocator).
+        using DSTupleAllocator = DSAllocator<double>;
+        using DSTupleUpdate = datasketches::update_tuple_sketch<double, double, DSTupleDoublePolicy, DSTupleAllocator>;
+        using DSTupleCompact = datasketches::compact_tuple_sketch<double, DSTupleAllocator>;
+        using DSTupleUnion = datasketches::tuple_union<double, DSTupleDoublePolicy, DSTupleAllocator>;
+        using DSTupleIntersection = datasketches::tuple_intersection<double, DSTupleDoublePolicy, DSTupleAllocator>;
+        using DSTupleANotB = datasketches::tuple_a_not_b<double, DSTupleAllocator>;
 
         struct DSTupleDoubleTraits
         {
