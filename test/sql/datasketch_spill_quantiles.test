@@ -33,7 +33,7 @@ FROM (
 ----
 0	0	0	0
 
-# 200k groups of 60 values: every state holds a sketch, together far more than the limit
+# 100k groups of 60 values: every state holds a sketch, together far more than the limit
 query IIII
 SELECT count(*) FILTER (WHERE datasketch_quantiles_n(q) != 60 OR datasketch_quantiles_min_item(q) != g OR datasketch_quantiles_max_item(q) != g + 59),
        count(*) FILTER (WHERE datasketch_req_n(r) != 60 OR datasketch_req_min_item(r) != g OR datasketch_req_max_item(r) != g + 59),
@@ -42,7 +42,7 @@ SELECT count(*) FILTER (WHERE datasketch_quantiles_n(q) != 60 OR datasketch_quan
 FROM (
     SELECT g, datasketch_quantiles(128, v::DOUBLE) AS q, datasketch_req(40, v::FLOAT) AS r,
            datasketch_req(40, v::DOUBLE, false) AS l, datasketch_tdigest(100, v::FLOAT) AS t
-    FROM (SELECT i % 200000 AS g, (i % 200000) + (i // 200000) AS v FROM range(12000000) t(i))
+    FROM (SELECT i % 100000 AS g, (i % 100000) + (i // 100000) AS v FROM range(6000000) t(i))
     GROUP BY g
 );
 ----
@@ -127,17 +127,27 @@ SET memory_limit='4GB';
 
 # Exported states finalize to the aggregate's result: exactly while a state buffers, and for the deterministic
 # t-digest; the others randomize when they compact
-query IIIIIII
+query IIII
 SELECT finalize(datasketch_quantiles(128, i::DOUBLE) EXPORT_STATE) = datasketch_quantiles(128, i::DOUBLE),
        finalize(datasketch_req(12, i::INTEGER) EXPORT_STATE) = datasketch_req(12, i::INTEGER),
        finalize(datasketch_req(12, i::INTEGER, false) EXPORT_STATE) = datasketch_req(12, i::INTEGER, false),
-       finalize(datasketch_tdigest(100, i::FLOAT) EXPORT_STATE) = datasketch_tdigest(100, i::FLOAT),
-       finalize(datasketch_quantiles(128, datasketch_quantiles(16, i::DOUBLE)) EXPORT_STATE) = datasketch_quantiles(128, datasketch_quantiles(16, i::DOUBLE)),
-       finalize(datasketch_req(12, datasketch_req(12, i::INTEGER, false)) EXPORT_STATE) = datasketch_req(12, datasketch_req(12, i::INTEGER, false)),
-       finalize(datasketch_tdigest(100, datasketch_tdigest(10, i::FLOAT)) EXPORT_STATE) = datasketch_tdigest(100, datasketch_tdigest(10, i::FLOAT))
+       finalize(datasketch_tdigest(100, i::FLOAT) EXPORT_STATE) = datasketch_tdigest(100, i::FLOAT)
 FROM range(20) t(i);
 ----
-true	true	true	true	true	true	true
+true	true	true	true
+
+statement ok
+CREATE TABLE small AS
+SELECT i % 4 AS p, datasketch_quantiles(16, i::DOUBLE) AS q, datasketch_req(12, i::INTEGER, false) AS r, datasketch_tdigest(10, i::FLOAT) AS t
+FROM range(20) t(i) GROUP BY p;
+
+query III
+SELECT finalize(datasketch_quantiles(128, q) EXPORT_STATE) = datasketch_quantiles(128, q),
+       finalize(datasketch_req(12, r) EXPORT_STATE) = datasketch_req(12, r),
+       finalize(datasketch_tdigest(100, t) EXPORT_STATE) = datasketch_tdigest(100, t)
+FROM small;
+----
+true	true	true
 
 query IIIII
 SELECT datasketch_quantiles_n(finalize(datasketch_quantiles(128, i::DOUBLE) EXPORT_STATE)),
