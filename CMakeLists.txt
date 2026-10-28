@@ -27,7 +27,11 @@ src/query_farm_telemetry.cpp
 src/theta_sketch.cpp
 src/tuple_sketch.cpp
 src/aod_sketch.cpp
-src/frequent_items_sketch.cpp)
+src/frequent_items_sketch.cpp
+src/bloom_filter.cpp
+src/count_min_sketch.cpp
+src/sampling_sketches.cpp
+src/density_sketch.cpp)
 
 build_static_extension(${TARGET_NAME} ${EXTENSION_SOURCES})
 build_loadable_extension(${TARGET_NAME} " " ${EXTENSION_SOURCES})

@@ -1,0 +1,164 @@
+# name: test/sql/datasketch_count_min.test
+# description: Count-Min sketches: frequency estimates, weights, merging, input types and errors
+# group: [datasketches]
+
+# Before we load the extension, this will fail
+statement error
+SELECT datasketch_count_min_is_empty(''::blob);
+----
+Catalog Error: Scalar Function with name datasketch_count_min_is_empty does not exist!
+
+require datasketches
+
+statement ok
+CREATE TABLE items AS SELECT i % 500 AS item FROM range(100000) t(i);
+
+statement ok
+CREATE TABLE cm AS SELECT datasketch_count_min(3, 64, item) AS s FROM items;
+
+query IIIII
+SELECT datasketch_count_min_num_hashes(s), datasketch_count_min_num_buckets(s), datasketch_count_min_total_weight(s),
+       datasketch_count_min_is_empty(s), round(datasketch_count_min_relative_error(s), 6) FROM cm;
+----
+3	64	100000	false	0.042473
+
+# Estimates never undercount, and overcount by at most relative_error * total_weight (here, always)
+query II
+SELECT min(datasketch_count_min_estimate(s, item) - c) >= 0,
+       max(datasketch_count_min_estimate(s, item) - c) <= datasketch_count_min_relative_error(s) * 100000
+FROM cm, (SELECT item, count(*) AS c FROM items GROUP BY item) GROUP BY s;
+----
+true	true
+
+# The library's bounds: the estimate, and the estimate plus relative_error * total_weight
+query II
+SELECT datasketch_count_min_lower_bound(s, 7) = datasketch_count_min_estimate(s, 7),
+       datasketch_count_min_upper_bound(s, 7) = datasketch_count_min_estimate(s, 7) + floor(datasketch_count_min_relative_error(s) * 100000)::BIGINT
+FROM cm;
+----
+true	true
+
+# A wide sketch counts exactly when there are few distinct values
+query I
+SELECT datasketch_count_min_estimate(datasketch_count_min(5, 2719, item), 7) FROM items;
+----
+200
+
+# Equal values of different types are the same item
+query IIII
+SELECT datasketch_count_min_estimate(s, 7::TINYINT) = datasketch_count_min_estimate(s, 7),
+       datasketch_count_min_estimate(s, 7::HUGEINT) = datasketch_count_min_estimate(s, 7),
+       datasketch_count_min_estimate(s, 7::UBIGINT) = datasketch_count_min_estimate(s, 7),
+       datasketch_count_min_estimate(s, 7::USMALLINT) = datasketch_count_min_estimate(s, 7)
+FROM cm;
+----
+true	true	true	true
+
+query III
+SELECT datasketch_count_min_estimate(s, 1.5::FLOAT), datasketch_count_min_estimate(s, -0.0), datasketch_count_min_estimate(s, 'x'::BLOB)
+FROM (SELECT datasketch_count_min(5, 2719, v) AS s FROM (VALUES (1.5::DOUBLE), (1.5::DOUBLE), (0.0::DOUBLE)) t(v));
+----
+2	1	0
+
+query I
+SELECT datasketch_count_min_estimate(datasketch_count_min(5, 2719, 'x'), 'x'::BLOB);
+----
+1
+
+# Weights add to an item's count, and may be negative; the total weight adds their absolute values
+query III
+SELECT datasketch_count_min_estimate(s, 'a'), datasketch_count_min_estimate(s, 'b'), datasketch_count_min_total_weight(s)
+FROM (SELECT datasketch_count_min_weighted(5, 2719, k, w) AS s FROM (VALUES ('a', 10), ('b', 3), ('a', -4)) v(k, w));
+----
+6	3	17
+
+# A sketch merged from several partitions equals the sketch built at once, byte for byte
+query I
+SELECT datasketch_count_min(p) = (SELECT s FROM cm)
+FROM (SELECT datasketch_count_min(3, 64, item) AS p FROM items GROUP BY item % 7);
+----
+true
+
+query I
+SELECT datasketch_count_min_estimate(datasketch_count_min_merge(a, b), 1)
+FROM (SELECT datasketch_count_min(5, 2719, 1) AS a), (SELECT datasketch_count_min_weighted(5, 2719, 1, 4) AS b);
+----
+5
+
+statement error
+SELECT datasketch_count_min_merge(a, b)
+FROM (SELECT datasketch_count_min(5, 2719, 1) AS a), (SELECT datasketch_count_min(3, 2719, 1) AS b);
+----
+cannot merge Count-Min sketches of different sizes
+
+statement error
+SELECT datasketch_count_min(s) FROM (SELECT datasketch_count_min(5, 100, 1) AS s UNION ALL SELECT datasketch_count_min(5, 200, 1));
+----
+cannot merge Count-Min sketches of different sizes
+
+# A constant value repeated in a chunk counts every row
+query I
+SELECT datasketch_count_min_estimate(datasketch_count_min(3, 64, 1), 1) FROM range(5000);
+----
+5000
+
+# NULL values are skipped; no values gives NULL
+query II
+SELECT datasketch_count_min(3, 64, x) IS NULL, datasketch_count_min_estimate(datasketch_count_min(3, 64, 1), NULL::INTEGER) IS NULL
+FROM (SELECT NULL::INTEGER AS x);
+----
+true	true
+
+# Sizing helpers
+query IIII
+SELECT datasketch_count_min_suggest_num_buckets(0.01), datasketch_count_min_suggest_num_hashes(0.99),
+       datasketch_count_min_suggest_num_hashes(0.0), datasketch_count_min_suggest_num_hashes(0.999999999999);
+----
+272	5	0	28
+
+statement error
+SELECT datasketch_count_min_suggest_num_hashes(1.0);
+----
+confidence must be at least 0 and less than 1
+
+statement error
+SELECT datasketch_count_min_suggest_num_buckets(0.0);
+----
+relative_error must be a positive number
+
+# The serialized form is stable
+query I
+SELECT datasketch_count_min(2, 4, i) FROM range(3) t(i);
+----
+\x02\x01\x12\x00\x00\x00\x00\x00\x04\x00\x00\x00\x02\xCC\x93\x00\x03\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00
+
+query I
+SELECT datasketch_count_min_describe(datasketch_count_min(2, 4, 1)) LIKE '%Count Min%';
+----
+true
+
+# Sizing errors are reported when binding
+statement error
+SELECT datasketch_count_min(0, 64, i) FROM range(10) t(i);
+----
+num_hashes must be between 1 and 255
+
+statement error
+SELECT datasketch_count_min(3, 2, i) FROM range(10) t(i);
+----
+num_buckets must be at least 3
+
+statement error
+SELECT datasketch_count_min(255, 100000000, i) FROM range(10) t(i);
+----
+must be less than 2^30
+
+statement error
+SELECT datasketch_count_min(i::INTEGER, 64, i) FROM range(10) t(i);
+----
+num_hashes must be a constant
+
+statement error
+SELECT datasketch_count_min_estimate('\x01'::sketch_count_min, 1);
+----
+Failed to deserialize Count-Min sketch

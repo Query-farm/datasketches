@@ -1,0 +1,117 @@
+# name: test/sql/datasketch_density.test
+# description: Density sketches: estimates, dimensions, merging and errors
+# group: [datasketches]
+
+# Before we load the extension, this will fail
+statement error
+SELECT datasketch_density_is_empty(''::blob);
+----
+Catalog Error: Scalar Function with name datasketch_density_is_empty does not exist!
+
+require datasketches
+
+# Below K points the sketch keeps every point, so the estimate is the exact kernel density:
+# the average of exp(-squared distance) to each point.
+query II
+SELECT round(datasketch_density_estimate(s, [0.0, 0.0]), 9), round((1 + exp(-1) + exp(-4)) / 3, 9)
+FROM (SELECT datasketch_density(16, p) AS s FROM (VALUES ([0.0, 0.0]), ([1.0, 0.0]), ([0.0, 2.0])) t(p));
+----
+0.461028101	0.461028101
+
+statement ok
+CREATE TABLE d AS SELECT datasketch_density(64, [(i % 100) / 10.0, (i % 37) / 10.0]) AS s FROM range(200000) t(i);
+
+query IIIII
+SELECT datasketch_density_k(s), datasketch_density_dim(s), datasketch_density_n(s), datasketch_density_is_empty(s),
+       datasketch_density_is_estimation_mode(s) FROM d;
+----
+64	2	200000	false	true
+
+query I
+SELECT datasketch_density_num_retained(s) < 64 * 20 FROM d;
+----
+true
+
+# Dense inside the data, zero far away
+query II
+SELECT datasketch_density_estimate(s, [5.0, 1.8]) > 0.05, datasketch_density_estimate(s, [50.0, 50.0]) FROM d;
+----
+true	0.0
+
+# Fixed-size arrays are points too
+query I
+SELECT datasketch_density_estimate(s, [5.0, 1.8]::DOUBLE[2]) = datasketch_density_estimate(s, [5.0, 1.8]) FROM d;
+----
+true
+
+# Merging partial sketches
+query II
+SELECT datasketch_density_n(m), datasketch_density_dim(m)
+FROM (SELECT datasketch_density(64, s) AS m FROM (SELECT datasketch_density(16, [i::DOUBLE, 1.0, 2.0]) AS s FROM range(10000) t(i) GROUP BY i % 4));
+----
+10000	3
+
+query I
+SELECT datasketch_density_n(datasketch_density(16, [i::DOUBLE])) FROM range(1000000) t(i);
+----
+1000000
+
+# NULL points are skipped; no points gives NULL
+query II
+SELECT datasketch_density(8, p) IS NULL, datasketch_density_estimate(datasketch_density(8, [1.0]), NULL) IS NULL
+FROM (SELECT NULL::DOUBLE[] AS p);
+----
+true	true
+
+query I
+SELECT datasketch_density_n(datasketch_density(8, p)) FROM (VALUES ([1.0]), (NULL), ([2.0])) t(p);
+----
+2
+
+# Every point has the sketch's dimension, and no NULL coordinates
+statement error
+SELECT datasketch_density(8, p) FROM (VALUES ([1.0, 2.0]), ([1.0])) t(p);
+----
+datasketch_density: dimension mismatch
+
+statement error
+SELECT datasketch_density(8, [1.0, NULL]);
+----
+point coordinates cannot be NULL
+
+statement error
+SELECT datasketch_density_estimate(s, [1.0]) FROM d;
+----
+the point has 1 dimensions, the sketch 2
+
+statement error
+SELECT datasketch_density(8, s) FROM (SELECT datasketch_density(8, [1.0]) AS s UNION ALL SELECT datasketch_density(8, [1.0, 2.0]));
+----
+dimension mismatch
+
+# The serialized form is stable
+query I
+SELECT datasketch_density(2, [i::DOUBLE]) FROM range(1) t(i);
+----
+\x06\x01\x13\x00\x02\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00
+
+query I
+SELECT datasketch_density_describe(datasketch_density(2, [1.0])) LIKE '%Density%';
+----
+true
+
+# K is a constant between 2 and 65535
+statement error
+SELECT datasketch_density(1, [1.0]);
+----
+Density K value must be between 2 and 65535
+
+statement error
+SELECT datasketch_density(i::INTEGER, [1.0]) FROM range(3) t(i);
+----
+Density can only take a constant K value
+
+statement error
+SELECT datasketch_density_n('\x01'::sketch_density);
+----
+Failed to deserialize Density sketch

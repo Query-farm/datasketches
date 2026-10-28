@@ -12,7 +12,7 @@
 [![DuckDB](https://img.shields.io/badge/DuckDB-extension-fdf1e0?logo=duckdb&logoColor=fff000)](https://query.farm/products/extensions/datasketches/)
 [![v2.0 build](https://github.com/Query-farm/datasketches/actions/workflows/MainDistributionPipeline.yml/badge.svg?branch=v2.0)](https://github.com/Query-farm/datasketches/actions/workflows/MainDistributionPipeline.yml?query=branch%3Av2.0)
 
-Compute approximate distinct counts, quantiles, and frequent items in DuckDB using Apache DataSketches.
+Compute approximate distinct counts, quantiles, frequent items and set operations, test membership with Bloom filters, estimate frequencies with Count-Min, draw weighted samples (VarOpt, EBPPS) and estimate densities in DuckDB using Apache DataSketches.
 
 ## Documentation
 
