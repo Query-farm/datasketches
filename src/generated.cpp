@@ -5132,32 +5132,9 @@ unique_ptr<FunctionData> DSHLLBind(BindAggregateFunctionInput &input) {
     return std::move(bind_data);
 }
 
-// Holds a union so partial states and input sketches merge into it in place.
-struct DSHLLUnionState {
-    DSHLLUnion *sketch = nullptr;
-
-    ~DSHLLUnionState() {
-        delete sketch;
-    }
-
-    void CreateSketch(const DSHLLBindData &bind) {
-        D_ASSERT(!sketch);
-        sketch = new DSHLLUnion(bind.k);
-    }
-
-    void CreateSketch(const DSHLLUnionState &existing) {
-        if (existing.sketch) {
-            sketch = new DSHLLUnion(*existing.sketch);
-        }
-    }
-
-    DSHLLSketch deserialize_sketch(const string_t &data) {
-        return DSDeserialize<DSHLLSketch>(data, "HLL");
-    }
-};
-
-// The aggregates' state: a union in the aggregate arena (see the arena states in datasketches_generated_common.hpp).
-struct DSHLLArenaState {
+// The union aggregate's state: a union in the aggregate arena (see the arena states in
+// datasketches_generated_common.hpp). The create aggregate keeps one once it outgrows its buffer.
+struct DSHLLArenaUnionState {
     DSHLLUnion *sketch;
 
     static DSAllocator<uint8_t> Allocator() {
@@ -5175,35 +5152,34 @@ struct DSHLLArenaState {
     bool IsEmpty() const {
         return !sketch;
     }
-    void Ensure(uint8_t lg_max_k, ArenaAllocator &arena) {
+    void Ensure(uint8_t lg_k, ArenaAllocator &arena) {
         if (!sketch) {
-            sketch = arena.Make<DSHLLUnion>(lg_max_k, Allocator());
+            sketch = arena.Make<DSHLLUnion>(lg_k, Allocator());
         }
-    }
-    template <bool IS_UUID, class V>
-    void Update(const V &value, const DSHLLBindData &bind, ArenaAllocator &arena) {
-        Ensure(bind.k, arena);
-        DSCountingUpdate<IS_UUID>(*sketch, value);
     }
     void Merge(const string_t &data, const DSHLLBindData &bind, ArenaAllocator &arena) {
         Ensure(bind.k, arena);
         sketch->update(Read(data));
     }
-    void Combine(const DSHLLArenaState &source, const DSHLLBindData &bind, ArenaAllocator &arena) {
+    void Combine(const DSHLLArenaUnionState &source, const DSHLLBindData &bind, ArenaAllocator &arena) {
         if (!sketch) {
             // A copy allocates through the source's allocator, which in arena mode is the current (target's) arena.
             sketch = arena.Make<DSHLLUnion>(*source.sketch);
             return;
         }
+        // The source's contents are copied into the current arena, then merged.
         sketch->update(UnionContents(*source.sketch));
     }
     auto Serialize(const DSHLLBindData &bind, ArenaAllocator &) const {
         return SerializeUnion(*sketch, bind);
     }
-    // The union's lg_max_k, then its contents.
-    auto Export(const DSHLLBindData &bind, ArenaAllocator &) const {
-        auto bytes = UnionContents(*sketch).serialize_updatable();
-        bytes.insert(bytes.begin(), static_cast<uint8_t>(bind.k));
+    // The union's lg_k, then its contents.
+    std::vector<uint8_t> Export(const DSHLLBindData &bind, ArenaAllocator &) const {
+        auto contents = UnionContents(*sketch).serialize_updatable();
+        std::vector<uint8_t> bytes;
+        bytes.reserve(1 + contents.size());
+        bytes.push_back(static_cast<uint8_t>(bind.k));
+        bytes.insert(bytes.end(), contents.begin(), contents.end());
         return bytes;
     }
     void Import(const string_t &data, ArenaAllocator &arena) {
@@ -5213,6 +5189,128 @@ struct DSHLLArenaState {
         auto bytes = data.GetData();
         Ensure(static_cast<uint8_t>(bytes[0]), arena);
         sketch->update(Read(string_t(bytes + 1, UnsafeNumericCast<uint32_t>(data.GetSize() - 1))));
+    }
+};
+
+// The create aggregate's state, for values read as INPUT (see DSCountingInput). DuckDB creates a state per input
+// row when grouping reduces little (it skips the hash table lookups), and a union takes a few allocations, so the
+// first BUFFERED distinct values are kept as they are (see DSArenaValues) and fed to a union, in order, only
+// when more arrive, when the state is finalized or exported as a sketch, or when it merges a partial state
+// that has a union. Up to 7 values make at most 7 coupons, which a union keeps in LIST mode in arrival order and
+// merges into another union by feeding them in that order: so appending a partial state's buffered values to
+// another state gives the same union as merging the two states' unions.
+template <class INPUT>
+struct DSHLLArenaState {
+    using T = typename INPUT::physical_type;
+    static constexpr uint32_t BUFFERED = 7;
+
+    // Empty while the values are buffered.
+    DSHLLArenaUnionState unioned;
+    DSArenaValues<T> buffer;
+
+    template <class TARGET>
+    static void Feed(TARGET &target, const T &value) {
+        DSCountingUpdate<INPUT::is_uuid>(target, value);
+    }
+
+    void Initialize() {
+        unioned.Initialize();
+        buffer.Initialize();
+    }
+    bool HasSketch() const {
+        return !unioned.IsEmpty();
+    }
+    bool IsEmpty() const {
+        return !HasSketch() && buffer.Count() == 0;
+    }
+    // Feeds the buffered values to a new union.
+    DSHLLUnion &Promote(const DSHLLBindData &bind, ArenaAllocator &arena) {
+        if (!HasSketch()) {
+            unioned.Ensure(bind.k, arena);
+            auto &target = *unioned.sketch;
+            buffer.ForEach([&](const T &value) { Feed(target, value); });
+            buffer.Initialize();
+        }
+        return *unioned.sketch;
+    }
+    void Add(const T &value, const DSHLLBindData &bind, ArenaAllocator &arena) {
+        if (!HasSketch()) {
+            if (buffer.Contains(value)) {
+                return;
+            }
+            if (buffer.Count() < BUFFERED) {
+                buffer.Append(value, arena);
+                return;
+            }
+        }
+        Feed(Promote(bind, arena), value);
+    }
+    template <bool IS_UUID, class V>
+    void Update(const V &value, const DSHLLBindData &bind, ArenaAllocator &arena) {
+        static_assert(IS_UUID == INPUT::is_uuid, "the state reads its values as INPUT");
+        Add(value, bind, arena);
+    }
+    void Combine(const DSHLLArenaState &source, const DSHLLBindData &bind, ArenaAllocator &arena) {
+        if (!source.HasSketch()) {
+            source.buffer.ForEach([&](const T &value) { Add(value, bind, arena); });
+            return;
+        }
+        if (!IsEmpty()) {
+            Promote(bind, arena);
+        }
+        unioned.Combine(source.unioned, bind, arena);
+    }
+    // A state that still buffers its values is serialized through a temporary union on the heap, which is freed
+    // right away, instead of one left behind in the arena.
+    auto Serialize(const DSHLLBindData &bind, ArenaAllocator &arena) const {
+        if (HasSketch()) {
+            return unioned.Serialize(bind, arena);
+        }
+        DSHLLUnion temporary(bind.k);
+        buffer.ForEach([&](const T &value) { Feed(temporary, value); });
+        return SerializeUnion(temporary, bind);
+    }
+    // The exported state is a tag byte, then the buffered values (EXPORT_BUFFER, see DSArenaValues::Export) or the
+    // exported union (see DSHLLArenaUnionState::Export) (EXPORT_SKETCH). Buffered states are exported as
+    // values, so spilled states that buffer stay small.
+    static constexpr uint8_t EXPORT_BUFFER = 0;
+    static constexpr uint8_t EXPORT_SKETCH = 1;
+    std::vector<uint8_t> Export(const DSHLLBindData &bind, ArenaAllocator &arena) const {
+        std::vector<uint8_t> bytes;
+        if (!HasSketch()) {
+            bytes.push_back(EXPORT_BUFFER);
+            buffer.Export(bytes);
+            return bytes;
+        }
+        auto exported = unioned.Export(bind, arena);
+        bytes.reserve(1 + exported.size());
+        bytes.push_back(EXPORT_SKETCH);
+        bytes.insert(bytes.end(), exported.begin(), exported.end());
+        return bytes;
+    }
+    void Import(const string_t &data, ArenaAllocator &arena) {
+        const auto size = data.GetSize();
+        const auto bytes = const_data_ptr_cast(data.GetData());
+        if (size >= 1 && bytes[0] == EXPORT_SKETCH) {
+            const string_t exported(data.GetData() + 1, UnsafeNumericCast<uint32_t>(size - 1));
+            unioned.Import(exported, arena);
+            return;
+        }
+        if (size < 1 || bytes[0] != EXPORT_BUFFER || !buffer.Import(bytes + 1, size - 1, BUFFERED, arena)) {
+            throw InvalidInputException("Invalid HLL aggregate state");
+        }
+    }
+};
+
+// A sketch absorbs a repeated value once, so a constant input is added once.
+template <bool IS_UUID>
+struct DSHLLArenaCreateOperation : DSArenaCreateOperation<DSHLLBindData, IS_UUID> {
+    template <class INPUT_TYPE, class STATE, class OP>
+    static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
+                                  idx_t count) {
+        if (count > 0) {
+            OP::template Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
+        }
     }
 };
 
@@ -5344,7 +5442,7 @@ static void DSHLLupper_bound(DataChunk &args, ExpressionState &state, Vector &re
 }
 
 static AggregateFunction DSHLLMergeAggregate(const LogicalType &result_type) {
-    using STATE = DSHLLArenaState;
+    using STATE = DSHLLArenaUnionState;
     using OP = DSArenaMergeOperation<DSHLLBindData>;
     auto fun = AggregateFunction::UnaryAggregate<STATE, string_t, string_t, OP>(result_type, result_type);
     DSReadDataArgumentAt<1, STATE, string_t, OP>(fun);
@@ -5355,8 +5453,8 @@ static AggregateFunction DSHLLMergeAggregate(const LogicalType &result_type) {
 template <class T>
 static AggregateFunction DSHLLCreateAggregate(const LogicalType &type, const LogicalType &result_type) {
     using INPUT = DSCountingInput<T>;
-    using STATE = DSHLLArenaState;
-    using OP = DSArenaCreateOperation<DSHLLBindData, INPUT::is_uuid>;
+    using STATE = DSHLLArenaState<INPUT>;
+    using OP = DSHLLArenaCreateOperation<INPUT::is_uuid>;
     auto fun = AggregateFunction::UnaryAggregate<STATE, typename INPUT::physical_type, string_t, OP>(type, result_type);
     DSReadDataArgumentAt<1, STATE, typename INPUT::physical_type, OP>(fun);
     DSSetArenaStateExport<STATE, DSHLLBindData>(fun);
@@ -5645,50 +5743,203 @@ unique_ptr<FunctionData> DSCPCBind(BindAggregateFunctionInput &input) {
     return std::move(bind_data);
 }
 
-struct DSCPCState {
-    DSCPCSketch *sketch = nullptr;
+// The union aggregate's state: a union in the aggregate arena (see the arena states in
+// datasketches_generated_common.hpp).
+struct DSCPCArenaUnionState {
+    DSCPCUnion *sketch;
 
-    ~DSCPCState() {
-        delete sketch;
+    static DSAllocator<uint8_t> Allocator() {
+        return DSAllocator<uint8_t>(DSArenaMode());
+    }
+    // Input sketches are read on the heap and freed once merged: the union assigns a sparse sketch to its
+    // accumulator, whose tables keep the accumulator's allocator, and ORs any other sketch into its bit matrix.
+    static DSCPCSketch Read(const string_t &data) {
+        return DSDeserialize<DSCPCSketch>(data, "CPC");
     }
 
-    void CreateSketch(const DSCPCBindData &bind) {
-        D_ASSERT(!sketch);
-        sketch = new DSCPCSketch(bind.k);
+    void Initialize() {
+        sketch = nullptr;
     }
-
-    void CreateSketch(const DSCPCState &existing) {
-        if (existing.sketch) {
-            sketch = new DSCPCSketch(*existing.sketch);
+    bool IsEmpty() const {
+        return !sketch;
+    }
+    void Ensure(uint8_t lg_k, ArenaAllocator &arena) {
+        if (!sketch) {
+            sketch = arena.Make<DSCPCUnion>(lg_k, datasketches::DEFAULT_SEED, Allocator());
         }
     }
-
-    DSCPCSketch deserialize_sketch(const string_t &data) {
-        return DSDeserialize<DSCPCSketch>(data, "CPC");
+    void Merge(const string_t &data, const DSCPCBindData &bind, ArenaAllocator &arena) {
+        Ensure(bind.k, arena);
+        sketch->update(Read(data));
+    }
+    void Combine(const DSCPCArenaUnionState &source, const DSCPCBindData &bind, ArenaAllocator &arena) {
+        if (!sketch) {
+            // A copy allocates through the source's allocator, which in arena mode is the current (target's) arena.
+            sketch = arena.Make<DSCPCUnion>(*source.sketch);
+            return;
+        }
+        // The source's contents are copied into the current arena, then merged.
+        sketch->update(UnionContents(*source.sketch));
+    }
+    auto Serialize(const DSCPCBindData &bind, ArenaAllocator &) const {
+        return SerializeUnion(*sketch, bind);
+    }
+    // The union's lg_k, then its contents.
+    std::vector<uint8_t> Export(const DSCPCBindData &bind, ArenaAllocator &) const {
+        auto contents = UnionContents(*sketch).serialize();
+        std::vector<uint8_t> bytes;
+        bytes.reserve(1 + contents.size());
+        bytes.push_back(static_cast<uint8_t>(bind.k));
+        bytes.insert(bytes.end(), contents.begin(), contents.end());
+        return bytes;
+    }
+    void Import(const string_t &data, ArenaAllocator &arena) {
+        if (data.GetSize() < 1) {
+            throw InvalidInputException("Invalid CPC aggregate state");
+        }
+        auto bytes = data.GetData();
+        Ensure(static_cast<uint8_t>(bytes[0]), arena);
+        sketch->update(Read(string_t(bytes + 1, UnsafeNumericCast<uint32_t>(data.GetSize() - 1))));
     }
 };
 
-// Holds a union so partial states and input sketches merge into it in place.
-struct DSCPCUnionState {
-    DSCPCUnion *sketch = nullptr;
+// The create aggregate's state, for values read as INPUT (see DSCountingInput). DuckDB creates a state per input
+// row when grouping reduces little (it skips the hash table lookups), and a sketch takes a few allocations, so the
+// first BUFFERED distinct values are kept as they are (see DSArenaValues) and fed to a sketch, in order, only
+// when more arrive, when the state is finalized or exported as a sketch, or when it merges a partial state
+// and both have values. Two partial states merge through a union, which marks the result merged (it drops the HIP
+// estimate), so buffered values are fed to a sketch first: the result is the one unbuffered states give.
+template <class INPUT>
+struct DSCPCArenaState {
+    using T = typename INPUT::physical_type;
+    static constexpr uint32_t BUFFERED = 16;
 
-    ~DSCPCUnionState() {
-        delete sketch;
+    DSCPCSketch *sketch;
+    DSArenaValues<T> buffer;
+
+    static DSAllocator<uint8_t> Allocator() {
+        return DSAllocator<uint8_t>(DSArenaMode());
+    }
+    template <class TARGET>
+    static void Feed(TARGET &target, const T &value) {
+        DSCountingUpdate<INPUT::is_uuid>(target, value);
     }
 
-    void CreateSketch(const DSCPCBindData &bind) {
-        D_ASSERT(!sketch);
-        sketch = new DSCPCUnion(bind.k);
+    void Initialize() {
+        sketch = nullptr;
+        buffer.Initialize();
     }
-
-    void CreateSketch(const DSCPCUnionState &existing) {
-        if (existing.sketch) {
-            sketch = new DSCPCUnion(*existing.sketch);
+    bool HasSketch() const {
+        return sketch != nullptr;
+    }
+    bool IsEmpty() const {
+        return !HasSketch() && buffer.Count() == 0;
+    }
+    // Feeds the buffered values to a new sketch.
+    DSCPCSketch &Promote(const DSCPCBindData &bind, ArenaAllocator &arena) {
+        if (!HasSketch()) {
+            sketch = arena.Make<DSCPCSketch>(bind.k, datasketches::DEFAULT_SEED, Allocator());
+            auto &target = *sketch;
+            buffer.ForEach([&](const T &value) { Feed(target, value); });
+            buffer.Initialize();
+        }
+        return *sketch;
+    }
+    void Add(const T &value, const DSCPCBindData &bind, ArenaAllocator &arena) {
+        if (!HasSketch()) {
+            if (buffer.Contains(value)) {
+                return;
+            }
+            if (buffer.Count() < BUFFERED) {
+                buffer.Append(value, arena);
+                return;
+            }
+        }
+        Feed(Promote(bind, arena), value);
+    }
+    template <bool IS_UUID, class V>
+    void Update(const V &value, const DSCPCBindData &bind, ArenaAllocator &arena) {
+        static_assert(IS_UUID == INPUT::is_uuid, "the state reads its values as INPUT");
+        Add(value, bind, arena);
+    }
+    void Combine(const DSCPCArenaState &source, const DSCPCBindData &bind, ArenaAllocator &arena) {
+        if (IsEmpty()) {
+            if (source.sketch) {
+                // A copy allocates through the source's allocator, which in arena mode is the current (target's)
+                // arena.
+                sketch = arena.Make<DSCPCSketch>(*source.sketch);
+            } else {
+                source.buffer.ForEach([&](const T &value) { buffer.Append(value, arena); });
+            }
+            return;
+        }
+        // The union and a sketch of the source's buffered values are temporaries on the heap. The union copies
+        // the sketches it reads; its result is assigned to the state's sketch, whose tables keep their (arena)
+        // allocator and so copy the result's.
+        auto &target = Promote(bind, arena);
+        DSCPCUnion u(target.get_lg_k());
+        u.update(target);
+        if (source.sketch) {
+            u.update(*source.sketch);
+        } else {
+            DSCPCSketch values(bind.k);
+            source.buffer.ForEach([&](const T &value) { Feed(values, value); });
+            u.update(std::move(values));
+        }
+        target = u.get_result();
+    }
+    // A state that still buffers its values is serialized through a temporary sketch on the heap, which is freed
+    // right away, instead of one left behind in the arena.
+    auto Serialize(const DSCPCBindData &bind, ArenaAllocator &arena) const {
+        if (HasSketch()) {
+            return sketch->serialize();
+        }
+        DSCPCSketch temporary(bind.k);
+        buffer.ForEach([&](const T &value) { Feed(temporary, value); });
+        return temporary.serialize();
+    }
+    // The exported state is a tag byte, then the buffered values (EXPORT_BUFFER, see DSArenaValues::Export) or the
+    // serialized sketch (EXPORT_SKETCH). Buffered states are exported as
+    // values, so spilled states that buffer stay small.
+    static constexpr uint8_t EXPORT_BUFFER = 0;
+    static constexpr uint8_t EXPORT_SKETCH = 1;
+    std::vector<uint8_t> Export(const DSCPCBindData &bind, ArenaAllocator &arena) const {
+        std::vector<uint8_t> bytes;
+        if (!HasSketch()) {
+            bytes.push_back(EXPORT_BUFFER);
+            buffer.Export(bytes);
+            return bytes;
+        }
+        auto exported = sketch->serialize();
+        bytes.reserve(1 + exported.size());
+        bytes.push_back(EXPORT_SKETCH);
+        bytes.insert(bytes.end(), exported.begin(), exported.end());
+        return bytes;
+    }
+    void Import(const string_t &data, ArenaAllocator &arena) {
+        const auto size = data.GetSize();
+        const auto bytes = const_data_ptr_cast(data.GetData());
+        if (size >= 1 && bytes[0] == EXPORT_SKETCH) {
+            const string_t exported(data.GetData() + 1, UnsafeNumericCast<uint32_t>(size - 1));
+            sketch = arena.Make<DSCPCSketch>(DSDeserialize<DSCPCSketch>(
+                exported, "CPC", datasketches::DEFAULT_SEED, Allocator()));
+            return;
+        }
+        if (size < 1 || bytes[0] != EXPORT_BUFFER || !buffer.Import(bytes + 1, size - 1, BUFFERED, arena)) {
+            throw InvalidInputException("Invalid CPC aggregate state");
         }
     }
+};
 
-    DSCPCSketch deserialize_sketch(const string_t &data) {
-        return DSDeserialize<DSCPCSketch>(data, "CPC");
+// A sketch absorbs a repeated value once, so a constant input is added once.
+template <bool IS_UUID>
+struct DSCPCArenaCreateOperation : DSArenaCreateOperation<DSCPCBindData, IS_UUID> {
+    template <class INPUT_TYPE, class STATE, class OP>
+    static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
+                                  idx_t count) {
+        if (count > 0) {
+            OP::template Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
+        }
     }
 };
 
@@ -5770,19 +6021,22 @@ static void DSCPCupper_bound(DataChunk &args, ExpressionState &state, Vector &re
 }
 
 static AggregateFunction DSCPCMergeAggregate(const LogicalType &result_type) {
-    using OP = DSUnionMergeOperation<DSCPCBindData>;
-    auto fun = AggregateFunction::UnaryAggregate<DSCPCUnionState, string_t, string_t, OP, AggregateDestructorType::LEGACY>(result_type, result_type);
-    DSReadDataArgumentAt<1, DSCPCUnionState, string_t, OP>(fun);
+    using STATE = DSCPCArenaUnionState;
+    using OP = DSArenaMergeOperation<DSCPCBindData>;
+    auto fun = AggregateFunction::UnaryAggregate<STATE, string_t, string_t, OP>(result_type, result_type);
+    DSReadDataArgumentAt<1, STATE, string_t, OP>(fun);
+    DSSetArenaStateExport<STATE, DSCPCBindData>(fun);
     return fun;
 }
 
 template <class T>
 static AggregateFunction DSCPCCreateAggregate(const LogicalType &type, const LogicalType &result_type) {
     using INPUT = DSCountingInput<T>;
-    using STATE = DSCPCState;
-    using OP = DSCPCCreateOperation<DSCPCBindData, INPUT::is_uuid>;
-    auto fun = AggregateFunction::UnaryAggregate<STATE, typename INPUT::physical_type, string_t, OP, AggregateDestructorType::LEGACY>(type, result_type);
+    using STATE = DSCPCArenaState<INPUT>;
+    using OP = DSCPCArenaCreateOperation<INPUT::is_uuid>;
+    auto fun = AggregateFunction::UnaryAggregate<STATE, typename INPUT::physical_type, string_t, OP>(type, result_type);
     DSReadDataArgumentAt<1, STATE, typename INPUT::physical_type, OP>(fun);
+    DSSetArenaStateExport<STATE, DSCPCBindData>(fun);
     return fun;
 }
 

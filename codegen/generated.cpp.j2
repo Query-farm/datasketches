@@ -65,7 +65,7 @@ unique_ptr<FunctionData> DS{{ S }}Bind(BindAggregateFunctionInput &input) {
     return std::move(bind_data);
 }
 
-{% if not sketch.union_accepts_values %}
+{% if not sketch.counting %}
 {% if not sketch.counting %}
 template <class T>
 {% endif %}
@@ -107,41 +107,25 @@ struct DS{{ S }}State {
 
 {% endif %}
 {% if sketch.counting %}
-// Holds a union so partial states and input sketches merge into it in place.
-struct DS{{ S }}UnionState {
-    {{ sketch.union_class }} *sketch = nullptr;
-
-    ~DS{{ S }}UnionState() {
-        delete sketch;
-    }
-
-    void CreateSketch(const DS{{ S }}BindData &bind) {
-        D_ASSERT(!sketch);
-        sketch = new {{ sketch.union_class }}(bind.k);
-    }
-
-    void CreateSketch(const DS{{ S }}UnionState &existing) {
-        if (existing.sketch) {
-            sketch = new {{ sketch.union_class }}(*existing.sketch);
-        }
-    }
-
-    {{ sketch.cpp_class }} deserialize_sketch(const string_t &data) {
-        return DSDeserialize<{{ sketch.cpp_class }}>(data, "{{ S }}");
-    }
-};
-
-{% endif %}
-{% if sketch.arena and sketch.counting %}
-// The aggregates' state: a union in the aggregate arena (see the arena states in datasketches_generated_common.hpp).
-struct DS{{ S }}ArenaState {
+{% set cpc = S == "CPC" %}
+{% set noun = "sketch" if cpc else "union" %}
+{% set held_class = sketch.cpp_class if cpc else sketch.union_class %}
+{% set held = "*sketch" if cpc else "*unioned.sketch" %}
+// The union aggregate's state: a union in the aggregate arena (see the arena states in
+// datasketches_generated_common.hpp).{{ "" if cpc else " The create aggregate keeps one once it outgrows its buffer." }}
+struct DS{{ S }}ArenaUnionState {
     {{ sketch.union_class }} *sketch;
 
     static DSAllocator<uint8_t> Allocator() {
         return DSAllocator<uint8_t>(DSArenaMode());
     }
+{% if cpc %}
+    // Input sketches are read on the heap and freed once merged: the union assigns a sparse sketch to its
+    // accumulator, whose tables keep the accumulator's allocator, and ORs any other sketch into its bit matrix.
+{% else %}
     // Input sketches are read on the heap and freed once merged: the union copies what it keeps into its own
     // memory (with vcpkg-overlay/apache-datasketches/hll-union-allocator.patch).
+{% endif %}
     static {{ sketch.cpp_class }} Read(const string_t &data) {
         return DSDeserialize<{{ sketch.cpp_class }}>(data, "{{ S }}");
     }
@@ -152,35 +136,34 @@ struct DS{{ S }}ArenaState {
     bool IsEmpty() const {
         return !sketch;
     }
-    void Ensure(uint8_t lg_max_k, ArenaAllocator &arena) {
+    void Ensure(uint8_t lg_k, ArenaAllocator &arena) {
         if (!sketch) {
-            sketch = arena.Make<{{ sketch.union_class }}>(lg_max_k, Allocator());
+            sketch = arena.Make<{{ sketch.union_class }}>(lg_k, {{ "datasketches::DEFAULT_SEED, " if cpc else "" }}Allocator());
         }
-    }
-    template <bool IS_UUID, class V>
-    void Update(const V &value, const DS{{ S }}BindData &bind, ArenaAllocator &arena) {
-        Ensure(bind.k, arena);
-        DSCountingUpdate<IS_UUID>(*sketch, value);
     }
     void Merge(const string_t &data, const DS{{ S }}BindData &bind, ArenaAllocator &arena) {
         Ensure(bind.k, arena);
         sketch->update(Read(data));
     }
-    void Combine(const DS{{ S }}ArenaState &source, const DS{{ S }}BindData &bind, ArenaAllocator &arena) {
+    void Combine(const DS{{ S }}ArenaUnionState &source, const DS{{ S }}BindData &bind, ArenaAllocator &arena) {
         if (!sketch) {
             // A copy allocates through the source's allocator, which in arena mode is the current (target's) arena.
             sketch = arena.Make<{{ sketch.union_class }}>(*source.sketch);
             return;
         }
+        // The source's contents are copied into the current arena, then merged.
         sketch->update(UnionContents(*source.sketch));
     }
     auto Serialize(const DS{{ S }}BindData &bind, ArenaAllocator &) const {
         return SerializeUnion(*sketch, bind);
     }
-    // The union's lg_max_k, then its contents.
-    auto Export(const DS{{ S }}BindData &bind, ArenaAllocator &) const {
-        auto bytes = UnionContents(*sketch).serialize_updatable();
-        bytes.insert(bytes.begin(), static_cast<uint8_t>(bind.k));
+    // The union's lg_k, then its contents.
+    std::vector<uint8_t> Export(const DS{{ S }}BindData &bind, ArenaAllocator &) const {
+        auto contents = UnionContents(*sketch).{{ "serialize" if cpc else "serialize_updatable" }}();
+        std::vector<uint8_t> bytes;
+        bytes.reserve(1 + contents.size());
+        bytes.push_back(static_cast<uint8_t>(bind.k));
+        bytes.insert(bytes.end(), contents.begin(), contents.end());
         return bytes;
     }
     void Import(const string_t &data, ArenaAllocator &arena) {
@@ -190,6 +173,180 @@ struct DS{{ S }}ArenaState {
         auto bytes = data.GetData();
         Ensure(static_cast<uint8_t>(bytes[0]), arena);
         sketch->update(Read(string_t(bytes + 1, UnsafeNumericCast<uint32_t>(data.GetSize() - 1))));
+    }
+};
+
+// The create aggregate's state, for values read as INPUT (see DSCountingInput). DuckDB creates a state per input
+// row when grouping reduces little (it skips the hash table lookups), and a {{ noun }} takes a few allocations, so the
+// first BUFFERED distinct values are kept as they are (see DSArenaValues) and fed to a {{ noun }}, in order, only
+// when more arrive, when the state is finalized or exported as a sketch, or when it merges a partial state
+{% if cpc %}
+// and both have values. Two partial states merge through a union, which marks the result merged (it drops the HIP
+// estimate), so buffered values are fed to a sketch first: the result is the one unbuffered states give.
+{% else %}
+// that has a union. Up to 7 values make at most 7 coupons, which a union keeps in LIST mode in arrival order and
+// merges into another union by feeding them in that order: so appending a partial state's buffered values to
+// another state gives the same union as merging the two states' unions.
+{% endif %}
+template <class INPUT>
+struct DS{{ S }}ArenaState {
+    using T = typename INPUT::physical_type;
+    static constexpr uint32_t BUFFERED = {{ 16 if cpc else 7 }};
+
+{% if cpc %}
+    {{ sketch.cpp_class }} *sketch;
+{% else %}
+    // Empty while the values are buffered.
+    DS{{ S }}ArenaUnionState unioned;
+{% endif %}
+    DSArenaValues<T> buffer;
+
+{% if cpc %}
+    static DSAllocator<uint8_t> Allocator() {
+        return DSAllocator<uint8_t>(DSArenaMode());
+    }
+{% endif %}
+    template <class TARGET>
+    static void Feed(TARGET &target, const T &value) {
+        DSCountingUpdate<INPUT::is_uuid>(target, value);
+    }
+
+    void Initialize() {
+        {{ "sketch = nullptr" if cpc else "unioned.Initialize()" }};
+        buffer.Initialize();
+    }
+    bool HasSketch() const {
+        return {{ "sketch != nullptr" if cpc else "!unioned.IsEmpty()" }};
+    }
+    bool IsEmpty() const {
+        return !HasSketch() && buffer.Count() == 0;
+    }
+    // Feeds the buffered values to a new {{ noun }}.
+    {{ held_class }} &Promote(const DS{{ S }}BindData &bind, ArenaAllocator &arena) {
+        if (!HasSketch()) {
+{% if cpc %}
+            sketch = arena.Make<{{ sketch.cpp_class }}>(bind.k, datasketches::DEFAULT_SEED, Allocator());
+{% else %}
+            unioned.Ensure(bind.k, arena);
+{% endif %}
+            auto &target = {{ held }};
+            buffer.ForEach([&](const T &value) { Feed(target, value); });
+            buffer.Initialize();
+        }
+        return {{ held }};
+    }
+    void Add(const T &value, const DS{{ S }}BindData &bind, ArenaAllocator &arena) {
+        if (!HasSketch()) {
+            if (buffer.Contains(value)) {
+                return;
+            }
+            if (buffer.Count() < BUFFERED) {
+                buffer.Append(value, arena);
+                return;
+            }
+        }
+        Feed(Promote(bind, arena), value);
+    }
+    template <bool IS_UUID, class V>
+    void Update(const V &value, const DS{{ S }}BindData &bind, ArenaAllocator &arena) {
+        static_assert(IS_UUID == INPUT::is_uuid, "the state reads its values as INPUT");
+        Add(value, bind, arena);
+    }
+{% if cpc %}
+    void Combine(const DS{{ S }}ArenaState &source, const DS{{ S }}BindData &bind, ArenaAllocator &arena) {
+        if (IsEmpty()) {
+            if (source.sketch) {
+                // A copy allocates through the source's allocator, which in arena mode is the current (target's)
+                // arena.
+                sketch = arena.Make<{{ sketch.cpp_class }}>(*source.sketch);
+            } else {
+                source.buffer.ForEach([&](const T &value) { buffer.Append(value, arena); });
+            }
+            return;
+        }
+        // The union and a sketch of the source's buffered values are temporaries on the heap. The union copies
+        // the sketches it reads; its result is assigned to the state's sketch, whose tables keep their (arena)
+        // allocator and so copy the result's.
+        auto &target = Promote(bind, arena);
+        {{ sketch.union_class }} u(target.get_lg_k());
+        u.update(target);
+        if (source.sketch) {
+            u.update(*source.sketch);
+        } else {
+            {{ sketch.cpp_class }} values(bind.k);
+            source.buffer.ForEach([&](const T &value) { Feed(values, value); });
+            u.update(std::move(values));
+        }
+        target = u.get_result();
+    }
+{% else %}
+    void Combine(const DS{{ S }}ArenaState &source, const DS{{ S }}BindData &bind, ArenaAllocator &arena) {
+        if (!source.HasSketch()) {
+            source.buffer.ForEach([&](const T &value) { Add(value, bind, arena); });
+            return;
+        }
+        if (!IsEmpty()) {
+            Promote(bind, arena);
+        }
+        unioned.Combine(source.unioned, bind, arena);
+    }
+{% endif %}
+    // A state that still buffers its values is serialized through a temporary {{ noun }} on the heap, which is freed
+    // right away, instead of one left behind in the arena.
+    auto Serialize(const DS{{ S }}BindData &bind, ArenaAllocator &arena) const {
+        if (HasSketch()) {
+            return {{ "sketch->serialize()" if cpc else "unioned.Serialize(bind, arena)" }};
+        }
+        {{ held_class }} temporary(bind.k);
+        buffer.ForEach([&](const T &value) { Feed(temporary, value); });
+        return {{ "temporary.serialize()" if cpc else "SerializeUnion(temporary, bind)" }};
+    }
+    // The exported state is a tag byte, then the buffered values (EXPORT_BUFFER, see DSArenaValues::Export) or the
+    // {{ "serialized sketch" if cpc else "exported union (see DS" ~ S ~ "ArenaUnionState::Export)" }} (EXPORT_SKETCH). Buffered states are exported as
+    // values, so spilled states that buffer stay small.
+    static constexpr uint8_t EXPORT_BUFFER = 0;
+    static constexpr uint8_t EXPORT_SKETCH = 1;
+    std::vector<uint8_t> Export(const DS{{ S }}BindData &bind, ArenaAllocator &arena) const {
+        std::vector<uint8_t> bytes;
+        if (!HasSketch()) {
+            bytes.push_back(EXPORT_BUFFER);
+            buffer.Export(bytes);
+            return bytes;
+        }
+        auto exported = {{ "sketch->serialize()" if cpc else "unioned.Export(bind, arena)" }};
+        bytes.reserve(1 + exported.size());
+        bytes.push_back(EXPORT_SKETCH);
+        bytes.insert(bytes.end(), exported.begin(), exported.end());
+        return bytes;
+    }
+    void Import(const string_t &data, ArenaAllocator &arena) {
+        const auto size = data.GetSize();
+        const auto bytes = const_data_ptr_cast(data.GetData());
+        if (size >= 1 && bytes[0] == EXPORT_SKETCH) {
+            const string_t exported(data.GetData() + 1, UnsafeNumericCast<uint32_t>(size - 1));
+{% if cpc %}
+            sketch = arena.Make<{{ sketch.cpp_class }}>(DSDeserialize<{{ sketch.cpp_class }}>(
+                exported, "{{ S }}", datasketches::DEFAULT_SEED, Allocator()));
+{% else %}
+            unioned.Import(exported, arena);
+{% endif %}
+            return;
+        }
+        if (size < 1 || bytes[0] != EXPORT_BUFFER || !buffer.Import(bytes + 1, size - 1, BUFFERED, arena)) {
+            throw InvalidInputException("Invalid {{ S }} aggregate state");
+        }
+    }
+};
+
+// A sketch absorbs a repeated value once, so a constant input is added once.
+template <bool IS_UUID>
+struct DS{{ S }}ArenaCreateOperation : DSArenaCreateOperation<DS{{ S }}BindData, IS_UUID> {
+    template <class INPUT_TYPE, class STATE, class OP>
+    static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
+                                  idx_t count) {
+        if (count > 0) {
+            OP::template Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
+        }
     }
 };
 
@@ -330,9 +487,9 @@ static void DS{{ S }}{{ function.name }}(DataChunk &args, ExpressionState &state
 }
 
 {% endfor %}
-{% if sketch.arena and sketch.counting %}
+{% if sketch.counting %}
 static AggregateFunction DS{{ S }}MergeAggregate(const LogicalType &result_type) {
-    using STATE = DS{{ S }}ArenaState;
+    using STATE = DS{{ S }}ArenaUnionState;
     using OP = DSArenaMergeOperation<DS{{ S }}BindData>;
     auto fun = AggregateFunction::UnaryAggregate<STATE, string_t, string_t, OP>(result_type, result_type);
     DSReadDataArgumentAt<1, STATE, string_t, OP>(fun);
@@ -343,33 +500,11 @@ static AggregateFunction DS{{ S }}MergeAggregate(const LogicalType &result_type)
 template <class T>
 static AggregateFunction DS{{ S }}CreateAggregate(const LogicalType &type, const LogicalType &result_type) {
     using INPUT = DSCountingInput<T>;
-    using STATE = DS{{ S }}ArenaState;
-    using OP = DSArenaCreateOperation<DS{{ S }}BindData, INPUT::is_uuid>;
+    using STATE = DS{{ S }}ArenaState<INPUT>;
+    using OP = DS{{ S }}ArenaCreateOperation<INPUT::is_uuid>;
     auto fun = AggregateFunction::UnaryAggregate<STATE, typename INPUT::physical_type, string_t, OP>(type, result_type);
     DSReadDataArgumentAt<1, STATE, typename INPUT::physical_type, OP>(fun);
     DSSetArenaStateExport<STATE, DS{{ S }}BindData>(fun);
-    return fun;
-}
-{% elif sketch.counting %}
-static AggregateFunction DS{{ S }}MergeAggregate(const LogicalType &result_type) {
-    using OP = DSUnionMergeOperation<DS{{ S }}BindData>;
-    auto fun = AggregateFunction::UnaryAggregate<DS{{ S }}UnionState, string_t, string_t, OP, AggregateDestructorType::LEGACY>(result_type, result_type);
-    DSReadDataArgumentAt<1, DS{{ S }}UnionState, string_t, OP>(fun);
-    return fun;
-}
-
-template <class T>
-static AggregateFunction DS{{ S }}CreateAggregate(const LogicalType &type, const LogicalType &result_type) {
-    using INPUT = DSCountingInput<T>;
-{% if sketch.union_accepts_values %}
-    using STATE = DS{{ S }}UnionState;
-    using OP = DSHLLCreateOperation<DS{{ S }}BindData, INPUT::is_uuid>;
-{% else %}
-    using STATE = DS{{ S }}State;
-    using OP = DSCPCCreateOperation<DS{{ S }}BindData, INPUT::is_uuid>;
-{% endif %}
-    auto fun = AggregateFunction::UnaryAggregate<STATE, typename INPUT::physical_type, string_t, OP, AggregateDestructorType::LEGACY>(type, result_type);
-    DSReadDataArgumentAt<1, STATE, typename INPUT::physical_type, OP>(fun);
     return fun;
 }
 {% else %}

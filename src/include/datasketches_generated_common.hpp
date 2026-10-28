@@ -421,135 +421,105 @@ static inline auto SerializeUnion(const DSCPCUnion &u, const BIND_DATA_TYPE &) {
     return u.get_result().serialize();
 }
 
-// For states holding a union. A union absorbs the same input any number of times with the same result,
-// so repeats merge once, and partial states merge in place instead of being rebuilt.
-template <class BIND_DATA_TYPE>
-struct DSUnionOperationBase : DSSketchOperationBase {
-    template <class INPUT_TYPE, class STATE, class OP>
-    static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
-                                  idx_t count) {
-        if (count > 0) {
-            OP::template Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-        }
-    }
+template <class ITEM>
+struct DSArenaItems;
 
-    template <class STATE, class OP>
-    static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data) {
-        if (!source.sketch) {
-            return;
-        }
-        if (!target.sketch) {
-            if (aggr_input_data.combine_type == AggregateCombineType::ALLOW_DESTRUCTIVE) {
-                // The source is discarded after this call, so take its union rather than copy it.
-                target.sketch = source.sketch;
-                const_cast<STATE &>(source).sketch = nullptr;
-            } else {
-                target.CreateSketch(source);
+// Input values of a counting sketch (HLL, CPC) kept in the aggregate arena until they are fed to a sketch, in the
+// order they arrived: fixed-width values as they are, VARCHAR and BLOB values with their bytes copied into the
+// arena. The states keep a value once (see Contains): equal bytes hash to the same coupon, which a sketch absorbs
+// only once. See the counting arena states in codegen/generated.cpp.j2.
+template <class T>
+struct DSArenaValues {
+    DSArenaItems<T> values;
+
+    void Initialize() {
+        values.Initialize();
+    }
+    uint32_t Count() const {
+        return values.count;
+    }
+    bool Contains(const T &value) const {
+        for (uint32_t i = 0; i < values.count; i++) {
+            if (Same(values.items[i], value)) {
+                return true;
             }
-            return;
         }
-        target.sketch->update(UnionContents(*source.sketch));
+        return false;
     }
-
-    template <class STATE, class OP>
-    static void RepeatedCombine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data,
-                                idx_t multiplicity) {
-        Combine<STATE, OP>(source, target, aggr_input_data);
-    }
-
-    template <class T, class STATE>
-    static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data) {
-        if (!state.sketch) {
-            finalize_data.ReturnNull();
-        } else {
-            auto &bind_data = finalize_data.input.bind_data->template Cast<BIND_DATA_TYPE>();
-            target = DSAddBytes(finalize_data.result, SerializeUnion(*state.sketch, bind_data));
-        }
-    }
-};
-
-// Merges serialized sketches into a union state; shared by every counting sketch's union aggregate.
-template <class BIND_DATA_TYPE>
-struct DSUnionMergeOperation : DSUnionOperationBase<BIND_DATA_TYPE> {
-    template <class A_TYPE, class STATE, class OP>
-    static void Operation(STATE &state, const A_TYPE &a_data, AggregateUnaryInput &idata) {
-        if (!state.sketch) {
-            auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
-            state.CreateSketch(bind_data);
-        }
-
-        state.sketch->update(state.deserialize_sketch(a_data));
-    }
-};
-
-template <class BIND_DATA_TYPE, bool IS_UUID = false>
-struct DSHLLCreateOperation : DSUnionOperationBase<BIND_DATA_TYPE> {
-    template <class A_TYPE, class STATE, class OP>
-    static void Operation(STATE &state, const A_TYPE &a_data, AggregateUnaryInput &idata) {
-        if (!state.sketch) {
-            auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
-            state.CreateSketch(bind_data);
-        }
-
-        DSCountingUpdate<IS_UUID>(*state.sketch, a_data);
-    }
-};
-
-template <class BIND_DATA_TYPE, bool IS_UUID = false>
-struct DSCPCCreateOperation : DSSketchOperationBase {
-    template <class A_TYPE, class STATE, class OP>
-    static void Operation(STATE &state, const A_TYPE &a_data, AggregateUnaryInput &idata) {
-        if (!state.sketch) {
-            auto &bind_data = idata.input.bind_data->template Cast<BIND_DATA_TYPE>();
-            state.CreateSketch(bind_data);
-        }
-
-        DSCountingUpdate<IS_UUID>(*state.sketch, a_data);
-    }
-
-    template <class INPUT_TYPE, class STATE, class OP>
-    static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
-                                  idx_t count) {
-        for (idx_t i = 0; i < count; i++) {
-            Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-        }
-    }
-
-    template <class STATE, class OP>
-    static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data) {
-        // A partial that saw no rows has nothing to add. Passing the target through a union anyway would mark it
-        // merged, which drops its HIP estimator, the more accurate estimate of a sketch that was never merged.
-        if (!source.sketch) {
-            return;
-        }
-        const bool destructive = aggr_input_data.combine_type == AggregateCombineType::ALLOW_DESTRUCTIVE;
-        if (!target.sketch) {
-            if (destructive) {
-                // The source is discarded after this call, so take its sketch rather than copy it.
-                target.sketch = source.sketch;
-                const_cast<STATE &>(source).sketch = nullptr;
-            } else {
-                target.CreateSketch(source);
+    void Append(const T &value, ArenaAllocator &arena) {
+        if constexpr (std::is_same_v<T, string_t>) {
+            if (!value.IsInlined()) {
+                const auto size = value.GetSize();
+                auto data = arena.Allocate(size);
+                memcpy(data, value.GetData(), size);
+                values.Append(string_t(const_char_ptr_cast(data), UnsafeNumericCast<uint32_t>(size)), arena);
+                return;
             }
-            return;
         }
-        // Move the sketches into the union so it adopts their tables instead of copying them.
-        DSCPCUnion u(target.sketch->get_lg_k());
-        u.update(std::move(*target.sketch));
-        if (destructive) {
-            u.update(std::move(*const_cast<STATE &>(source).sketch));
-        } else {
-            u.update(*source.sketch);
+        values.Append(value, arena);
+    }
+    template <class FUNC>
+    void ForEach(FUNC &&fun) const {
+        for (uint32_t i = 0; i < values.count; i++) {
+            fun(values.items[i]);
         }
-        *target.sketch = u.get_result();
     }
 
-    template <class T, class STATE>
-    static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data) {
-        if (!state.sketch) {
-            finalize_data.ReturnNull();
+    // Appends the values to `bytes`: fixed-width values as they are, strings as their size (a uint32_t) and bytes.
+    void Export(std::vector<uint8_t> &bytes) const {
+        if constexpr (std::is_same_v<T, string_t>) {
+            for (uint32_t i = 0; i < values.count; i++) {
+                const auto &value = values.items[i];
+                const auto size = static_cast<uint32_t>(value.GetSize());
+                auto size_bytes = reinterpret_cast<const uint8_t *>(&size);
+                bytes.insert(bytes.end(), size_bytes, size_bytes + sizeof(size));
+                auto data = const_data_ptr_cast(value.GetData());
+                bytes.insert(bytes.end(), data, data + size);
+            }
         } else {
-            target = DSAddBytes(finalize_data.result, state.sketch->serialize());
+            auto data = reinterpret_cast<const uint8_t *>(values.items);
+            bytes.insert(bytes.end(), data, data + values.count * sizeof(T));
+        }
+    }
+    // Rebuilds exported values (at most `max_count` of them); false if the bytes are not exported values.
+    bool Import(const_data_ptr_t data, idx_t size, uint32_t max_count, ArenaAllocator &arena) {
+        idx_t offset = 0;
+        while (offset < size) {
+            if (values.count == max_count) {
+                return false;
+            }
+            if constexpr (std::is_same_v<T, string_t>) {
+                uint32_t length;
+                if (size - offset < sizeof(length)) {
+                    return false;
+                }
+                memcpy(&length, data + offset, sizeof(length));
+                offset += sizeof(length);
+                if (size - offset < length) {
+                    return false;
+                }
+                Append(string_t(const_char_ptr_cast(data + offset), length), arena);
+                offset += length;
+            } else {
+                if (size - offset < sizeof(T)) {
+                    return false;
+                }
+                T value;
+                memcpy(&value, data + offset, sizeof(T));
+                values.Append(value, arena);
+                offset += sizeof(T);
+            }
+        }
+        return true;
+    }
+
+private:
+    static bool Same(const T &a, const T &b) {
+        if constexpr (std::is_same_v<T, string_t>) {
+            return a == b;
+        } else {
+            // bytewise, so e.g. 0.0 and -0.0 count as different values (the sketch decides whether they are)
+            return memcmp(&a, &b, sizeof(T)) == 0;
         }
     }
 };
