@@ -1,17 +1,22 @@
 // The Density sketch: a sample of multi-dimensional points that estimates the density (Gaussian kernel) at any
 // point.
 
-#include "datasketches_generated_common.hpp"
+#include "datasketches_arena_buffer.hpp"
 
 #include <DataSketches/density_sketch.hpp>
+
+#include <optional>
 
 namespace duckdb
 {
     namespace
     {
-        // The library's Gaussian kernel only takes std::vector<double>, so this sketch keeps std::allocator.
+        // Scalar functions read sketches on the heap; aggregate states keep theirs, points included, in the aggregate
+        // arena (needs vcpkg-overlay's library with apache/datasketches-cpp#562, whose kernel takes any vector).
         using DensitySketch = datasketches::density_sketch<double>;
         using DensityPoint = std::vector<double>;
+        using ArenaDensitySketch = datasketches::density_sketch<double, datasketches::gaussian_kernel<double>, DSAllocator<double>>;
+        using ArenaDensityPoint = std::vector<double, DSAllocator<double>>;
 
         const vector<string> DS_DENSITY_CATEGORIES = {"sketch", "density"};
 
@@ -22,10 +27,11 @@ namespace duckdb
         }
 
         // Reads one LIST(DOUBLE) value as a point. NULL coordinates have no place in a point.
-        DensityPoint DSDensityPoint(const list_entry_t &list, const UnifiedVectorFormat &children, const double *values,
-                                    const char *function_name)
+        template <class POINT = DensityPoint>
+        POINT DSDensityPoint(const list_entry_t &list, const UnifiedVectorFormat &children, const double *values,
+                             const char *function_name, POINT point = POINT())
         {
-            DensityPoint point(list.length);
+            point.resize(list.length);
             for (idx_t i = 0; i < list.length; i++)
             {
                 auto index = children.sel->get_index(list.offset + i);
@@ -82,88 +88,73 @@ namespace duckdb
         // ============================================================
         // 2. State & Operations
         // ============================================================
+        // A sketch in the aggregate arena, with its points (see the arena states in datasketches_generated_common.hpp).
+        // It takes its dimension from its first point or sketch; with no input rows, the result is NULL.
         struct DSDensityState
         {
-            DensitySketch *sketch = nullptr;
-            ~DSDensityState()
-            {
-                delete sketch;
-            }
-        };
+            ArenaDensitySketch *sketch;
 
-        // Shared by the build and merge aggregates. A sketch takes its dimension from its first point (or sketch).
-        // With no input rows, the result is NULL.
-        struct DSDensityOperationBase
-        {
-            template <class STATE>
-            static void Initialize(STATE &state) { state.sketch = nullptr; }
-
-            template <class STATE>
-            static void Destroy(STATE &state, AggregateInputData &)
+            static DSAllocator<double> Alloc()
             {
-                delete state.sketch;
-                state.sketch = nullptr;
+                return DSAllocator<double>(DSArenaMode());
             }
 
-            static bool IgnoreNull() { return true; }
-
-            template <class INPUT_TYPE, class STATE, class OP>
-            static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t count)
+            void Initialize()
             {
-                for (idx_t i = 0; i < count; i++)
+                sketch = nullptr;
+            }
+            bool IsEmpty() const
+            {
+                return !sketch;
+            }
+            void Ensure(uint16_t k, uint32_t dim, ArenaAllocator &arena)
+            {
+                if (!sketch)
                 {
-                    OP::template Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
+                    sketch = arena.Make<ArenaDensitySketch>(k, dim, datasketches::gaussian_kernel<double>(), Alloc());
                 }
             }
-
-            template <class STATE, class OP>
-            static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data)
+            // The incoming sketch is read into a scratch arena, and its points are copied into this state's arena by the
+            // merge: a point copies with its own allocator, so a point read on the heap would stay on the heap.
+            void Merge(const string_t &data, const DSDensityBindData &bind, ArenaAllocator &arena)
             {
-                if (!source.sketch)
+                ArenaAllocator scratch(Allocator::DefaultAllocator());
+                std::optional<ArenaDensitySketch> incoming;
+                {
+                    DSArenaScope scope(scratch);
+                    incoming.emplace(DSDeserialize<ArenaDensitySketch>(data, "Density", datasketches::gaussian_kernel<double>(), Alloc()));
+                }
+                if (incoming->is_empty())
                 {
                     return;
                 }
-                const bool destructive = aggr_input_data.combine_type == AggregateCombineType::ALLOW_DESTRUCTIVE;
-                if (!target.sketch)
-                {
-                    if (destructive)
-                    {
-                        // The source is discarded after this call, so take its sketch rather than copy it.
-                        target.sketch = source.sketch;
-                        const_cast<STATE &>(source).sketch = nullptr;
-                    }
-                    else
-                    {
-                        target.sketch = new DensitySketch(*source.sketch);
-                    }
-                    return;
-                }
-                DSDensityGuard("datasketch_density", [&]()
-                               {
-                    if (destructive) {
-                        target.sketch->merge(std::move(*const_cast<STATE &>(source).sketch));
-                    } else {
-                        target.sketch->merge(*source.sketch);
-                    } });
+                Ensure(bind.k, incoming->get_dim(), arena);
+                DSDensityGuard("datasketch_density", [&]() { sketch->merge(*incoming); });
             }
-
-            template <class RESULT_TYPE, class STATE>
-            static void Finalize(STATE &state, RESULT_TYPE &target, AggregateFinalizeData &finalize_data)
+            // The source may live in another thread's arena: its points are copied into this one.
+            void Combine(const DSDensityState &source, const DSDensityBindData &bind, ArenaAllocator &arena)
             {
-                if (state.sketch)
-                {
-                    target = DSAddBytes(finalize_data.result, state.sketch->serialize());
-                }
-                else
-                {
-                    finalize_data.ReturnNull();
-                }
+                Ensure(bind.k, source.sketch->get_dim(), arena);
+                DSDensityGuard("datasketch_density", [&]() { sketch->merge(*source.sketch); });
+            }
+            std::vector<uint8_t> Serialize(const DSDensityBindData &, ArenaAllocator &) const
+            {
+                return DSScratchBytes([&]() { return sketch->serialize(); });
+            }
+            std::vector<uint8_t> Export(const DSDensityBindData &bind, ArenaAllocator &arena) const
+            {
+                return Serialize(bind, arena);
+            }
+            void Import(const string_t &data, ArenaAllocator &arena)
+            {
+                sketch = arena.Make<ArenaDensitySketch>(
+                    DSDeserialize<ArenaDensitySketch>(data, "Density", datasketches::gaussian_kernel<double>(), Alloc()));
             }
         };
 
         // Points are LIST(DOUBLE) values, which the unary executor cannot hand over with their elements, so the build
         // aggregate has its own update callback (DSDensityUpdate); this operation provides the others.
-        struct DSDensityBuildOperation : DSDensityOperationBase
+        struct DSDensityBuildOperation : DSArenaOperationBase<DSDensityBindData>
         {
             template <class A_TYPE, class STATE, class OP>
             static void Operation(STATE &, const A_TYPE &, AggregateUnaryInput &)
@@ -185,6 +176,7 @@ namespace duckdb
             auto lists = UnifiedVectorFormat::GetData<list_entry_t>(point_format);
             auto values = UnifiedVectorFormat::GetData<double>(child_format);
             auto state_pointers = UnifiedVectorFormat::GetData<DSDensityState *>(state_format);
+            DSArenaScope scope(aggr_input_data.allocator);
             for (idx_t row = 0; row < count; row++)
             {
                 auto index = point_format.sel->get_index(row);
@@ -193,34 +185,14 @@ namespace duckdb
                     continue;
                 }
                 auto &state = *state_pointers[state_format.sel->get_index(row)];
-                auto point = DSDensityPoint(lists[index], child_format, values, "datasketch_density");
+                auto point = DSDensityPoint<ArenaDensityPoint>(lists[index], child_format, values, "datasketch_density",
+                                                               ArenaDensityPoint(DSDensityState::Alloc()));
                 DSDensityGuard("datasketch_density", [&]()
                                {
-                    if (!state.sketch) {
-                        state.sketch = new DensitySketch(k, static_cast<uint32_t>(point.size()));
-                    }
+                    state.Ensure(k, static_cast<uint32_t>(point.size()), aggr_input_data.allocator);
                     state.sketch->update(std::move(point)); });
             }
         }
-
-        struct DSDensityMergeOperation : DSDensityOperationBase
-        {
-            template <class A_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &input, AggregateUnaryInput &idata)
-            {
-                auto incoming = DSDeserialize<DensitySketch>(input, "Density");
-                if (incoming.is_empty())
-                {
-                    return;
-                }
-                if (!state.sketch)
-                {
-                    auto k = idata.input.bind_data->template Cast<DSDensityBindData>().k;
-                    state.sketch = new DensitySketch(k, incoming.get_dim());
-                }
-                DSDensityGuard("datasketch_density", [&]() { state.sketch->merge(std::move(incoming)); });
-            }
-        };
 
         // ============================================================
         // 3. Scalar Functions
@@ -321,14 +293,17 @@ namespace duckdb
         {
             AggregateFunctionSet set("datasketch_density");
             vector<FunctionDescription> descs;
-            auto fun = AggregateFunction::UnaryAggregate<DSDensityState, list_entry_t, string_t, DSDensityBuildOperation, AggregateDestructorType::LEGACY>(point_type, sketch_type);
+            auto fun = AggregateFunction::UnaryAggregate<DSDensityState, list_entry_t, string_t, DSDensityBuildOperation>(point_type, sketch_type);
             fun.SetStateUpdateCallback(DSDensityUpdate);
+            DSSetArenaStateExport<DSDensityState, DSDensityBindData>(fun);
             DSAddAggregate(set, descs, fun, DSDensityBind, {LogicalType::INTEGER, point_type}, {"k", "point"},
                            "Creates a Density sketch of multi-dimensional points (DOUBLE lists, all of the same length), which "
                            "estimates the density at any point with a Gaussian kernel. Larger K is more accurate",
                            {"SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) FROM range(1000) t(i)"});
-            auto merge = AggregateFunction::UnaryAggregate<DSDensityState, string_t, string_t, DSDensityMergeOperation, AggregateDestructorType::LEGACY>(sketch_type, sketch_type);
-            DSReadDataArgumentAt<1, DSDensityState, string_t, DSDensityMergeOperation>(merge);
+            using MERGE = DSArenaMergeOperation<DSDensityBindData>;
+            auto merge = AggregateFunction::UnaryAggregate<DSDensityState, string_t, string_t, MERGE>(sketch_type, sketch_type);
+            DSReadDataArgumentAt<1, DSDensityState, string_t, MERGE>(merge);
+            DSSetArenaStateExport<DSDensityState, DSDensityBindData>(merge);
             DSAddAggregate(set, descs, merge, DSDensityBind, {LogicalType::INTEGER, sketch_type}, {"k", "sketch"},
                            "Merges Density sketches of points of the same dimension",
                            {ex.QueryPartials("datasketch_density(16, sketch)")});

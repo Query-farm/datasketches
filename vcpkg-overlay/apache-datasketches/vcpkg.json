@@ -1,7 +1,7 @@
 {
   "name": "apache-datasketches",
   "version": "5.3.0",
-  "port-version": 5,
+  "port-version": 6,
   "description": "Apache DataSketches Core C++ Library Component.",
   "homepage": "https://datasketches.apache.org/",
   "license": "Apache-2.0",
