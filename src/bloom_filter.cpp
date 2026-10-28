@@ -1,5 +1,4 @@
-#include "datasketches_extension.hpp"
-#include "datasketches_items.hpp"
+#include "datasketches_arena_buffer.hpp"
 
 #include "duckdb/common/vector/flat_vector.hpp"
 #include "duckdb/common/vector/string_vector.hpp"
@@ -79,25 +78,32 @@ namespace duckdb
         // ============================================================
         struct DSBloomBindData : public FunctionData
         {
+            // The merge aggregate's: its filters carry their own sizes.
+            DSBloomBindData() : max_distinct_items(0), false_positive_rate(0), filter_bytes(0)
+            {
+            }
             DSBloomBindData(uint64_t max_distinct_items, double false_positive_rate)
-                : max_distinct_items(max_distinct_items), false_positive_rate(false_positive_rate)
+                : max_distinct_items(max_distinct_items), false_positive_rate(false_positive_rate),
+                  filter_bytes(((BloomFilter::builder::suggest_num_filter_bits(max_distinct_items, false_positive_rate) + 63) / 64) * 8)
             {
             }
             unique_ptr<FunctionData> Copy() const override
             {
-                return make_uniq<DSBloomBindData>(max_distinct_items, false_positive_rate);
+                return make_uniq<DSBloomBindData>(*this);
             }
             bool Equals(const FunctionData &other_p) const override
             {
                 auto &other = other_p.Cast<DSBloomBindData>();
                 return max_distinct_items == other.max_distinct_items && false_positive_rate == other.false_positive_rate;
             }
-            BloomFilter Create() const
+            BloomFilter Create(const DSAllocator<uint8_t> &allocator = DSAllocator<uint8_t>()) const
             {
-                return BloomFilter::builder::create_by_accuracy(max_distinct_items, false_positive_rate, DS_BLOOM_SEED);
+                return BloomFilter::builder::create_by_accuracy(max_distinct_items, false_positive_rate, DS_BLOOM_SEED, allocator);
             }
             uint64_t max_distinct_items;
             double false_positive_rate;
+            // The size of the filter's bit array.
+            idx_t filter_bytes;
         };
 
         // datasketch_bloom_filter(max_distinct_items, false_positive_rate, data): both constants size the filter.
@@ -131,109 +137,84 @@ namespace duckdb
 
         unique_ptr<FunctionData> DSBloomUnionBind(BindAggregateFunctionInput &)
         {
-            return nullptr;
+            return make_uniq<DSBloomBindData>();
+        }
+
+        // The constants an exported state is re-bound with.
+        void DSBloomConstants(const DSBloomBindData &bind, unordered_map<idx_t, Value> &constants)
+        {
+            constants.emplace(0, Value::BIGINT(static_cast<int64_t>(bind.max_distinct_items)));
+            constants.emplace(1, Value::DOUBLE(bind.false_positive_rate));
         }
 
         // ============================================================
         // 2. State & Operations
         // ============================================================
-        struct DSBloomState
+        // The aggregates' state, in the aggregate arena (see datasketches_arena_buffer.hpp): the first values, or the
+        // filter. Values of every type are buffered as they are (strings copied into the arena): a filter never keeps
+        // them, only their hashes.
+        template <class T, bool IS_UUID>
+        struct DSBloomPolicy
         {
-            BloomFilter *filter = nullptr;
-            ~DSBloomState()
+            using BIND = DSBloomBindData;
+            using VALUE = T;
+            using WEIGHT = void;
+            using SKETCH = BloomFilter;
+            using ENTRY = DSBufferedEntry<T, void>;
+            static constexpr const char *NAME = "Bloom filter";
+            static constexpr uint32_t BUFFERED = 32;
+
+            static DSAllocator<uint8_t> ArenaMode()
             {
-                delete filter;
+                return DSAllocator<uint8_t>(DSArenaMode());
+            }
+            static idx_t Budget(const BIND &bind) { return bind.filter_bytes; }
+            static ENTRY Entry(const T &value) { return ENTRY {value}; }
+            static BloomFilter *Create(const BIND &bind, ArenaAllocator &arena)
+            {
+                return arena.Make<BloomFilter>(bind.Create(ArenaMode()));
+            }
+            static BloomFilter Temporary(const BIND &bind) { return bind.Create(); }
+            static void Update(BloomFilter &filter, const ENTRY &entry) { DSBloomUpdate<IS_UUID>(filter, entry.value); }
+            // See DSBloomSerialize.
+            static auto Serialize(BloomFilter &filter)
+            {
+                filter.get_bits_used();
+                return filter.serialize();
+            }
+            static BloomFilter *Deserialize(const string_t &blob, ArenaAllocator &arena)
+            {
+                return arena.Make<BloomFilter>(DSDeserialize<BloomFilter>(blob, "Bloom filter", ArenaMode()));
+            }
+            // The copy allocates through the source's allocator, which in arena mode is the current (target's) arena.
+            static BloomFilter *Copy(const BloomFilter &source, ArenaAllocator &arena)
+            {
+                return arena.Make<BloomFilter>(source);
+            }
+            static void Combine(BloomFilter &target, const BloomFilter &source, const BIND &, ArenaAllocator &)
+            {
+                DSBloomCombine(target, source, "datasketch_bloom_filter");
+            }
+            // An input filter is read on the heap and freed once combined, except the first, which becomes the state's.
+            static void Merge(BloomFilter *&filter, const string_t &blob, const BIND &, ArenaAllocator &arena)
+            {
+                if (!filter)
+                {
+                    filter = Deserialize(blob, arena);
+                    return;
+                }
+                DSBloomCombine(*filter, DSBloomDeserialize(blob), "datasketch_bloom_filter");
             }
         };
 
-        // Shared by the build and merge aggregates. With no input rows, the result is NULL.
-        struct DSBloomOperationBase
+        // Adding a value (or a filter) again does not change the filter.
+        template <class BASE>
+        struct DSBloomIdempotent : BASE
         {
-            template <class STATE>
-            static void Initialize(STATE &state) { state.filter = nullptr; }
-
-            template <class STATE>
-            static void Destroy(STATE &state, AggregateInputData &)
-            {
-                delete state.filter;
-                state.filter = nullptr;
-            }
-
-            static bool IgnoreNull() { return true; }
-
-            // Adding a value (or a filter) again does not change the filter.
             template <class INPUT_TYPE, class STATE, class OP>
-            static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t count)
+            static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t)
             {
-                OP::template Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-            }
-
-            template <class STATE, class OP>
-            static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data)
-            {
-                if (!source.filter)
-                {
-                    return;
-                }
-                if (!target.filter)
-                {
-                    if (aggr_input_data.combine_type == AggregateCombineType::ALLOW_DESTRUCTIVE)
-                    {
-                        // The source is discarded after this call, so take its filter rather than copy it.
-                        target.filter = source.filter;
-                        const_cast<STATE &>(source).filter = nullptr;
-                    }
-                    else
-                    {
-                        target.filter = new BloomFilter(*source.filter);
-                    }
-                    return;
-                }
-                DSBloomCombine(*target.filter, *source.filter, "datasketch_bloom_filter");
-            }
-
-            template <class T, class STATE>
-            static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data)
-            {
-                if (state.filter)
-                {
-                    target = DSBloomSerialize(finalize_data.result, *state.filter);
-                }
-                else
-                {
-                    finalize_data.ReturnNull();
-                }
-            }
-        };
-
-        template <bool IS_UUID>
-        struct DSBloomBuildOperation : DSBloomOperationBase
-        {
-            template <class A_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &input, AggregateUnaryInput &idata)
-            {
-                if (!state.filter)
-                {
-                    state.filter = new BloomFilter(idata.input.bind_data->template Cast<DSBloomBindData>().Create());
-                }
-                DSBloomUpdate<IS_UUID>(*state.filter, input);
-            }
-        };
-
-        struct DSBloomUnionOperation : DSBloomOperationBase
-        {
-            template <class A_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &input, AggregateUnaryInput &)
-            {
-                auto filter = DSBloomDeserialize(input);
-                if (!state.filter)
-                {
-                    state.filter = new BloomFilter(std::move(filter));
-                }
-                else
-                {
-                    DSBloomCombine(*state.filter, filter, "datasketch_bloom_filter");
-                }
+                BASE::template Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
             }
         };
 
@@ -342,10 +323,12 @@ namespace duckdb
             DSForEachHashedType([&](auto marker, const LogicalType &item_type)
                                 {
                 using INPUT = DSCountingInput<decltype(marker)>;
-                using OP = DSBloomBuildOperation<INPUT::is_uuid>;
                 using T = typename INPUT::physical_type;
-                auto fun = AggregateFunction::UnaryAggregate<DSBloomState, T, string_t, OP, AggregateDestructorType::LEGACY>(item_type, sketch_type);
-                DSReadDataArgumentAt<2, DSBloomState, T, OP>(fun);
+                using STATE = DSBufferedArenaState<DSBloomPolicy<T, INPUT::is_uuid>>;
+                using OP = DSBloomIdempotent<DSArenaCreateOperation<DSBloomBindData, INPUT::is_uuid>>;
+                auto fun = AggregateFunction::UnaryAggregate<STATE, T, string_t, OP>(item_type, sketch_type);
+                DSReadDataArgumentAt<2, STATE, T, OP>(fun);
+                DSSetBufferedStateExport<STATE, DSBloomBindData, DSBloomConstants>(fun);
                 DSAddAggregate(set, descs, fun, DSBloomBind, {LogicalType::BIGINT, LogicalType::DOUBLE, item_type},
                                {"max_distinct_items", "false_positive_rate", "data"},
                                "Creates a Bloom filter sized to hold max_distinct_items distinct values with the given false positive rate. "
@@ -353,7 +336,10 @@ namespace duckdb
                                {"SELECT datasketch_bloom_filter(1000, 0.01, i) FROM range(100) t(i)"}); });
 
             // datasketch_bloom_filter(filter): combines filters.
-            auto merge = AggregateFunction::UnaryAggregate<DSBloomState, string_t, string_t, DSBloomUnionOperation, AggregateDestructorType::LEGACY>(sketch_type, sketch_type);
+            using MERGE_STATE = DSBufferedArenaState<DSBloomPolicy<int64_t, false>>;
+            using MERGE = DSBloomIdempotent<DSArenaMergeOperation<DSBloomBindData>>;
+            auto merge = AggregateFunction::UnaryAggregate<MERGE_STATE, string_t, string_t, MERGE>(sketch_type, sketch_type);
+            DSSetBufferedStateExport<MERGE_STATE, DSBloomBindData, DSNoConstants<DSBloomBindData>>(merge);
             DSAddAggregate(set, descs, merge, DSBloomUnionBind, {sketch_type}, {"filter"},
                            "Combines Bloom filters built with the same max_distinct_items and false_positive_rate into one that "
                            "contains the values of each",
