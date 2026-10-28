@@ -7,6 +7,10 @@ vcpkg_from_github(
     PATCHES
         # req_sketch kept K in 8 bits, so a K of 256 or more wrapped around (256 became 4). Not yet fixed upstream.
         req-k-16-bit.patch
+        # count_min_sketch drew its hash seeds with std::default_random_engine and std::uniform_int_distribution, which
+        # differ between standard libraries, so sketches built on Linux, macOS and Windows disagreed. The patch
+        # computes libstdc++'s seeds on every platform.
+        count-min-portable-hash-seeds.patch
 )
 
 set(VCPKG_BUILD_TYPE release) # header-only port
