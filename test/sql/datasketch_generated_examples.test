@@ -15,6 +15,7 @@ INSERT INTO generated_examples VALUES
 ('SELECT datasketch_quantiles_k(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
+('SELECT datasketch_quantiles_merge(sketch_a, sketch_b) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b'),
 ('SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_quantiles_describe(sketch, false, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_quantiles_rank(sketch, 50.0, true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
@@ -33,6 +34,7 @@ INSERT INTO generated_examples VALUES
 ('SELECT datasketch_kll_k(sketch) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_kll_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
+('SELECT datasketch_kll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b'),
 ('SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_kll_describe(sketch, false, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_kll_rank(sketch, 50.0, true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
@@ -51,6 +53,7 @@ INSERT INTO generated_examples VALUES
 ('SELECT datasketch_req_k(sketch) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
+('SELECT datasketch_req_merge(sketch_a, sketch_b) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_req(12, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b'),
 ('SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_req_rank(sketch, 50.0, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_req_quantile(sketch, 0.5, true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
@@ -76,6 +79,7 @@ INSERT INTO generated_examples VALUES
 ('SELECT datasketch_tdigest_rank(sketch, 50.0) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_tdigest_total_weight(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_tdigest_quantile(sketch, 0.5) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
+('SELECT datasketch_tdigest_merge(sketch_a, sketch_b) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b'),
 ('SELECT datasketch_tdigest_min_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_tdigest_max_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s'),
 ('SELECT datasketch_tdigest(100, i::DOUBLE) FROM range(100) t(i)'),
@@ -109,7 +113,7 @@ SELECT count(*), count(*) FILTER (WHERE example NOT IN (SELECT example FROM gene
 FROM (SELECT DISTINCT unnest(examples) AS example FROM duckdb_functions()
       WHERE regexp_matches(function_name, '^datasketch_(quantiles|kll|req|tdigest|hll|cpc)(_|$)'));
 ----
-91	0
+95	0
 
 statement ok
 SELECT datasketch_quantiles_is_empty(sketch) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s;
@@ -122,6 +126,9 @@ SELECT datasketch_quantiles_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT d
 
 statement ok
 SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s;
+
+statement ok
+SELECT datasketch_quantiles_merge(sketch_a, sketch_b) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b;
 
 statement ok
 SELECT datasketch_quantiles_normalized_rank_error(sketch, false) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s;
@@ -178,6 +185,9 @@ statement ok
 SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s;
 
 statement ok
+SELECT datasketch_kll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b;
+
+statement ok
 SELECT datasketch_kll_normalized_rank_error(sketch, false) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s;
 
 statement ok
@@ -230,6 +240,9 @@ SELECT datasketch_req_cdf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT dataske
 
 statement ok
 SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s;
+
+statement ok
+SELECT datasketch_req_merge(sketch_a, sketch_b) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_req(12, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b;
 
 statement ok
 SELECT datasketch_req_describe(sketch, false, false) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s;
@@ -305,6 +318,9 @@ SELECT datasketch_tdigest_total_weight(sketch) FROM (SELECT datasketch_tdigest(1
 
 statement ok
 SELECT datasketch_tdigest_quantile(sketch, 0.5) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s;
+
+statement ok
+SELECT datasketch_tdigest_merge(sketch_a, sketch_b) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b;
 
 statement ok
 SELECT datasketch_tdigest_min_value(sketch) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s;
