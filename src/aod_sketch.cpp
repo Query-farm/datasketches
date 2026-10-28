@@ -4,6 +4,7 @@
 // same key are summed element-wise when building, merging, unioning and intersecting.
 
 #include "datasketches_tuple_common.hpp"
+#include "datasketches_theta_arena.hpp"
 
 #include <DataSketches/array_of_doubles_sketch.hpp>
 
@@ -101,14 +102,6 @@ namespace duckdb
 
         using DSAodScalars = DSTupleFunctions<DSAodTraits>;
 
-        DSAodCompact DSAodEmptySketch(uint8_t lg_k, uint64_t seed, uint8_t num_values)
-        {
-            DSAodUpdate::builder b{datasketches::default_array_tuple_update_policy<DSAodArray>(num_values)};
-            b.set_lg_k(lg_k);
-            b.set_seed(seed);
-            return b.build().compact();
-        }
-
         // Tracks the number of values of the sketches being combined (empty sketches are ignored).
         struct DSAodNumValuesTracker
         {
@@ -148,24 +141,7 @@ namespace duckdb
         // Bind Data
         // ============================================================
 
-        struct DSAodBindData : public FunctionData
-        {
-            unique_ptr<FunctionData> Copy() const override
-            {
-                return make_uniq<DSAodBindData>(*this);
-            }
-
-            bool Equals(const FunctionData &other_p) const override
-            {
-                auto &other = other_p.Cast<DSAodBindData>();
-                return lg_k == other.lg_k && infer_lg_k == other.infer_lg_k && seed == other.seed && p == other.p;
-            }
-
-            uint8_t lg_k = DS_THETA_DEFAULT_LG_K;
-            bool infer_lg_k = false;
-            uint64_t seed = DS_THETA_DEFAULT_SEED;
-            float p = 1.0f;
-        };
+        using DSAodBindData = DSThetaFamilyBindData;
 
         template <bool HAS_LG_K>
         unique_ptr<FunctionData> DSAodBindBuild(BindAggregateFunctionInput &input)
@@ -176,6 +152,7 @@ namespace duckdb
                 result->lg_k = DSTupleBindLgK(input, 0);
             }
             DSTupleBindSeedAndP(input, result->seed, result->p);
+            DSThetaRecordConstants(input, *result, HAS_LG_K ? 1 : 0, HAS_LG_K ? 3 : 2);
             return std::move(result);
         }
 
@@ -191,213 +168,144 @@ namespace duckdb
             {
                 result->infer_lg_k = true;
             }
+            DSThetaRecordConstants(input, *result, HAS_LG_K ? 1 : 0, HAS_LG_K ? 2 : 1);
             return std::move(result);
         }
 
         // ============================================================
-        // Build / Union Aggregate
+        // Aggregate states (see datasketches_theta_arena.hpp)
         // ============================================================
 
-        struct DSAodState
+        // Every array (and so every entry) allocates in arena mode, so copies the library makes of entries land in
+        // the current arena.
+        struct DSAodStateTraits
         {
-            DSAodUpdate *update_sketch = nullptr;
-            DSAodUnion *union_sketch = nullptr;
-            uint8_t union_lg_k = 0;
-            uint64_t union_seed = DS_THETA_DEFAULT_SEED;
-            //! The number of values per key (0 while unknown)
-            uint8_t num_values = 0;
-            //! A merged input sketch was empty: with no other input, the result is an empty sketch rather than NULL
-            bool saw_empty_sketch = false;
+            using Alloc = DSAllocator<double>;
+            using Entry = std::pair<uint64_t, DSAodArray>;
+            using Update = DSAodUpdate;
+            using Compact = DSAodCompact;
+            using Union = DSAodUnion;
+            using Intersection = DSAodIntersection;
+            static constexpr bool SET_ONLY = false;
+            static constexpr bool HAS_NUM_VALUES = true;
+            static constexpr const char *KIND = "Array of doubles";
+            static constexpr const char *BUILD_NAME = "datasketch_aod";
+            static constexpr const char *INTERSECT_NAME = "datasketch_aod_intersect_agg";
 
-            ~DSAodState()
+            static uint64_t Key(const Entry &entry) { return entry.first; }
+            static idx_t SummarySize(const DSThetaParams &params) { return sizeof(double) * params.num_values; }
+            static void WriteSummary(const Entry &entry, data_ptr_t data, const DSThetaParams &params)
             {
-                delete update_sketch;
-                delete union_sketch;
+                memcpy(data, entry.second.data(), SummarySize(params));
             }
-
-            void CheckNumValues(idx_t count, const char *function_name)
+            static Entry MakeEntry(uint64_t key, const_data_ptr_t data, const DSThetaParams &params)
             {
-                if (num_values == 0)
-                {
-                    num_values = static_cast<uint8_t>(count);
-                }
-                else if (num_values != count)
-                {
-                    DSAodThrowNumValues(function_name, num_values, count);
-                }
+                DSAodArray values(params.num_values, 0.0, Alloc(DSArenaMode()));
+                memcpy(values.data(), data, SummarySize(params));
+                return Entry(key, std::move(values));
             }
-
-            void CreateUpdateSketch(const DSAodBindData &bind_data, idx_t count)
+            // default_array_tuple_union_policy: element-wise sum
+            static void Fold(data_ptr_t data, const Entry &incoming, const DSThetaParams &params)
             {
-                if (num_values != 0 && num_values != count)
+                for (uint8_t i = 0; i < params.num_values; i++)
                 {
-                    throw InvalidInputException("datasketch_aod: every values list must have the same length (got %llu and %llu)", idx_t(num_values), count);
-                }
-                CheckNumValues(count, "datasketch_aod");
-                if (!update_sketch)
-                {
-                    DSAodUpdate::builder b{datasketches::default_array_tuple_update_policy<DSAodArray>(num_values)};
-                    b.set_lg_k(bind_data.lg_k);
-                    b.set_seed(bind_data.seed);
-                    b.set_p(bind_data.p);
-                    update_sketch = new DSAodUpdate(b.build());
+                    double value;
+                    memcpy(&value, data + i * sizeof(double), sizeof(double));
+                    value += incoming.second[i];
+                    memcpy(data + i * sizeof(double), &value, sizeof(double));
                 }
             }
+            static idx_t PayloadSize(const DSThetaParams &params) { return SummarySize(params); }
+            static uint8_t NumValues(const Compact &sketch) { return sketch.get_num_values(); }
 
-            // Creates the union, or grows it to a larger lg_k (re-adding what it holds so far).
-            void EnsureUnion(uint8_t lg_k, uint64_t seed)
+            template <class KEY>
+            static void Apply(Update &sketch, const_data_ptr_t key, uint32_t length, const_data_ptr_t payload, const DSThetaParams &params)
             {
-                if (union_sketch && lg_k <= union_lg_k)
+                double values[DS_AOD_MAX_VALUES];
+                memcpy(values, payload, SummarySize(params));
+                const double *update = values;
+                if constexpr (std::is_same<KEY, string_t>::value)
                 {
-                    return;
-                }
-                if (union_sketch)
-                {
-                    seed = union_seed;
-                }
-                DSAodUnion::builder b{datasketches::default_array_tuple_union_policy<DSAodArray>(num_values)};
-                b.set_lg_k(lg_k);
-                b.set_seed(seed);
-                auto grown = new DSAodUnion(b.build());
-                if (union_sketch)
-                {
-                    grown->update(union_sketch->get_result());
-                    delete union_sketch;
-                }
-                union_sketch = grown;
-                union_lg_k = lg_k;
-                union_seed = seed;
-            }
-
-            bool HasData() const
-            {
-                return update_sketch || union_sketch;
-            }
-
-            uint64_t Seed(const DSAodBindData &bind_data) const
-            {
-                return union_sketch ? union_seed : bind_data.seed;
-            }
-
-            uint8_t LgK(const DSAodBindData &bind_data) const
-            {
-                return union_sketch ? union_lg_k : bind_data.lg_k;
-            }
-        };
-
-        struct DSAodOperation
-        {
-            template <class STATE>
-            static void Initialize(STATE &state)
-            {
-                state.update_sketch = nullptr;
-                state.union_sketch = nullptr;
-                state.union_lg_k = 0;
-                state.union_seed = DS_THETA_DEFAULT_SEED;
-                state.num_values = 0;
-                state.saw_empty_sketch = false;
-            }
-
-            template <class STATE>
-            static void Destroy(STATE &state, AggregateInputData &)
-            {
-                delete state.update_sketch;
-                delete state.union_sketch;
-                state.update_sketch = nullptr;
-                state.union_sketch = nullptr;
-            }
-
-            static bool IgnoreNull() { return true; }
-
-            template <class STATE, class OP>
-            static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data)
-            {
-                target.saw_empty_sketch = target.saw_empty_sketch || source.saw_empty_sketch;
-                if (!source.HasData())
-                    return;
-                auto &bind_data = aggr_input_data.bind_data->template Cast<DSAodBindData>();
-                auto source_seed = source.Seed(bind_data);
-                if (target.HasData() && ThetaSeedHash(source_seed) != ThetaSeedHash(target.Seed(bind_data)))
-                {
-                    DSAodThrowSeedMismatch("datasketch_aod", ThetaSeedHash(target.Seed(bind_data)), ThetaSeedHash(source_seed));
-                }
-                target.CheckNumValues(source.num_values, "datasketch_aod");
-                auto lg_k = MaxValue(source.LgK(bind_data), target.LgK(bind_data));
-                target.EnsureUnion(lg_k, target.HasData() ? target.Seed(bind_data) : source_seed);
-                if (target.update_sketch)
-                {
-                    target.union_sketch->update(target.update_sketch->compact());
-                    delete target.update_sketch;
-                    target.update_sketch = nullptr;
-                }
-                if (source.update_sketch)
-                    target.union_sketch->update(source.update_sketch->compact());
-                if (source.union_sketch)
-                    target.union_sketch->update(source.union_sketch->get_result());
-            }
-
-            template <class T, class STATE>
-            static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data)
-            {
-                if (state.union_sketch)
-                {
-                    target = DSAodTraits::Serialize(finalize_data.result, state.union_sketch->get_result());
-                }
-                else if (state.update_sketch)
-                {
-                    target = DSAodTraits::Serialize(finalize_data.result, state.update_sketch->compact());
-                }
-                else if (state.saw_empty_sketch)
-                {
-                    auto &bind_data = finalize_data.input.bind_data->template Cast<DSAodBindData>();
-                    target = DSAodTraits::Serialize(finalize_data.result, DSAodEmptySketch(bind_data.lg_k, bind_data.seed, MaxValue<uint8_t>(state.num_values, 1)));
+                    sketch.update(key, length, update);
                 }
                 else
                 {
-                    // no input rows: NULL, as for the other sketches' aggregates
-                    finalize_data.ReturnNull();
+                    KEY typed;
+                    memcpy(&typed, key, sizeof(KEY));
+                    sketch.update(typed, update);
                 }
             }
 
-            // Merging serialized sketches.
-            template <class A_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &blob, AggregateUnaryInput &idata)
+            static Update NewUpdate(const DSAodBindData &bind, const DSThetaParams &params)
             {
-                auto &bind_data = idata.input.bind_data->template Cast<DSAodBindData>();
-                auto sketch = DSAodTraits::Deserialize(blob);
-                if (sketch.is_empty())
-                {
-                    state.saw_empty_sketch = true;
-                    return;
-                }
-                if (state.union_sketch && sketch.get_seed_hash() != ThetaSeedHash(state.union_seed))
-                {
-                    DSAodThrowSeedMismatch("datasketch_aod", ThetaSeedHash(state.union_seed), sketch.get_seed_hash());
-                }
-                state.CheckNumValues(sketch.get_num_values(), "datasketch_aod");
-                auto lg_k = bind_data.infer_lg_k ? MaxValue(bind_data.lg_k, ThetaInferLgK(sketch)) : bind_data.lg_k;
-                state.EnsureUnion(lg_k, ThetaSeedForHash(sketch.get_seed_hash()));
-                ThetaGuard([&]()
-                           { state.union_sketch->update(sketch); },
-                           DSAodTraits::KIND);
+                DSAodUpdate::builder b{datasketches::default_array_tuple_update_policy<DSAodArray>(params.num_values, Alloc(DSArenaMode())),
+                                       Alloc(DSArenaMode())};
+                b.set_lg_k(bind.lg_k);
+                b.set_seed(bind.seed);
+                b.set_p(bind.p);
+                return b.build();
             }
 
-            template <class INPUT_TYPE, class STATE, class OP>
-            static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t count)
+            static Union NewUnion(uint8_t lg_k, uint64_t seed, const DSThetaParams &params)
             {
-                // the values of the same key add up, so merging a sketch twice is not the same as once
-                for (idx_t i = 0; i < count; i++)
-                {
-                    Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-                }
+                DSAodUnion::builder b{datasketches::default_array_tuple_union_policy<DSAodArray>(params.num_values), Alloc(DSArenaMode())};
+                b.set_lg_k(lg_k);
+                b.set_seed(seed);
+                return b.build();
+            }
+
+            static Intersection NewIntersection(uint64_t seed, const DSThetaParams &params)
+            {
+                return Intersection(seed, DSAodSumPolicy(params.num_values), Alloc(DSArenaMode()));
+            }
+
+            static Compact Deserialize(const string_t &blob)
+            {
+                auto seed = DSTupleSeedFor(blob);
+                return ThetaGuard([&]()
+                                  { return Compact::deserialize(blob.GetData(), blob.GetSize(), seed, Alloc(DSArenaMode())); },
+                                  KIND);
+            }
+
+            static Compact Empty(uint8_t lg_k, uint64_t seed, const DSThetaParams &params)
+            {
+                DSAodUpdate::builder b{datasketches::default_array_tuple_update_policy<DSAodArray>(params.num_values, Alloc(DSArenaMode())),
+                                       Alloc(DSArenaMode())};
+                b.set_lg_k(lg_k);
+                b.set_seed(seed);
+                return b.build().compact();
+            }
+
+            static auto Serialize(const Compact &sketch) -> decltype(sketch.serialize())
+            {
+                return sketch.serialize();
+            }
+
+            static void ThrowSeedMismatch(const char *function_name, uint16_t a, uint16_t b)
+            {
+                DSAodThrowSeedMismatch(function_name, a, b);
+            }
+
+            static void ThrowNumValues(const char *function_name, idx_t a, idx_t b)
+            {
+                DSAodThrowNumValues(function_name, a, b);
             }
         };
+
+        template <class KEY>
+        using DSAodState = DSThetaFamilyState<DSAodStateTraits, KEY>;
+        using DSAodMergeState = DSAodState<string_t>;
+        using DSAodIntersectState = DSThetaFamilyIntersectState<DSAodStateTraits>;
+        // the values of the same key add up, so merging a sketch twice is not the same as once
+        using DSAodOperation = DSThetaFamilyOperation<false>;
+        using DSAodIntersectOperation = DSThetaFamilyIntersectOperation<false>;
 
         // The update of the build aggregate: (key, values) at KEY_INDEX and KEY_INDEX + 1.
         template <class KEY_TYPE, idx_t KEY_INDEX>
         void DSAodBuildUpdate(Vector inputs[], AggregateInputData &aggr_input_data, idx_t input_count, Vector &states, idx_t count)
         {
             D_ASSERT(input_count > KEY_INDEX + 1);
+            using STATE = DSAodState<KEY_TYPE>;
             auto &bind_data = aggr_input_data.bind_data->Cast<DSAodBindData>();
             auto &list = inputs[KEY_INDEX + 1];
             UnifiedVectorFormat key_format, list_format, child_format, state_format;
@@ -408,8 +316,9 @@ namespace duckdb
             auto keys = UnifiedVectorFormat::GetData<KEY_TYPE>(key_format);
             auto lists = UnifiedVectorFormat::GetData<list_entry_t>(list_format);
             auto values = UnifiedVectorFormat::GetData<double>(child_format);
-            auto state_pointers = UnifiedVectorFormat::GetData<DSAodState *>(state_format);
-            std::vector<double> buffer;
+            auto state_pointers = UnifiedVectorFormat::GetData<STATE *>(state_format);
+            DSArenaScope scope(aggr_input_data.allocator);
+            double buffer[DS_AOD_MAX_VALUES];
             for (idx_t i = 0; i < count; i++)
             {
                 auto key_index = key_format.sel->get_index(i);
@@ -423,7 +332,6 @@ namespace duckdb
                 {
                     throw InvalidInputException("datasketch_aod: values must have between 1 and %llu elements, got %llu", DS_AOD_MAX_VALUES, entry.length);
                 }
-                buffer.resize(entry.length);
                 for (idx_t j = 0; j < entry.length; j++)
                 {
                     auto child_index = child_format.sel->get_index(entry.offset + j);
@@ -434,137 +342,15 @@ namespace duckdb
                     buffer[j] = values[child_index];
                 }
                 auto &state = *state_pointers[state_format.sel->get_index(i)];
-                state.CreateUpdateSketch(bind_data, entry.length);
-                if constexpr (std::is_same_v<KEY_TYPE, duckdb::string_t>)
+                if (state.num_values != 0 && state.num_values != entry.length)
                 {
-                    state.update_sketch->update(keys[key_index].GetData(), keys[key_index].GetSize(), buffer.data());
+                    throw InvalidInputException("datasketch_aod: every values list must have the same length (got %llu and %llu)", idx_t(state.num_values), entry.length);
                 }
-                else
-                {
-                    state.update_sketch->update(keys[key_index], buffer.data());
-                }
+                state.num_values = static_cast<uint8_t>(entry.length);
+                auto bytes = DSThetaKeyBytes(keys[key_index]);
+                state.AddRow(bytes.first, bytes.second, const_data_ptr_cast(buffer), bind_data, aggr_input_data.allocator);
             }
         }
-
-        // ============================================================
-        // Intersection Aggregate
-        // ============================================================
-
-        struct DSAodIntersectState
-        {
-            DSAodIntersection *intersection = nullptr;
-            uint64_t seed = DS_THETA_DEFAULT_SEED;
-            uint8_t num_values = 0;
-            bool saw_empty = false;
-
-            ~DSAodIntersectState()
-            {
-                delete intersection;
-            }
-
-            void Add(const DSAodCompact &sketch)
-            {
-                if (sketch.is_empty())
-                {
-                    saw_empty = true;
-                    if (num_values == 0)
-                    {
-                        num_values = sketch.get_num_values();
-                    }
-                    return;
-                }
-                if (!intersection)
-                {
-                    seed = ThetaSeedForHash(sketch.get_seed_hash());
-                    num_values = sketch.get_num_values();
-                    intersection = new DSAodIntersection(seed, DSAodSumPolicy(num_values));
-                    return Update(sketch);
-                }
-                if (sketch.get_seed_hash() != ThetaSeedHash(seed))
-                {
-                    DSAodThrowSeedMismatch("datasketch_aod_intersect_agg", ThetaSeedHash(seed), sketch.get_seed_hash());
-                }
-                if (sketch.get_num_values() != num_values)
-                {
-                    DSAodThrowNumValues("datasketch_aod_intersect_agg", num_values, sketch.get_num_values());
-                }
-                Update(sketch);
-            }
-
-            void Update(const DSAodCompact &sketch)
-            {
-                ThetaGuard([&]()
-                           { intersection->update(sketch); },
-                           DSAodTraits::KIND);
-            }
-        };
-
-        struct DSAodIntersectOperation
-        {
-            template <class STATE>
-            static void Initialize(STATE &state)
-            {
-                state.intersection = nullptr;
-                state.seed = DS_THETA_DEFAULT_SEED;
-                state.num_values = 0;
-                state.saw_empty = false;
-            }
-
-            template <class STATE>
-            static void Destroy(STATE &state, AggregateInputData &)
-            {
-                delete state.intersection;
-                state.intersection = nullptr;
-            }
-
-            static bool IgnoreNull() { return true; }
-
-            template <class A_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &blob, AggregateUnaryInput &)
-            {
-                state.Add(DSAodTraits::Deserialize(blob));
-            }
-
-            template <class INPUT_TYPE, class STATE, class OP>
-            static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t count)
-            {
-                for (idx_t i = 0; i < count; i++)
-                {
-                    Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-                }
-            }
-
-            template <class STATE, class OP>
-            static void Combine(const STATE &source, STATE &target, AggregateInputData &)
-            {
-                target.saw_empty = target.saw_empty || source.saw_empty;
-                if (target.num_values == 0)
-                {
-                    target.num_values = source.num_values;
-                }
-                if (source.intersection)
-                {
-                    target.Add(source.intersection->get_result());
-                }
-            }
-
-            template <class T, class STATE>
-            static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data)
-            {
-                if (state.saw_empty)
-                {
-                    target = DSAodTraits::Serialize(finalize_data.result, DSAodEmptySketch(DS_THETA_DEFAULT_LG_K, state.seed, MaxValue<uint8_t>(state.num_values, 1)));
-                }
-                else if (state.intersection)
-                {
-                    target = DSAodTraits::Serialize(finalize_data.result, state.intersection->get_result());
-                }
-                else
-                {
-                    finalize_data.ReturnNull();
-                }
-            }
-        };
 
         // ============================================================
         // Scalar Functions
@@ -743,8 +529,8 @@ namespace duckdb
             const auto values_type = LogicalType::LIST(LogicalType::DOUBLE);
             for (bool with_lg_k : {false, true})
             {
-                auto fun = AggregateFunction::UnaryAggregate<DSAodState, string_t, string_t, DSAodOperation, AggregateDestructorType::LEGACY>(
-                    key_type, sketch_type);
+                auto fun = AggregateFunction::UnaryAggregate<DSAodState<T>, string_t, string_t, DSAodOperation>(key_type, sketch_type);
+                DSThetaSetStateExport<DSAodState<T>>(fun);
                 auto signature = DSTupleSignature(with_lg_k, {key_type, values_type}, sketch_type);
                 DSTupleAddSeedAndP(signature);
                 fun.GetSignature() = std::move(signature);
@@ -808,13 +594,13 @@ namespace duckdb
 
             for (bool with_lg_k : {false, true})
             {
-                auto fun = AggregateFunction::UnaryAggregate<DSAodState, string_t, string_t, DSAodOperation, AggregateDestructorType::LEGACY>(
-                    sketch_type, sketch_type);
+                auto fun = AggregateFunction::UnaryAggregate<DSAodMergeState, string_t, string_t, DSAodOperation>(sketch_type, sketch_type);
+                DSThetaSetStateExport<DSAodMergeState>(fun);
                 fun.GetSignature() = DSTupleSignature(with_lg_k, {sketch_type}, sketch_type);
                 if (with_lg_k)
                 {
                     fun.SetBindCallback(DSAodBindMerge<true>);
-                    DSReadDataArgumentAt<1, DSAodState, string_t, DSAodOperation>(fun);
+                    DSReadDataArgumentAt<1, DSAodMergeState, string_t, DSAodOperation>(fun);
                     descs.push_back(DSAodDescription("Merges (unions) array-of-doubles sketches into one with the given log2 of nominal entries (lg_k); "
                                                      "the values of a key are summed element-wise",
                                                      {ex.QueryPartials("datasketch_aod(16, sketch)")}, {"lg_k", "sketch"}, {LogicalType::INTEGER, sketch_type}));
@@ -822,7 +608,7 @@ namespace duckdb
                 else
                 {
                     fun.SetBindCallback(DSAodBindMerge<false>);
-                    DSReadDataArgumentAt<0, DSAodState, string_t, DSAodOperation>(fun);
+                    DSReadDataArgumentAt<0, DSAodMergeState, string_t, DSAodOperation>(fun);
                     descs.push_back(DSAodDescription("Merges (unions) array-of-doubles sketches into one, keeping as many entries as the largest input "
                                                      "(at least lg_k 12); the values of a key are summed element-wise",
                                                      {ex.QueryPartials("datasketch_aod(sketch)")}, {"sketch"}, {sketch_type}));
@@ -836,8 +622,8 @@ namespace duckdb
         // --- datasketch_aod_intersect_agg
         {
             AggregateFunctionSet set("datasketch_aod_intersect_agg");
-            auto fun = AggregateFunction::UnaryAggregate<DSAodIntersectState, string_t, string_t, DSAodIntersectOperation, AggregateDestructorType::LEGACY>(
-                sketch_type, sketch_type);
+            auto fun = AggregateFunction::UnaryAggregate<DSAodIntersectState, string_t, string_t, DSAodIntersectOperation>(sketch_type, sketch_type);
+            DSThetaSetStateExport<DSAodIntersectState>(fun);
             DSSetArguments(fun, {sketch_type});
             fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
             set.AddFunction(fun);

@@ -7,6 +7,7 @@
 #include "duckdb/common/vector/struct_vector.hpp"
 #include "duckdb/common/vector/unified_vector_format.hpp"
 #include "datasketches_theta_common.hpp"
+#include "datasketches_theta_arena.hpp"
 
 // Apache DataSketches Headers
 #include <DataSketches/theta_sketch.hpp>
@@ -77,44 +78,11 @@ namespace duckdb
             return StringVector::AddStringOrBlob(result, reinterpret_cast<const char *>(bytes.data()), bytes.size());
         }
 
-        compact_theta_sketch ThetaEmptySketch(uint8_t lg_k, uint64_t seed)
-        {
-            update_theta_sketch::builder b;
-            b.set_lg_k(lg_k);
-            b.set_seed(seed);
-            return b.build().compact();
-        }
-
-
         // ============================================================
         // 2. Bind Data
         // ============================================================
 
-        struct DSThetaBindData : public FunctionData
-        {
-            DSThetaBindData() = default;
-            DSThetaBindData(uint8_t lg_k, bool infer_lg_k, uint64_t seed, float p)
-                : lg_k(lg_k), infer_lg_k(infer_lg_k), seed(seed), p(p) {}
-
-            unique_ptr<FunctionData> Copy() const override
-            {
-                return make_uniq<DSThetaBindData>(lg_k, infer_lg_k, seed, p);
-            }
-
-            bool Equals(const FunctionData &other_p) const override
-            {
-                auto &other = other_p.Cast<DSThetaBindData>();
-                return lg_k == other.lg_k && infer_lg_k == other.infer_lg_k && seed == other.seed && p == other.p;
-            }
-
-            //! lg_k of the sketches built (or the minimum lg_k of the union when infer_lg_k is set)
-            uint8_t lg_k = DS_THETA_DEFAULT_LG_K;
-            //! Merging: grow the union to the lg_k of the sketches merged
-            bool infer_lg_k = false;
-            //! Building: the hash seed and the sampling probability
-            uint64_t seed = DS_THETA_DEFAULT_SEED;
-            float p = 1.0f;
-        };
+        using DSThetaBindData = DSThetaFamilyBindData;
 
         uint8_t DSThetaBindLgK(BindAggregateFunctionInput &input, idx_t index)
         {
@@ -132,14 +100,17 @@ namespace duckdb
         template <bool HAS_LG_K>
         unique_ptr<FunctionData> DSThetaBindBuild(BindAggregateFunctionInput &input)
         {
-            uint8_t lg_k = HAS_LG_K ? DSThetaBindLgK(input, 0) : DS_THETA_DEFAULT_LG_K;
-            auto seed = static_cast<uint64_t>(input.GetNonNullConstant(Identifier("seed")).GetValue<int64_t>());
+            auto result = make_uniq<DSThetaBindData>();
+            result->lg_k = HAS_LG_K ? DSThetaBindLgK(input, 0) : DS_THETA_DEFAULT_LG_K;
+            result->seed = static_cast<uint64_t>(input.GetNonNullConstant(Identifier("seed")).GetValue<int64_t>());
             auto p = input.GetNonNullConstant(Identifier("p")).GetValue<double>();
             if (!(p > 0.0 && p <= 1.0))
             {
                 throw BinderException("Theta sketch sampling probability p must be in (0, 1], got %f", p);
             }
-            return make_uniq<DSThetaBindData>(lg_k, false, seed, static_cast<float>(p));
+            result->p = static_cast<float>(p);
+            DSThetaRecordConstants(input, *result, HAS_LG_K ? 1 : 0, HAS_LG_K ? 2 : 1);
+            return std::move(result);
         }
 
         // Merging sketches with an explicit lg_k. The lg_k stays in the argument list (the update reads the sketch
@@ -147,322 +118,122 @@ namespace duckdb
         // aggregates that differ only in lg_k as identical.
         unique_ptr<FunctionData> DSThetaBindMergeWithK(BindAggregateFunctionInput &input)
         {
-            auto lg_k = DSThetaBindLgK(input, 0);
-            return make_uniq<DSThetaBindData>(lg_k, false, DS_THETA_DEFAULT_SEED, 1.0f);
+            auto result = make_uniq<DSThetaBindData>();
+            result->lg_k = DSThetaBindLgK(input, 0);
+            DSThetaRecordConstants(input, *result, 1, 2);
+            return std::move(result);
         }
 
         // Merging sketches: the union grows to the lg_k of the sketches merged.
         unique_ptr<FunctionData> DSThetaBindMergeDefault(BindAggregateFunctionInput &input)
         {
-            return make_uniq<DSThetaBindData>(DS_THETA_DEFAULT_LG_K, true, DS_THETA_DEFAULT_SEED, 1.0f);
+            auto result = make_uniq<DSThetaBindData>();
+            result->infer_lg_k = true;
+            return std::move(result);
         }
 
         // ============================================================
-        // 3. Build / Union Aggregate State & Operations
+        // 3. Aggregate states (see datasketches_theta_arena.hpp)
         // ============================================================
 
-        struct DSThetaState
+        struct DSThetaTraits
         {
-            update_theta_sketch *update_sketch = nullptr;
-            theta_union *union_sketch = nullptr;
-            uint8_t union_lg_k = 0;
-            uint64_t union_seed = DS_THETA_DEFAULT_SEED;
-            //! A merged input sketch was empty: with no other input, the result is an empty sketch rather than NULL
-            bool saw_empty_sketch = false;
+            using Alloc = ThetaAllocator;
+            using Entry = uint64_t;
+            using Update = update_theta_sketch;
+            using Compact = compact_theta_sketch;
+            using Union = theta_union;
+            using Intersection = theta_intersection;
+            static constexpr bool SET_ONLY = true;
+            static constexpr bool HAS_NUM_VALUES = false;
+            static constexpr const char *KIND = "Theta";
+            static constexpr const char *BUILD_NAME = "datasketch_theta";
+            static constexpr const char *INTERSECT_NAME = "datasketch_theta_intersect_agg";
 
-            ~DSThetaState()
-            {
-                if (update_sketch)
-                    delete update_sketch;
-                if (union_sketch)
-                    delete union_sketch;
-            }
+            static uint64_t Key(const Entry &entry) { return entry; }
+            static idx_t SummarySize(const DSThetaParams &) { return 0; }
+            static void WriteSummary(const Entry &, data_ptr_t, const DSThetaParams &) {}
+            static Entry MakeEntry(uint64_t key, const_data_ptr_t, const DSThetaParams &) { return key; }
+            static void Fold(data_ptr_t, const Entry &, const DSThetaParams &) {}
+            static idx_t PayloadSize(const DSThetaParams &) { return 0; }
+            static uint8_t NumValues(const Compact &) { return 1; }
 
-            void CreateUpdateSketch(const DSThetaBindData &bind_data)
+            template <class KEY>
+            static void Apply(Update &sketch, const_data_ptr_t key, uint32_t length, const_data_ptr_t, const DSThetaParams &)
             {
-                if (!update_sketch)
+                if constexpr (std::is_same<KEY, string_t>::value)
                 {
-                    update_theta_sketch::builder b;
-                    b.set_lg_k(bind_data.lg_k);
-                    b.set_seed(bind_data.seed);
-                    b.set_p(bind_data.p);
-                    update_sketch = new update_theta_sketch(b.build());
+                    sketch.update(key, length);
+                }
+                else
+                {
+                    KEY value;
+                    memcpy(&value, key, sizeof(KEY));
+                    sketch.update(value);
                 }
             }
 
-            // Creates the union, or grows it to a larger lg_k (re-adding what it holds so far).
-            void EnsureUnion(uint8_t lg_k, uint64_t seed)
+            static Update NewUpdate(const DSThetaBindData &bind, const DSThetaParams &)
             {
-                if (union_sketch && lg_k <= union_lg_k)
-                {
-                    return;
-                }
-                if (union_sketch)
-                {
-                    seed = union_seed;
-                }
-                theta_union::builder b;
+                update_theta_sketch::builder b{Alloc(DSArenaMode())};
+                b.set_lg_k(bind.lg_k);
+                b.set_seed(bind.seed);
+                b.set_p(bind.p);
+                return b.build();
+            }
+
+            static Union NewUnion(uint8_t lg_k, uint64_t seed, const DSThetaParams &)
+            {
+                theta_union::builder b{Alloc(DSArenaMode())};
                 b.set_lg_k(lg_k);
                 b.set_seed(seed);
-                auto grown = new theta_union(b.build());
-                if (union_sketch)
+                return b.build();
+            }
+
+            static Intersection NewIntersection(uint64_t seed, const DSThetaParams &)
+            {
+                return Intersection(seed, Alloc(DSArenaMode()));
+            }
+
+            static Compact Deserialize(const string_t &blob)
+            {
+                auto data = blob.GetData();
+                auto size = blob.GetSize();
+                auto seed = ThetaSeedForHash(ThetaPeekSeedHash(data, size));
+                return ThetaGuard([&]()
+                                  { return Compact::deserialize(data, size, seed, Alloc(DSArenaMode())); });
+            }
+
+            static Compact Empty(uint8_t lg_k, uint64_t seed, const DSThetaParams &)
+            {
+                update_theta_sketch::builder b{Alloc(DSArenaMode())};
+                b.set_lg_k(lg_k);
+                b.set_seed(seed);
+                return b.build().compact();
+            }
+
+            static auto Serialize(const Compact &sketch) -> decltype(sketch.serialize_compressed())
+            {
+                return sketch.serialize_compressed();
+            }
+
+            static void ThrowSeedMismatch(const char *function_name, uint16_t a, uint16_t b)
+            {
+                if (string(function_name) == BUILD_NAME)
                 {
-                    grown->update(union_sketch->get_result());
-                    delete union_sketch;
+                    throw InvalidInputException("datasketch_theta: cannot merge Theta sketches built with different seeds (seed hashes %d and %d)", a, b);
                 }
-                union_sketch = grown;
-                union_lg_k = lg_k;
-                union_seed = seed;
+                throw InvalidInputException("%s: cannot combine Theta sketches built with different seeds (seed hashes %d and %d)", function_name, a, b);
             }
 
-            bool HasData() const
-            {
-                return update_sketch || union_sketch;
-            }
-
-            uint64_t Seed(const DSThetaBindData &bind_data) const
-            {
-                return union_sketch ? union_seed : bind_data.seed;
-            }
-
-            uint8_t LgK(const DSThetaBindData &bind_data) const
-            {
-                return union_sketch ? union_lg_k : bind_data.lg_k;
-            }
+            static void ThrowNumValues(const char *, idx_t, idx_t) {}
         };
 
-        struct DSThetaOperationBase
-        {
-            template <class STATE>
-            static void Initialize(STATE &state)
-            {
-                state.update_sketch = nullptr;
-                state.union_sketch = nullptr;
-                state.union_lg_k = 0;
-                state.union_seed = DS_THETA_DEFAULT_SEED;
-                state.saw_empty_sketch = false;
-            }
-            template <class STATE>
-            static void Destroy(STATE &state, AggregateInputData &)
-            {
-                if (state.update_sketch)
-                    delete state.update_sketch;
-                if (state.union_sketch)
-                    delete state.union_sketch;
-                state.update_sketch = nullptr;
-                state.union_sketch = nullptr;
-            }
-            static bool IgnoreNull() { return true; }
-
-            template <class STATE, class OP>
-            static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data)
-            {
-                target.saw_empty_sketch = target.saw_empty_sketch || source.saw_empty_sketch;
-                if (!source.HasData())
-                    return;
-                auto &bind_data = aggr_input_data.bind_data->template Cast<DSThetaBindData>();
-                auto source_seed = source.Seed(bind_data);
-                if (target.HasData() && ThetaSeedHash(source_seed) != ThetaSeedHash(target.Seed(bind_data)))
-                {
-                    throw InvalidInputException("datasketch_theta: cannot merge Theta sketches built with different seeds (seed hashes %d and %d)",
-                                                ThetaSeedHash(target.Seed(bind_data)), ThetaSeedHash(source_seed));
-                }
-                auto lg_k = MaxValue(source.LgK(bind_data), target.LgK(bind_data));
-                target.EnsureUnion(lg_k, target.HasData() ? target.Seed(bind_data) : source_seed);
-                if (target.update_sketch)
-                {
-                    target.union_sketch->update(*target.update_sketch);
-                    delete target.update_sketch;
-                    target.update_sketch = nullptr;
-                }
-                if (source.update_sketch)
-                    target.union_sketch->update(*source.update_sketch);
-                if (source.union_sketch)
-                    target.union_sketch->update(source.union_sketch->get_result());
-            }
-
-            template <class T, class STATE>
-            static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data)
-            {
-                if (state.union_sketch)
-                {
-                    target = ThetaSerialize(finalize_data.result, state.union_sketch->get_result());
-                }
-                else if (state.update_sketch)
-                {
-                    target = ThetaSerialize(finalize_data.result, state.update_sketch->compact());
-                }
-                else if (state.saw_empty_sketch)
-                {
-                    auto &bind_data = finalize_data.input.bind_data->template Cast<DSThetaBindData>();
-                    target = ThetaSerialize(finalize_data.result, ThetaEmptySketch(bind_data.lg_k, bind_data.seed));
-                }
-                else
-                {
-                    // no input rows: NULL, as for the other sketches' aggregates
-                    finalize_data.ReturnNull();
-                }
-            }
-        };
-
-        struct DSThetaCreateOperation : DSThetaOperationBase
-        {
-            template <class A_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &a_data, AggregateUnaryInput &idata)
-            {
-                auto &bind_data = idata.input.bind_data->template Cast<DSThetaBindData>();
-                state.CreateUpdateSketch(bind_data);
-                if constexpr (std::is_same_v<A_TYPE, duckdb::string_t>)
-                {
-                    state.update_sketch->update(a_data.GetData(), a_data.GetSize());
-                }
-                else
-                {
-                    state.update_sketch->update(a_data);
-                }
-            }
-
-            template <class INPUT_TYPE, class STATE, class OP>
-            static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t count)
-            {
-                // Adding the same value again does not change the sketch.
-                Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-            }
-        };
-
-        struct DSThetaMergeOperation : DSThetaOperationBase
-        {
-            template <class A_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &a_data, AggregateUnaryInput &idata)
-            {
-                auto &bind_data = idata.input.bind_data->template Cast<DSThetaBindData>();
-                auto sketch = ThetaDeserialize(a_data);
-                if (sketch.is_empty())
-                {
-                    // an empty sketch adds nothing to a union
-                    state.saw_empty_sketch = true;
-                    return;
-                }
-                if (state.union_sketch && sketch.get_seed_hash() != ThetaSeedHash(state.union_seed))
-                {
-                    throw InvalidInputException("datasketch_theta: cannot merge Theta sketches built with different seeds (seed hashes %d and %d)",
-                                                ThetaSeedHash(state.union_seed), sketch.get_seed_hash());
-                }
-                auto lg_k = bind_data.infer_lg_k ? MaxValue(bind_data.lg_k, ThetaInferLgK(sketch)) : bind_data.lg_k;
-                state.EnsureUnion(lg_k, ThetaSeedForHash(sketch.get_seed_hash()));
-                ThetaGuard([&]()
-                           { state.union_sketch->update(sketch); });
-            }
-
-            template <class INPUT_TYPE, class STATE, class OP>
-            static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t count)
-            {
-                // A union is idempotent: merging the same sketch again does not change it.
-                Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-            }
-        };
-
-        // ============================================================
-        // 4. Intersection Aggregate
-        // ============================================================
-
-        struct DSThetaIntersectState
-        {
-            theta_intersection *intersection = nullptr;
-            uint64_t seed = DS_THETA_DEFAULT_SEED;
-            //! An empty sketch was intersected: the result is empty
-            bool saw_empty = false;
-
-            ~DSThetaIntersectState()
-            {
-                if (intersection)
-                    delete intersection;
-            }
-
-            void Add(const compact_theta_sketch &sketch)
-            {
-                if (sketch.is_empty())
-                {
-                    saw_empty = true;
-                    return;
-                }
-                if (!intersection)
-                {
-                    seed = ThetaSeedForHash(sketch.get_seed_hash());
-                    intersection = new theta_intersection(seed);
-                }
-                else if (sketch.get_seed_hash() != ThetaSeedHash(seed))
-                {
-                    throw InvalidInputException("datasketch_theta_intersect_agg: cannot combine Theta sketches built with different seeds (seed hashes %d and %d)",
-                                                ThetaSeedHash(seed), sketch.get_seed_hash());
-                }
-                ThetaGuard([&]()
-                           { intersection->update(sketch); });
-            }
-        };
-
-        struct DSThetaIntersectOperation
-        {
-            template <class STATE>
-            static void Initialize(STATE &state)
-            {
-                state.intersection = nullptr;
-                state.seed = DS_THETA_DEFAULT_SEED;
-                state.saw_empty = false;
-            }
-
-            template <class STATE>
-            static void Destroy(STATE &state, AggregateInputData &)
-            {
-                if (state.intersection)
-                    delete state.intersection;
-                state.intersection = nullptr;
-            }
-
-            static bool IgnoreNull() { return true; }
-
-            template <class A_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &a_data, AggregateUnaryInput &)
-            {
-                state.Add(ThetaDeserialize(a_data));
-            }
-
-            template <class INPUT_TYPE, class STATE, class OP>
-            static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t count)
-            {
-                // An intersection is idempotent: intersecting the same sketch again does not change it.
-                Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-            }
-
-            template <class STATE, class OP>
-            static void Combine(const STATE &source, STATE &target, AggregateInputData &)
-            {
-                target.saw_empty = target.saw_empty || source.saw_empty;
-                if (source.intersection)
-                {
-                    target.Add(source.intersection->get_result());
-                }
-            }
-
-            template <class T, class STATE>
-            static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data)
-            {
-                if (state.saw_empty)
-                {
-                    target = ThetaSerialize(finalize_data.result, ThetaEmptySketch(DS_THETA_DEFAULT_LG_K, state.seed));
-                }
-                else if (state.intersection)
-                {
-                    target = ThetaSerialize(finalize_data.result, state.intersection->get_result());
-                }
-                else
-                {
-                    // no sketches: the intersection of nothing is undefined
-                    finalize_data.ReturnNull();
-                }
-            }
-        };
-
+        template <class KEY>
+        using DSThetaState = DSThetaFamilyState<DSThetaTraits, KEY>;
+        using DSThetaIntersectState = DSThetaFamilyIntersectState<DSThetaTraits>;
+        using DSThetaMergeOperation = DSThetaFamilyOperation<true>;
+        using DSThetaIntersectOperation = DSThetaFamilyIntersectOperation<true>;
 
         // ============================================================
         // 5. Scalar Functions
@@ -704,13 +475,14 @@ namespace duckdb
         {
             for (bool with_lg_k : {false, true})
             {
-                auto fun = AggregateFunction::UnaryAggregate<DSThetaState, T, string_t, DSThetaCreateOperation, AggregateDestructorType::LEGACY>(
-                    input_type, sketch_type);
+                using STATE = DSThetaState<T>;
+                auto fun = AggregateFunction::UnaryAggregate<STATE, T, string_t, DSThetaFamilyCreateOperation>(input_type, sketch_type);
+                DSThetaSetStateExport<STATE>(fun);
                 FunctionSignature signature(vector<LogicalType>(), sketch_type);
                 if (with_lg_k)
                 {
                     signature.AddParameter(LogicalType::INTEGER);
-                    DSReadDataArgumentAt<1, DSThetaState, T, DSThetaCreateOperation>(fun);
+                    DSReadDataArgumentAt<1, STATE, T, DSThetaFamilyCreateOperation>(fun);
                     fun.SetBindCallback(DSThetaBindBuild<true>);
                 }
                 else
@@ -773,8 +545,9 @@ namespace duckdb
             RegisterThetaBuild<double>(sketch_agg, agg_descs, "datasketch_theta", LogicalType::DOUBLE, sketch_type);
             RegisterThetaBuild<string_t>(sketch_agg, agg_descs, "datasketch_theta", LogicalType::VARCHAR, sketch_type);
 
-            auto fun_merge = AggregateFunction::UnaryAggregate<DSThetaState, string_t, string_t, DSThetaMergeOperation, AggregateDestructorType::LEGACY>(
-                sketch_type, sketch_type);
+            using MERGE_STATE = DSThetaState<string_t>;
+            auto fun_merge = AggregateFunction::UnaryAggregate<MERGE_STATE, string_t, string_t, DSThetaMergeOperation>(sketch_type, sketch_type);
+            DSThetaSetStateExport<MERGE_STATE>(fun_merge);
             fun_merge.SetBindCallback(DSThetaBindMergeDefault);
             fun_merge.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
             DSSetArguments(fun_merge, {sketch_type});
@@ -783,12 +556,12 @@ namespace duckdb
                                                  "largest input sketch (inferred from the sketches, at least lg_k 12)",
                                                  {ex.QueryPartials("datasketch_theta(sketch)")}, {"sketch"}, {sketch_type}));
 
-            auto fun_merge_k = AggregateFunction::UnaryAggregate<DSThetaState, string_t, string_t, DSThetaMergeOperation, AggregateDestructorType::LEGACY>(
-                sketch_type, sketch_type);
+            auto fun_merge_k = AggregateFunction::UnaryAggregate<MERGE_STATE, string_t, string_t, DSThetaMergeOperation>(sketch_type, sketch_type);
+            DSThetaSetStateExport<MERGE_STATE>(fun_merge_k);
             fun_merge_k.SetBindCallback(DSThetaBindMergeWithK);
             fun_merge_k.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
             DSSetArguments(fun_merge_k, {LogicalType::INTEGER, sketch_type});
-            DSReadDataArgumentAt<1, DSThetaState, string_t, DSThetaMergeOperation>(fun_merge_k);
+            DSReadDataArgumentAt<1, MERGE_STATE, string_t, DSThetaMergeOperation>(fun_merge_k);
             sketch_agg.AddFunction(fun_merge_k);
             agg_descs.push_back(ThetaDescription("Merges (unions) Theta sketches into a single sketch with the given log2 of nominal entries (lg_k)",
                                                  {ex.QueryPartials("datasketch_theta(16, sketch)")}, {"lg_k", "sketch"}, {LogicalType::INTEGER, sketch_type}));
@@ -813,8 +586,8 @@ namespace duckdb
         // --- datasketch_theta_intersect_agg: intersect sketches across rows
         {
             AggregateFunctionSet intersect_agg("datasketch_theta_intersect_agg");
-            auto fun = AggregateFunction::UnaryAggregate<DSThetaIntersectState, string_t, string_t, DSThetaIntersectOperation, AggregateDestructorType::LEGACY>(
-                sketch_type, sketch_type);
+            auto fun = AggregateFunction::UnaryAggregate<DSThetaIntersectState, string_t, string_t, DSThetaIntersectOperation>(sketch_type, sketch_type);
+            DSThetaSetStateExport<DSThetaIntersectState>(fun);
             fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
             DSSetArguments(fun, {sketch_type});
             intersect_agg.AddFunction(fun);

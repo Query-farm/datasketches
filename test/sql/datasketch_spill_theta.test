@@ -1,0 +1,129 @@
+# name: test/sql/datasketch_spill_theta.test
+# description: Theta, Tuple and array-of-doubles aggregate states live in the arena, spill, and give the results they give in memory
+# group: [datasketches]
+
+require datasketches
+
+require skip_reload
+
+statement ok
+SET threads=4;
+
+statement ok
+SET temp_directory='{TEST_DIR}/datasketch_spill_theta';
+
+statement ok
+SET preserve_insertion_order=false;
+
+statement ok
+SET memory_limit='4GB';
+
+# Few rows per group (buffered states) and many rows per group (sketches), several input types. Summaries are
+# small integers, so sums do not depend on the order they are added in. The expected results are computed in
+# memory and kept as hashes of the sketches.
+statement ok
+CREATE VIEW small_rows AS SELECT i % 300000 AS g, i AS v, (i % 1000)::VARCHAR AS s, (i % 7)::DOUBLE AS d FROM range(900000) t(i);
+
+statement ok
+CREATE VIEW large_rows AS SELECT i % 40000 AS g, i AS v, (i % 100000)::VARCHAR AS s, (i % 7)::DOUBLE AS d FROM range(4000000) t(i);
+
+statement ok
+CREATE TABLE small_expected AS SELECT g, hash(datasketch_theta(v)) AS th, hash(datasketch_theta(s)) AS ths, hash(datasketch_theta(10, d::INTEGER, seed := 42, p := 0.5)) AS thp, hash(datasketch_tuple(v, d)) AS tu, hash(datasketch_tuple(s, d, mode := 'max')) AS tus, hash(datasketch_aod(v::INTEGER, [d, 1.0])) AS ao FROM small_rows GROUP BY g;
+
+statement ok
+CREATE TABLE large_expected AS SELECT g, hash(datasketch_theta(v)) AS th, hash(datasketch_theta(s)) AS ths, hash(datasketch_theta(5, v::DOUBLE)) AS thd, hash(datasketch_tuple(v, d)) AS tu, hash(datasketch_tuple(s, d, mode := 'min')) AS tus, hash(datasketch_aod(v::INTEGER, [d, 1.0])) AS ao FROM large_rows GROUP BY g;
+
+# Partial sketches of each group, which overlap, for the merge and intersection aggregates
+statement ok
+CREATE TABLE parts AS
+SELECT g, p, datasketch_theta(v) AS th, datasketch_tuple(v, d) AS tu, datasketch_aod(v, [d]) AS ao
+FROM (SELECT i % 100000 AS g, (i // 100000) % 3 AS p, (i // 100000) % 4 + (i % 100000) * 10 AS v, (i % 5)::DOUBLE AS d FROM range(1200000) t(i))
+GROUP BY g, p;
+
+statement ok
+CREATE TABLE merged_expected AS SELECT g, hash(datasketch_theta(th)) AS th, hash(datasketch_theta(14, th)) AS thk, hash(datasketch_theta_intersect_agg(th)) AS thi, hash(datasketch_tuple(tu)) AS tu, hash(datasketch_tuple(16, tu, mode := 'max')) AS tuk, hash(datasketch_tuple_intersect_agg(tu, mode := 'min')) AS tui, hash(datasketch_aod(ao)) AS ao, hash(datasketch_aod_intersect_agg(ao)) AS aoi FROM parts GROUP BY g;
+
+# The merged sketches are what they should be: each group has 4 distinct values, in every part
+query IIII
+SELECT min(datasketch_theta_estimate(th)), max(datasketch_theta_estimate(th)), min(datasketch_theta_estimate(thi)), max(datasketch_tuple_sum(tu))
+FROM (SELECT datasketch_theta(th) AS th, datasketch_theta_intersect_agg(th) AS thi, datasketch_tuple(tu) AS tu FROM parts GROUP BY g);
+----
+4.0	4.0	4.0	48.0
+
+statement ok
+SET memory_limit='128MB';
+
+query I
+SELECT count(*) FROM small_expected e JOIN (SELECT g, hash(datasketch_theta(v)) AS th, hash(datasketch_theta(s)) AS ths, hash(datasketch_theta(10, d::INTEGER, seed := 42, p := 0.5)) AS thp, hash(datasketch_tuple(v, d)) AS tu, hash(datasketch_tuple(s, d, mode := 'max')) AS tus, hash(datasketch_aod(v::INTEGER, [d, 1.0])) AS ao FROM small_rows GROUP BY g) a USING (g) WHERE e.th = a.th AND e.ths = a.ths AND e.thp = a.thp AND e.tu = a.tu AND e.tus = a.tus AND e.ao = a.ao;
+----
+300000
+
+query I
+SELECT count(*) FROM merged_expected e JOIN (SELECT g, hash(datasketch_theta(th)) AS th, hash(datasketch_theta(14, th)) AS thk, hash(datasketch_theta_intersect_agg(th)) AS thi, hash(datasketch_tuple(tu)) AS tu, hash(datasketch_tuple(16, tu, mode := 'max')) AS tuk, hash(datasketch_tuple_intersect_agg(tu, mode := 'min')) AS tui, hash(datasketch_aod(ao)) AS ao, hash(datasketch_aod_intersect_agg(ao)) AS aoi FROM parts GROUP BY g) a USING (g) WHERE e.th = a.th AND e.thk = a.thk AND e.thi = a.thi AND e.tu = a.tu AND e.tuk = a.tuk AND e.tui = a.tui AND e.ao = a.ao AND e.aoi = a.aoi;
+----
+100000
+
+# Large states: one aggregate per query, so that a partition of states fits in the limit
+query I
+SELECT count(*) FROM large_expected e JOIN (SELECT g, hash(datasketch_theta(v)) AS x FROM large_rows GROUP BY g) a USING (g) WHERE e.th = a.x;
+----
+40000
+
+query I
+SELECT count(*) FROM large_expected e JOIN (SELECT g, hash(datasketch_theta(s)) AS x FROM large_rows GROUP BY g) a USING (g) WHERE e.ths = a.x;
+----
+40000
+
+query I
+SELECT count(*) FROM large_expected e JOIN (SELECT g, hash(datasketch_theta(5, v::DOUBLE)) AS x FROM large_rows GROUP BY g) a USING (g) WHERE e.thd = a.x;
+----
+40000
+
+query I
+SELECT count(*) FROM large_expected e JOIN (SELECT g, hash(datasketch_tuple(v, d)) AS x FROM large_rows GROUP BY g) a USING (g) WHERE e.tu = a.x;
+----
+40000
+
+query I
+SELECT count(*) FROM large_expected e JOIN (SELECT g, hash(datasketch_tuple(s, d, mode := 'min')) AS x FROM large_rows GROUP BY g) a USING (g) WHERE e.tus = a.x;
+----
+40000
+
+query I
+SELECT count(*) FROM large_expected e JOIN (SELECT g, hash(datasketch_aod(v::INTEGER, [d, 1.0])) AS x FROM large_rows GROUP BY g) a USING (g) WHERE e.ao = a.x;
+----
+40000
+
+statement ok
+SET memory_limit='4GB';
+
+# Exported states finalize to the aggregate's result, buffered (small inputs) or not. DuckDB re-binds an exported
+# state with its arguments as positional ones, so this works only for aggregates without keyword-only parameters
+# (the builds take seed := and p :=, the Tuple merges mode :=); spilling does not re-bind and covers those above.
+statement ok
+CREATE TABLE stored AS
+SELECT n, i % n AS k, datasketch_theta(i) AS th, datasketch_aod(i, [1.0, i::DOUBLE]) AS ao
+FROM (VALUES (1), (3), (1000)) n(n), range(20000) t(i) GROUP BY n, k;
+
+query IIIIII
+SELECT bool_and(a), bool_and(b), bool_and(c), bool_and(d), bool_and(e), bool_and(f) FROM (
+    SELECT finalize(datasketch_theta(th) EXPORT_STATE) = datasketch_theta(th) AS a,
+           finalize(datasketch_theta(5, th) EXPORT_STATE) = datasketch_theta(5, th) AS b,
+           finalize(datasketch_theta_intersect_agg(th) EXPORT_STATE) = datasketch_theta_intersect_agg(th) AS c,
+           finalize(datasketch_aod(ao) EXPORT_STATE) = datasketch_aod(ao) AS d,
+           finalize(datasketch_aod(16, ao) EXPORT_STATE) = datasketch_aod(16, ao) AS e,
+           finalize(datasketch_aod_intersect_agg(ao) EXPORT_STATE) = datasketch_aod_intersect_agg(ao) AS f
+    FROM stored GROUP BY n, k % 5
+);
+----
+true	true	true	true	true	true
+
+query III
+SELECT bool_and(a), bool_and(b), bool_and(c) FROM (
+    SELECT finalize(datasketch_theta(th) EXPORT_STATE) = datasketch_theta(th) AS a,
+           finalize(datasketch_theta_intersect_agg(th) EXPORT_STATE) = datasketch_theta_intersect_agg(th) AS b,
+           finalize(datasketch_aod_intersect_agg(ao) EXPORT_STATE) = datasketch_aod_intersect_agg(ao) AS c
+    FROM parts GROUP BY g % 1000
+);
+----
+true	true	true
