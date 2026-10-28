@@ -638,13 +638,20 @@ static void DSArenaImportState(AggregateImportInputData &input) {
     }
 }
 
-// The exported state is a BLOB; K is recorded so that re-binding the exported state supplies it.
+// Records a sketch's optional constant argument (see DSArenaGetStateType): an overload taking the sketch's bind data
+// does, next to its arena state.
+template <class BIND_DATA_TYPE>
+static void DSArenaStateOption(AggregateStateLayout &, const BIND_DATA_TYPE &) {
+}
+
+// The exported state is a BLOB; K (and an option) is recorded so that re-binding the exported state supplies it.
 template <class STATE, class BIND_DATA_TYPE>
 static AggregateStateLayout DSArenaGetStateType(AggregateLayoutInput &input) {
     AggregateStateLayout layout(LogicalType::BLOB, AlignValue<idx_t>(sizeof(STATE)));
     if (input.bind_data) {
         auto &bind_data = input.bind_data->template Cast<BIND_DATA_TYPE>();
         layout.constant_parameters.emplace(0, Value::INTEGER(bind_data.k));
+        DSArenaStateOption(layout, bind_data);
     }
     return layout;
 }

@@ -137,6 +137,84 @@ class Sketch:
         """The state_class constructor's arguments, from the bind data `bind`."""
         return "bind.k, bind.hra" if self.option and self.option.name == "hra" else "bind.k"
 
+    # The arena states of the item sketches (DS<name>ArenaState in generated.cpp.j2), where ITEM is the item type.
+
+    @property
+    def arena_merges_as_updates(self) -> bool:
+        """The library merges an exact sketch by updating with its items one by one, so an arena state buffers a merged
+        sketch's items as updates. REQ and TDigest merge them as a sorted run instead."""
+        return self.name in ("KLL", "Quantiles")
+
+    def arena_args(self, allocator: str) -> str:
+        """The state_class constructor's arguments in an arena state, allocating through `allocator`."""
+        if self.name == "TDigest":
+            return f"bind.k, {allocator}"
+        if self.name == "REQ":
+            return f"bind.k, hra, std::less<ITEM>(), {allocator}"
+        return f"bind.k, std::less<ITEM>(), {allocator}"
+
+    @property
+    def arena_limit(self) -> str:
+        """C++: how many items an arena state buffers, given the bind data `bind`: fewer than a new sketch holds before
+        it compacts."""
+        return {
+            "KLL": "std::min<uint32_t>(BUFFERED, bind.k)",
+            "Quantiles": "std::min<uint32_t>(BUFFERED, 2 * bind.k - 1)",
+            "REQ": "std::min<uint32_t>(BUFFERED, 6 * std::max(bind.k & ~1, 4) - 1)",
+            "TDigest": "BUFFERED",
+        }[self.name]
+
+    @property
+    def arena_limit_comment(self) -> str:
+        return {
+            "KLL": "A new KLL sketch compacts when its K items are full.",
+            "Quantiles": "A new Quantiles sketch compacts when its base buffer holds 2K items.",
+            "REQ": "A new REQ sketch (K rounded down to even, at least 4) compacts when it holds 6K items.",
+            "TDigest": "A new t-digest compresses when it buffers 4 * (2K + 10) values, at least 200.",
+        }[self.name]
+
+    @property
+    def arena_run_args(self) -> str:
+        """The constructor arguments of a heap sketch holding a merged run's items: one that does not compact."""
+        return "8, hra" if self.name == "REQ" else "10"
+
+    @property
+    def arena_run_comment(self) -> str:
+        if self.name == "REQ":
+            return "A merged run, as the sketch it came from: K = 8 holds 48 items before it compacts."
+        return "A merged run, as the sketch it came from: K = 10 buffers 200 values before it compresses."
+
+    @property
+    def arena_copy_args(self) -> str:
+        """The arguments copying `*source.sketch` into an arena state."""
+        if self.name == "TDigest":
+            return "*source.sketch"
+        return "*source.sketch, std::less<ITEM>(), Allocator()"
+
+    @property
+    def arena_copy_comment(self) -> str:
+        if self.name == "TDigest":
+            return "A copy allocates through the source's allocator, which in arena mode is the current (target's) arena."
+        return "A copy into this arena."
+
+    @property
+    def arena_deserialize_args(self) -> str:
+        """The library deserialize's arguments after the bytes, deserializing into the arena."""
+        if self.name == "TDigest":
+            return "Allocator()"
+        return "datasketches::serde<ITEM>(), std::less<ITEM>(), Allocator()"
+
+    @property
+    def arena_n(self) -> str:
+        """The sketch method counting its items."""
+        return "get_total_weight" if self.name == "TDigest" else "get_n"
+
+    @property
+    def arena_export_serialize(self) -> str:
+        """Serializes an arena state's sketch for export: a t-digest keeps its buffered values (serialize() would
+        compress them first, so a spilled state would go on differently)."""
+        return "serialize(0, true)" if self.name == "TDigest" else "serialize()"
+
     @property
     def overload_types(self) -> tuple:
         """The item types the scalar functions are registered for; a counting sketch's take no item type."""
@@ -185,16 +263,16 @@ COUNTING_TYPES = NUMERIC_TYPES + (
 
 SKETCHES = [
     Sketch("Quantiles", "DSQuantilesSketch", NUMERIC_TYPES + ("LogicalType::VARCHAR",),
-           example_k=16, k_min=2, k_max=32768, k_power_of_two=True),
+           example_k=16, k_min=2, k_max=32768, k_power_of_two=True, arena=True),
     Sketch("KLL", "DSKLLSketch", NUMERIC_TYPES + ("LogicalType::VARCHAR",),
            example_k=200, k_min=8, k_max=65535, arena=True),
     # The library rounds an odd K down. (It kept K in 8 bits, so a larger K wrapped around: see
     # vcpkg-overlay/apache-datasketches/req-k-16-bit.patch.)
     Sketch("REQ", "DSREQSketch", NUMERIC_TYPES,
-           example_k=12, k_min=4, k_max=1024, option=REQ_HRA),
+           example_k=12, k_min=4, k_max=1024, option=REQ_HRA, arena=True),
     # The library's K is a uint16_t.
     Sketch("TDigest", "DSTDigestSketch", ("LogicalType::FLOAT", "LogicalType::DOUBLE"),
-           example_k=100, k_min=10, k_max=65535, k_label="K (compression)"),
+           example_k=100, k_min=10, k_max=65535, k_label="K (compression)", arena=True),
     Sketch("HLL", "DSHLLSketch", COUNTING_TYPES,
            example_k=12, k_min=4, k_max=21, k_label="K (lg_k)", option=HLL_TARGET_TYPE,
            counting=True, arena=True),
