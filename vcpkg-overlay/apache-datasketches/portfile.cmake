@@ -25,6 +25,9 @@ vcpkg_from_github(
         # reverse_purge_hash_map::purge (frequent items) took its temporary median sample from the sketch's
         # allocator, which an arena never gets back; it now lives on the stack.
         frequent-items-purge-samples.patch
+        # tdigest reserved room for 2K + 30 centroids and four times as many buffered values in its constructor (and when
+        # deserialized); both now grow as they fill.
+        tdigest-lazy-buffers.patch
 )
 
 set(VCPKG_BUILD_TYPE release) # header-only port

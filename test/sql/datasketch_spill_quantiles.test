@@ -1,0 +1,175 @@
+# name: test/sql/datasketch_spill_quantiles.test
+# description: arena-backed Quantiles, REQ and TDigest states count toward memory_limit and spill instead of failing
+# group: [datasketches]
+
+require datasketches
+
+require skip_reload
+
+statement ok
+SET threads=4;
+
+statement ok
+SET memory_limit='128MB';
+
+statement ok
+SET temp_directory='{TEST_DIR}/datasketch_spill_quantiles';
+
+statement ok
+SET preserve_insertion_order=false;
+
+# 400k groups of 3 values: every state still buffers its items. Each group's n, min and max are exact.
+query IIII
+SELECT count(*) FILTER (WHERE datasketch_quantiles_n(q) != 3 OR datasketch_quantiles_min_item(q) != g OR datasketch_quantiles_max_item(q) != g + 2),
+       count(*) FILTER (WHERE datasketch_req_n(r) != 3 OR datasketch_req_min_item(r) != g OR datasketch_req_max_item(r) != g + 2),
+       count(*) FILTER (WHERE datasketch_req_n(l) != 3 OR datasketch_req_min_item(l) != g OR datasketch_req_max_item(l) != g + 2),
+       count(*) FILTER (WHERE datasketch_tdigest_total_weight(t) != 3 OR datasketch_tdigest_min_value(t) != g OR datasketch_tdigest_max_value(t) != g + 2)
+FROM (
+    SELECT g, datasketch_quantiles(128, v::INTEGER) AS q, datasketch_req(12, v::BIGINT) AS r,
+           datasketch_req(12, v::BIGINT, false) AS l, datasketch_tdigest(100, v::DOUBLE) AS t
+    FROM (SELECT i % 400000 AS g, (i % 400000) + (i // 400000) AS v FROM range(1200000) t(i))
+    GROUP BY g
+);
+----
+0	0	0	0
+
+# 200k groups of 60 values: every state holds a sketch, together far more than the limit
+query IIII
+SELECT count(*) FILTER (WHERE datasketch_quantiles_n(q) != 60 OR datasketch_quantiles_min_item(q) != g OR datasketch_quantiles_max_item(q) != g + 59),
+       count(*) FILTER (WHERE datasketch_req_n(r) != 60 OR datasketch_req_min_item(r) != g OR datasketch_req_max_item(r) != g + 59),
+       count(*) FILTER (WHERE datasketch_req_n(l) != 60 OR datasketch_req_min_item(l) != g OR datasketch_req_max_item(l) != g + 59),
+       count(*) FILTER (WHERE datasketch_tdigest_total_weight(t) != 60 OR datasketch_tdigest_min_value(t) != g OR datasketch_tdigest_max_value(t) != g + 59)
+FROM (
+    SELECT g, datasketch_quantiles(128, v::DOUBLE) AS q, datasketch_req(40, v::FLOAT) AS r,
+           datasketch_req(40, v::DOUBLE, false) AS l, datasketch_tdigest(100, v::FLOAT) AS t
+    FROM (SELECT i % 200000 AS g, (i % 200000) + (i // 200000) AS v FROM range(12000000) t(i))
+    GROUP BY g
+);
+----
+0	0	0	0
+
+# A small K compacts before the buffer is full
+query III
+SELECT count(*) FILTER (WHERE datasketch_quantiles_n(q) != 40 OR datasketch_quantiles_min_item(q) != g OR datasketch_quantiles_max_item(q) != g + 39),
+       count(*) FILTER (WHERE datasketch_req_n(r) != 40 OR datasketch_req_min_item(r) != g OR datasketch_req_max_item(r) != g + 39),
+       count(*) FILTER (WHERE datasketch_tdigest_total_weight(t) != 40 OR datasketch_tdigest_min_value(t) != g OR datasketch_tdigest_max_value(t) != g + 39)
+FROM (
+    SELECT g, datasketch_quantiles(2, v::SMALLINT) AS q, datasketch_req(4, v::USMALLINT) AS r, datasketch_tdigest(10, v::DOUBLE) AS t
+    FROM (SELECT i % 1000 AS g, (i % 1000) + (i // 1000) AS v FROM range(40000) t(i))
+    GROUP BY g
+);
+----
+0	0	0
+
+# Merging stored sketches spills too: small exact ones (buffered) and larger ones
+statement ok
+SET memory_limit='4GB';
+
+statement ok
+CREATE TABLE parts AS
+SELECT g, p, datasketch_quantiles(128, v) AS q, datasketch_req(12, v) AS r, datasketch_req(12, v, false) AS l,
+       datasketch_tdigest(100, v) AS t
+FROM (SELECT i % 200000 AS g, i % 3 AS p, i::DOUBLE AS v FROM range(1200000) t(i))
+GROUP BY g, p;
+
+statement ok
+CREATE TABLE big_parts AS
+SELECT g, p, datasketch_quantiles(128, v) AS q, datasketch_req(12, v) AS r, datasketch_req(12, v, false) AS l,
+       datasketch_tdigest(100, v) AS t
+FROM (SELECT i % 50000 AS g, i % 3 AS p, i::DOUBLE AS v FROM range(6000000) t(i))
+GROUP BY g, p;
+
+statement ok
+SET memory_limit='128MB';
+
+query IIII
+SELECT count(*) FILTER (WHERE datasketch_quantiles_n(q) != 6 OR datasketch_quantiles_min_item(q) != g OR datasketch_quantiles_max_item(q) != g + 1000000),
+       count(*) FILTER (WHERE datasketch_req_n(r) != 6 OR datasketch_req_min_item(r) != g OR datasketch_req_max_item(r) != g + 1000000),
+       count(*) FILTER (WHERE datasketch_req_n(l) != 6 OR datasketch_req_is_hra(l)),
+       count(*) FILTER (WHERE datasketch_tdigest_total_weight(t) != 6 OR datasketch_tdigest_min_value(t) != g OR datasketch_tdigest_max_value(t) != g + 1000000)
+FROM (
+    SELECT g, datasketch_quantiles(128, q) AS q, datasketch_req(12, r) AS r, datasketch_req(12, l) AS l, datasketch_tdigest(100, t) AS t
+    FROM parts GROUP BY g
+);
+----
+0	0	0	0
+
+query IIII
+SELECT count(*) FILTER (WHERE datasketch_quantiles_n(q) != 120 OR datasketch_quantiles_min_item(q) != g OR datasketch_quantiles_max_item(q) != g + 5950000),
+       count(*) FILTER (WHERE datasketch_req_n(r) != 120 OR datasketch_req_min_item(r) != g OR datasketch_req_max_item(r) != g + 5950000),
+       count(*) FILTER (WHERE datasketch_req_n(l) != 120 OR datasketch_req_is_hra(l)),
+       count(*) FILTER (WHERE datasketch_tdigest_total_weight(t) != 120 OR datasketch_tdigest_min_value(t) != g OR datasketch_tdigest_max_value(t) != g + 5950000)
+FROM (
+    SELECT g, datasketch_quantiles(128, q) AS q, datasketch_req(12, r) AS r, datasketch_req(12, l) AS l, datasketch_tdigest(100, t) AS t
+    FROM big_parts GROUP BY g
+);
+----
+0	0	0	0
+
+# Merged states keep the first sketch's rank accuracy mode, and reject the other mode, buffered or not
+query I
+SELECT datasketch_req_is_hra(datasketch_req(12, l)) FROM parts WHERE g < 10;
+----
+false
+
+statement error
+SELECT datasketch_req(12, s) FROM (SELECT r AS s FROM parts WHERE g = 1 UNION ALL SELECT l FROM parts WHERE g = 2);
+----
+Cannot merge sketches
+
+statement error
+SELECT g % 2, datasketch_req(12, s) FROM (SELECT g, r AS s FROM big_parts UNION ALL SELECT g, l FROM big_parts) GROUP BY g % 2;
+----
+Cannot merge sketches
+
+statement ok
+SET memory_limit='4GB';
+
+# Exported states finalize to the aggregate's result: exactly while a state buffers, and for the deterministic
+# t-digest; the others randomize when they compact
+query IIIIIII
+SELECT finalize(datasketch_quantiles(128, i::DOUBLE) EXPORT_STATE) = datasketch_quantiles(128, i::DOUBLE),
+       finalize(datasketch_req(12, i::INTEGER) EXPORT_STATE) = datasketch_req(12, i::INTEGER),
+       finalize(datasketch_req(12, i::INTEGER, false) EXPORT_STATE) = datasketch_req(12, i::INTEGER, false),
+       finalize(datasketch_tdigest(100, i::FLOAT) EXPORT_STATE) = datasketch_tdigest(100, i::FLOAT),
+       finalize(datasketch_quantiles(128, datasketch_quantiles(16, i::DOUBLE)) EXPORT_STATE) = datasketch_quantiles(128, datasketch_quantiles(16, i::DOUBLE)),
+       finalize(datasketch_req(12, datasketch_req(12, i::INTEGER, false)) EXPORT_STATE) = datasketch_req(12, datasketch_req(12, i::INTEGER, false)),
+       finalize(datasketch_tdigest(100, datasketch_tdigest(10, i::FLOAT)) EXPORT_STATE) = datasketch_tdigest(100, datasketch_tdigest(10, i::FLOAT))
+FROM range(20) t(i);
+----
+true	true	true	true	true	true	true
+
+query IIIII
+SELECT datasketch_quantiles_n(finalize(datasketch_quantiles(128, i::DOUBLE) EXPORT_STATE)),
+       datasketch_req_n(finalize(datasketch_req(12, i::INTEGER) EXPORT_STATE)),
+       datasketch_req_is_hra(finalize(datasketch_req(12, i::INTEGER, false) EXPORT_STATE)),
+       finalize(datasketch_tdigest(100, i::DOUBLE) EXPORT_STATE) = datasketch_tdigest(100, i::DOUBLE),
+       datasketch_tdigest_total_weight(finalize(datasketch_tdigest(100, i::FLOAT) EXPORT_STATE))
+FROM range(100000) t(i);
+----
+100000	100000	false	true	100000
+
+# Grouped exports, buffered and not: n is exact, and t-digests are equal
+query III
+SELECT count(*) FILTER (WHERE datasketch_quantiles_n(q) != g % 50 + 1),
+       count(*) FILTER (WHERE datasketch_req_n(r) != g % 50 + 1),
+       count(*) FILTER (WHERE t IS DISTINCT FROM t2)
+FROM (
+    SELECT g, finalize(datasketch_quantiles(16, v) EXPORT_STATE) AS q, finalize(datasketch_req(12, v::BIGINT) EXPORT_STATE) AS r,
+           finalize(datasketch_tdigest(100, v) EXPORT_STATE) AS t, datasketch_tdigest(100, v) AS t2
+    FROM (SELECT g, (g * 100 + j)::DOUBLE AS v FROM range(2000) a(g), range(50) b(j) WHERE j <= g % 50)
+    GROUP BY g
+);
+----
+0	0	0
+
+# VARCHAR Quantiles sketches keep their heap states and still work under the limit
+statement ok
+SET memory_limit='128MB';
+
+query I
+SELECT count(*) FROM (
+    SELECT g, datasketch_quantiles(128, v::VARCHAR) AS s FROM (SELECT i % 1000 AS g, i AS v FROM range(100000) t(i)) GROUP BY g
+) WHERE datasketch_quantiles_n(s) != 100;
+----
+0

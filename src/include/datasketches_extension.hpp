@@ -369,6 +369,15 @@ namespace duckdb
 			if (!arena_mode)
 			{
 				Allocator::DefaultAllocator().FreeData(data_ptr_cast(pointer), Bytes(n));
+				return;
+			}
+			// The arena takes back the last allocation it made, e.g. a temporary buffer the library frees before it
+			// allocates anything else (t-digest's compress() and merge()); other arena memory is never freed.
+			const auto size = AlignValue<idx_t>(Bytes(n));
+			auto head = ds_current_arena ? ds_current_arena->GetHead() : nullptr;
+			if (head && data_ptr_cast(pointer) + size == head->data.get() + head->current_position)
+			{
+				ds_current_arena->ShrinkHead(size);
 			}
 		}
 

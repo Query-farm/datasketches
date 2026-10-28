@@ -72,6 +72,171 @@ struct DSQuantilesState {
     }
 };
 
+// The aggregates' state over items that own no heap memory (every item type but VARCHAR), in the aggregate arena
+// (see the arena states in datasketches_generated_common.hpp). The first items are kept as they are, in a buffer,
+// and fed to a sketch, in order, only when more arrive: DuckDB creates a state per input row when grouping reduces
+// little (it skips the hash table lookups), and a sketch reserves room for many items up front. The buffer holds
+// at most Limit() items, fewer than a sketch holds before it compacts, so a buffering state is a sketch that has
+// not compacted; small exact input sketches are buffered too.
+template <class T>
+struct DSQuantilesArenaState {
+    using ITEM = DSItem<T>;
+    using SKETCH = DSQuantilesSketch<DSItem<T>>;
+    static constexpr uint32_t BUFFERED = 32;
+
+    SKETCH *sketch;
+    DSArenaItems<ITEM> buffer;
+
+    static DSAllocator<ITEM> Allocator() {
+        return DSAllocator<ITEM>(DSArenaMode());
+    }
+    // A new Quantiles sketch compacts when its base buffer holds 2K items.
+    static uint32_t Limit(const DSQuantilesBindData &bind) {
+        return std::min<uint32_t>(BUFFERED, 2 * bind.k - 1);
+    }
+
+    void Initialize() {
+        sketch = nullptr;
+        buffer.Initialize();
+    }
+    bool IsEmpty() const {
+        return !sketch && buffer.count == 0;
+    }
+    // Feeds the buffered items to `target` (a new sketch) as they arrived.
+    void Replay(SKETCH &target) const {
+        for (uint32_t i = 0; i < buffer.count; i++) {
+            target.update(buffer.items[i]);
+        }
+    }
+    // Moves the buffered items into a new sketch.
+    SKETCH &Promote(const DSQuantilesBindData &bind, ArenaAllocator &arena) {
+        if (!sketch) {
+            sketch = arena.Make<SKETCH>(bind.k, std::less<ITEM>(), Allocator());
+            Replay(*sketch);
+            buffer.Initialize();
+        }
+        return *sketch;
+    }
+    void Add(const ITEM &item, const DSQuantilesBindData &bind, ArenaAllocator &arena) {
+        if (!sketch && buffer.count < Limit(bind)) {
+            buffer.Append(item, arena);
+        } else {
+            Promote(bind, arena).update(item);
+        }
+    }
+    // Adds the items of an exact sketch, which have weight 1, as merging that sketch would.
+    void AddRun(const ITEM *items, uint32_t count, const DSQuantilesBindData &bind, ArenaAllocator &arena) {
+        for (uint32_t i = 0; i < count; i++) {
+            Add(items[i], bind, arena);
+        }
+    }
+    template <bool IS_UUID, class V>
+    void Update(const V &value, const DSQuantilesBindData &bind, ArenaAllocator &arena) {
+        Add(DSItemIn(value), bind, arena);
+    }
+    // quantiles_sketch::merge takes over a copy of an estimation-mode sketch, allocator included, unless this sketch
+    // is in estimation mode with no larger K: such a sketch, read on the heap, is first copied into the arena.
+    static void MergeIncoming(SKETCH &target, SKETCH &&incoming) {
+        if (incoming.is_estimation_mode() && !(target.is_estimation_mode() && target.get_k() <= incoming.get_k())) {
+            DSMergeSketch(target, SKETCH(incoming, std::less<ITEM>(), Allocator()));
+            return;
+        }
+        DSMergeSketch(target, std::move(incoming));
+    }
+    void Merge(const string_t &data, const DSQuantilesBindData &bind, ArenaAllocator &arena) {
+        auto incoming = DSDeserialize<SKETCH>(data, "Quantiles");
+        if (!sketch && !incoming.is_empty() &&
+            buffer.count + incoming.get_n() <= Limit(bind)) {
+            // An exact sketch holds its items with weight 1: buffer them in the order a merge reads them.
+            ITEM items[BUFFERED];
+            uint32_t count = 0;
+            bool exact = true;
+            for (auto entry : incoming) {
+                if (entry.second != 1 || count == BUFFERED) {
+                    exact = false;
+                    break;
+                }
+                items[count++] = entry.first;
+            }
+            if (exact) {
+                AddRun(items, count, bind, arena);
+                return;
+            }
+        }
+        MergeIncoming(Promote(bind, arena), std::move(incoming));
+    }
+    void Combine(const DSQuantilesArenaState &source, const DSQuantilesBindData &bind, ArenaAllocator &arena) {
+        if (!source.sketch) {
+            if (IsEmpty()) {
+                // The same buffer, copied into this arena
+                for (uint32_t i = 0; i < source.buffer.count; i++) {
+                    buffer.Append(source.buffer.items[i], arena);
+                }
+            } else {
+                // Merging the source's sketch, which has not compacted, updates with its items
+                AddRun(source.buffer.items, source.buffer.count, bind, arena);
+            }
+        } else if (IsEmpty()) {
+            // A copy into this arena.
+            sketch = arena.Make<SKETCH>(*source.sketch, std::less<ITEM>(), Allocator());
+        } else {
+            DSMergeSketch(Promote(bind, arena), *source.sketch);
+        }
+    }
+    // A state that still buffers its items is serialized through a temporary sketch on the heap, which is freed
+    // right away, instead of a sketch left behind in the arena.
+    auto Serialize(const DSQuantilesBindData &bind, ArenaAllocator &) const {
+        if (sketch) {
+            return sketch->serialize();
+        }
+        SKETCH temporary(bind.k, std::less<ITEM>(), DSAllocator<ITEM>());
+        Replay(temporary);
+        return temporary.serialize();
+    }
+    // The exported state is a tag byte, then the buffered items as they are (EXPORT_BUFFER) or
+    // the serialized sketch (EXPORT_SKETCH). A
+    // deserialized sketch may reserve room for many items, so buffered states are exported as items: importing them
+    // as sketches would make every spilled state full size.
+    static constexpr uint8_t EXPORT_BUFFER = 0;
+    static constexpr uint8_t EXPORT_SKETCH = 1;
+    static constexpr idx_t BUFFER_HEADER = 1;
+    std::vector<uint8_t> Export(const DSQuantilesBindData &, ArenaAllocator &) const {
+        std::vector<uint8_t> bytes;
+        if (sketch) {
+            auto serialized = sketch->serialize();
+            bytes.reserve(1 + serialized.size());
+            bytes.push_back(EXPORT_SKETCH);
+            bytes.insert(bytes.end(), serialized.begin(), serialized.end());
+        } else {
+            auto items = reinterpret_cast<const uint8_t *>(buffer.items);
+            bytes.resize(BUFFER_HEADER);
+            bytes[0] = EXPORT_BUFFER;
+            bytes.insert(bytes.end(), items, items + buffer.count * sizeof(ITEM));
+        }
+        return bytes;
+    }
+    void Import(const string_t &data, ArenaAllocator &arena) {
+        const auto size = data.GetSize();
+        const auto bytes = const_data_ptr_cast(data.GetData());
+        if (size >= 1 && bytes[0] == EXPORT_SKETCH) {
+            const string_t serialized(data.GetData() + 1, UnsafeNumericCast<uint32_t>(size - 1));
+            // A deserialized sketch reserves 2K items for its base buffer; a copy grows it as it fills.
+            sketch = arena.Make<SKETCH>(DSDeserialize<SKETCH>(serialized, "Quantiles"), std::less<ITEM>(), Allocator());
+            return;
+        }
+        if (size < BUFFER_HEADER || bytes[0] != EXPORT_BUFFER || (size - BUFFER_HEADER) % sizeof(ITEM) != 0 ||
+            (size - BUFFER_HEADER) / sizeof(ITEM) > BUFFERED) {
+            throw InvalidInputException("Invalid Quantiles aggregate state");
+        }
+        const auto count = static_cast<uint32_t>((size - BUFFER_HEADER) / sizeof(ITEM));
+        for (uint32_t i = 0; i < count; i++) {
+            ITEM item;
+            memcpy(&item, bytes + BUFFER_HEADER + i * sizeof(ITEM), sizeof(ITEM));
+            buffer.Append(item, arena);
+        }
+    }
+};
+
 template <class T>
 static void DSQuantilesis_empty(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 1);
@@ -331,6 +496,14 @@ static void DSQuantilessorted_view(DataChunk &args, ExpressionState &state, Vect
 
 template <class T>
 static AggregateFunction DSQuantilesMergeAggregate(const LogicalType &type, const LogicalType &result_type) {
+    if constexpr (!std::is_same_v<T, string_t>) {
+        using STATE = DSQuantilesArenaState<T>;
+        using OP = DSArenaMergeOperation<DSQuantilesBindData>;
+        auto fun = AggregateFunction::UnaryAggregate<STATE, string_t, string_t, OP>(result_type, result_type);
+        DSReadDataArgumentAt<1, STATE, string_t, OP>(fun);
+        DSSetArenaStateExport<STATE, DSQuantilesBindData>(fun);
+        return fun;
+    }
     using OP = DSQuantilesMergeOperation<DSQuantilesBindData>;
     auto fun = AggregateFunction::UnaryAggregate<DSQuantilesState<T>, string_t, string_t, OP, AggregateDestructorType::LEGACY>(result_type, result_type);
     DSReadDataArgumentAt<1, DSQuantilesState<T>, string_t, OP>(fun);
@@ -339,6 +512,14 @@ static AggregateFunction DSQuantilesMergeAggregate(const LogicalType &type, cons
 
 template <class T>
 static AggregateFunction DSQuantilesCreateAggregate(const LogicalType &type, const LogicalType &result_type) {
+    if constexpr (!std::is_same_v<T, string_t>) {
+        using STATE = DSQuantilesArenaState<T>;
+        using OP = DSArenaCreateOperation<DSQuantilesBindData>;
+        auto fun = AggregateFunction::UnaryAggregate<STATE, T, string_t, OP>(type, result_type);
+        DSReadDataArgumentAt<1, STATE, T, OP>(fun);
+        DSSetArenaStateExport<STATE, DSQuantilesBindData>(fun);
+        return fun;
+    }
     using OP = DSQuantilesCreateOperation<DSQuantilesBindData>;
     auto fun = AggregateFunction::UnaryAggregate<DSQuantilesState<T>, T, string_t, OP, AggregateDestructorType::LEGACY>(type, result_type);
     DSReadDataArgumentAt<1, DSQuantilesState<T>, T, OP>(fun);
@@ -1543,9 +1724,11 @@ struct DSKLLState {
 };
 
 // The aggregates' state over items that own no heap memory (every item type but VARCHAR), in the aggregate arena
-// (see the arena states in datasketches_generated_common.hpp). The first BUFFERED items are kept as they are and
-// fed to a sketch, in order, only when more arrive: DuckDB creates a state per input row when grouping reduces
-// little (it skips the hash table lookups), and a sketch reserves K items up front.
+// (see the arena states in datasketches_generated_common.hpp). The first items are kept as they are, in a buffer,
+// and fed to a sketch, in order, only when more arrive: DuckDB creates a state per input row when grouping reduces
+// little (it skips the hash table lookups), and a sketch reserves room for many items up front. The buffer holds
+// at most Limit() items, fewer than a sketch holds before it compacts, so a buffering state is a sketch that has
+// not compacted; small exact input sketches are buffered too.
 template <class T>
 struct DSKLLArenaState {
     using ITEM = DSItem<T>;
@@ -1558,6 +1741,10 @@ struct DSKLLArenaState {
     static DSAllocator<ITEM> Allocator() {
         return DSAllocator<ITEM>(DSArenaMode());
     }
+    // A new KLL sketch compacts when its K items are full.
+    static uint32_t Limit(const DSKLLBindData &bind) {
+        return std::min<uint32_t>(BUFFERED, bind.k);
+    }
 
     void Initialize() {
         sketch = nullptr;
@@ -1566,22 +1753,32 @@ struct DSKLLArenaState {
     bool IsEmpty() const {
         return !sketch && buffer.count == 0;
     }
+    // Feeds the buffered items to `target` (a new sketch) as they arrived.
+    void Replay(SKETCH &target) const {
+        for (uint32_t i = 0; i < buffer.count; i++) {
+            target.update(buffer.items[i]);
+        }
+    }
     // Moves the buffered items into a new sketch.
     SKETCH &Promote(const DSKLLBindData &bind, ArenaAllocator &arena) {
         if (!sketch) {
             sketch = arena.Make<SKETCH>(bind.k, std::less<ITEM>(), Allocator());
-            for (uint32_t i = 0; i < buffer.count; i++) {
-                sketch->update(buffer.items[i]);
-            }
+            Replay(*sketch);
             buffer.Initialize();
         }
         return *sketch;
     }
     void Add(const ITEM &item, const DSKLLBindData &bind, ArenaAllocator &arena) {
-        if (!sketch && buffer.count < BUFFERED) {
+        if (!sketch && buffer.count < Limit(bind)) {
             buffer.Append(item, arena);
         } else {
             Promote(bind, arena).update(item);
+        }
+    }
+    // Adds the items of an exact sketch, which have weight 1, as merging that sketch would.
+    void AddRun(const ITEM *items, uint32_t count, const DSKLLBindData &bind, ArenaAllocator &arena) {
+        for (uint32_t i = 0; i < count; i++) {
+            Add(items[i], bind, arena);
         }
     }
     template <bool IS_UUID, class V>
@@ -1590,22 +1787,39 @@ struct DSKLLArenaState {
     }
     void Merge(const string_t &data, const DSKLLBindData &bind, ArenaAllocator &arena) {
         auto incoming = DSDeserialize<SKETCH>(data, "KLL");
-        if (!sketch && !incoming.is_empty() && !incoming.is_estimation_mode() &&
-            buffer.count + incoming.get_n() <= BUFFERED) {
-            // A small exact sketch holds its items with weight 1: buffer them in the order a merge inserts them.
+        if (!sketch && !incoming.is_empty() &&
+            buffer.count + incoming.get_n() <= Limit(bind)) {
+            // An exact sketch holds its items with weight 1: buffer them in the order a merge reads them.
+            ITEM items[BUFFERED];
+            uint32_t count = 0;
+            bool exact = true;
             for (auto entry : incoming) {
-                Add(entry.first, bind, arena);
+                if (entry.second != 1 || count == BUFFERED) {
+                    exact = false;
+                    break;
+                }
+                items[count++] = entry.first;
             }
-            return;
+            if (exact) {
+                AddRun(items, count, bind, arena);
+                return;
+            }
         }
         DSMergeSketch(Promote(bind, arena), std::move(incoming));
     }
     void Combine(const DSKLLArenaState &source, const DSKLLBindData &bind, ArenaAllocator &arena) {
         if (!source.sketch) {
-            for (uint32_t i = 0; i < source.buffer.count; i++) {
-                Add(source.buffer.items[i], bind, arena);
+            if (IsEmpty()) {
+                // The same buffer, copied into this arena
+                for (uint32_t i = 0; i < source.buffer.count; i++) {
+                    buffer.Append(source.buffer.items[i], arena);
+                }
+            } else {
+                // Merging the source's sketch, which has not compacted, updates with its items
+                AddRun(source.buffer.items, source.buffer.count, bind, arena);
             }
         } else if (IsEmpty()) {
+            // A copy into this arena.
             sketch = arena.Make<SKETCH>(*source.sketch, std::less<ITEM>(), Allocator());
         } else {
             DSMergeSketch(Promote(bind, arena), *source.sketch);
@@ -1617,17 +1831,17 @@ struct DSKLLArenaState {
         if (sketch) {
             return sketch->serialize();
         }
-        SKETCH temporary(bind.k);
-        for (uint32_t i = 0; i < buffer.count; i++) {
-            temporary.update(buffer.items[i]);
-        }
+        SKETCH temporary(bind.k, std::less<ITEM>(), DSAllocator<ITEM>());
+        Replay(temporary);
         return temporary.serialize();
     }
-    // The exported state is a tag byte, then the buffered items as they are (EXPORT_BUFFER) or the serialized sketch
-    // (EXPORT_SKETCH). A deserialized sketch reserves K items, so buffered states are exported as items: importing
-    // them as sketches would make every spilled state full size.
+    // The exported state is a tag byte, then the buffered items as they are (EXPORT_BUFFER) or
+    // the serialized sketch (EXPORT_SKETCH). A
+    // deserialized sketch may reserve room for many items, so buffered states are exported as items: importing them
+    // as sketches would make every spilled state full size.
     static constexpr uint8_t EXPORT_BUFFER = 0;
     static constexpr uint8_t EXPORT_SKETCH = 1;
+    static constexpr idx_t BUFFER_HEADER = 1;
     std::vector<uint8_t> Export(const DSKLLBindData &, ArenaAllocator &) const {
         std::vector<uint8_t> bytes;
         if (sketch) {
@@ -1637,8 +1851,8 @@ struct DSKLLArenaState {
             bytes.insert(bytes.end(), serialized.begin(), serialized.end());
         } else {
             auto items = reinterpret_cast<const uint8_t *>(buffer.items);
-            bytes.reserve(1 + buffer.count * sizeof(ITEM));
-            bytes.push_back(EXPORT_BUFFER);
+            bytes.resize(BUFFER_HEADER);
+            bytes[0] = EXPORT_BUFFER;
             bytes.insert(bytes.end(), items, items + buffer.count * sizeof(ITEM));
         }
         return bytes;
@@ -1648,17 +1862,17 @@ struct DSKLLArenaState {
         const auto bytes = const_data_ptr_cast(data.GetData());
         if (size >= 1 && bytes[0] == EXPORT_SKETCH) {
             const string_t serialized(data.GetData() + 1, UnsafeNumericCast<uint32_t>(size - 1));
-            sketch = arena.Make<SKETCH>(
-                DSDeserialize<SKETCH>(serialized, "KLL", datasketches::serde<ITEM>(), std::less<ITEM>(), Allocator()));
+            sketch = arena.Make<SKETCH>(DSDeserialize<SKETCH>(serialized, "KLL", datasketches::serde<ITEM>(), std::less<ITEM>(), Allocator()));
             return;
         }
-        if (size < 1 || bytes[0] != EXPORT_BUFFER || (size - 1) % sizeof(ITEM) != 0 || (size - 1) / sizeof(ITEM) > BUFFERED) {
+        if (size < BUFFER_HEADER || bytes[0] != EXPORT_BUFFER || (size - BUFFER_HEADER) % sizeof(ITEM) != 0 ||
+            (size - BUFFER_HEADER) / sizeof(ITEM) > BUFFERED) {
             throw InvalidInputException("Invalid KLL aggregate state");
         }
-        const auto count = static_cast<uint32_t>((size - 1) / sizeof(ITEM));
+        const auto count = static_cast<uint32_t>((size - BUFFER_HEADER) / sizeof(ITEM));
         for (uint32_t i = 0; i < count; i++) {
             ITEM item;
-            memcpy(&item, bytes + 1 + i * sizeof(ITEM), sizeof(ITEM));
+            memcpy(&item, bytes + BUFFER_HEADER + i * sizeof(ITEM), sizeof(ITEM));
             buffer.Append(item, arena);
         }
     }
@@ -3160,6 +3374,222 @@ struct DSREQState {
     }
 };
 
+// The aggregates' state over items that own no heap memory (every item type but VARCHAR), in the aggregate arena
+// (see the arena states in datasketches_generated_common.hpp). The first items are kept as they are, in a buffer,
+// and fed to a sketch, in order, only when more arrive: DuckDB creates a state per input row when grouping reduces
+// little (it skips the hash table lookups), and a sketch reserves room for many items up front. The buffer holds
+// at most Limit() items, fewer than a sketch holds before it compacts, so a buffering state is a sketch that has
+// not compacted; small exact input sketches are buffered too.
+template <class T>
+struct DSREQArenaState {
+    using ITEM = DSItem<T>;
+    using SKETCH = DSREQSketch<DSItem<T>>;
+    static constexpr uint32_t BUFFERED = 32;
+
+    SKETCH *sketch;
+    DSArenaItems<ITEM> buffer;
+    // The library merges an exact sketch's items as a sorted run, not one by one: bit i of `merged` is set if
+    // buffered item i came from a merged sketch (or partial state), and bit i of `runs` if it is the first of
+    // that sketch's items. They are replayed as merges of the same items.
+    uint32_t merged;
+    uint32_t runs;
+    // The buffered items' rank accuracy mode: the bind data's, or the first merged sketch's (sketches of different
+    // modes cannot be merged).
+    bool hra;
+
+    static DSAllocator<ITEM> Allocator() {
+        return DSAllocator<ITEM>(DSArenaMode());
+    }
+    // A new REQ sketch (K rounded down to even, at least 4) compacts when it holds 6K items.
+    static uint32_t Limit(const DSREQBindData &bind) {
+        return std::min<uint32_t>(BUFFERED, 6 * std::max(bind.k & ~1, 4) - 1);
+    }
+
+    void Initialize() {
+        sketch = nullptr;
+        buffer.Initialize();
+        merged = 0;
+        runs = 0;
+        hra = true;
+    }
+    bool IsEmpty() const {
+        return !sketch && buffer.count == 0;
+    }
+    bool HRA() const {
+        return sketch ? sketch->is_HRA() : hra;
+    }
+    // Feeds the buffered items to `target` (a new sketch) as they arrived.
+    void Replay(SKETCH &target) const {
+        for (uint32_t i = 0; i < buffer.count;) {
+            if (!((merged >> i) & 1)) {
+                target.update(buffer.items[i++]);
+                continue;
+            }
+            // A merged run, as the sketch it came from: K = 8 holds 48 items before it compacts.
+            SKETCH run(8, hra);
+            do {
+                run.update(buffer.items[i++]);
+            } while (i < buffer.count && ((merged >> i) & 1) && !((runs >> i) & 1));
+            DSMergeSketch(target, run);
+        }
+    }
+    // Moves the buffered items into a new sketch.
+    SKETCH &Promote(const DSREQBindData &bind, ArenaAllocator &arena) {
+        if (!sketch) {
+            sketch = arena.Make<SKETCH>(bind.k, hra, std::less<ITEM>(), Allocator());
+            Replay(*sketch);
+            buffer.Initialize();
+            merged = 0;
+            runs = 0;
+        }
+        return *sketch;
+    }
+    void Add(const ITEM &item, const DSREQBindData &bind, ArenaAllocator &arena) {
+        if (!sketch && buffer.count < Limit(bind)) {
+            buffer.Append(item, arena);
+        } else {
+            Promote(bind, arena).update(item);
+        }
+    }
+    // Adds the items of an exact sketch, which have weight 1, as merging that sketch would.
+    void AddRun(const ITEM *items, uint32_t count, const DSREQBindData &bind, ArenaAllocator &arena) {
+        if (count == 0) {
+            return;
+        }
+        if (!sketch && buffer.count + count <= Limit(bind)) {
+            runs |= 1u << buffer.count;
+            for (uint32_t i = 0; i < count; i++) {
+                merged |= 1u << buffer.count;
+                buffer.Append(items[i], arena);
+            }
+            return;
+        }
+        SKETCH run(8, hra);
+        for (uint32_t i = 0; i < count; i++) {
+            run.update(items[i]);
+        }
+        DSMergeSketch(Promote(bind, arena), run);
+    }
+    template <bool IS_UUID, class V>
+    void Update(const V &value, const DSREQBindData &bind, ArenaAllocator &arena) {
+        if (IsEmpty()) {
+            hra = bind.hra;
+        }
+        Add(DSItemIn(value), bind, arena);
+    }
+    void Merge(const string_t &data, const DSREQBindData &bind, ArenaAllocator &arena) {
+        auto incoming = DSDeserialize<SKETCH>(data, "REQ");
+        if (IsEmpty()) {
+            hra = incoming.is_HRA();
+        }
+        if (!sketch && !incoming.is_empty() && incoming.is_HRA() == hra &&
+            buffer.count + incoming.get_n() <= Limit(bind)) {
+            // An exact sketch holds its items with weight 1: buffer them in the order a merge reads them.
+            ITEM items[BUFFERED];
+            uint32_t count = 0;
+            bool exact = true;
+            for (auto entry : incoming) {
+                if (entry.second != 1 || count == BUFFERED) {
+                    exact = false;
+                    break;
+                }
+                items[count++] = entry.first;
+            }
+            if (exact) {
+                AddRun(items, count, bind, arena);
+                return;
+            }
+        }
+        DSMergeSketch(Promote(bind, arena), std::move(incoming));
+    }
+    void Combine(const DSREQArenaState &source, const DSREQBindData &bind, ArenaAllocator &arena) {
+        if (!IsEmpty() && source.HRA() != HRA()) {
+            throw InvalidInputException("Cannot merge sketches: merging HRA and LRA is not valid");
+        }
+        if (!source.sketch) {
+            if (IsEmpty()) {
+                // The same buffer, copied into this arena
+                for (uint32_t i = 0; i < source.buffer.count; i++) {
+                    buffer.Append(source.buffer.items[i], arena);
+                }
+                merged = source.merged;
+                runs = source.runs;
+                hra = source.hra;
+            } else {
+                // Merging the source's sketch, which has not compacted, adds its items as one run
+                AddRun(source.buffer.items, source.buffer.count, bind, arena);
+            }
+        } else if (IsEmpty()) {
+            // A copy into this arena.
+            sketch = arena.Make<SKETCH>(*source.sketch, std::less<ITEM>(), Allocator());
+        } else {
+            DSMergeSketch(Promote(bind, arena), *source.sketch);
+        }
+    }
+    // A state that still buffers its items is serialized through a temporary sketch on the heap, which is freed
+    // right away, instead of a sketch left behind in the arena.
+    auto Serialize(const DSREQBindData &bind, ArenaAllocator &) const {
+        if (sketch) {
+            return sketch->serialize();
+        }
+        SKETCH temporary(bind.k, hra, std::less<ITEM>(), DSAllocator<ITEM>());
+        Replay(temporary);
+        return temporary.serialize();
+    }
+    // The exported state is a tag byte, then the buffered items as they are (EXPORT_BUFFER, after `merged` and `runs` and `hra`) or
+    // the serialized sketch (EXPORT_SKETCH). A
+    // deserialized sketch may reserve room for many items, so buffered states are exported as items: importing them
+    // as sketches would make every spilled state full size.
+    static constexpr uint8_t EXPORT_BUFFER = 0;
+    static constexpr uint8_t EXPORT_SKETCH = 1;
+    static constexpr idx_t BUFFER_HEADER = 1 + 2 * sizeof(uint32_t) + 1;
+    std::vector<uint8_t> Export(const DSREQBindData &, ArenaAllocator &) const {
+        std::vector<uint8_t> bytes;
+        if (sketch) {
+            auto serialized = sketch->serialize();
+            bytes.reserve(1 + serialized.size());
+            bytes.push_back(EXPORT_SKETCH);
+            bytes.insert(bytes.end(), serialized.begin(), serialized.end());
+        } else {
+            auto items = reinterpret_cast<const uint8_t *>(buffer.items);
+            bytes.resize(BUFFER_HEADER);
+            bytes[0] = EXPORT_BUFFER;
+            memcpy(bytes.data() + 1, &merged, sizeof(uint32_t));
+            memcpy(bytes.data() + 1 + sizeof(uint32_t), &runs, sizeof(uint32_t));
+            bytes[BUFFER_HEADER - 1] = hra;
+            bytes.insert(bytes.end(), items, items + buffer.count * sizeof(ITEM));
+        }
+        return bytes;
+    }
+    void Import(const string_t &data, ArenaAllocator &arena) {
+        const auto size = data.GetSize();
+        const auto bytes = const_data_ptr_cast(data.GetData());
+        if (size >= 1 && bytes[0] == EXPORT_SKETCH) {
+            const string_t serialized(data.GetData() + 1, UnsafeNumericCast<uint32_t>(size - 1));
+            sketch = arena.Make<SKETCH>(DSDeserialize<SKETCH>(serialized, "REQ", datasketches::serde<ITEM>(), std::less<ITEM>(), Allocator()));
+            return;
+        }
+        if (size < BUFFER_HEADER || bytes[0] != EXPORT_BUFFER || (size - BUFFER_HEADER) % sizeof(ITEM) != 0 ||
+            (size - BUFFER_HEADER) / sizeof(ITEM) > BUFFERED) {
+            throw InvalidInputException("Invalid REQ aggregate state");
+        }
+        memcpy(&merged, bytes + 1, sizeof(uint32_t));
+        memcpy(&runs, bytes + 1 + sizeof(uint32_t), sizeof(uint32_t));
+        hra = bytes[BUFFER_HEADER - 1] != 0;
+        const auto count = static_cast<uint32_t>((size - BUFFER_HEADER) / sizeof(ITEM));
+        for (uint32_t i = 0; i < count; i++) {
+            ITEM item;
+            memcpy(&item, bytes + BUFFER_HEADER + i * sizeof(ITEM), sizeof(ITEM));
+            buffer.Append(item, arena);
+        }
+    }
+};
+
+// A call with the rank accuracy mode (index 2) re-binds its exported state with it; a call without ignores it.
+static void DSArenaStateOption(AggregateStateLayout &layout, const DSREQBindData &bind) {
+    layout.constant_parameters.emplace(2, Value::BOOLEAN(bind.hra));
+}
+
 template <class T>
 static void DSREQis_empty(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 1);
@@ -3448,6 +3878,14 @@ static void DSREQsorted_view(DataChunk &args, ExpressionState &state, Vector &re
 
 template <class T>
 static AggregateFunction DSREQMergeAggregate(const LogicalType &type, const LogicalType &result_type) {
+    if constexpr (!std::is_same_v<T, string_t>) {
+        using STATE = DSREQArenaState<T>;
+        using OP = DSArenaMergeOperation<DSREQBindData>;
+        auto fun = AggregateFunction::UnaryAggregate<STATE, string_t, string_t, OP>(result_type, result_type);
+        DSReadDataArgumentAt<1, STATE, string_t, OP>(fun);
+        DSSetArenaStateExport<STATE, DSREQBindData>(fun);
+        return fun;
+    }
     using OP = DSQuantilesMergeOperation<DSREQBindData>;
     auto fun = AggregateFunction::UnaryAggregate<DSREQState<T>, string_t, string_t, OP, AggregateDestructorType::LEGACY>(result_type, result_type);
     DSReadDataArgumentAt<1, DSREQState<T>, string_t, OP>(fun);
@@ -3456,6 +3894,14 @@ static AggregateFunction DSREQMergeAggregate(const LogicalType &type, const Logi
 
 template <class T>
 static AggregateFunction DSREQCreateAggregate(const LogicalType &type, const LogicalType &result_type) {
+    if constexpr (!std::is_same_v<T, string_t>) {
+        using STATE = DSREQArenaState<T>;
+        using OP = DSArenaCreateOperation<DSREQBindData>;
+        auto fun = AggregateFunction::UnaryAggregate<STATE, T, string_t, OP>(type, result_type);
+        DSReadDataArgumentAt<1, STATE, T, OP>(fun);
+        DSSetArenaStateExport<STATE, DSREQBindData>(fun);
+        return fun;
+    }
     using OP = DSQuantilesCreateOperation<DSREQBindData>;
     auto fun = AggregateFunction::UnaryAggregate<DSREQState<T>, T, string_t, OP, AggregateDestructorType::LEGACY>(type, result_type);
     DSReadDataArgumentAt<1, DSREQState<T>, T, OP>(fun);
@@ -4715,6 +5161,199 @@ struct DSTDigestState {
     }
 };
 
+// The aggregates' state over items that own no heap memory (every item type but VARCHAR), in the aggregate arena
+// (see the arena states in datasketches_generated_common.hpp). The first items are kept as they are, in a buffer,
+// and fed to a sketch, in order, only when more arrive: DuckDB creates a state per input row when grouping reduces
+// little (it skips the hash table lookups), and a sketch reserves room for many items up front. The buffer holds
+// at most Limit() items, fewer than a sketch holds before it compacts, so a buffering state is a sketch that has
+// not compacted; small exact input sketches are buffered too.
+template <class T>
+struct DSTDigestArenaState {
+    using ITEM = DSItem<T>;
+    using SKETCH = DSTDigestSketch<DSItem<T>>;
+    static constexpr uint32_t BUFFERED = 32;
+
+    SKETCH *sketch;
+    DSArenaItems<ITEM> buffer;
+    // The library merges an exact sketch's items as a sorted run, not one by one: bit i of `merged` is set if
+    // buffered item i came from a merged sketch (or partial state), and bit i of `runs` if it is the first of
+    // that sketch's items. They are replayed as merges of the same items.
+    uint32_t merged;
+    uint32_t runs;
+
+    static DSAllocator<ITEM> Allocator() {
+        return DSAllocator<ITEM>(DSArenaMode());
+    }
+    // A new t-digest compresses when it buffers 4 * (2K + 10) values, at least 200.
+    static uint32_t Limit(const DSTDigestBindData &bind) {
+        return BUFFERED;
+    }
+
+    void Initialize() {
+        sketch = nullptr;
+        buffer.Initialize();
+        merged = 0;
+        runs = 0;
+    }
+    bool IsEmpty() const {
+        return !sketch && buffer.count == 0;
+    }
+    // Feeds the buffered items to `target` (a new sketch) as they arrived.
+    void Replay(SKETCH &target) const {
+        for (uint32_t i = 0; i < buffer.count;) {
+            if (!((merged >> i) & 1)) {
+                target.update(buffer.items[i++]);
+                continue;
+            }
+            // A merged run, as the sketch it came from: K = 10 buffers 200 values before it compresses.
+            SKETCH run(10);
+            do {
+                run.update(buffer.items[i++]);
+            } while (i < buffer.count && ((merged >> i) & 1) && !((runs >> i) & 1));
+            DSMergeSketch(target, run);
+        }
+    }
+    // Moves the buffered items into a new sketch.
+    SKETCH &Promote(const DSTDigestBindData &bind, ArenaAllocator &arena) {
+        if (!sketch) {
+            sketch = arena.Make<SKETCH>(bind.k, Allocator());
+            Replay(*sketch);
+            buffer.Initialize();
+            merged = 0;
+            runs = 0;
+        }
+        return *sketch;
+    }
+    void Add(const ITEM &item, const DSTDigestBindData &bind, ArenaAllocator &arena) {
+        if (!sketch && buffer.count < Limit(bind)) {
+            buffer.Append(item, arena);
+        } else {
+            Promote(bind, arena).update(item);
+        }
+    }
+    // Adds the items of an exact sketch, which have weight 1, as merging that sketch would.
+    void AddRun(const ITEM *items, uint32_t count, const DSTDigestBindData &bind, ArenaAllocator &arena) {
+        if (count == 0) {
+            return;
+        }
+        if (!sketch && buffer.count + count <= Limit(bind)) {
+            runs |= 1u << buffer.count;
+            for (uint32_t i = 0; i < count; i++) {
+                merged |= 1u << buffer.count;
+                buffer.Append(items[i], arena);
+            }
+            return;
+        }
+        SKETCH run(10);
+        for (uint32_t i = 0; i < count; i++) {
+            run.update(items[i]);
+        }
+        DSMergeSketch(Promote(bind, arena), run);
+    }
+    template <bool IS_UUID, class V>
+    void Update(const V &value, const DSTDigestBindData &bind, ArenaAllocator &arena) {
+        Add(DSItemIn(value), bind, arena);
+    }
+    void Merge(const string_t &data, const DSTDigestBindData &bind, ArenaAllocator &arena) {
+        auto incoming = DSDeserialize<SKETCH>(data, "TDigest");
+        if (!sketch && !incoming.is_empty() &&
+            buffer.count + incoming.get_total_weight() <= Limit(bind)) {
+            // An exact sketch holds its items with weight 1: buffer them in the order a merge reads them.
+            ITEM items[BUFFERED];
+            uint32_t count = 0;
+            bool exact = true;
+            for (auto entry : incoming) {
+                if (entry.second != 1 || count == BUFFERED) {
+                    exact = false;
+                    break;
+                }
+                items[count++] = entry.first;
+            }
+            if (exact) {
+                AddRun(items, count, bind, arena);
+                return;
+            }
+        }
+        DSMergeSketch(Promote(bind, arena), std::move(incoming));
+    }
+    void Combine(const DSTDigestArenaState &source, const DSTDigestBindData &bind, ArenaAllocator &arena) {
+        if (!source.sketch) {
+            if (IsEmpty()) {
+                // The same buffer, copied into this arena
+                for (uint32_t i = 0; i < source.buffer.count; i++) {
+                    buffer.Append(source.buffer.items[i], arena);
+                }
+                merged = source.merged;
+                runs = source.runs;
+            } else {
+                // Merging the source's sketch adds its values as one run. (Its own merged runs may have combined into
+                // heavier centroids in that sketch: their values are merged as they are instead, which is at least as accurate.)
+                AddRun(source.buffer.items, source.buffer.count, bind, arena);
+            }
+        } else if (IsEmpty()) {
+            // A copy allocates through the source's allocator, which in arena mode is the current (target's) arena.
+            sketch = arena.Make<SKETCH>(*source.sketch);
+        } else {
+            DSMergeSketch(Promote(bind, arena), *source.sketch);
+        }
+    }
+    // A state that still buffers its items is serialized through a temporary sketch on the heap, which is freed
+    // right away, instead of a sketch left behind in the arena.
+    auto Serialize(const DSTDigestBindData &bind, ArenaAllocator &) const {
+        if (sketch) {
+            return sketch->serialize();
+        }
+        SKETCH temporary(bind.k, DSAllocator<ITEM>());
+        Replay(temporary);
+        return temporary.serialize();
+    }
+    // The exported state is a tag byte, then the buffered items as they are (EXPORT_BUFFER, after `merged` and `runs`) or
+    // the serialized sketch (EXPORT_SKETCH, with its buffered values, so that an imported state goes on as it was). A
+    // deserialized sketch may reserve room for many items, so buffered states are exported as items: importing them
+    // as sketches would make every spilled state full size.
+    static constexpr uint8_t EXPORT_BUFFER = 0;
+    static constexpr uint8_t EXPORT_SKETCH = 1;
+    static constexpr idx_t BUFFER_HEADER = 1 + 2 * sizeof(uint32_t);
+    std::vector<uint8_t> Export(const DSTDigestBindData &, ArenaAllocator &) const {
+        std::vector<uint8_t> bytes;
+        if (sketch) {
+            auto serialized = sketch->serialize(0, true);
+            bytes.reserve(1 + serialized.size());
+            bytes.push_back(EXPORT_SKETCH);
+            bytes.insert(bytes.end(), serialized.begin(), serialized.end());
+        } else {
+            auto items = reinterpret_cast<const uint8_t *>(buffer.items);
+            bytes.resize(BUFFER_HEADER);
+            bytes[0] = EXPORT_BUFFER;
+            memcpy(bytes.data() + 1, &merged, sizeof(uint32_t));
+            memcpy(bytes.data() + 1 + sizeof(uint32_t), &runs, sizeof(uint32_t));
+            bytes.insert(bytes.end(), items, items + buffer.count * sizeof(ITEM));
+        }
+        return bytes;
+    }
+    void Import(const string_t &data, ArenaAllocator &arena) {
+        const auto size = data.GetSize();
+        const auto bytes = const_data_ptr_cast(data.GetData());
+        if (size >= 1 && bytes[0] == EXPORT_SKETCH) {
+            const string_t serialized(data.GetData() + 1, UnsafeNumericCast<uint32_t>(size - 1));
+            sketch = arena.Make<SKETCH>(DSDeserialize<SKETCH>(serialized, "TDigest", Allocator()));
+            return;
+        }
+        if (size < BUFFER_HEADER || bytes[0] != EXPORT_BUFFER || (size - BUFFER_HEADER) % sizeof(ITEM) != 0 ||
+            (size - BUFFER_HEADER) / sizeof(ITEM) > BUFFERED) {
+            throw InvalidInputException("Invalid TDigest aggregate state");
+        }
+        memcpy(&merged, bytes + 1, sizeof(uint32_t));
+        memcpy(&runs, bytes + 1 + sizeof(uint32_t), sizeof(uint32_t));
+        const auto count = static_cast<uint32_t>((size - BUFFER_HEADER) / sizeof(ITEM));
+        for (uint32_t i = 0; i < count; i++) {
+            ITEM item;
+            memcpy(&item, bytes + BUFFER_HEADER + i * sizeof(ITEM), sizeof(ITEM));
+            buffer.Append(item, arena);
+        }
+    }
+};
+
 template <class T>
 static void DSTDigestis_empty(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 1);
@@ -4878,6 +5517,14 @@ static void DSTDigestmax_value(DataChunk &args, ExpressionState &state, Vector &
 
 template <class T>
 static AggregateFunction DSTDigestMergeAggregate(const LogicalType &type, const LogicalType &result_type) {
+    if constexpr (!std::is_same_v<T, string_t>) {
+        using STATE = DSTDigestArenaState<T>;
+        using OP = DSArenaMergeOperation<DSTDigestBindData>;
+        auto fun = AggregateFunction::UnaryAggregate<STATE, string_t, string_t, OP>(result_type, result_type);
+        DSReadDataArgumentAt<1, STATE, string_t, OP>(fun);
+        DSSetArenaStateExport<STATE, DSTDigestBindData>(fun);
+        return fun;
+    }
     using OP = DSQuantilesMergeOperation<DSTDigestBindData>;
     auto fun = AggregateFunction::UnaryAggregate<DSTDigestState<T>, string_t, string_t, OP, AggregateDestructorType::LEGACY>(result_type, result_type);
     DSReadDataArgumentAt<1, DSTDigestState<T>, string_t, OP>(fun);
@@ -4886,6 +5533,14 @@ static AggregateFunction DSTDigestMergeAggregate(const LogicalType &type, const 
 
 template <class T>
 static AggregateFunction DSTDigestCreateAggregate(const LogicalType &type, const LogicalType &result_type) {
+    if constexpr (!std::is_same_v<T, string_t>) {
+        using STATE = DSTDigestArenaState<T>;
+        using OP = DSArenaCreateOperation<DSTDigestBindData>;
+        auto fun = AggregateFunction::UnaryAggregate<STATE, T, string_t, OP>(type, result_type);
+        DSReadDataArgumentAt<1, STATE, T, OP>(fun);
+        DSSetArenaStateExport<STATE, DSTDigestBindData>(fun);
+        return fun;
+    }
     using OP = DSQuantilesCreateOperation<DSTDigestBindData>;
     auto fun = AggregateFunction::UnaryAggregate<DSTDigestState<T>, T, string_t, OP, AggregateDestructorType::LEGACY>(type, result_type);
     DSReadDataArgumentAt<1, DSTDigestState<T>, T, OP>(fun);
