@@ -1,0 +1,23 @@
+--- a/count/include/count_min.hpp
++++ b/count/include/count_min.hpp
+@@ -382,7 +382,7 @@
+   std::vector<W, Allocator> _sketch_array; // the array stored by the sketch
+   uint64_t _seed;
+   W _total_weight;
+-  std::vector<uint64_t> hash_seeds;
++  std::vector<uint64_t, typename std::allocator_traits<Allocator>::template rebind_alloc<uint64_t>> hash_seeds;
+ 
+   enum flags {IS_EMPTY};
+   static const uint8_t PREAMBLE_LONGS_SHORT = 2; // Empty -> need second byte for sketch parameters
+--- a/count/include/count_min_impl.hpp
++++ b/count/include/count_min_impl.hpp
+@@ -72,7 +72,8 @@
+ _num_buckets(num_buckets),
+ _sketch_array((static_cast<uint64_t>(num_hashes) * num_buckets < 1<<30) ? static_cast<size_t>(num_hashes) * num_buckets : 0, 0, _allocator),
+ _seed(seed),
+-_total_weight(0) {
++_total_weight(0),
++hash_seeds(_allocator) {
+   if (num_buckets < 3) {
+     throw std::invalid_argument("Using fewer than 3 buckets incurs relative error greater than 1.");
+   }

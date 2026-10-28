@@ -1,5 +1,4 @@
-#include "datasketches_extension.hpp"
-#include "datasketches_items.hpp"
+#include "datasketches_arena_buffer.hpp"
 
 #include "duckdb/common/vector/flat_vector.hpp"
 #include "duckdb/common/vector/string_vector.hpp"
@@ -132,139 +131,92 @@ namespace duckdb
             return make_uniq<DSCountMinBindData>(static_cast<uint8_t>(num_hashes), static_cast<uint32_t>(num_buckets));
         }
 
+        // The merge aggregate's bind data: its sketches carry their own sizes.
         unique_ptr<FunctionData> DSCountMinMergeBind(BindAggregateFunctionInput &)
         {
-            return nullptr;
+            return make_uniq<DSCountMinBindData>(0, 0);
+        }
+
+        // The constants an exported state is re-bound with.
+        void DSCountMinConstants(const DSCountMinBindData &bind, unordered_map<idx_t, Value> &constants)
+        {
+            constants.emplace(0, Value::INTEGER(bind.num_hashes));
+            constants.emplace(1, Value::INTEGER(static_cast<int32_t>(bind.num_buckets)));
         }
 
         // ============================================================
         // 2. State & Operations
         // ============================================================
-        struct DSCountMinState
+        // The aggregates' state, in the aggregate arena (see datasketches_arena_buffer.hpp): the first values with
+        // their weights, or the sketch. Values of every type are buffered as they are (strings copied into the arena):
+        // a sketch never keeps them, only their hashes. Counters are sums, so feeding the buffered values later gives
+        // the same sketch.
+        template <class T, bool IS_UUID>
+        struct DSCountMinPolicy
         {
-            CountMinSketch *sketch = nullptr;
-            ~DSCountMinState()
+            using BIND = DSCountMinBindData;
+            using VALUE = T;
+            using WEIGHT = int64_t;
+            using SKETCH = CountMinSketch;
+            using ENTRY = DSBufferedEntry<T, int64_t>;
+            static constexpr const char *NAME = "Count-Min";
+            static constexpr uint32_t BUFFERED = 32;
+
+            static DSAllocator<int64_t> ArenaMode()
             {
-                delete sketch;
+                return DSAllocator<int64_t>(DSArenaMode());
             }
-            void Create(AggregateInputData &input)
+            static idx_t Budget(const BIND &bind)
+            {
+                return static_cast<idx_t>(bind.num_hashes) * bind.num_buckets * sizeof(int64_t);
+            }
+            static ENTRY Entry(const T &value, int64_t weight = 1) { return ENTRY {value, weight}; }
+            static CountMinSketch *Create(const BIND &bind, ArenaAllocator &arena)
+            {
+                return arena.Make<CountMinSketch>(bind.num_hashes, bind.num_buckets, datasketches::DEFAULT_SEED, ArenaMode());
+            }
+            static CountMinSketch Temporary(const BIND &bind) { return CountMinSketch(bind.num_hashes, bind.num_buckets); }
+            static void Update(CountMinSketch &sketch, const ENTRY &entry)
+            {
+                DSCountMinUpdate<IS_UUID>(sketch, entry.value, entry.weight);
+            }
+            static auto Serialize(const CountMinSketch &sketch) { return sketch.serialize(); }
+            static CountMinSketch *Deserialize(const string_t &blob, ArenaAllocator &arena)
+            {
+                return arena.Make<CountMinSketch>(DSDeserialize<CountMinSketch>(blob, "Count-Min", datasketches::DEFAULT_SEED, ArenaMode()));
+            }
+            // The copy allocates through the source's allocator, which in arena mode is the current (target's) arena
+            // (with vcpkg-overlay/apache-datasketches/count-min-hash-seeds-allocator.patch).
+            static CountMinSketch *Copy(const CountMinSketch &source, ArenaAllocator &arena)
+            {
+                return arena.Make<CountMinSketch>(source);
+            }
+            static void Combine(CountMinSketch &target, const CountMinSketch &source, const BIND &, ArenaAllocator &)
+            {
+                DSCountMinMerge(target, source, "datasketch_count_min");
+            }
+            // An input sketch is read on the heap and freed once merged, except the first, which becomes the state's.
+            static void Merge(CountMinSketch *&sketch, const string_t &blob, const BIND &, ArenaAllocator &arena)
             {
                 if (!sketch)
                 {
-                    auto &bind = input.bind_data->Cast<DSCountMinBindData>();
-                    sketch = new CountMinSketch(bind.num_hashes, bind.num_buckets);
+                    sketch = Deserialize(blob, arena);
+                    return;
                 }
+                DSCountMinMerge(*sketch, DSCountMinDeserialize(blob), "datasketch_count_min");
             }
         };
 
-        // Shared by the build, weighted build and merge aggregates. With no input rows, the result is NULL.
-        struct DSCountMinOperationBase
-        {
-            template <class STATE>
-            static void Initialize(STATE &state) { state.sketch = nullptr; }
-
-            template <class STATE>
-            static void Destroy(STATE &state, AggregateInputData &)
-            {
-                delete state.sketch;
-                state.sketch = nullptr;
-            }
-
-            static bool IgnoreNull() { return true; }
-
-            template <class STATE, class OP>
-            static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data)
-            {
-                if (!source.sketch)
-                {
-                    return;
-                }
-                if (!target.sketch)
-                {
-                    if (aggr_input_data.combine_type == AggregateCombineType::ALLOW_DESTRUCTIVE)
-                    {
-                        // The source is discarded after this call, so take its sketch rather than copy it.
-                        target.sketch = source.sketch;
-                        const_cast<STATE &>(source).sketch = nullptr;
-                    }
-                    else
-                    {
-                        target.sketch = new CountMinSketch(*source.sketch);
-                    }
-                    return;
-                }
-                DSCountMinMerge(*target.sketch, *source.sketch, "datasketch_count_min");
-            }
-
-            template <class T, class STATE>
-            static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data)
-            {
-                if (state.sketch)
-                {
-                    target = DSCountMinSerialize(finalize_data.result, *state.sketch);
-                }
-                else
-                {
-                    finalize_data.ReturnNull();
-                }
-            }
-        };
-
-        // Each row counts once.
+        // Each row counts once; a repeated value counts as many times as it repeats.
         template <bool IS_UUID>
-        struct DSCountMinOperation : DSCountMinOperationBase
+        struct DSCountMinOperation : DSArenaCreateOperation<DSCountMinBindData, IS_UUID>
         {
-            template <class A_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &input, AggregateUnaryInput &idata)
-            {
-                state.Create(idata.input);
-                DSCountMinUpdate<IS_UUID>(*state.sketch, input, 1);
-            }
-
-            // A repeated value counts as many times as it repeats.
             template <class INPUT_TYPE, class STATE, class OP>
             static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t count)
             {
-                state.Create(unary_input.input);
-                DSCountMinUpdate<IS_UUID>(*state.sketch, input, static_cast<int64_t>(count));
-            }
-        };
-
-        // Each row adds its weight.
-        template <bool IS_UUID>
-        struct DSCountMinWeightedOperation : DSCountMinOperationBase
-        {
-            template <class A_TYPE, class W_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &input, const W_TYPE &weight, AggregateBinaryInput &idata)
-            {
-                state.Create(idata.input);
-                DSCountMinUpdate<IS_UUID>(*state.sketch, input, weight);
-            }
-        };
-
-        struct DSCountMinMergeOperation : DSCountMinOperationBase
-        {
-            template <class A_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &input, AggregateUnaryInput &)
-            {
-                auto sketch = DSCountMinDeserialize(input);
-                if (!state.sketch)
-                {
-                    state.sketch = new CountMinSketch(std::move(sketch));
-                }
-                else
-                {
-                    DSCountMinMerge(*state.sketch, sketch, "datasketch_count_min");
-                }
-            }
-
-            template <class INPUT_TYPE, class STATE, class OP>
-            static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t count)
-            {
-                for (idx_t i = 0; i < count; i++)
-                {
-                    Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-                }
+                DSArenaScope scope(unary_input.input.allocator);
+                state.UpdateWeighted(input, static_cast<int64_t>(count), unary_input.input.bind_data->template Cast<DSCountMinBindData>(),
+                                     unary_input.input.allocator);
             }
         };
 
@@ -396,15 +348,20 @@ namespace duckdb
                 using INPUT = DSCountingInput<decltype(marker)>;
                 using OP = DSCountMinOperation<INPUT::is_uuid>;
                 using T = typename INPUT::physical_type;
-                auto fun = AggregateFunction::UnaryAggregate<DSCountMinState, T, string_t, OP, AggregateDestructorType::LEGACY>(item_type, sketch_type);
-                DSReadDataArgumentAt<2, DSCountMinState, T, OP>(fun);
+                using STATE = DSBufferedArenaState<DSCountMinPolicy<T, INPUT::is_uuid>>;
+                auto fun = AggregateFunction::UnaryAggregate<STATE, T, string_t, OP>(item_type, sketch_type);
+                DSReadDataArgumentAt<2, STATE, T, OP>(fun);
+                DSSetBufferedStateExport<STATE, DSCountMinBindData, DSCountMinConstants>(fun);
                 DSAddAggregate(set, descs, fun, DSCountMinBind, {LogicalType::INTEGER, LogicalType::INTEGER, item_type},
                                {"num_hashes", "num_buckets", "data"},
                                "Creates a Count-Min sketch that estimates how often each value occurs. An estimate exceeds the true "
                                "count by at most e / num_buckets of the total count, with probability 1 - e^-num_hashes "
                                "(see datasketch_count_min_suggest_num_buckets and _suggest_num_hashes)",
                                {"SELECT datasketch_count_min(3, 128, item)" + rows}); });
-            auto merge = AggregateFunction::UnaryAggregate<DSCountMinState, string_t, string_t, DSCountMinMergeOperation, AggregateDestructorType::LEGACY>(sketch_type, sketch_type);
+            using MERGE_STATE = DSBufferedArenaState<DSCountMinPolicy<int64_t, false>>;
+            using MERGE = DSArenaMergeOperation<DSCountMinBindData>;
+            auto merge = AggregateFunction::UnaryAggregate<MERGE_STATE, string_t, string_t, MERGE>(sketch_type, sketch_type);
+            DSSetBufferedStateExport<MERGE_STATE, DSCountMinBindData, DSNoConstants<DSCountMinBindData>>(merge);
             DSAddAggregate(set, descs, merge, DSCountMinMergeBind, {sketch_type}, {"sketch"},
                            "Merges Count-Min sketches of the same size",
                            {ex.QueryPartials("datasketch_count_min(sketch)")});
@@ -418,11 +375,12 @@ namespace duckdb
             DSForEachHashedType([&](auto marker, const LogicalType &item_type)
                                 {
                 using INPUT = DSCountingInput<decltype(marker)>;
-                using OP = DSCountMinWeightedOperation<INPUT::is_uuid>;
+                using OP = DSArenaWeightedOperation<DSCountMinBindData>;
                 using T = typename INPUT::physical_type;
-                auto fun = AggregateFunction::BinaryAggregate<DSCountMinState, T, int64_t, string_t, OP, AggregateDestructorType::LEGACY>(item_type, LogicalType::BIGINT, sketch_type);
-                fun.SetStateDestructorCallback(AggregateFunction::StateDestroy<DSCountMinState, OP>);
-                DSReadDataArgumentsAt<2, 3, DSCountMinState, T, int64_t, OP>(fun);
+                using STATE = DSBufferedArenaState<DSCountMinPolicy<T, INPUT::is_uuid>>;
+                auto fun = AggregateFunction::BinaryAggregate<STATE, T, int64_t, string_t, OP>(item_type, LogicalType::BIGINT, sketch_type);
+                DSReadDataArgumentsAt<2, 3, STATE, T, int64_t, OP>(fun);
+                DSSetBufferedStateExport<STATE, DSCountMinBindData, DSCountMinConstants>(fun);
                 DSAddAggregate(set, descs, fun, DSCountMinBind, {LogicalType::INTEGER, LogicalType::INTEGER, item_type, LogicalType::BIGINT},
                                {"num_hashes", "num_buckets", "data", "weight"},
                                "Creates a Count-Min sketch of the total weight of each value: each row adds its weight (which may be "

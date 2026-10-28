@@ -1,0 +1,200 @@
+# name: test/sql/datasketch_spill_items.test
+# description: frequent items, VarOpt, EBPPS, Bloom filter and Count-Min states live in the arena and spill under memory_limit
+# group: [datasketches]
+
+require datasketches
+
+require skip_reload
+
+statement ok
+SET threads=4;
+
+statement ok
+SET temp_directory='{TEST_DIR}/datasketch_spill_items';
+
+statement ok
+SET preserve_insertion_order=false;
+
+# Inputs (views, so they take no memory) and reference results, computed with plenty of memory: 100k groups of 40 rows (more than a state buffers) and 400k groups of
+# 3 rows (fewer)
+statement ok
+SET memory_limit='4GB';
+
+statement ok
+CREATE VIEW big AS SELECT i % 100000 AS g, i AS v, (i % 5 + 1) AS w FROM range(4000000) t(i);
+
+statement ok
+CREATE VIEW small AS SELECT i % 400000 AS g, i AS v, (i % 5 + 1) AS w FROM range(1200000) t(i);
+
+# (hashes of the deterministic sketches, so the reference itself stays small)
+statement ok
+CREATE TABLE ref AS
+SELECT g, hash(datasketch_bloom_filter(1000, 0.01, v)) AS b, hash(datasketch_count_min(3, 128, v)) AS c,
+       hash(datasketch_count_min_weighted(3, 128, v, w)) AS cw, datasketch_frequent_items(10, v % 7) AS f,
+       hash(datasketch_bloom_filter(1000, 0.01, v::VARCHAR)) AS bs, hash(datasketch_count_min(3, 128, v::VARCHAR)) AS cs
+FROM big GROUP BY g;
+
+statement ok
+SET memory_limit='128MB';
+
+# Bloom filters and Count-Min sketches are deterministic: the same bytes as with plenty of memory
+query I
+SELECT count(*) FROM (
+    SELECT g, hash(datasketch_bloom_filter(1000, 0.01, v)) AS b, hash(datasketch_count_min(3, 128, v)) AS c,
+           hash(datasketch_count_min_weighted(3, 128, v, w)) AS cw, hash(datasketch_bloom_filter(1000, 0.01, v::VARCHAR)) AS bs,
+           hash(datasketch_count_min(3, 128, v::VARCHAR)) AS cs
+    FROM big GROUP BY g
+) t JOIN ref USING (g)
+WHERE t.b != ref.b OR t.c != ref.c OR t.cw != ref.cw OR t.bs != ref.bs OR t.cs != ref.cs;
+----
+0
+
+# Frequent items of 7 distinct values are exact
+query I
+SELECT count(*) FROM (
+    SELECT g, datasketch_frequent_items(10, v % 7) AS f FROM big GROUP BY g
+) t JOIN ref USING (g)
+WHERE datasketch_frequent_items_total_weight(t.f) != 40
+   OR datasketch_frequent_items_estimate(t.f, (g % 7)::BIGINT) != datasketch_frequent_items_estimate(ref.f, (g % 7)::BIGINT);
+----
+0
+
+# Many small groups: every sketch's exact facts
+query I
+SELECT count(*) FROM (
+    SELECT g,
+           datasketch_bloom_filter(1000, 0.01, v) AS b,
+           datasketch_count_min(3, 128, v) AS c,
+           datasketch_count_min_weighted(3, 128, v, w) AS cw,
+           datasketch_frequent_items(10, v) AS f,
+           datasketch_frequent_items_weighted(v, w) AS fw,
+           datasketch_varopt(16, v) AS vo,
+           datasketch_varopt_weighted(16, v, w::DOUBLE) AS vow,
+           datasketch_ebpps(16, v) AS e,
+           datasketch_ebpps_weighted(16, v, w::DOUBLE) AS ew,
+           sum(w) AS total
+    FROM small GROUP BY g
+) WHERE NOT datasketch_bloom_filter_contains(b, g) OR NOT datasketch_bloom_filter_contains(b, g + 400000)
+     OR NOT datasketch_bloom_filter_contains(b, g + 800000)
+     OR datasketch_count_min_total_weight(c) != 3 OR datasketch_count_min_estimate(c, g) < 1
+     OR datasketch_count_min_total_weight(cw) != total
+     OR datasketch_frequent_items_total_weight(f) != 3 OR datasketch_frequent_items_estimate(f, g) != 1
+     OR datasketch_frequent_items_total_weight(fw) != total
+     OR datasketch_varopt_n(vo) != 3 OR datasketch_varopt_num_samples(vo) != 3
+     OR datasketch_varopt_subset_sum(vow, [g, g + 400000, g + 800000]).estimate != total
+     OR datasketch_ebpps_n(e) != 3 OR datasketch_ebpps_cumulative_weight(ew) != total;
+----
+0
+
+# Large groups of the sampling sketches: n and total weights are exact
+query I
+SELECT count(*) FROM (
+    SELECT g, datasketch_varopt(16, v) AS vo, datasketch_varopt_weighted(16, v, w::DOUBLE) AS vow,
+           datasketch_ebpps(64, v) AS e, datasketch_ebpps_weighted(64, v, w::DOUBLE) AS ew, sum(w) AS total
+    FROM big GROUP BY g
+) WHERE datasketch_varopt_n(vo) != 40 OR datasketch_varopt_num_samples(vo) != 16
+     OR abs(datasketch_varopt_subset_sum(vow, [g]).total_weight - total) > 1e-6
+     OR datasketch_ebpps_n(e) != 40 OR datasketch_ebpps_cumulative_weight(ew) != total;
+----
+0
+
+# Merging stored sketches spills too
+statement ok
+SET memory_limit='4GB';
+
+statement ok
+CREATE TABLE parts AS
+SELECT g, p, datasketch_bloom_filter(100, 0.05, v) AS b, datasketch_count_min(2, 16, v) AS c,
+       datasketch_frequent_items(10, v) AS f, datasketch_varopt(16, v) AS vo, datasketch_ebpps(16, v) AS e
+FROM (SELECT i % 100000 AS g, i % 3 AS p, i AS v FROM range(1200000) t(i))
+GROUP BY g, p;
+
+statement ok
+CREATE TABLE merged_ref AS
+SELECT g, hash(datasketch_bloom_filter(b)) AS b, hash(datasketch_count_min(c)) AS c FROM parts GROUP BY g;
+
+statement ok
+SET memory_limit='128MB';
+
+query I
+SELECT count(*) FROM (
+    SELECT g, datasketch_bloom_filter(b) AS b, datasketch_count_min(c) AS c FROM parts GROUP BY g
+) t JOIN merged_ref USING (g)
+WHERE hash(t.b) != merged_ref.b OR hash(t.c) != merged_ref.c OR NOT datasketch_bloom_filter_contains(t.b, g + 1100000);
+----
+0
+
+query I
+SELECT count(*) FROM (
+    SELECT g, datasketch_varopt(16, vo) AS vo, datasketch_ebpps(16, e) AS e FROM parts GROUP BY g
+) WHERE datasketch_varopt_n(vo) != 12 OR datasketch_varopt_num_samples(vo) != 12 OR datasketch_ebpps_n(e) != 12;
+----
+0
+
+# The frequent items merge keeps its heap state (its items may be any strings), which DuckDB does not spill: on its own,
+# so that the other aggregates of a query still can
+query I
+SELECT count(*) FROM (SELECT g, datasketch_frequent_items(f) AS f FROM parts GROUP BY g)
+WHERE datasketch_frequent_items_total_weight(f) != 12;
+----
+0
+
+statement ok
+SET memory_limit='4GB';
+
+# Exported states finalize to the aggregate's result, buffered (10 rows) or not (100000 rows). Frequent items of
+# several threads are combined in any order, which places items differently: their estimates are compared
+foreach n 10 100000
+
+query IIIIIIII
+SELECT finalize(datasketch_bloom_filter(1000, 0.01, i) EXPORT_STATE) = datasketch_bloom_filter(1000, 0.01, i),
+       finalize(datasketch_bloom_filter(1000, 0.01, i::VARCHAR) EXPORT_STATE) = datasketch_bloom_filter(1000, 0.01, i::VARCHAR),
+       finalize(datasketch_count_min(3, 128, i) EXPORT_STATE) = datasketch_count_min(3, 128, i),
+       finalize(datasketch_count_min_weighted(3, 128, i, i % 3) EXPORT_STATE) = datasketch_count_min_weighted(3, 128, i, i % 3),
+       datasketch_frequent_items_estimate(finalize(datasketch_frequent_items(10, i % 50) EXPORT_STATE), 7) = count(*) FILTER (i % 50 = 7),
+       datasketch_varopt_n(finalize(datasketch_varopt_weighted(16, i, 1.0 + i % 3) EXPORT_STATE)) = ${n},
+       datasketch_ebpps_cumulative_weight(finalize(datasketch_ebpps_weighted(16, i, 1.0 + i % 3) EXPORT_STATE)) = sum(1.0 + i % 3),
+       datasketch_frequent_items_total_weight(finalize(datasketch_frequent_items_weighted(i % 50, i % 4) EXPORT_STATE)) = sum(i % 4)
+FROM range(${n}) t(i);
+----
+true	true	true	true	true	true	true	true
+
+endloop
+
+# Exported merge states
+query III
+SELECT finalize(datasketch_bloom_filter(b) EXPORT_STATE) = datasketch_bloom_filter(b),
+       finalize(datasketch_count_min(c) EXPORT_STATE) = datasketch_count_min(c),
+       datasketch_varopt_n(finalize(datasketch_varopt(16, vo) EXPORT_STATE)) = 1200000
+FROM parts;
+----
+true	true	true
+
+# VARCHAR frequent items and samples keep their heap states and still work under the limit
+statement ok
+SET memory_limit='128MB';
+
+query I
+SELECT count(*) FROM (
+    SELECT g, datasketch_frequent_items(v::VARCHAR) AS f, datasketch_varopt(16, v::VARCHAR) AS vo,
+           datasketch_ebpps(16, v::VARCHAR) AS e
+    FROM (SELECT i % 1000 AS g, i AS v FROM range(100000) t(i)) GROUP BY g
+) WHERE datasketch_frequent_items_total_weight(f) != 100 OR datasketch_varopt_n(vo) != 100 OR datasketch_ebpps_n(e) != 100;
+----
+0
+
+# Weights are checked when a row arrives, also while a state buffers it
+statement error
+SELECT datasketch_varopt_weighted(16, i, 0.0) FROM range(3) t(i);
+----
+Item weights must be positive and finite
+
+statement error
+SELECT datasketch_ebpps_weighted(16, i, -1.0) FROM range(3) t(i);
+----
+Item weights must be nonnegative and finite
+
+statement error
+SELECT datasketch_frequent_items_weighted(i, -1) FROM range(3) t(i);
+----
+Frequent Items weight must be non-negative
