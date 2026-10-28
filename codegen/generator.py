@@ -234,7 +234,7 @@ def item_arg(name: str) -> Arg:
 
 
 def sketch_arg(sketch: Sketch, name: str = "sketch") -> Arg:
-    """A serialized sketch; the function body sees it deserialized as `<name>`."""
+    """A serialized sketch; the function body sees it deserialized as `<name>`, reused while rows repeat it."""
     if sketch.counting:
         sketch_class = sketch.cpp_class
         logical = lambda item_type: "sketch_type"
@@ -245,7 +245,8 @@ def sketch_arg(sketch: Sketch, name: str = "sketch") -> Arg:
         name,
         "string_t",
         logical,
-        process=f'auto {name} = DSDeserialize<{sketch_class}>({name}_data, "{sketch.name}");',
+        pre_executor=f"DSSketchCache<{sketch_class}> {name}_cache;",
+        process=f'const auto &{name} = {name}_cache.Get({name}_data, "{sketch.name}");',
         is_sketch=True,
     )
 

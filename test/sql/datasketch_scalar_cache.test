@@ -1,0 +1,50 @@
+# name: test/sql/datasketch_scalar_cache.test
+# description: scalar functions reuse a deserialized sketch while rows repeat it, and only then
+# group: [datasketches]
+
+require datasketches
+
+statement ok
+CREATE TABLE sketches AS
+SELECT g, datasketch_kll(200, (i * (g + 1))::DOUBLE) AS k, datasketch_hll(12, i + g * 1000000) AS h,
+       datasketch_frequent_items(6, (i % (g + 2))::VARCHAR) AS f
+FROM range(10000) t(i), range(3) s(g) GROUP BY g;
+
+# A constant sketch probed by many rows gives what one row does
+query I
+SELECT count(*) FROM (
+  SELECT r.x, datasketch_kll_rank(s.k, r.x::DOUBLE, true) AS rank FROM sketches s, range(5000) r(x) WHERE s.g = 1
+) WHERE rank != (SELECT datasketch_kll_rank(k, x::DOUBLE, true) FROM sketches WHERE g = 1);
+----
+0
+
+# Sketches that alternate from row to row are each read correctly
+query III
+SELECT g, count(DISTINCT rank), min(rank = expected)
+FROM (
+  SELECT s.g, datasketch_kll_rank(s.k, 5000.0, true) AS rank,
+         (SELECT datasketch_kll_rank(k, 5000.0, true) FROM sketches s2 WHERE s2.g = s.g) AS expected
+  FROM range(3000) r(x), sketches s ORDER BY x, s.g
+) GROUP BY g ORDER BY g;
+----
+0	1	true
+1	1	true
+2	1	true
+
+# The same through dictionary-like repetition from a join, for a counting sketch and frequent items
+query II
+SELECT count(DISTINCT (g, est)), count(DISTINCT (g, freq))
+FROM (
+  SELECT s.g, datasketch_hll_estimate(s.h) AS est, datasketch_frequent_items_estimate(s.f, '1') AS freq
+  FROM sketches s JOIN range(4000) r(x) ON r.x % 3 = s.g
+);
+----
+3	3
+
+# Every row's sketch matches the result of reading it alone
+query I
+SELECT count(*) FROM (
+  SELECT s.g, datasketch_hll_estimate(s.h) AS est FROM sketches s JOIN range(4000) r(x) ON r.x % 3 = s.g
+) a JOIN (SELECT g, datasketch_hll_estimate(h) AS est FROM sketches) b USING (g) WHERE a.est != b.est;
+----
+0
