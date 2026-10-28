@@ -137,6 +137,24 @@ static void DSQuantilespmf(DataChunk &args, ExpressionState &state, Vector &resu
 }
 
 template <class T>
+static void DSQuantilesmerge(DataChunk &args, ExpressionState &state, Vector &result) {
+    D_ASSERT(args.ColumnCount() == 2);
+    auto &sketch_a_vector = args.data[0];
+    auto &sketch_b_vector = args.data[1];
+    DSSketchCache<DSQuantilesSketch<DSItem<T>>> sketch_a_cache;
+    DSSketchCache<DSQuantilesSketch<DSItem<T>>> sketch_b_cache;
+    BinaryExecutor::Execute<string_t, string_t, string_t>(sketch_a_vector, sketch_b_vector, result, [&](string_t sketch_a_data, string_t sketch_b_data) {
+        return DSGuard("datasketch_quantiles_merge", [&]() {
+            const auto &sketch_a = sketch_a_cache.Get(sketch_a_data, "Quantiles");
+            const auto &sketch_b = sketch_b_cache.Get(sketch_b_data, "Quantiles");
+            auto merged = sketch_a;
+            DSMergeSketch(merged, sketch_b);
+            return DSAddBytes(result, merged.serialize());
+        });
+    });
+}
+
+template <class T>
 static void DSQuantilesnormalized_rank_error(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 2);
     auto &sketch_vector = args.data[0];
@@ -579,6 +597,66 @@ void LoadQuantilesSketch(ExtensionLoader &loader) {
                                    DSQuantilespmf<string_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
                     { "SELECT datasketch_quantiles_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
+    }
+    {
+        ScalarFunctionSet set("datasketch_quantiles_merge");
+        vector<FunctionDescription> descriptions;
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], sketch_map_types[LogicalTypeId::TINYINT] }, sketch_map_types[LogicalTypeId::TINYINT],
+                                   DSQuantilesmerge<int8_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the smaller K of the two",
+                    { "SELECT datasketch_quantiles_merge(sketch_a, sketch_b) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], sketch_map_types[LogicalTypeId::SMALLINT] }, sketch_map_types[LogicalTypeId::SMALLINT],
+                                   DSQuantilesmerge<int16_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the smaller K of the two",
+                    { "SELECT datasketch_quantiles_merge(sketch_a, sketch_b) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], sketch_map_types[LogicalTypeId::INTEGER] }, sketch_map_types[LogicalTypeId::INTEGER],
+                                   DSQuantilesmerge<int32_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the smaller K of the two",
+                    { "SELECT datasketch_quantiles_merge(sketch_a, sketch_b) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], sketch_map_types[LogicalTypeId::BIGINT] }, sketch_map_types[LogicalTypeId::BIGINT],
+                                   DSQuantilesmerge<int64_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the smaller K of the two",
+                    { "SELECT datasketch_quantiles_merge(sketch_a, sketch_b) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], sketch_map_types[LogicalTypeId::FLOAT] }, sketch_map_types[LogicalTypeId::FLOAT],
+                                   DSQuantilesmerge<float>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the smaller K of the two",
+                    { "SELECT datasketch_quantiles_merge(sketch_a, sketch_b) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], sketch_map_types[LogicalTypeId::DOUBLE] }, sketch_map_types[LogicalTypeId::DOUBLE],
+                                   DSQuantilesmerge<double>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the smaller K of the two",
+                    { "SELECT datasketch_quantiles_merge(sketch_a, sketch_b) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], sketch_map_types[LogicalTypeId::UTINYINT] }, sketch_map_types[LogicalTypeId::UTINYINT],
+                                   DSQuantilesmerge<uint8_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the smaller K of the two",
+                    { "SELECT datasketch_quantiles_merge(sketch_a, sketch_b) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], sketch_map_types[LogicalTypeId::USMALLINT] }, sketch_map_types[LogicalTypeId::USMALLINT],
+                                   DSQuantilesmerge<uint16_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the smaller K of the two",
+                    { "SELECT datasketch_quantiles_merge(sketch_a, sketch_b) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], sketch_map_types[LogicalTypeId::UINTEGER] }, sketch_map_types[LogicalTypeId::UINTEGER],
+                                   DSQuantilesmerge<uint32_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the smaller K of the two",
+                    { "SELECT datasketch_quantiles_merge(sketch_a, sketch_b) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], sketch_map_types[LogicalTypeId::UBIGINT] }, sketch_map_types[LogicalTypeId::UBIGINT],
+                                   DSQuantilesmerge<uint64_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the smaller K of the two",
+                    { "SELECT datasketch_quantiles_merge(sketch_a, sketch_b) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], sketch_map_types[LogicalTypeId::VARCHAR] }, sketch_map_types[LogicalTypeId::VARCHAR],
+                                   DSQuantilesmerge<string_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the smaller K of the two",
+                    { "SELECT datasketch_quantiles_merge(sketch_a, sketch_b) FROM (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_quantiles(16, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
         DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "quantiles"});
     }
     {
@@ -1529,6 +1607,24 @@ static void DSKLLpmf(DataChunk &args, ExpressionState &state, Vector &result) {
 }
 
 template <class T>
+static void DSKLLmerge(DataChunk &args, ExpressionState &state, Vector &result) {
+    D_ASSERT(args.ColumnCount() == 2);
+    auto &sketch_a_vector = args.data[0];
+    auto &sketch_b_vector = args.data[1];
+    DSSketchCache<DSKLLSketch<DSItem<T>>> sketch_a_cache;
+    DSSketchCache<DSKLLSketch<DSItem<T>>> sketch_b_cache;
+    BinaryExecutor::Execute<string_t, string_t, string_t>(sketch_a_vector, sketch_b_vector, result, [&](string_t sketch_a_data, string_t sketch_b_data) {
+        return DSGuard("datasketch_kll_merge", [&]() {
+            const auto &sketch_a = sketch_a_cache.Get(sketch_a_data, "KLL");
+            const auto &sketch_b = sketch_b_cache.Get(sketch_b_data, "KLL");
+            auto merged = sketch_a;
+            DSMergeSketch(merged, sketch_b);
+            return DSAddBytes(result, merged.serialize());
+        });
+    });
+}
+
+template <class T>
 static void DSKLLnormalized_rank_error(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 2);
     auto &sketch_vector = args.data[0];
@@ -1971,6 +2067,66 @@ void LoadKLLSketch(ExtensionLoader &loader) {
                                    DSKLLpmf<string_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
                     { "SELECT datasketch_kll_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
+    }
+    {
+        ScalarFunctionSet set("datasketch_kll_merge");
+        vector<FunctionDescription> descriptions;
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], sketch_map_types[LogicalTypeId::TINYINT] }, sketch_map_types[LogicalTypeId::TINYINT],
+                                   DSKLLmerge<int8_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K",
+                    { "SELECT datasketch_kll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], sketch_map_types[LogicalTypeId::SMALLINT] }, sketch_map_types[LogicalTypeId::SMALLINT],
+                                   DSKLLmerge<int16_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K",
+                    { "SELECT datasketch_kll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], sketch_map_types[LogicalTypeId::INTEGER] }, sketch_map_types[LogicalTypeId::INTEGER],
+                                   DSKLLmerge<int32_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K",
+                    { "SELECT datasketch_kll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], sketch_map_types[LogicalTypeId::BIGINT] }, sketch_map_types[LogicalTypeId::BIGINT],
+                                   DSKLLmerge<int64_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K",
+                    { "SELECT datasketch_kll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], sketch_map_types[LogicalTypeId::FLOAT] }, sketch_map_types[LogicalTypeId::FLOAT],
+                                   DSKLLmerge<float>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K",
+                    { "SELECT datasketch_kll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], sketch_map_types[LogicalTypeId::DOUBLE] }, sketch_map_types[LogicalTypeId::DOUBLE],
+                                   DSKLLmerge<double>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K",
+                    { "SELECT datasketch_kll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], sketch_map_types[LogicalTypeId::UTINYINT] }, sketch_map_types[LogicalTypeId::UTINYINT],
+                                   DSKLLmerge<uint8_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K",
+                    { "SELECT datasketch_kll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], sketch_map_types[LogicalTypeId::USMALLINT] }, sketch_map_types[LogicalTypeId::USMALLINT],
+                                   DSKLLmerge<uint16_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K",
+                    { "SELECT datasketch_kll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], sketch_map_types[LogicalTypeId::UINTEGER] }, sketch_map_types[LogicalTypeId::UINTEGER],
+                                   DSKLLmerge<uint32_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K",
+                    { "SELECT datasketch_kll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], sketch_map_types[LogicalTypeId::UBIGINT] }, sketch_map_types[LogicalTypeId::UBIGINT],
+                                   DSKLLmerge<uint64_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K",
+                    { "SELECT datasketch_kll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::VARCHAR], sketch_map_types[LogicalTypeId::VARCHAR] }, sketch_map_types[LogicalTypeId::VARCHAR],
+                                   DSKLLmerge<string_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K",
+                    { "SELECT datasketch_kll_merge(sketch_a, sketch_b) FROM (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_kll(200, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
         DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "kll"});
     }
     {
@@ -2931,6 +3087,24 @@ static void DSREQpmf(DataChunk &args, ExpressionState &state, Vector &result) {
 }
 
 template <class T>
+static void DSREQmerge(DataChunk &args, ExpressionState &state, Vector &result) {
+    D_ASSERT(args.ColumnCount() == 2);
+    auto &sketch_a_vector = args.data[0];
+    auto &sketch_b_vector = args.data[1];
+    DSSketchCache<DSREQSketch<DSItem<T>>> sketch_a_cache;
+    DSSketchCache<DSREQSketch<DSItem<T>>> sketch_b_cache;
+    BinaryExecutor::Execute<string_t, string_t, string_t>(sketch_a_vector, sketch_b_vector, result, [&](string_t sketch_a_data, string_t sketch_b_data) {
+        return DSGuard("datasketch_req_merge", [&]() {
+            const auto &sketch_a = sketch_a_cache.Get(sketch_a_data, "REQ");
+            const auto &sketch_b = sketch_b_cache.Get(sketch_b_data, "REQ");
+            auto merged = sketch_a;
+            DSMergeSketch(merged, sketch_b);
+            return DSAddBytes(result, merged.serialize());
+        });
+    });
+}
+
+template <class T>
 static void DSREQdescribe(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 3);
     auto &sketch_vector = args.data[0];
@@ -3381,6 +3555,61 @@ void LoadREQSketch(ExtensionLoader &loader) {
                                    DSREQpmf<uint64_t>),
                     { "sketch", "split_points", "inclusive" }, "Return the Probability Mass Function (PMF) of the sketch for a series of points",
                     { "SELECT datasketch_req_pmf(sketch, [25.0, 50.0, 75.0], true) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
+    }
+    {
+        ScalarFunctionSet set("datasketch_req_merge");
+        vector<FunctionDescription> descriptions;
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::TINYINT], sketch_map_types[LogicalTypeId::TINYINT] }, sketch_map_types[LogicalTypeId::TINYINT],
+                                   DSREQmerge<int8_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K; both must have the same rank accuracy mode",
+                    { "SELECT datasketch_req_merge(sketch_a, sketch_b) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_req(12, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::SMALLINT], sketch_map_types[LogicalTypeId::SMALLINT] }, sketch_map_types[LogicalTypeId::SMALLINT],
+                                   DSREQmerge<int16_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K; both must have the same rank accuracy mode",
+                    { "SELECT datasketch_req_merge(sketch_a, sketch_b) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_req(12, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::INTEGER], sketch_map_types[LogicalTypeId::INTEGER] }, sketch_map_types[LogicalTypeId::INTEGER],
+                                   DSREQmerge<int32_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K; both must have the same rank accuracy mode",
+                    { "SELECT datasketch_req_merge(sketch_a, sketch_b) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_req(12, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::BIGINT], sketch_map_types[LogicalTypeId::BIGINT] }, sketch_map_types[LogicalTypeId::BIGINT],
+                                   DSREQmerge<int64_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K; both must have the same rank accuracy mode",
+                    { "SELECT datasketch_req_merge(sketch_a, sketch_b) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_req(12, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], sketch_map_types[LogicalTypeId::FLOAT] }, sketch_map_types[LogicalTypeId::FLOAT],
+                                   DSREQmerge<float>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K; both must have the same rank accuracy mode",
+                    { "SELECT datasketch_req_merge(sketch_a, sketch_b) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_req(12, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], sketch_map_types[LogicalTypeId::DOUBLE] }, sketch_map_types[LogicalTypeId::DOUBLE],
+                                   DSREQmerge<double>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K; both must have the same rank accuracy mode",
+                    { "SELECT datasketch_req_merge(sketch_a, sketch_b) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_req(12, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::UTINYINT], sketch_map_types[LogicalTypeId::UTINYINT] }, sketch_map_types[LogicalTypeId::UTINYINT],
+                                   DSREQmerge<uint8_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K; both must have the same rank accuracy mode",
+                    { "SELECT datasketch_req_merge(sketch_a, sketch_b) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_req(12, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::USMALLINT], sketch_map_types[LogicalTypeId::USMALLINT] }, sketch_map_types[LogicalTypeId::USMALLINT],
+                                   DSREQmerge<uint16_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K; both must have the same rank accuracy mode",
+                    { "SELECT datasketch_req_merge(sketch_a, sketch_b) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_req(12, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::UINTEGER], sketch_map_types[LogicalTypeId::UINTEGER] }, sketch_map_types[LogicalTypeId::UINTEGER],
+                                   DSREQmerge<uint32_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K; both must have the same rank accuracy mode",
+                    { "SELECT datasketch_req_merge(sketch_a, sketch_b) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_req(12, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::UBIGINT], sketch_map_types[LogicalTypeId::UBIGINT] }, sketch_map_types[LogicalTypeId::UBIGINT],
+                                   DSREQmerge<uint64_t>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K; both must have the same rank accuracy mode",
+                    { "SELECT datasketch_req_merge(sketch_a, sketch_b) FROM (SELECT datasketch_req(12, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_req(12, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
         DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "req"});
     }
     {
@@ -4466,6 +4695,24 @@ static void DSTDigestquantile(DataChunk &args, ExpressionState &state, Vector &r
 }
 
 template <class T>
+static void DSTDigestmerge(DataChunk &args, ExpressionState &state, Vector &result) {
+    D_ASSERT(args.ColumnCount() == 2);
+    auto &sketch_a_vector = args.data[0];
+    auto &sketch_b_vector = args.data[1];
+    DSSketchCache<DSTDigestSketch<DSItem<T>>> sketch_a_cache;
+    DSSketchCache<DSTDigestSketch<DSItem<T>>> sketch_b_cache;
+    BinaryExecutor::Execute<string_t, string_t, string_t>(sketch_a_vector, sketch_b_vector, result, [&](string_t sketch_a_data, string_t sketch_b_data) {
+        return DSGuard("datasketch_tdigest_merge", [&]() {
+            const auto &sketch_a = sketch_a_cache.Get(sketch_a_data, "TDigest");
+            const auto &sketch_b = sketch_b_cache.Get(sketch_b_data, "TDigest");
+            auto merged = sketch_a;
+            DSMergeSketch(merged, sketch_b);
+            return DSAddBytes(result, merged.serialize());
+        });
+    });
+}
+
+template <class T>
 static void DSTDigestmin_value(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
@@ -4630,6 +4877,21 @@ void LoadTDigestSketch(ExtensionLoader &loader) {
                                    DSTDigestquantile<double>),
                     { "sketch", "rank" }, "Return the quantile of a rank in the sketch",
                     { "SELECT datasketch_tdigest_quantile(sketch, 0.5) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch FROM range(100) t(i)) s" });
+        DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "tdigest"});
+    }
+    {
+        ScalarFunctionSet set("datasketch_tdigest_merge");
+        vector<FunctionDescription> descriptions;
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::FLOAT], sketch_map_types[LogicalTypeId::FLOAT] }, sketch_map_types[LogicalTypeId::FLOAT],
+                                   DSTDigestmerge<float>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K (compression)",
+                    { "SELECT datasketch_tdigest_merge(sketch_a, sketch_b) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
+        DSAddScalar(set, descriptions,
+                    ScalarFunction({ sketch_map_types[LogicalTypeId::DOUBLE], sketch_map_types[LogicalTypeId::DOUBLE] }, sketch_map_types[LogicalTypeId::DOUBLE],
+                                   DSTDigestmerge<double>),
+                    { "sketch_a", "sketch_b" }, "Return the merge of two sketches as a new sketch, as if built from the values of both. The result has the first sketch's K (compression)",
+                    { "SELECT datasketch_tdigest_merge(sketch_a, sketch_b) FROM (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch_a FROM range(100) t(i)) a, (SELECT datasketch_tdigest(100, i::DOUBLE) AS sketch_b FROM range(50, 150) t(i)) b" });
         DSRegisterScalars(loader, std::move(set), std::move(descriptions), {"sketch", "tdigest"});
     }
     {

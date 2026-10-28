@@ -1,0 +1,75 @@
+# name: test/sql/datasketch_quantile_merge.test
+# description: the scalar merge of two quantile sketches
+# group: [datasketches]
+
+require datasketches
+
+statement ok
+CREATE TABLE halves AS
+SELECT datasketch_kll(200, i::DOUBLE) FILTER (WHERE i < 5000) AS kll_a, datasketch_kll(200, i::DOUBLE) FILTER (WHERE i >= 5000) AS kll_b,
+       datasketch_quantiles(128, i::DOUBLE) FILTER (WHERE i < 5000) AS q_a, datasketch_quantiles(128, i::DOUBLE) FILTER (WHERE i >= 5000) AS q_b,
+       datasketch_req(12, i::DOUBLE) FILTER (WHERE i < 5000) AS req_a, datasketch_req(12, i::DOUBLE) FILTER (WHERE i >= 5000) AS req_b,
+       datasketch_tdigest(100, i::DOUBLE) FILTER (WHERE i < 5000) AS td_a, datasketch_tdigest(100, i::DOUBLE) FILTER (WHERE i >= 5000) AS td_b
+FROM range(10000) t(i);
+
+# The merge has the values of both sketches
+query IIII
+SELECT datasketch_kll_n(datasketch_kll_merge(kll_a, kll_b)), datasketch_quantiles_n(datasketch_quantiles_merge(q_a, q_b)),
+       datasketch_req_n(datasketch_req_merge(req_a, req_b)), datasketch_tdigest_total_weight(datasketch_tdigest_merge(td_a, td_b))
+FROM halves;
+----
+10000	10000	10000	10000
+
+query IIII
+SELECT datasketch_kll_min_item(datasketch_kll_merge(kll_a, kll_b)), datasketch_kll_max_item(datasketch_kll_merge(kll_a, kll_b)),
+       datasketch_tdigest_min_value(datasketch_tdigest_merge(td_a, td_b)), datasketch_tdigest_max_value(datasketch_tdigest_merge(td_a, td_b))
+FROM halves;
+----
+0.0	9999.0	0.0	9999.0
+
+query IIII
+SELECT abs(datasketch_kll_quantile(datasketch_kll_merge(kll_a, kll_b), 0.5, true) - 5000) < 200,
+       abs(datasketch_quantiles_quantile(datasketch_quantiles_merge(q_a, q_b), 0.5, true) - 5000) < 200,
+       abs(datasketch_req_quantile(datasketch_req_merge(req_a, req_b), 0.5, true) - 5000) < 200,
+       abs(datasketch_tdigest_quantile(datasketch_tdigest_merge(td_a, td_b), 0.5) - 5000) < 200
+FROM halves;
+----
+true	true	true	true
+
+# The result has the inputs' sketch type
+query I
+SELECT typeof(datasketch_kll_merge(kll_a, kll_b)) FROM halves;
+----
+sketch_kll_double
+
+query I
+SELECT typeof(datasketch_kll_merge(a, b)) FROM (SELECT datasketch_kll(16, 1::INTEGER) AS a), (SELECT datasketch_kll(16, 2::INTEGER) AS b);
+----
+sketch_kll_integer
+
+query I
+SELECT datasketch_kll_max_item(datasketch_kll_merge(a, b)) FROM (SELECT datasketch_kll(16, 'a') AS a), (SELECT datasketch_kll(16, 'b') AS b);
+----
+b
+
+# Classic Quantiles takes the smaller K; KLL and TDigest keep the first sketch's
+query IIII
+SELECT datasketch_quantiles_k(datasketch_quantiles_merge(qa, qb)), datasketch_quantiles_k(datasketch_quantiles_merge(qb, qa)),
+       datasketch_kll_k(datasketch_kll_merge(ka, kb)), datasketch_tdigest_k(datasketch_tdigest_merge(ta, tb))
+FROM (SELECT datasketch_quantiles(256, i::DOUBLE) AS qa, datasketch_quantiles(64, i::DOUBLE) AS qb,
+             datasketch_kll(200, i::DOUBLE) AS ka, datasketch_kll(100, i::DOUBLE) AS kb,
+             datasketch_tdigest(200, i::DOUBLE) AS ta, datasketch_tdigest(100, i::DOUBLE) AS tb FROM range(1000) t(i));
+----
+64	64	200	200
+
+# Merging with an empty sketch, and NULL inputs
+query II
+SELECT datasketch_kll_n(datasketch_kll_merge(kll_a, kll_a)), datasketch_kll_merge(kll_a, NULL) IS NULL FROM halves;
+----
+10000	true
+
+# REQ sketches must have the same rank accuracy mode
+statement error
+SELECT datasketch_req_merge(a, b) FROM (SELECT datasketch_req(12, 1.0, true) AS a), (SELECT datasketch_req(12, 2.0, false) AS b);
+----
+Cannot merge sketches

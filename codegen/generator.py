@@ -283,6 +283,7 @@ def returns(logical_type: str) -> Returns:
 
 RETURNS_ITEM = Returns("T", lambda item_type: item_type)
 RETURNS_SKETCH = Returns("string_t", lambda item_type: "sketch_type")
+RETURNS_ITEM_SKETCH = Returns("string_t", lambda item_type: f"sketch_map_types[{to_type_id(item_type)}]")
 RETURNS_DOUBLE_LIST = Returns("list_entry_t", lambda item_type: "LogicalType::LIST(LogicalType::DOUBLE)")
 RETURNS_ITEM_LIST = Returns("list_entry_t", lambda item_type: f"LogicalType::LIST({item_type})")
 RETURNS_SORTED_VIEW = Returns(
@@ -413,6 +414,15 @@ def _all_functions(sketch: Sketch) -> list:
         Function("quantile", tdigest, "Return the quantile of a rank in the sketch",
                  (sk, fixed_arg("rank", "LogicalType::DOUBLE")), RETURNS_ITEM,
                  "DSCheckRank(rank_data); return DSItemOut<T>(result, sketch.get_quantile(rank_data));", "0.5"),
+
+        Function("merge", QUANTILE_SKETCHES,
+                 "Return the merge of two sketches as a new sketch, as if built from the values of both. "
+                 + {"Quantiles": "The result has the smaller K of the two",
+                    "KLL": "The result has the first sketch's K",
+                    "REQ": "The result has the first sketch's K; both must have the same rank accuracy mode",
+                    "TDigest": "The result has the first sketch's K (compression)"}.get(sketch.name, ""),
+                 (sketch_arg(sketch, "sketch_a"), sketch_arg(sketch, "sketch_b")), RETURNS_ITEM_SKETCH,
+                 "auto merged = sketch_a;\nDSMergeSketch(merged, sketch_b);\nreturn DSAddBytes(result, merged.serialize());"),
 
         # --- Classic quantile sketches ---
         Function("normalized_rank_error", frozenset({"Quantiles", "KLL"}), "Return the normalized rank error of the sketch",
