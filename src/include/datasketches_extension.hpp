@@ -4,6 +4,7 @@
 
 #include "duckdb.hpp"
 #include "duckdb/common/allocator.hpp"
+#include "duckdb/storage/arena_allocator.hpp"
 #include <string>
 #include "duckdb/function/aggregate_function.hpp"
 #include "duckdb/function/scalar_function.hpp"
@@ -277,13 +278,19 @@ namespace duckdb
 		return value;
 	}
 
-	// Deserializes a sketch, reporting a corrupt or foreign blob as invalid input.
-	template <class SKETCH>
-	SKETCH DSDeserialize(const string_t &data, const char *sketch_name)
+	// Deserializes a sketch, reporting a corrupt or foreign blob as invalid input. `args` follow the bytes in the
+	// library's deserialize (e.g. an allocator).
+	template <class SKETCH, class... ARGS>
+	SKETCH DSDeserialize(const string_t &data, const char *sketch_name, ARGS &&...args)
 	{
 		try
 		{
-			return SKETCH::deserialize(data.GetDataUnsafe(), data.GetSize());
+			return SKETCH::deserialize(data.GetDataUnsafe(), data.GetSize(), std::forward<ARGS>(args)...);
+		}
+		catch (const Exception &)
+		{
+			// DuckDB's own errors (e.g. out of memory) pass through unchanged
+			throw;
 		}
 		catch (const std::exception &e)
 		{
@@ -291,41 +298,92 @@ namespace duckdb
 		}
 	}
 
-	// Allocates sketch memory through DuckDB's default allocator instead of the C++ runtime's: jemalloc on 64-bit
-	// Linux, where it makes building many small sketches (GROUP BY) up to 3.7x faster than glibc malloc, and plain
-	// malloc elsewhere. Stateless, so sketches can be moved and merged between threads and partial aggregate states.
-	// DuckDB's allocator rejects zero-byte requests, so those take one byte.
+	// The arena of the aggregate callback running on this thread (see DSArenaScope), which arena allocators
+	// allocate from.
+	inline thread_local ArenaAllocator *ds_current_arena = nullptr;
+
+	// Makes the allocators in arena mode allocate from `arena` while the scope lasts. Aggregate callbacks open one
+	// with the arena DuckDB passes them, so each allocation lands in an arena that the current thread may use: a
+	// sketch combined from another thread's partial state grows in the target's arena, never in the source's.
+	struct DSArenaScope
+	{
+		explicit DSArenaScope(ArenaAllocator &arena) : previous(ds_current_arena)
+		{
+			ds_current_arena = &arena;
+		}
+		~DSArenaScope()
+		{
+			ds_current_arena = previous;
+		}
+		DSArenaScope(const DSArenaScope &) = delete;
+		DSArenaScope &operator=(const DSArenaScope &) = delete;
+
+	private:
+		ArenaAllocator *previous;
+	};
+
+	struct DSArenaMode
+	{
+	};
+
+	// Allocates sketch memory in one of two modes.
+	//
+	// Heap mode (the default) uses DuckDB's default allocator instead of the C++ runtime's: jemalloc on 64-bit Linux,
+	// where it makes building many small sketches (GROUP BY) up to 3.7x faster than glibc malloc, and plain malloc
+	// elsewhere. DuckDB's allocator rejects zero-byte requests, so those take one byte.
+	//
+	// Arena mode (DSAllocator(DSArenaMode())) allocates from the current aggregate arena (see DSArenaScope) and never
+	// frees: the arena is released as a whole when the query is done. Aggregate states built this way have no
+	// destructor and count toward memory_limit, so DuckDB can spill them (through their export and import
+	// callbacks). Only sketches whose items own no heap memory of their own (not std::string) may use it.
 	template <class T>
 	struct DSAllocator
 	{
 		using value_type = T;
 
 		DSAllocator() noexcept = default;
+		explicit DSAllocator(DSArenaMode) noexcept : arena_mode(true)
+		{
+		}
 		template <class U>
-		DSAllocator(const DSAllocator<U> &) noexcept
+		DSAllocator(const DSAllocator<U> &other) noexcept : arena_mode(other.arena_mode)
 		{
 		}
 
 		T *allocate(size_t n)
 		{
+			if (arena_mode)
+			{
+				if (!ds_current_arena)
+				{
+					throw InternalException("datasketches: arena allocation outside of an aggregate callback");
+				}
+				D_ASSERT(alignof(T) <= sizeof(idx_t));
+				return reinterpret_cast<T *>(ds_current_arena->AllocateAligned(Bytes(n)));
+			}
 			return reinterpret_cast<T *>(Allocator::DefaultAllocator().AllocateData(Bytes(n)));
 		}
 
 		void deallocate(T *pointer, size_t n) noexcept
 		{
-			Allocator::DefaultAllocator().FreeData(data_ptr_cast(pointer), Bytes(n));
+			if (!arena_mode)
+			{
+				Allocator::DefaultAllocator().FreeData(data_ptr_cast(pointer), Bytes(n));
+			}
 		}
 
 		template <class U>
-		bool operator==(const DSAllocator<U> &) const noexcept
+		bool operator==(const DSAllocator<U> &other) const noexcept
 		{
-			return true;
+			return arena_mode == other.arena_mode;
 		}
 		template <class U>
-		bool operator!=(const DSAllocator<U> &) const noexcept
+		bool operator!=(const DSAllocator<U> &other) const noexcept
 		{
-			return false;
+			return arena_mode != other.arena_mode;
 		}
+
+		bool arena_mode = false;
 
 	private:
 		static idx_t Bytes(size_t n)

@@ -1542,6 +1542,128 @@ struct DSKLLState {
     }
 };
 
+// The aggregates' state over items that own no heap memory (every item type but VARCHAR), in the aggregate arena
+// (see the arena states in datasketches_generated_common.hpp). The first BUFFERED items are kept as they are and
+// fed to a sketch, in order, only when more arrive: DuckDB creates a state per input row when grouping reduces
+// little (it skips the hash table lookups), and a sketch reserves K items up front.
+template <class T>
+struct DSKLLArenaState {
+    using ITEM = DSItem<T>;
+    using SKETCH = DSKLLSketch<DSItem<T>>;
+    static constexpr uint32_t BUFFERED = 32;
+
+    SKETCH *sketch;
+    DSArenaItems<ITEM> buffer;
+
+    static DSAllocator<ITEM> Allocator() {
+        return DSAllocator<ITEM>(DSArenaMode());
+    }
+
+    void Initialize() {
+        sketch = nullptr;
+        buffer.Initialize();
+    }
+    bool IsEmpty() const {
+        return !sketch && buffer.count == 0;
+    }
+    // Moves the buffered items into a new sketch.
+    SKETCH &Promote(const DSKLLBindData &bind, ArenaAllocator &arena) {
+        if (!sketch) {
+            sketch = arena.Make<SKETCH>(bind.k, std::less<ITEM>(), Allocator());
+            for (uint32_t i = 0; i < buffer.count; i++) {
+                sketch->update(buffer.items[i]);
+            }
+            buffer.Initialize();
+        }
+        return *sketch;
+    }
+    void Add(const ITEM &item, const DSKLLBindData &bind, ArenaAllocator &arena) {
+        if (!sketch && buffer.count < BUFFERED) {
+            buffer.Append(item, arena);
+        } else {
+            Promote(bind, arena).update(item);
+        }
+    }
+    template <bool IS_UUID, class V>
+    void Update(const V &value, const DSKLLBindData &bind, ArenaAllocator &arena) {
+        Add(DSItemIn(value), bind, arena);
+    }
+    void Merge(const string_t &data, const DSKLLBindData &bind, ArenaAllocator &arena) {
+        auto incoming = DSDeserialize<SKETCH>(data, "KLL");
+        if (!sketch && !incoming.is_empty() && !incoming.is_estimation_mode() &&
+            buffer.count + incoming.get_n() <= BUFFERED) {
+            // A small exact sketch holds its items with weight 1: buffer them in the order a merge inserts them.
+            for (auto entry : incoming) {
+                Add(entry.first, bind, arena);
+            }
+            return;
+        }
+        DSMergeSketch(Promote(bind, arena), std::move(incoming));
+    }
+    void Combine(const DSKLLArenaState &source, const DSKLLBindData &bind, ArenaAllocator &arena) {
+        if (!source.sketch) {
+            for (uint32_t i = 0; i < source.buffer.count; i++) {
+                Add(source.buffer.items[i], bind, arena);
+            }
+        } else if (IsEmpty()) {
+            sketch = arena.Make<SKETCH>(*source.sketch, std::less<ITEM>(), Allocator());
+        } else {
+            DSMergeSketch(Promote(bind, arena), *source.sketch);
+        }
+    }
+    // A state that still buffers its items is serialized through a temporary sketch on the heap, which is freed
+    // right away, instead of a sketch left behind in the arena.
+    auto Serialize(const DSKLLBindData &bind, ArenaAllocator &) const {
+        if (sketch) {
+            return sketch->serialize();
+        }
+        SKETCH temporary(bind.k);
+        for (uint32_t i = 0; i < buffer.count; i++) {
+            temporary.update(buffer.items[i]);
+        }
+        return temporary.serialize();
+    }
+    // The exported state is a tag byte, then the buffered items as they are (EXPORT_BUFFER) or the serialized sketch
+    // (EXPORT_SKETCH). A deserialized sketch reserves K items, so buffered states are exported as items: importing
+    // them as sketches would make every spilled state full size.
+    static constexpr uint8_t EXPORT_BUFFER = 0;
+    static constexpr uint8_t EXPORT_SKETCH = 1;
+    std::vector<uint8_t> Export(const DSKLLBindData &, ArenaAllocator &) const {
+        std::vector<uint8_t> bytes;
+        if (sketch) {
+            auto serialized = sketch->serialize();
+            bytes.reserve(1 + serialized.size());
+            bytes.push_back(EXPORT_SKETCH);
+            bytes.insert(bytes.end(), serialized.begin(), serialized.end());
+        } else {
+            auto items = reinterpret_cast<const uint8_t *>(buffer.items);
+            bytes.reserve(1 + buffer.count * sizeof(ITEM));
+            bytes.push_back(EXPORT_BUFFER);
+            bytes.insert(bytes.end(), items, items + buffer.count * sizeof(ITEM));
+        }
+        return bytes;
+    }
+    void Import(const string_t &data, ArenaAllocator &arena) {
+        const auto size = data.GetSize();
+        const auto bytes = const_data_ptr_cast(data.GetData());
+        if (size >= 1 && bytes[0] == EXPORT_SKETCH) {
+            const string_t serialized(data.GetData() + 1, UnsafeNumericCast<uint32_t>(size - 1));
+            sketch = arena.Make<SKETCH>(
+                DSDeserialize<SKETCH>(serialized, "KLL", datasketches::serde<ITEM>(), std::less<ITEM>(), Allocator()));
+            return;
+        }
+        if (size < 1 || bytes[0] != EXPORT_BUFFER || (size - 1) % sizeof(ITEM) != 0 || (size - 1) / sizeof(ITEM) > BUFFERED) {
+            throw InvalidInputException("Invalid KLL aggregate state");
+        }
+        const auto count = static_cast<uint32_t>((size - 1) / sizeof(ITEM));
+        for (uint32_t i = 0; i < count; i++) {
+            ITEM item;
+            memcpy(&item, bytes + 1 + i * sizeof(ITEM), sizeof(ITEM));
+            buffer.Append(item, arena);
+        }
+    }
+};
+
 template <class T>
 static void DSKLLis_empty(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 1);
@@ -1801,6 +1923,14 @@ static void DSKLLsorted_view(DataChunk &args, ExpressionState &state, Vector &re
 
 template <class T>
 static AggregateFunction DSKLLMergeAggregate(const LogicalType &type, const LogicalType &result_type) {
+    if constexpr (!std::is_same_v<T, string_t>) {
+        using STATE = DSKLLArenaState<T>;
+        using OP = DSArenaMergeOperation<DSKLLBindData>;
+        auto fun = AggregateFunction::UnaryAggregate<STATE, string_t, string_t, OP>(result_type, result_type);
+        DSReadDataArgumentAt<1, STATE, string_t, OP>(fun);
+        DSSetArenaStateExport<STATE, DSKLLBindData>(fun);
+        return fun;
+    }
     using OP = DSQuantilesMergeOperation<DSKLLBindData>;
     auto fun = AggregateFunction::UnaryAggregate<DSKLLState<T>, string_t, string_t, OP, AggregateDestructorType::LEGACY>(result_type, result_type);
     DSReadDataArgumentAt<1, DSKLLState<T>, string_t, OP>(fun);
@@ -1809,6 +1939,14 @@ static AggregateFunction DSKLLMergeAggregate(const LogicalType &type, const Logi
 
 template <class T>
 static AggregateFunction DSKLLCreateAggregate(const LogicalType &type, const LogicalType &result_type) {
+    if constexpr (!std::is_same_v<T, string_t>) {
+        using STATE = DSKLLArenaState<T>;
+        using OP = DSArenaCreateOperation<DSKLLBindData>;
+        auto fun = AggregateFunction::UnaryAggregate<STATE, T, string_t, OP>(type, result_type);
+        DSReadDataArgumentAt<1, STATE, T, OP>(fun);
+        DSSetArenaStateExport<STATE, DSKLLBindData>(fun);
+        return fun;
+    }
     using OP = DSQuantilesCreateOperation<DSKLLBindData>;
     auto fun = AggregateFunction::UnaryAggregate<DSKLLState<T>, T, string_t, OP, AggregateDestructorType::LEGACY>(type, result_type);
     DSReadDataArgumentAt<1, DSKLLState<T>, T, OP>(fun);
@@ -5018,6 +5156,66 @@ struct DSHLLUnionState {
     }
 };
 
+// The aggregates' state: a union in the aggregate arena (see the arena states in datasketches_generated_common.hpp).
+struct DSHLLArenaState {
+    DSHLLUnion *sketch;
+
+    static DSAllocator<uint8_t> Allocator() {
+        return DSAllocator<uint8_t>(DSArenaMode());
+    }
+    // Input sketches are read on the heap and freed once merged: the union copies what it keeps into its own
+    // memory (with vcpkg-overlay/apache-datasketches/hll-union-allocator.patch).
+    static DSHLLSketch Read(const string_t &data) {
+        return DSDeserialize<DSHLLSketch>(data, "HLL");
+    }
+
+    void Initialize() {
+        sketch = nullptr;
+    }
+    bool IsEmpty() const {
+        return !sketch;
+    }
+    void Ensure(uint8_t lg_max_k, ArenaAllocator &arena) {
+        if (!sketch) {
+            sketch = arena.Make<DSHLLUnion>(lg_max_k, Allocator());
+        }
+    }
+    template <bool IS_UUID, class V>
+    void Update(const V &value, const DSHLLBindData &bind, ArenaAllocator &arena) {
+        Ensure(bind.k, arena);
+        DSCountingUpdate<IS_UUID>(*sketch, value);
+    }
+    void Merge(const string_t &data, const DSHLLBindData &bind, ArenaAllocator &arena) {
+        Ensure(bind.k, arena);
+        sketch->update(Read(data));
+    }
+    void Combine(const DSHLLArenaState &source, const DSHLLBindData &bind, ArenaAllocator &arena) {
+        if (!sketch) {
+            // A copy allocates through the source's allocator, which in arena mode is the current (target's) arena.
+            sketch = arena.Make<DSHLLUnion>(*source.sketch);
+            return;
+        }
+        sketch->update(UnionContents(*source.sketch));
+    }
+    auto Serialize(const DSHLLBindData &bind, ArenaAllocator &) const {
+        return SerializeUnion(*sketch, bind);
+    }
+    // The union's lg_max_k, then its contents.
+    auto Export(const DSHLLBindData &bind, ArenaAllocator &) const {
+        auto bytes = UnionContents(*sketch).serialize_updatable();
+        bytes.insert(bytes.begin(), static_cast<uint8_t>(bind.k));
+        return bytes;
+    }
+    void Import(const string_t &data, ArenaAllocator &arena) {
+        if (data.GetSize() < 1) {
+            throw InvalidInputException("Invalid HLL aggregate state");
+        }
+        auto bytes = data.GetData();
+        Ensure(static_cast<uint8_t>(bytes[0]), arena);
+        sketch->update(Read(string_t(bytes + 1, UnsafeNumericCast<uint32_t>(data.GetSize() - 1))));
+    }
+};
+
 static void DSHLLis_empty(DataChunk &args, ExpressionState &state, Vector &result) {
     D_ASSERT(args.ColumnCount() == 1);
     auto &sketch_vector = args.data[0];
@@ -5146,19 +5344,22 @@ static void DSHLLupper_bound(DataChunk &args, ExpressionState &state, Vector &re
 }
 
 static AggregateFunction DSHLLMergeAggregate(const LogicalType &result_type) {
-    using OP = DSUnionMergeOperation<DSHLLBindData>;
-    auto fun = AggregateFunction::UnaryAggregate<DSHLLUnionState, string_t, string_t, OP, AggregateDestructorType::LEGACY>(result_type, result_type);
-    DSReadDataArgumentAt<1, DSHLLUnionState, string_t, OP>(fun);
+    using STATE = DSHLLArenaState;
+    using OP = DSArenaMergeOperation<DSHLLBindData>;
+    auto fun = AggregateFunction::UnaryAggregate<STATE, string_t, string_t, OP>(result_type, result_type);
+    DSReadDataArgumentAt<1, STATE, string_t, OP>(fun);
+    DSSetArenaStateExport<STATE, DSHLLBindData>(fun);
     return fun;
 }
 
 template <class T>
 static AggregateFunction DSHLLCreateAggregate(const LogicalType &type, const LogicalType &result_type) {
     using INPUT = DSCountingInput<T>;
-    using STATE = DSHLLUnionState;
-    using OP = DSHLLCreateOperation<DSHLLBindData, INPUT::is_uuid>;
-    auto fun = AggregateFunction::UnaryAggregate<STATE, typename INPUT::physical_type, string_t, OP, AggregateDestructorType::LEGACY>(type, result_type);
+    using STATE = DSHLLArenaState;
+    using OP = DSArenaCreateOperation<DSHLLBindData, INPUT::is_uuid>;
+    auto fun = AggregateFunction::UnaryAggregate<STATE, typename INPUT::physical_type, string_t, OP>(type, result_type);
     DSReadDataArgumentAt<1, STATE, typename INPUT::physical_type, OP>(fun);
+    DSSetArenaStateExport<STATE, DSHLLBindData>(fun);
     return fun;
 }
 
