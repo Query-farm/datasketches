@@ -1,5 +1,5 @@
 # name: test/sql/datasketch_examples.test
-# description: every example in the Theta, Tuple, array-of-doubles and Frequent Items function descriptions runs
+# description: every example in the Theta, Tuple, array-of-doubles, Frequent Items, Bloom filter, Count-Min, VarOpt, EBPPS and Density function descriptions runs
 # group: [datasketches]
 
 # The generated sketch functions (Quantiles, KLL, REQ, TDigest, HLL, CPC) are covered by
@@ -44,6 +44,53 @@ INSERT INTO documented_examples VALUES
 ('SELECT datasketch_aod_union(sketch_a, sketch_b) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b'),
 ('SELECT datasketch_aod_union(sketch_a, sketch_b, sketch_c) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch_c FROM range(250, 1250) t(i)) c'),
 ('SELECT datasketch_aod_upper_bound(sketch, 2) FROM (SELECT datasketch_aod(i % 100, [1.0, i * 0.5]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_bloom_filter(1000, 0.01, i) FROM range(100) t(i)'),
+('SELECT datasketch_bloom_filter(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_bloom_filter_bits_used(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_bloom_filter_capacity(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_bloom_filter_contains(sketch, 42) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_bloom_filter_describe(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_bloom_filter_false_positive_rate(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_bloom_filter_intersect(sketch_a, sketch_b) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_bloom_filter_is_compatible(sketch_a, sketch_b) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_bloom_filter_is_empty(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_bloom_filter_num_hashes(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_bloom_filter_union(sketch_a, sketch_b) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_count_min(3, 128, item) FROM (SELECT i % 10 AS item, i AS weight FROM range(1000) t(i)) t'),
+('SELECT datasketch_count_min(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_count_min_describe(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_count_min_estimate(sketch, 3) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_count_min_is_empty(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_count_min_lower_bound(sketch, 3) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_count_min_merge(sketch_a, sketch_b) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_count_min(3, 128, i % 10) AS sketch_b FROM range(500, 1500) t(i)) b'),
+('SELECT datasketch_count_min_num_buckets(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_count_min_num_hashes(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_count_min_relative_error(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_count_min_suggest_num_buckets(0.01)'),
+('SELECT datasketch_count_min_suggest_num_hashes(0.99)'),
+('SELECT datasketch_count_min_total_weight(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_count_min_upper_bound(sketch, 3) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_count_min_weighted(3, 128, item, weight) FROM (SELECT i % 10 AS item, i AS weight FROM range(1000) t(i)) t'),
+('SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) FROM range(1000) t(i)'),
+('SELECT datasketch_density(16, sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_density_describe(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_density_dim(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_density_estimate(sketch, [5.0, 3.0]) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_density_is_empty(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_density_is_estimation_mode(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_density_k(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_density_n(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_density_num_retained(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_ebpps(16, i::DOUBLE) FROM range(1000) t(i)'),
+('SELECT datasketch_ebpps(16, sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_ebpps_c(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_ebpps_cumulative_weight(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_ebpps_describe(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_ebpps_is_empty(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_ebpps_k(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_ebpps_n(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_ebpps_samples(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_ebpps_weighted(16, i::DOUBLE, (i % 10 + 1)::DOUBLE) FROM range(1000) t(i)'),
 ('SELECT datasketch_frequent_items(10, item) FROM (SELECT (i % 10)::VARCHAR AS item, i AS weight FROM range(1000) t(i)) t'),
 ('SELECT datasketch_frequent_items(10, sketch) FROM (SELECT datasketch_frequent_items(10, (i % 10)::VARCHAR) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
 ('SELECT datasketch_frequent_items(item) FROM (SELECT (i % 10)::VARCHAR AS item, i AS weight FROM range(1000) t(i)) t'),
@@ -124,7 +171,17 @@ INSERT INTO documented_examples VALUES
 ('SELECT datasketch_tuple_union(16, sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b'),
 ('SELECT datasketch_tuple_union(sketch_a, sketch_b) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b'),
 ('SELECT datasketch_tuple_union(sketch_a, sketch_b, sketch_c, mode := ''max'') FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_b FROM range(500, 1500) t(i)) b, (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch_c FROM range(250, 1250) t(i)) c'),
-('SELECT datasketch_tuple_upper_bound(sketch, 2) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s');
+('SELECT datasketch_tuple_upper_bound(sketch, 2) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s'),
+('SELECT datasketch_varopt(16, i::DOUBLE) FROM range(1000) t(i)'),
+('SELECT datasketch_varopt(16, sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s'),
+('SELECT datasketch_varopt_describe(sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_varopt_is_empty(sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_varopt_k(sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_varopt_n(sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_varopt_num_samples(sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_varopt_samples(sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_varopt_subset_sum(sketch, [1.0, 2.0, 3.0]) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s'),
+('SELECT datasketch_varopt_weighted(16, i::DOUBLE, (i % 10 + 1)::DOUBLE) FROM range(1000) t(i)');
 
 # Every registered example of these functions is one of the examples run below
 query II
@@ -133,7 +190,7 @@ FROM (SELECT DISTINCT unnest(examples) AS example FROM duckdb_functions()
       WHERE function_name LIKE 'datasketch%'
         AND NOT regexp_matches(function_name, '^datasketch_(quantiles|kll|req|tdigest|hll|cpc)(_|$)'));
 ----
-112	0
+169	0
 
 statement ok
 SELECT datasketch_aod(14, user_id, [clicks, revenue]) FROM (SELECT i % 100 AS user_id, 1.0::DOUBLE AS clicks, i * 0.5::DOUBLE AS revenue FROM range(1000) t(i)) t;
@@ -470,3 +527,174 @@ SELECT datasketch_tuple_union(sketch_a, sketch_b, sketch_c, mode := 'max') FROM 
 
 statement ok
 SELECT datasketch_tuple_upper_bound(sketch, 2) FROM (SELECT datasketch_tuple(i % 100, i::DOUBLE) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_bloom_filter(1000, 0.01, i) FROM range(100) t(i);
+
+statement ok
+SELECT datasketch_bloom_filter(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_bloom_filter_bits_used(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_bloom_filter_capacity(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_bloom_filter_contains(sketch, 42) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_bloom_filter_describe(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_bloom_filter_false_positive_rate(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_bloom_filter_intersect(sketch_a, sketch_b) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_bloom_filter_is_compatible(sketch_a, sketch_b) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_bloom_filter_is_empty(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_bloom_filter_num_hashes(sketch) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_bloom_filter_union(sketch_a, sketch_b) FROM (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_bloom_filter(1000, 0.01, i) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_count_min(3, 128, item) FROM (SELECT i % 10 AS item, i AS weight FROM range(1000) t(i)) t;
+
+statement ok
+SELECT datasketch_count_min(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_count_min_describe(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_count_min_estimate(sketch, 3) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_count_min_is_empty(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_count_min_lower_bound(sketch, 3) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_count_min_merge(sketch_a, sketch_b) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch_a FROM range(0, 1000) t(i)) a, (SELECT datasketch_count_min(3, 128, i % 10) AS sketch_b FROM range(500, 1500) t(i)) b;
+
+statement ok
+SELECT datasketch_count_min_num_buckets(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_count_min_num_hashes(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_count_min_relative_error(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_count_min_suggest_num_buckets(0.01);
+
+statement ok
+SELECT datasketch_count_min_suggest_num_hashes(0.99);
+
+statement ok
+SELECT datasketch_count_min_total_weight(sketch) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_count_min_upper_bound(sketch, 3) FROM (SELECT datasketch_count_min(3, 128, i % 10) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_count_min_weighted(3, 128, item, weight) FROM (SELECT i % 10 AS item, i AS weight FROM range(1000) t(i)) t;
+
+statement ok
+SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) FROM range(1000) t(i);
+
+statement ok
+SELECT datasketch_density(16, sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_density_describe(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_density_dim(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_density_estimate(sketch, [5.0, 3.0]) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_density_is_empty(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_density_is_estimation_mode(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_density_k(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_density_n(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_density_num_retained(sketch) FROM (SELECT datasketch_density(16, [i % 10, i % 7]::DOUBLE[]) AS sketch FROM range(0, 1000) t(i)) s;
+
+statement ok
+SELECT datasketch_ebpps(16, i::DOUBLE) FROM range(1000) t(i);
+
+statement ok
+SELECT datasketch_ebpps(16, sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_ebpps_c(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_ebpps_cumulative_weight(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_ebpps_describe(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_ebpps_is_empty(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_ebpps_k(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_ebpps_n(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_ebpps_samples(sketch) FROM (SELECT datasketch_ebpps(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_ebpps_weighted(16, i::DOUBLE, (i % 10 + 1)::DOUBLE) FROM range(1000) t(i);
+
+statement ok
+SELECT datasketch_varopt(16, i::DOUBLE) FROM range(1000) t(i);
+
+statement ok
+SELECT datasketch_varopt(16, sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i) GROUP BY i % 4) s;
+
+statement ok
+SELECT datasketch_varopt_describe(sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_varopt_is_empty(sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_varopt_k(sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_varopt_n(sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_varopt_num_samples(sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_varopt_samples(sketch) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_varopt_subset_sum(sketch, [1.0, 2.0, 3.0]) FROM (SELECT datasketch_varopt(16, i::DOUBLE) AS sketch FROM range(1000) t(i)) s;
+
+statement ok
+SELECT datasketch_varopt_weighted(16, i::DOUBLE, (i % 10 + 1)::DOUBLE) FROM range(1000) t(i);

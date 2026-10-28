@@ -4,6 +4,7 @@
 // conversions, aggregate operations, the bodies of the larger scalar functions and registration helpers.
 
 #include "datasketches_extension.hpp"
+#include "datasketches_items.hpp"
 
 #include "duckdb/common/bswap.hpp"
 #include "duckdb/common/string_util.hpp"
@@ -309,19 +310,6 @@ struct DSSketchOperationBase {
     static bool IgnoreNull() {
         return true;
     }
-};
-
-// Marks the UUID overload: its values are read as hugeint_t but hashed as UUIDs.
-struct DSUUIDInput {};
-template <class T>
-struct DSCountingInput {
-    using physical_type = T;
-    static constexpr bool is_uuid = false;
-};
-template <>
-struct DSCountingInput<DSUUIDInput> {
-    using physical_type = hugeint_t;
-    static constexpr bool is_uuid = true;
 };
 
 // Feeds one input value to a counting sketch or union.

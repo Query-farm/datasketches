@@ -1,0 +1,159 @@
+# name: test/sql/datasketch_bloom_filter.test
+# description: Bloom filters: membership, sizing, combining, input types and errors
+# group: [datasketches]
+
+# Before we load the extension, this will fail
+statement error
+SELECT datasketch_bloom_filter_is_empty(''::blob);
+----
+Catalog Error: Scalar Function with name datasketch_bloom_filter_is_empty does not exist!
+
+require datasketches
+
+statement ok
+CREATE TABLE f AS SELECT datasketch_bloom_filter(10000, 0.01, i) AS f FROM range(10000) t(i);
+
+# Sized from the expected number of values and the false positive rate
+query IIII
+SELECT datasketch_bloom_filter_capacity(f), datasketch_bloom_filter_num_hashes(f), datasketch_bloom_filter_is_empty(f),
+       datasketch_bloom_filter_false_positive_rate(f) BETWEEN 0.005 AND 0.015 FROM f;
+----
+95872	7	false	true
+
+# Every value added tests positive
+query I
+SELECT count(*) FROM f, range(10000) r(x) WHERE NOT datasketch_bloom_filter_contains(f, x);
+----
+0
+
+# Values never added test positive at about the false positive rate
+query I
+SELECT count(*) FILTER (WHERE datasketch_bloom_filter_contains(f, x)) BETWEEN 500 AND 1500
+FROM f, range(10000, 110000) r(x);
+----
+true
+
+# Equal values of different types test alike: integers that fit in a BIGINT hash as that BIGINT
+query IIIIII
+SELECT datasketch_bloom_filter_contains(f, 42::TINYINT), datasketch_bloom_filter_contains(f, 42::SMALLINT),
+       datasketch_bloom_filter_contains(f, 42::INTEGER), datasketch_bloom_filter_contains(f, 42::UBIGINT),
+       datasketch_bloom_filter_contains(f, 42::HUGEINT), datasketch_bloom_filter_contains(f, 42::UHUGEINT) FROM f;
+----
+true	true	true	true	true	true
+
+# FLOAT and DOUBLE, -0.0 and 0.0
+query III
+SELECT datasketch_bloom_filter_contains(f, 1.5::FLOAT), datasketch_bloom_filter_contains(f, -0.0::DOUBLE),
+       datasketch_bloom_filter_contains(f, 0.0::FLOAT)
+FROM (SELECT datasketch_bloom_filter(100, 0.01, x) AS f FROM (VALUES (1.5::DOUBLE), (0.0::DOUBLE)) v(x));
+----
+true	true	true
+
+# Wide integers, UBIGINT beyond BIGINT (as the UHUGEINT of the same value), UUIDs (as their 16 bytes) and
+# VARCHAR (as BLOB)
+query IIII
+SELECT datasketch_bloom_filter_contains(datasketch_bloom_filter(100, 0.01, 170141183460469231731687303715884105727::HUGEINT),
+                                        170141183460469231731687303715884105727::HUGEINT),
+       datasketch_bloom_filter_contains(datasketch_bloom_filter(100, 0.01, 18446744073709551615::UBIGINT),
+                                        18446744073709551615::UHUGEINT),
+       datasketch_bloom_filter_contains(datasketch_bloom_filter(100, 0.01, '00000000-0000-0000-0000-000000000001'::UUID),
+                                        '00000000-0000-0000-0000-000000000001'::UUID::BLOB),
+       datasketch_bloom_filter_contains(datasketch_bloom_filter(100, 0.01, 'abc'), 'abc'::BLOB);
+----
+true	true	true	true
+
+# A filter built from several partitions equals the filter built at once, byte for byte
+query I
+SELECT datasketch_bloom_filter(p) = (SELECT f FROM f)
+FROM (SELECT datasketch_bloom_filter(10000, 0.01, i) AS p FROM range(10000) t(i) GROUP BY i % 7);
+----
+true
+
+# The scalar union and intersection
+query IIII
+SELECT datasketch_bloom_filter_contains(datasketch_bloom_filter_union(a, b), 5),
+       datasketch_bloom_filter_contains(datasketch_bloom_filter_union(a, b), 1005),
+       datasketch_bloom_filter_bits_used(datasketch_bloom_filter_intersect(a, b)) <= least(datasketch_bloom_filter_bits_used(a), datasketch_bloom_filter_bits_used(b)),
+       datasketch_bloom_filter_is_compatible(a, b)
+FROM (SELECT datasketch_bloom_filter(2000, 0.01, i) AS a FROM range(1000) t(i)),
+     (SELECT datasketch_bloom_filter(2000, 0.01, i) AS b FROM range(1000, 2000) t(i));
+----
+true	true	true	true
+
+# Filters of different sizes cannot be combined
+query I
+SELECT datasketch_bloom_filter_is_compatible(a, b)
+FROM (SELECT datasketch_bloom_filter(2000, 0.01, 1) AS a), (SELECT datasketch_bloom_filter(1000, 0.01, 1) AS b);
+----
+false
+
+statement error
+SELECT datasketch_bloom_filter_union(a, b)
+FROM (SELECT datasketch_bloom_filter(2000, 0.01, 1) AS a), (SELECT datasketch_bloom_filter(1000, 0.01, 1) AS b);
+----
+cannot combine Bloom filters with different capacities
+
+statement error
+SELECT datasketch_bloom_filter(f) FROM (SELECT datasketch_bloom_filter(2000, 0.01, 1) AS f UNION ALL SELECT datasketch_bloom_filter(1000, 0.01, 1));
+----
+cannot combine Bloom filters with different capacities
+
+# NULL values are skipped; no values gives NULL; a NULL item tests NULL
+query II
+SELECT datasketch_bloom_filter(100, 0.01, x) IS NULL, datasketch_bloom_filter_contains(datasketch_bloom_filter(100, 0.01, 1), NULL::INTEGER) IS NULL
+FROM (SELECT NULL::INTEGER AS x);
+----
+true	true
+
+query I
+SELECT datasketch_bloom_filter_bits_used(datasketch_bloom_filter(100, 0.01, x)) FROM (VALUES (1), (NULL), (1)) v(x);
+----
+7
+
+# The serialized form is stable
+query I
+SELECT datasketch_bloom_filter(10, 0.1, i) FROM range(3) t(i);
+----
+\x04\x01\x15\x00\x04\x00\x00\x00)#\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x0C\x00\x00\x00\x00\x00\x00\x00\x04\x09\x08\x05\x0C\x00$(
+
+query II
+SELECT datasketch_bloom_filter_contains(f, 2), datasketch_bloom_filter_num_hashes(f)
+FROM (SELECT '\x04\x01\x15\x00\x04\x00\x00\x00)#\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x0C\x00\x00\x00\x00\x00\x00\x00\x04\x09\x08\x05\x0C\x00$('::sketch_bloom_filter AS f);
+----
+true	4
+
+query I
+SELECT datasketch_bloom_filter_describe(datasketch_bloom_filter(10, 0.1, 1)) LIKE '%Bloom%';
+----
+true
+
+# Sizing errors are reported when binding
+statement error
+SELECT datasketch_bloom_filter(0, 0.01, i) FROM range(10) t(i);
+----
+max_distinct_items must be at least 1
+
+statement error
+SELECT datasketch_bloom_filter(100, 1.0, i) FROM range(10) t(i);
+----
+false_positive_rate must be between 0 and 1
+
+statement error
+SELECT datasketch_bloom_filter(100, 0.0, i) FROM range(10) t(i);
+----
+false_positive_rate must be between 0 and 1
+
+statement error
+SELECT datasketch_bloom_filter(1000000000000000, 0.0000001, i) FROM range(10) t(i);
+----
+more than the maximum
+
+statement error
+SELECT datasketch_bloom_filter(i, 0.01, i) FROM range(10) t(i);
+----
+max_distinct_items must be a constant
+
+statement error
+SELECT datasketch_bloom_filter_contains('\x01\x02'::sketch_bloom_filter, 1);
+----
+Failed to deserialize Bloom filter sketch

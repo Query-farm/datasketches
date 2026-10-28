@@ -23,11 +23,15 @@ NULL
 # Each family is tagged with its own category.
 query II rowsort
 SELECT family, bool_and(list_contains(categories, family)) FROM (
-    SELECT categories, regexp_extract(function_name, '^datasketch_(kll|quantiles|req|tdigest|hll|cpc|frequent_items|theta)', 1) AS family
+    SELECT categories, regexp_extract(function_name, '^datasketch_(kll|quantiles|req|tdigest|hll|cpc|frequent_items|theta|bloom_filter|count_min|varopt|ebpps|density)', 1) AS family
     FROM duckdb_functions() WHERE function_name LIKE 'datasketch\_%' ESCAPE '\'
 ) WHERE family <> '' GROUP BY family;
 ----
+bloom_filter	true
+count_min	true
 cpc	true
+density	true
+ebpps	true
 frequent_items	true
 hll	true
 kll	true
@@ -35,6 +39,7 @@ quantiles	true
 req	true
 tdigest	true
 theta	true
+varopt	true
 
 query I
 SELECT count(*) > 0 FROM duckdb_functions() WHERE function_name = 'datasketch_kll' AND categories = ['sketch', 'kll'];

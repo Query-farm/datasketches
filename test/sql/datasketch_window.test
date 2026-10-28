@@ -1,0 +1,82 @@
+# name: test/sql/datasketch_window.test
+# description: sketch aggregates as window functions (running, sliding and partitioned frames)
+# group: [datasketches]
+
+require datasketches
+
+# Window frames are computed from segment trees of partial states, which DuckDB combines without discarding them:
+# every result must match the plain aggregate over the same rows.
+
+statement ok
+CREATE TABLE w AS SELECT i, i % 7 AS g, (i * 37) % 101 AS v, ((i * 37) % 101)::DOUBLE AS d FROM range(2000) t(i);
+
+# Running frames: n counts the rows so far. (The counts are compared as BIGINT: a UBIGINT = BIGINT comparison goes
+# through HUGEINT, which some DuckDB 2.0 development builds evaluate wrongly in a projection.)
+query IIIIII
+SELECT bool_and(kll = i + 1), bool_and(q = i + 1), bool_and(req = i + 1), bool_and(td = i + 1), bool_and(vo = i + 1), bool_and(dn = i + 1)
+FROM (
+  SELECT i,
+         datasketch_kll_n(datasketch_kll(200, d) OVER running)::BIGINT AS kll,
+         datasketch_quantiles_n(datasketch_quantiles(128, d) OVER running)::BIGINT AS q,
+         datasketch_req_n(datasketch_req(12, d) OVER running)::BIGINT AS req,
+         datasketch_tdigest_total_weight(datasketch_tdigest(100, d) OVER running)::BIGINT AS td,
+         datasketch_varopt_n(datasketch_varopt(16, v) OVER running)::BIGINT AS vo,
+         datasketch_density_n(datasketch_density(16, [d]) OVER running)::BIGINT AS dn
+  FROM w WINDOW running AS (ORDER BY i ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+);
+----
+true	true	true	true	true	true
+
+# Running frames: the running max is the max so far
+query I
+SELECT bool_and(datasketch_kll_max_item(s) = m)
+FROM (SELECT datasketch_kll(200, d) OVER running AS s, max(d) OVER running AS m FROM w
+      WINDOW running AS (ORDER BY i ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW));
+----
+true
+
+# Sliding frames of 10 rows: distinct counts (exact for so few values), counts and membership
+query IIII
+SELECT bool_and(round(hll) = cnt), bool_and(round(cpc) = cnt), bool_and(round(theta) = cnt), bool_and(cm = 1 AND bloom)
+FROM (
+  SELECT count(DISTINCT v) OVER sliding AS cnt,
+         datasketch_hll_estimate(datasketch_hll(12, v) OVER sliding) AS hll,
+         datasketch_cpc_estimate(datasketch_cpc(12, v) OVER sliding) AS cpc,
+         datasketch_theta_estimate(datasketch_theta(v) OVER sliding) AS theta,
+         datasketch_count_min_estimate(datasketch_count_min(5, 2719, v) OVER sliding, v) AS cm,
+         datasketch_bloom_filter_contains(datasketch_bloom_filter(100, 0.01, v) OVER sliding, v) AS bloom
+  FROM w WINDOW sliding AS (ORDER BY i ROWS BETWEEN 9 PRECEDING AND CURRENT ROW)
+);
+----
+true	true	true	true
+
+# Partitioned frames equal the grouped aggregates
+query IIIII
+SELECT bool_and(a.hll = b.hll), bool_and(a.theta = b.theta), bool_and(a.freq = b.freq), bool_and(a.kll = b.kll), bool_and(a.cm = b.cm)
+FROM (
+  SELECT DISTINCT g,
+         datasketch_hll_estimate(datasketch_hll(12, v) OVER (PARTITION BY g)) AS hll,
+         datasketch_theta_estimate(datasketch_theta(v) OVER (PARTITION BY g)) AS theta,
+         datasketch_frequent_items_estimate(datasketch_frequent_items(6, v) OVER (PARTITION BY g), 5) AS freq,
+         datasketch_kll_n(datasketch_kll(200, d) OVER (PARTITION BY g)) AS kll,
+         datasketch_count_min_total_weight(datasketch_count_min(3, 64, v) OVER (PARTITION BY g)) AS cm
+  FROM w
+) a JOIN (
+  SELECT g, datasketch_hll_estimate(datasketch_hll(12, v)) AS hll, datasketch_theta_estimate(datasketch_theta(v)) AS theta,
+         datasketch_frequent_items_estimate(datasketch_frequent_items(6, v), 5) AS freq, datasketch_kll_n(datasketch_kll(200, d)) AS kll,
+         datasketch_count_min_total_weight(datasketch_count_min(3, 64, v)) AS cm
+  FROM w GROUP BY g
+) b USING (g);
+----
+true	true	true	true	true
+
+# Merging stored sketches over a frame (the estimate of up to 2000 distinct values is within 5%)
+query I
+SELECT bool_and(abs(datasketch_hll_estimate(s) - c) <= 0.05 * c)
+FROM (
+  SELECT datasketch_hll_union(12, h) OVER (ORDER BY g ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS s,
+         (sum(n) OVER (ORDER BY g ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW))::BIGINT AS c
+  FROM (SELECT g, datasketch_hll(12, i) AS h, count(*) AS n FROM w GROUP BY g)
+);
+----
+true

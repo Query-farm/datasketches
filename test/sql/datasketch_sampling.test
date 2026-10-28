@@ -1,0 +1,165 @@
+# name: test/sql/datasketch_sampling.test
+# description: VarOpt and EBPPS weighted samples: sizes, weights, merging, item types and errors
+# group: [datasketches]
+
+# Before we load the extension, this will fail
+statement error
+SELECT datasketch_varopt_is_empty(''::blob);
+----
+Catalog Error: Scalar Function with name datasketch_varopt_is_empty does not exist!
+
+require datasketches
+
+# Samples are random once there are more items than K, so these tests check what holds for every sample.
+
+statement ok
+CREATE TABLE samples AS
+SELECT datasketch_varopt_weighted(100, i, (i % 10 + 1)::DOUBLE) AS v, datasketch_ebpps_weighted(100, i, (i % 10 + 1)::DOUBLE) AS e
+FROM range(100000) t(i);
+
+query IIII
+SELECT datasketch_varopt_k(v), datasketch_varopt_n(v), datasketch_varopt_num_samples(v), datasketch_varopt_is_empty(v) FROM samples;
+----
+100	100000	100	false
+
+query IIII
+SELECT datasketch_ebpps_k(e), datasketch_ebpps_n(e), round(datasketch_ebpps_c(e), 6), datasketch_ebpps_cumulative_weight(e) FROM samples;
+----
+100	100000	100.0	550000.0
+
+# VarOpt: the adjusted weights of the sample add up to the total weight
+query II
+SELECT round(sum(x.weight), 6), count(DISTINCT x.item) FROM (SELECT unnest(datasketch_varopt_samples(v)) AS x FROM samples);
+----
+550000.0	100
+
+query I
+SELECT round(datasketch_varopt_subset_sum(v, []::BIGINT[]).total_weight, 6) FROM samples;
+----
+550000.0
+
+# A subset sum estimate lies within its bounds, and the subset of every sampled item is the total
+query II
+SELECT bool_and(s.lower_bound <= s.estimate AND s.estimate <= s.upper_bound), bool_and(s.estimate <= s.total_weight)
+FROM (SELECT datasketch_varopt_subset_sum(v, list(i)) AS s FROM samples, range(0, 100000, 9) t(i) GROUP BY v);
+----
+true	true
+
+query I
+SELECT round(datasketch_varopt_subset_sum(v, [x.item for x in datasketch_varopt_samples(v)]).estimate, 6) FROM samples;
+----
+550000.0
+
+# EBPPS: the sample holds floor(C) or ceil(C) distinct items
+query I
+SELECT len(datasketch_ebpps_samples(e)) FROM samples;
+----
+100
+
+# Below K items, both samples keep every item, VarOpt with its weight
+query II
+SELECT list_sort([x.item for x in datasketch_varopt_samples(v)]), list_sort(datasketch_ebpps_samples(e))
+FROM (SELECT datasketch_varopt(10, s) AS v, datasketch_ebpps(10, s) AS e FROM (VALUES ('a'), ('b'), ('c')) t(s));
+----
+[a, b, c]	[a, b, c]
+
+query I
+SELECT datasketch_varopt_samples(datasketch_varopt_weighted(10, x, w)) FROM (VALUES (1.5::DOUBLE, 2.0), (2.5::DOUBLE, 3.0)) t(x, w);
+----
+[{'item': 1.5, 'weight': 2.0}, {'item': 2.5, 'weight': 3.0}]
+
+# Every item type has its own sketch type
+query II
+SELECT typeof(datasketch_varopt(4, 1::TINYINT)), typeof(datasketch_ebpps(4, 'x'));
+----
+sketch_varopt_tinyint	sketch_ebpps_varchar
+
+query IIII
+SELECT datasketch_varopt_samples(datasketch_varopt(4, 7::UBIGINT))[1].item, datasketch_ebpps_samples(datasketch_ebpps(4, 1.5::FLOAT)),
+       datasketch_varopt_samples(datasketch_varopt(4, -3::SMALLINT))[1].item, datasketch_ebpps_samples(datasketch_ebpps(4, 9::UINTEGER));
+----
+7	[1.5]	-3	[9]
+
+# Merging partial samples (an aggregate over partitions, and the merge aggregates)
+query II
+SELECT datasketch_varopt_n(datasketch_varopt(64, i)), datasketch_ebpps_n(datasketch_ebpps(64, i)) FROM range(1000000) t(i);
+----
+1000000	1000000
+
+query III
+SELECT datasketch_varopt_n(m), datasketch_varopt_num_samples(m), datasketch_varopt_k(m)
+FROM (SELECT datasketch_varopt(100, s) AS m FROM (SELECT datasketch_varopt(50, i::VARCHAR) AS s FROM range(10000) t(i) GROUP BY i % 4));
+----
+10000	100	100
+
+# EBPPS merges keep the smaller K
+query III
+SELECT datasketch_ebpps_n(m), datasketch_ebpps_k(m), len(datasketch_ebpps_samples(m))
+FROM (SELECT datasketch_ebpps(100, s) AS m FROM (SELECT datasketch_ebpps(50, i::VARCHAR) AS s FROM range(10000) t(i) GROUP BY i % 4));
+----
+10000	50	50
+
+# NULL items and weights are skipped; no items gives NULL
+query II
+SELECT datasketch_varopt(4, x) IS NULL, datasketch_ebpps_weighted(4, 1, x::DOUBLE) IS NULL FROM (SELECT NULL::INTEGER AS x);
+----
+true	true
+
+query II
+SELECT datasketch_varopt_n(datasketch_varopt(4, x)), datasketch_ebpps_n(datasketch_ebpps(4, x)) FROM (VALUES (1), (NULL), (2)) t(x);
+----
+2	2
+
+# Weights: VarOpt needs positive weights, EBPPS non-negative ones
+statement error
+SELECT datasketch_varopt_weighted(10, 1, -1.0);
+----
+Item weights must be positive and finite
+
+statement error
+SELECT datasketch_varopt_weighted(10, 1, 0.0);
+----
+Item weights must be positive and finite
+
+statement error
+SELECT datasketch_ebpps_weighted(10, 1, 'inf'::DOUBLE);
+----
+Item weights must be nonnegative and finite
+
+# EBPPS skips items of weight 0
+query II
+SELECT datasketch_ebpps_n(s), datasketch_ebpps_is_empty(s) FROM (SELECT datasketch_ebpps_weighted(10, 1, 0.0) AS s);
+----
+0	true
+
+# The serialized forms are stable
+query II
+SELECT datasketch_varopt(4, i), datasketch_ebpps(4, i) FROM range(3) t(i);
+----
+\xC3\x02\x0D\x00\x04\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xF0?\x00\x00\x00\x00\x00\x00\xF0?\x00\x00\x00\x00\x00\x00\xF0?\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00	\x05\x01\x13\x00\x04\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08@\x00\x00\x00\x00\x00\x00\xF0?\x00\x00\x00\x00\x00\x00\xF0?\x00\x00\x00\x00\x00\x00\x08@\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00
+
+query I
+SELECT datasketch_varopt_describe(datasketch_varopt(4, 1)) LIKE '%VarOpt%' AND datasketch_ebpps_describe(datasketch_ebpps(4, 1)) LIKE '%EBPPS%';
+----
+true
+
+# K is a constant between 1 and 2^20
+statement error
+SELECT datasketch_varopt(0, i) FROM range(10) t(i);
+----
+VarOpt K value must be between 1 and 1048576
+
+statement error
+SELECT datasketch_ebpps(2000000, i) FROM range(10) t(i);
+----
+EBPPS K value must be between 1 and 1048576
+
+statement error
+SELECT datasketch_varopt(i::INTEGER, i) FROM range(10) t(i);
+----
+VarOpt can only take a constant K value
+
+statement error
+SELECT datasketch_varopt_n('\x01'::sketch_varopt_bigint);
+----
+Failed to deserialize VarOpt sketch

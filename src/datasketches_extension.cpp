@@ -27,6 +27,10 @@ namespace duckdb
     void LoadTupleSketch(ExtensionLoader &loader);
     void LoadAodSketch(ExtensionLoader &loader);
     void LoadFrequentItemsSketch(ExtensionLoader &loader);
+    void LoadBloomFilter(ExtensionLoader &loader);
+    void LoadCountMinSketch(ExtensionLoader &loader);
+    void LoadSamplingSketches(ExtensionLoader &loader);
+    void LoadDensitySketch(ExtensionLoader &loader);
 
     static void LoadInternal(ExtensionLoader &loader)
     {
@@ -40,6 +44,10 @@ namespace duckdb
         LoadTupleSketch(loader);
         LoadAodSketch(loader);
         LoadFrequentItemsSketch(loader);
+        LoadBloomFilter(loader);
+        LoadCountMinSketch(loader);
+        LoadSamplingSketches(loader);
+        LoadDensitySketch(loader);
         QueryFarmSendTelemetry(loader, "datasketches", "2026102101");
     }
 
