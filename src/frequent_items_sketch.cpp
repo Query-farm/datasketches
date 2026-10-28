@@ -1,4 +1,4 @@
-#include "datasketches_extension.hpp"
+#include "datasketches_arena_buffer.hpp"
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/common/types/vector.hpp"
@@ -10,7 +10,9 @@
 #include "duckdb/common/types/cast_helpers.hpp" // duckdb_fmt
 
 #include <DataSketches/frequent_items_sketch.hpp>
+#include <DataSketches/memory_operations.hpp>
 #include <string>
+#include <string_view>
 #include <type_traits>
 
 namespace duckdb
@@ -254,6 +256,137 @@ namespace duckdb
             }
         };
 
+        // ------------------------------------------------------------
+        // Arena states, for numbers
+        // ------------------------------------------------------------
+        // A sketch's items are strings, which own heap memory, so VARCHAR items and the merge aggregates keep
+        // DSFreqItemsState. A number's string (see DSFreqItemsToString) is at most 24 bytes, so sketches of numbers
+        // keep it inline in a key that owns no heap memory, in the aggregate arena (see datasketches_arena_buffer.hpp).
+        // A key compares, hashes and serializes as the std::string of the same bytes, so a sketch of keys holds its
+        // items in the same places, purges the same ones and serializes to the same bytes as one of strings.
+        struct DSFreqItemsKey
+        {
+            static constexpr idx_t CAPACITY = 31;
+            uint8_t size;
+            char data[CAPACITY];
+
+            std::string_view View() const { return std::string_view(data, size); }
+            bool operator==(const DSFreqItemsKey &other) const { return View() == other.View(); }
+
+            static DSFreqItemsKey From(const std::string &text)
+            {
+                if (text.size() > CAPACITY)
+                {
+                    throw InternalException("Frequent Items: the item '%s' is too long for an inline key", text);
+                }
+                DSFreqItemsKey key;
+                key.size = static_cast<uint8_t>(text.size());
+                memcpy(key.data, text.data(), text.size());
+                return key;
+            }
+        };
+
+        // std::hash of a std::string equals that of its string_view.
+        struct DSFreqItemsKeyHash
+        {
+            size_t operator()(const DSFreqItemsKey &key) const { return std::hash<std::string_view>()(key.View()); }
+        };
+
+        // As datasketches::serde<std::string>: each item is its uint32 length, then its bytes.
+        struct DSFreqItemsKeySerde
+        {
+            size_t size_of_item(const DSFreqItemsKey &key) const { return sizeof(uint32_t) + key.size; }
+
+            size_t serialize(void *ptr, size_t capacity, const DSFreqItemsKey *items, unsigned num) const
+            {
+                auto out = static_cast<char *>(ptr);
+                size_t written = 0;
+                for (unsigned i = 0; i < num; i++)
+                {
+                    const uint32_t length = items[i].size;
+                    datasketches::check_memory_size(written + sizeof(length) + length, capacity);
+                    memcpy(out + written, &length, sizeof(length));
+                    memcpy(out + written + sizeof(length), items[i].data, length);
+                    written += sizeof(length) + length;
+                }
+                return written;
+            }
+
+            size_t deserialize(const void *ptr, size_t capacity, DSFreqItemsKey *items, unsigned num) const
+            {
+                auto in = static_cast<const char *>(ptr);
+                size_t read = 0;
+                for (unsigned i = 0; i < num; i++)
+                {
+                    uint32_t length;
+                    datasketches::check_memory_size(read + sizeof(length), capacity);
+                    memcpy(&length, in + read, sizeof(length));
+                    read += sizeof(length);
+                    datasketches::check_memory_size(read + length, capacity);
+                    if (length > DSFreqItemsKey::CAPACITY)
+                    {
+                        throw std::invalid_argument("item of " + std::to_string(length) + " bytes in a sketch of numbers");
+                    }
+                    auto key = new (&items[i]) DSFreqItemsKey();
+                    key->size = static_cast<uint8_t>(length);
+                    memcpy(key->data, in + read, length);
+                    read += length;
+                }
+                return read;
+            }
+        };
+
+        using DSFreqItemsArenaSketch = datasketches::frequent_items_sketch<DSFreqItemsKey, uint64_t, DSFreqItemsKeyHash,
+                                                                           std::equal_to<DSFreqItemsKey>, DSAllocator<DSFreqItemsKey>>;
+
+        // The first items with their weights, or the sketch they were fed to, in order: a sketch reserves room for
+        // 8 items, and DuckDB creates a state per input row when grouping reduces little.
+        template <class T>
+        struct DSFreqItemsArenaPolicy
+        {
+            using BIND = DSFreqItemsBindData;
+            using VALUE = T;
+            using WEIGHT = uint64_t;
+            using SKETCH = DSFreqItemsArenaSketch;
+            using ENTRY = DSBufferedEntry<T, uint64_t>;
+            static constexpr const char *NAME = "Frequent Items";
+            static constexpr uint32_t BUFFERED = 32;
+
+            static DSAllocator<DSFreqItemsKey> ArenaMode()
+            {
+                return DSAllocator<DSFreqItemsKey>(DSArenaMode());
+            }
+            static idx_t Budget(const BIND &) { return NumericLimits<idx_t>::Maximum(); }
+            static ENTRY Entry(const T &value) { return ENTRY {value, 1}; }
+            // The weight is checked now, as the heap state checks it.
+            template <class W>
+            static ENTRY Entry(const T &value, const W &weight) { return ENTRY {value, DSFreqItemsToWeight(weight)}; }
+
+            static SKETCH *Create(const BIND &bind, ArenaAllocator &arena)
+            {
+                return arena.Make<SKETCH>(bind.lg_max_k, SKETCH::LG_MIN_MAP_SIZE, std::equal_to<DSFreqItemsKey>(), ArenaMode());
+            }
+            static SKETCH Temporary(const BIND &bind) { return SKETCH(bind.lg_max_k); }
+            static void Update(SKETCH &sketch, const ENTRY &entry)
+            {
+                sketch.update(DSFreqItemsKey::From(DSFreqItemsToString(entry.value)), entry.weight);
+            }
+            static auto Serialize(const SKETCH &sketch) { return sketch.serialize(0, DSFreqItemsKeySerde()); }
+            static SKETCH *Deserialize(const string_t &blob, ArenaAllocator &arena)
+            {
+                return arena.Make<SKETCH>(DSDeserialize<SKETCH>(blob, NAME, DSFreqItemsKeySerde(), std::equal_to<DSFreqItemsKey>(), ArenaMode()));
+            }
+            // The copy allocates through the source's allocator, which in arena mode is the current (target's) arena.
+            static SKETCH *Copy(const SKETCH &source, ArenaAllocator &arena) { return arena.Make<SKETCH>(source); }
+            static void Combine(SKETCH &target, const SKETCH &source, const BIND &, ArenaAllocator &) { target.merge(source); }
+        };
+
+        // The constants an exported state is re-bound with: lg_max_k, for the overloads that take it.
+        void DSFreqItemsConstants(const DSFreqItemsBindData &bind, unordered_map<idx_t, Value> &constants)
+        {
+            constants.emplace(0, Value::INTEGER(bind.lg_max_k));
+        }
+
         // ============================================================
         // 3. Scalar Functions
         // ============================================================
@@ -364,14 +497,33 @@ namespace duckdb
             DSFreqItemsForEachItemType([&](auto item, const LogicalType &item_type)
                                        {
                 using T = decltype(item);
-                auto fun = AggregateFunction::UnaryAggregate<DSFreqItemsState, T, string_t, DSFreqItemsOperation, AggregateDestructorType::LEGACY>(item_type, sketch_type);
-                DSAddAggregate(set, descs, fun, DSFreqItemsBind<2>, {item_type}, {"data"},
-                               "Creates a Frequent Items sketch to find heavy hitters in a data stream",
-                               {"SELECT datasketch_frequent_items(item)" + rows});
-                DSReadDataArgumentAt<1, DSFreqItemsState, T, DSFreqItemsOperation>(fun);
-                DSAddAggregate(set, descs, fun, DSFreqItemsBind<2>, {LogicalType::INTEGER, item_type}, {"lg_max_k", "data"},
-                               "Creates a Frequent Items sketch with the given log2 of max map size (lg_max_k)",
-                               {"SELECT datasketch_frequent_items(10, item)" + rows}); });
+                auto add = [&](AggregateFunction fun, AggregateFunction with_lg_max_k)
+                {
+                    DSAddAggregate(set, descs, fun, DSFreqItemsBind<2>, {item_type}, {"data"},
+                                   "Creates a Frequent Items sketch to find heavy hitters in a data stream",
+                                   {"SELECT datasketch_frequent_items(item)" + rows});
+                    DSAddAggregate(set, descs, with_lg_max_k, DSFreqItemsBind<2>, {LogicalType::INTEGER, item_type}, {"lg_max_k", "data"},
+                                   "Creates a Frequent Items sketch with the given log2 of max map size (lg_max_k)",
+                                   {"SELECT datasketch_frequent_items(10, item)" + rows});
+                };
+                if constexpr (std::is_same_v<T, string_t>)
+                {
+                    auto fun = AggregateFunction::UnaryAggregate<DSFreqItemsState, T, string_t, DSFreqItemsOperation, AggregateDestructorType::LEGACY>(item_type, sketch_type);
+                    auto with_lg_max_k = fun;
+                    DSReadDataArgumentAt<1, DSFreqItemsState, T, DSFreqItemsOperation>(with_lg_max_k);
+                    add(fun, with_lg_max_k);
+                }
+                else
+                {
+                    using STATE = DSBufferedArenaState<DSFreqItemsArenaPolicy<T>>;
+                    using OP = DSArenaCreateOperation<DSFreqItemsBindData>;
+                    auto fun = AggregateFunction::UnaryAggregate<STATE, T, string_t, OP>(item_type, sketch_type);
+                    auto with_lg_max_k = fun;
+                    DSSetBufferedStateExport<STATE, DSFreqItemsBindData, DSNoConstants<DSFreqItemsBindData>>(fun);
+                    DSReadDataArgumentAt<1, STATE, T, OP>(with_lg_max_k);
+                    DSSetBufferedStateExport<STATE, DSFreqItemsBindData, DSFreqItemsConstants>(with_lg_max_k);
+                    add(fun, with_lg_max_k);
+                } });
 
             auto merge = AggregateFunction::UnaryAggregate<DSFreqItemsState, string_t, string_t, DSFreqItemsMergeOperation, AggregateDestructorType::LEGACY>(sketch_type, sketch_type);
             DSAddAggregate(set, descs, merge, DSFreqItemsBind<2>, {sketch_type}, {"sketch"},
@@ -394,16 +546,35 @@ namespace duckdb
                 auto add = [&](auto weight, const LogicalType &weight_type)
                 {
                     using W = decltype(weight);
-                    using OP = DSFreqItemsWeightedOperation;
-                    auto fun = AggregateFunction::BinaryAggregate<DSFreqItemsState, T, W, string_t, OP, AggregateDestructorType::LEGACY>(item_type, weight_type, sketch_type);
-                    fun.SetStateDestructorCallback(AggregateFunction::StateDestroy<DSFreqItemsState, OP>);
-                    DSAddAggregate(set, descs, fun, DSFreqItemsBind<3>, {item_type, weight_type}, {"data", "weight"},
-                                   "Creates a weighted Frequent Items sketch to find heavy hitters by total item weight; each row adds its weight to the item's count",
-                                   {"SELECT datasketch_frequent_items_weighted(item, weight)" + rows});
-                    DSReadDataArgumentsAt<1, 2, DSFreqItemsState, T, W, OP>(fun);
-                    DSAddAggregate(set, descs, fun, DSFreqItemsBind<3>, {LogicalType::INTEGER, item_type, weight_type}, {"lg_max_k", "data", "weight"},
-                                   "Creates a weighted Frequent Items sketch with the given log2 of max map size (lg_max_k); each row adds its weight to the item's count",
-                                   {"SELECT datasketch_frequent_items_weighted(10, item, weight)" + rows});
+                    auto add_functions = [&](AggregateFunction fun, AggregateFunction with_lg_max_k)
+                    {
+                        DSAddAggregate(set, descs, fun, DSFreqItemsBind<3>, {item_type, weight_type}, {"data", "weight"},
+                                       "Creates a weighted Frequent Items sketch to find heavy hitters by total item weight; each row adds its weight to the item's count",
+                                       {"SELECT datasketch_frequent_items_weighted(item, weight)" + rows});
+                        DSAddAggregate(set, descs, with_lg_max_k, DSFreqItemsBind<3>, {LogicalType::INTEGER, item_type, weight_type}, {"lg_max_k", "data", "weight"},
+                                       "Creates a weighted Frequent Items sketch with the given log2 of max map size (lg_max_k); each row adds its weight to the item's count",
+                                       {"SELECT datasketch_frequent_items_weighted(10, item, weight)" + rows});
+                    };
+                    if constexpr (std::is_same_v<T, string_t>)
+                    {
+                        using OP = DSFreqItemsWeightedOperation;
+                        auto fun = AggregateFunction::BinaryAggregate<DSFreqItemsState, T, W, string_t, OP, AggregateDestructorType::LEGACY>(item_type, weight_type, sketch_type);
+                        fun.SetStateDestructorCallback(AggregateFunction::StateDestroy<DSFreqItemsState, OP>);
+                        auto with_lg_max_k = fun;
+                        DSReadDataArgumentsAt<1, 2, DSFreqItemsState, T, W, OP>(with_lg_max_k);
+                        add_functions(fun, with_lg_max_k);
+                    }
+                    else
+                    {
+                        using STATE = DSBufferedArenaState<DSFreqItemsArenaPolicy<T>>;
+                        using OP = DSArenaWeightedOperation<DSFreqItemsBindData>;
+                        auto fun = AggregateFunction::BinaryAggregate<STATE, T, W, string_t, OP>(item_type, weight_type, sketch_type);
+                        auto with_lg_max_k = fun;
+                        DSSetBufferedStateExport<STATE, DSFreqItemsBindData, DSNoConstants<DSFreqItemsBindData>>(fun);
+                        DSReadDataArgumentsAt<1, 2, STATE, T, W, OP>(with_lg_max_k);
+                        DSSetBufferedStateExport<STATE, DSFreqItemsBindData, DSFreqItemsConstants>(with_lg_max_k);
+                        add_functions(fun, with_lg_max_k);
+                    }
                 };
                 add(int64_t(), LogicalType::BIGINT);
                 add(uint64_t(), LogicalType::UBIGINT); });
