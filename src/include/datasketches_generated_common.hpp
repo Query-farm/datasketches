@@ -25,6 +25,8 @@
 #include <DataSketches/req_sketch.hpp>
 #include <DataSketches/tdigest.hpp>
 
+#include <vector>
+
 namespace duckdb
 {
 
@@ -541,6 +543,30 @@ private:
 //   auto Serialize(bind, arena);                       the aggregate's result
 //   auto Export(bind, arena);                          the exported state
 //   void Import(const string_t &state, arena);         rebuilds an exported state
+
+// A scratch arena for temporaries of arena-mode sketches (e.g. a union's result, serialized bytes): while it lives,
+// arena-mode allocations go to it, and it is freed as a whole when it goes out of scope. A temporary must not
+// outlive it, and nothing a state keeps may be allocated while it is the current arena (open a DSArenaScope on the
+// state's arena for that).
+struct DSArenaScratch
+{
+    DSArenaScratch() : arena(Allocator::DefaultAllocator()), scope(arena)
+    {
+    }
+
+    ArenaAllocator arena;
+    DSArenaScope scope;
+};
+
+// The bytes fun() returns (a library's serialize(), whose vector uses the sketch's allocator), produced in a scratch
+// arena and returned on the heap: serializing an arena-mode sketch leaves nothing behind in the callback's arena.
+template <class FUNC>
+static std::vector<uint8_t> DSScratchBytes(FUNC &&fun)
+{
+    DSArenaScratch scratch;
+    auto bytes = fun();
+    return std::vector<uint8_t>(bytes.begin(), bytes.end());
+}
 
 template <class BIND_DATA_TYPE>
 struct DSArenaOperationBase {

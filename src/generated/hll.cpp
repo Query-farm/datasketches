@@ -86,15 +86,23 @@ struct DSHLLArenaUnionState {
             sketch = arena.Make<DSHLLUnion>(*source.sketch);
             return;
         }
-        // The source's contents are copied into the current arena, then merged.
-        sketch->update(UnionContents(*source.sketch));
+        // The source's contents are a temporary in a scratch arena. The union copies what it keeps with the
+        // contents' allocator, which in arena mode is the current arena: the state's, once the scratch scope ends.
+        ArenaAllocator scratch(Allocator::DefaultAllocator());
+        std::optional<DSHLLSketch> contents;
+        {
+            DSArenaScope scope(scratch);
+            contents.emplace(UnionContents(*source.sketch));
+        }
+        sketch->update(*contents);
     }
-    auto Serialize(const DSHLLBindData &bind, ArenaAllocator &) const {
-        return SerializeUnion(*sketch, bind);
+    // The result and its bytes are temporaries in a scratch arena, not left behind in the state's arena.
+    std::vector<uint8_t> Serialize(const DSHLLBindData &bind, ArenaAllocator &) const {
+        return DSScratchBytes([&]() { return SerializeUnion(*sketch, bind); });
     }
     // The union's lg_k, then its contents.
     std::vector<uint8_t> Export(const DSHLLBindData &bind, ArenaAllocator &) const {
-        auto contents = UnionContents(*sketch).serialize_updatable();
+        auto contents = DSScratchBytes([&]() { return UnionContents(*sketch).serialize_updatable(); });
         std::vector<uint8_t> bytes;
         bytes.reserve(1 + contents.size());
         bytes.push_back(static_cast<uint8_t>(bind.k));
@@ -181,13 +189,14 @@ struct DSHLLArenaState {
     }
     // A state that still buffers its values is serialized through a temporary union on the heap, which is freed
     // right away, instead of one left behind in the arena.
-    auto Serialize(const DSHLLBindData &bind, ArenaAllocator &arena) const {
+    std::vector<uint8_t> Serialize(const DSHLLBindData &bind, ArenaAllocator &arena) const {
         if (HasSketch()) {
             return unioned.Serialize(bind, arena);
         }
         DSHLLUnion temporary(bind.k);
         buffer.ForEach([&](const T &value) { Feed(temporary, value); });
-        return SerializeUnion(temporary, bind);
+        auto bytes = SerializeUnion(temporary, bind);
+        return std::vector<uint8_t>(bytes.begin(), bytes.end());
     }
     // The exported state is a tag byte, then the buffered values (EXPORT_BUFFER, see DSArenaValues::Export) or the
     // exported union (see DSHLLArenaUnionState::Export) (EXPORT_SKETCH). Buffered states are exported as
