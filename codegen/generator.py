@@ -112,6 +112,10 @@ class Sketch:
     """Counting sketches have one sketch type for every input type; the others have one per item type."""
     union_accepts_values: bool = False
     """The library union also accepts raw values, so the create aggregate builds the union directly."""
+    arena: bool = False
+    """The aggregates keep their sketches in the aggregate arena, so DuckDB can spill them (see the arena states in
+    datasketches_generated_common.hpp). Item sketches over VARCHAR stay on the heap: their std::string items do not
+    allocate from the arena."""
 
     @property
     def sql(self) -> str:
@@ -181,7 +185,7 @@ SKETCHES = [
     Sketch("Quantiles", "DSQuantilesSketch", NUMERIC_TYPES + ("LogicalType::VARCHAR",),
            example_k=16, k_min=2, k_max=32768, k_power_of_two=True),
     Sketch("KLL", "DSKLLSketch", NUMERIC_TYPES + ("LogicalType::VARCHAR",),
-           example_k=200, k_min=8, k_max=65535),
+           example_k=200, k_min=8, k_max=65535, arena=True),
     # The library rounds an odd K down. (It kept K in 8 bits, so a larger K wrapped around: see
     # vcpkg-overlay/apache-datasketches/req-k-16-bit.patch.)
     Sketch("REQ", "DSREQSketch", NUMERIC_TYPES,
@@ -191,7 +195,7 @@ SKETCHES = [
            example_k=100, k_min=10, k_max=65535, k_label="K (compression)"),
     Sketch("HLL", "DSHLLSketch", COUNTING_TYPES,
            example_k=12, k_min=4, k_max=21, k_label="K (lg_k)", option=HLL_TARGET_TYPE,
-           counting=True, union_accepts_values=True),
+           counting=True, union_accepts_values=True, arena=True),
     Sketch("CPC", "DSCPCSketch", COUNTING_TYPES,
            example_k=12, k_min=4, k_max=26, k_label="K (lg_k)", counting=True),
 ]

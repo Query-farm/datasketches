@@ -1,0 +1,78 @@
+# name: test/sql/datasketch_spill.test
+# description: arena-backed sketch states count toward memory_limit and spill instead of failing
+# group: [datasketches]
+
+require datasketches
+
+require skip_reload
+
+statement ok
+SET threads=4;
+
+statement ok
+SET memory_limit='128MB';
+
+statement ok
+SET temp_directory='{TEST_DIR}/datasketch_spill';
+
+statement ok
+SET preserve_insertion_order=false;
+
+# 400k groups of KLL sketches (a few KB each) are far more than the limit: each group's n, min and max are exact
+query I
+SELECT count(*) FROM (
+    SELECT g, datasketch_kll(200, v) AS s
+    FROM (SELECT i % 400000 AS g, (i % 400000)::DOUBLE + (i // 400000) AS v FROM range(1200000) t(i))
+    GROUP BY g
+) WHERE datasketch_kll_n(s) != 3 OR datasketch_kll_min_item(s) != g OR datasketch_kll_max_item(s) != g + 2;
+----
+0
+
+# HLL unions: few distinct values per group are counted almost exactly (two values can share a coupon)
+query I
+SELECT count(*) FROM (
+    SELECT g, datasketch_hll(12, v) AS s
+    FROM (SELECT i % 400000 AS g, i AS v FROM range(1200000) t(i))
+    GROUP BY g
+) WHERE abs(datasketch_hll_estimate(s) - 3) > 1;
+----
+0
+
+# Merging stored sketches spills too
+statement ok
+SET memory_limit='4GB';
+
+statement ok
+CREATE TABLE parts AS
+SELECT g, p, datasketch_kll(200, v) AS k, datasketch_hll(12, v) AS h
+FROM (SELECT i % 200000 AS g, i % 3 AS p, i::DOUBLE AS v FROM range(1200000) t(i))
+GROUP BY g, p;
+
+statement ok
+SET memory_limit='128MB';
+
+query I
+SELECT count(*) FROM (
+    SELECT g, datasketch_kll(200, k) AS k, datasketch_hll_union(12, h) AS h FROM parts GROUP BY g
+) WHERE datasketch_kll_n(k) != 6 OR abs(datasketch_hll_estimate(h) - 6) > 1;
+----
+0
+
+statement ok
+SET memory_limit='4GB';
+
+# Exported states finalize to the aggregate's result
+query II
+SELECT datasketch_kll_n(finalize(datasketch_kll(200, i::DOUBLE) EXPORT_STATE)) = 100000,
+       finalize(datasketch_hll(12, i) EXPORT_STATE) = datasketch_hll(12, i)
+FROM range(100000) t(i);
+----
+true	true
+
+# VARCHAR sketches keep their heap states and still work under the limit
+query I
+SELECT count(*) FROM (
+    SELECT g, datasketch_kll(200, v::VARCHAR) AS s FROM (SELECT i % 1000 AS g, i AS v FROM range(100000) t(i)) GROUP BY g
+) WHERE datasketch_kll_n(s) != 100;
+----
+0

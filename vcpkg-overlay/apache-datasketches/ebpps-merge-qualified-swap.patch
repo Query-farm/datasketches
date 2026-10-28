@@ -1,0 +1,13 @@
+diff --git a/sampling/include/ebpps_sketch_impl.hpp b/sampling/include/ebpps_sketch_impl.hpp
+index 299b7f5c..36a7b926 100644
+--- a/sampling/include/ebpps_sketch_impl.hpp
++++ b/sampling/include/ebpps_sketch_impl.hpp
+@@ -202,7 +202,7 @@ void ebpps_sketch<T, A>::merge(const ebpps_sketch<T, A>& sk) {
+     // need to swap this with sk to merge, so make a copy, swap,
+     // and use that to merge
+     ebpps_sketch sk_copy(sk);
+-    swap(*this, sk_copy);
++    std::swap(*this, sk_copy);
+     internal_merge(sk_copy);
+   } else {
+     internal_merge(sk);

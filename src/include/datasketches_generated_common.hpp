@@ -554,4 +554,164 @@ struct DSCPCCreateOperation : DSSketchOperationBase {
     }
 };
 
+// ---------------------------------------------------------------------------
+// Arena states
+// ---------------------------------------------------------------------------
+//
+// These states keep their sketch, and all of the sketch's memory, in the aggregate arena (DSAllocator's arena
+// mode). They have no destructor and export their sketches as BLOBs, so DuckDB counts them toward memory_limit and
+// can spill them to disk. Each callback opens a DSArenaScope on the arena DuckDB passes it, so the sketch grows in
+// that arena. STATE provides, with `bind` the aggregate's bind data and `arena` the callback's arena:
+//   void Initialize();                                 an empty state
+//   bool IsEmpty() const;                              no rows yet
+//   template <bool IS_UUID, class V> void Update(const V &value, bind, arena);
+//   void Merge(const string_t &sketch, bind, arena);   merges a serialized sketch
+//   void Combine(const STATE &source, bind, arena);    merges a partial state, which may live in another
+//                                                      thread's arena: nothing of it is taken over
+//   auto Serialize(bind, arena);                       the aggregate's result
+//   auto Export(bind, arena);                          the exported state
+//   void Import(const string_t &state, arena);         rebuilds an exported state
+
+template <class BIND_DATA_TYPE>
+struct DSArenaOperationBase {
+    template <class STATE>
+    static void Initialize(STATE &state) {
+        state.Initialize();
+    }
+
+    static bool IgnoreNull() {
+        return true;
+    }
+
+    template <class INPUT_TYPE, class STATE, class OP>
+    static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input,
+                                  idx_t count) {
+        for (idx_t i = 0; i < count; i++) {
+            OP::template Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
+        }
+    }
+
+    template <class STATE, class OP>
+    static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data) {
+        if (source.IsEmpty()) {
+            return;
+        }
+        DSArenaScope scope(aggr_input_data.allocator);
+        target.Combine(source, aggr_input_data.bind_data->template Cast<BIND_DATA_TYPE>(), aggr_input_data.allocator);
+    }
+
+    template <class T, class STATE>
+    static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data) {
+        if (state.IsEmpty()) {
+            finalize_data.ReturnNull();
+            return;
+        }
+        auto &input = finalize_data.input;
+        DSArenaScope scope(input.allocator);
+        target = DSAddBytes(finalize_data.result,
+                            state.Serialize(input.bind_data->template Cast<BIND_DATA_TYPE>(), input.allocator));
+    }
+};
+
+// Builds the sketch from values.
+template <class BIND_DATA_TYPE, bool IS_UUID = false>
+struct DSArenaCreateOperation : DSArenaOperationBase<BIND_DATA_TYPE> {
+    template <class A_TYPE, class STATE, class OP>
+    static void Operation(STATE &state, const A_TYPE &a_data, AggregateUnaryInput &idata) {
+        DSArenaScope scope(idata.input.allocator);
+        state.template Update<IS_UUID>(a_data, idata.input.bind_data->template Cast<BIND_DATA_TYPE>(),
+                                       idata.input.allocator);
+    }
+};
+
+// Merges serialized sketches.
+template <class BIND_DATA_TYPE>
+struct DSArenaMergeOperation : DSArenaOperationBase<BIND_DATA_TYPE> {
+    template <class A_TYPE, class STATE, class OP>
+    static void Operation(STATE &state, const A_TYPE &a_data, AggregateUnaryInput &idata) {
+        DSArenaScope scope(idata.input.allocator);
+        state.Merge(a_data, idata.input.bind_data->template Cast<BIND_DATA_TYPE>(), idata.input.allocator);
+    }
+};
+
+// Exports each state (NULL for a state that saw no rows) for spilling.
+template <class STATE, class BIND_DATA_TYPE>
+static void DSArenaExportState(Vector &state_vector, AggregateFinalizeInputData &aggr_input_data, Vector &result,
+                               idx_t count, idx_t offset) {
+    auto states = state_vector.Values<STATE *>();
+    auto results = FlatVector::GetDataMutable<string_t>(result);
+    auto &bind_data = aggr_input_data.bind_data->template Cast<BIND_DATA_TYPE>();
+    DSArenaScope scope(aggr_input_data.allocator);
+    for (idx_t i = 0; i < count; i++) {
+        auto &state = *states[i].GetValue();
+        if (state.IsEmpty()) {
+            FlatVector::SetNull(result, offset + i, true);
+            continue;
+        }
+        results[offset + i] = DSAddBytes(result, state.Export(bind_data, aggr_input_data.allocator));
+    }
+}
+
+// Rebuilds exported states in the arena.
+template <class STATE>
+static void DSArenaImportState(AggregateImportInputData &input) {
+    const auto count = input.input_vec.size();
+    auto entries = input.input_vec.Values<string_t>();
+    DSArenaScope scope(input.allocator);
+    for (idx_t i = 0; i < count; i++) {
+        auto &state = *reinterpret_cast<STATE *>(input.dest_buffer + i * input.layout.total_state_size);
+        state.Initialize();
+        const auto entry = entries[i];
+        if (entry.IsValid()) {
+            state.Import(entry.GetValue(), input.allocator);
+        }
+    }
+}
+
+// The exported state is a BLOB; K is recorded so that re-binding the exported state supplies it.
+template <class STATE, class BIND_DATA_TYPE>
+static AggregateStateLayout DSArenaGetStateType(AggregateLayoutInput &input) {
+    AggregateStateLayout layout(LogicalType::BLOB, AlignValue<idx_t>(sizeof(STATE)));
+    if (input.bind_data) {
+        auto &bind_data = input.bind_data->template Cast<BIND_DATA_TYPE>();
+        layout.constant_parameters.emplace(0, Value::INTEGER(bind_data.k));
+    }
+    return layout;
+}
+
+template <class STATE, class BIND_DATA_TYPE>
+static void DSSetArenaStateExport(AggregateFunction &fun) {
+    fun.SetStateExportCallbacks(DSArenaGetStateType<STATE, BIND_DATA_TYPE>, DSArenaExportState<STATE, BIND_DATA_TYPE>,
+                                DSArenaImportState<STATE>);
+}
+
+// Items kept in the arena in insertion order, in an array that doubles as it fills.
+template <class ITEM>
+struct DSArenaItems {
+    static_assert(std::is_trivially_copyable<ITEM>::value, "arena items are copied bytewise");
+
+    ITEM *items;
+    uint32_t count;
+    uint32_t capacity;
+
+    void Initialize() {
+        items = nullptr;
+        count = 0;
+        capacity = 0;
+    }
+
+    void Append(const ITEM &item, ArenaAllocator &arena) {
+        if (count == capacity) {
+            const uint32_t new_capacity = capacity ? capacity * 2 : 1;
+            auto new_items = reinterpret_cast<ITEM *>(arena.AllocateAligned(new_capacity * sizeof(ITEM)));
+            if (count) {
+                memcpy(new_items, items, count * sizeof(ITEM));
+            }
+            items = new_items;
+            capacity = new_capacity;
+        }
+        items[count++] = item;
+    }
+};
+
 } // namespace duckdb

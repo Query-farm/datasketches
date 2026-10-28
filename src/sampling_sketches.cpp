@@ -79,11 +79,9 @@ namespace duckdb
             {
                 target.merge(std::move(source));
             }
-            // The library's merge(const ebpps_sketch &) calls an unqualified swap() that only resolves for
-            // std::allocator, so merge a copy instead.
-            static void Merge(Sketch &target, const Sketch &source, uint32_t k)
+            static void Merge(Sketch &target, const Sketch &source, uint32_t)
             {
-                Merge(target, Sketch(source), k);
+                target.merge(source);
             }
         };
 

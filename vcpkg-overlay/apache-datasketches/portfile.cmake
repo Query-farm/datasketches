@@ -11,6 +11,15 @@ vcpkg_from_github(
         # differ between standard libraries, so sketches built on Linux, macOS and Windows disagreed. The patch
         # computes libstdc++'s seeds on every platform.
         count-min-portable-hash-seeds.patch
+        # hll_union copied input sketches with their own allocator, so a union could hold memory of another allocator
+        # (https://github.com/apache/datasketches-cpp/pull/556).
+        hll-union-allocator.patch
+        # ebpps_sketch::merge(const&) called an unqualified swap, which does not compile with DSAllocator
+        # (https://github.com/apache/datasketches-cpp/pull/557).
+        ebpps-merge-qualified-swap.patch
+        # kll_sketch allocated K items in its constructor; it now allocates them on first use
+        # (https://github.com/apache/datasketches-cpp/pull/558).
+        kll-lazy-items.patch
 )
 
 set(VCPKG_BUILD_TYPE release) # header-only port
