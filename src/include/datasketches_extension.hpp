@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "duckdb.hpp"
+#include "duckdb/common/allocator.hpp"
 #include <string>
 #include "duckdb/function/aggregate_function.hpp"
 #include "duckdb/function/scalar_function.hpp"
@@ -289,6 +290,49 @@ namespace duckdb
 			throw InvalidInputException("Failed to deserialize %s sketch: %s", sketch_name, e.what());
 		}
 	}
+
+	// Allocates sketch memory through DuckDB's default allocator instead of the C++ runtime's: jemalloc on 64-bit
+	// Linux, where it makes building many small sketches (GROUP BY) up to 3.7x faster than glibc malloc, and plain
+	// malloc elsewhere. Stateless, so sketches can be moved and merged between threads and partial aggregate states.
+	// DuckDB's allocator rejects zero-byte requests, so those take one byte.
+	template <class T>
+	struct DSAllocator
+	{
+		using value_type = T;
+
+		DSAllocator() noexcept = default;
+		template <class U>
+		DSAllocator(const DSAllocator<U> &) noexcept
+		{
+		}
+
+		T *allocate(size_t n)
+		{
+			return reinterpret_cast<T *>(Allocator::DefaultAllocator().AllocateData(Bytes(n)));
+		}
+
+		void deallocate(T *pointer, size_t n) noexcept
+		{
+			Allocator::DefaultAllocator().FreeData(data_ptr_cast(pointer), Bytes(n));
+		}
+
+		template <class U>
+		bool operator==(const DSAllocator<U> &) const noexcept
+		{
+			return true;
+		}
+		template <class U>
+		bool operator!=(const DSAllocator<U> &) const noexcept
+		{
+			return false;
+		}
+
+	private:
+		static idx_t Bytes(size_t n)
+		{
+			return MaxValue<idx_t>(n * sizeof(T), 1);
+		}
+	};
 
 	// The last sketch a scalar function deserialized, reused while the following rows hold the same bytes (a constant
 	// sketch argument, or a sketch joined to many rows). Deserializing is most of the cost of a call, and quantile

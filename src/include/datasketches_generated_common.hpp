@@ -28,6 +28,23 @@ namespace duckdb
 {
 
 // ---------------------------------------------------------------------------
+// Sketch classes, allocating through DSAllocator
+// ---------------------------------------------------------------------------
+
+template <class T>
+using DSQuantilesSketch = datasketches::quantiles_sketch<T, std::less<T>, DSAllocator<T>>;
+template <class T>
+using DSKLLSketch = datasketches::kll_sketch<T, std::less<T>, DSAllocator<T>>;
+template <class T>
+using DSREQSketch = datasketches::req_sketch<T, std::less<T>, DSAllocator<T>>;
+template <class T>
+using DSTDigestSketch = datasketches::tdigest<T, DSAllocator<T>>;
+using DSHLLSketch = datasketches::hll_sketch_alloc<DSAllocator<uint8_t>>;
+using DSHLLUnion = datasketches::hll_union_alloc<DSAllocator<uint8_t>>;
+using DSCPCSketch = datasketches::cpc_sketch_alloc<DSAllocator<uint8_t>>;
+using DSCPCUnion = datasketches::cpc_union_alloc<DSAllocator<uint8_t>>;
+
+// ---------------------------------------------------------------------------
 // Items
 // ---------------------------------------------------------------------------
 
@@ -72,6 +89,12 @@ static inline T DSItemOut(Vector &vector, const V &value) {
 template <class BYTES>
 static inline string_t DSAddBytes(Vector &vector, const BYTES &bytes) {
     return StringVector::AddStringOrBlob(vector, const_char_ptr_cast(bytes.data()), bytes.size());
+}
+
+// Stores text in `vector`: the sketches' to_string() results use the sketch's allocator, so they are not std::string.
+template <class TEXT>
+static inline string_t DSAddText(Vector &vector, const TEXT &text) {
+    return StringVector::AddString(vector, text.data(), text.size());
 }
 
 // Merges `source` into `target`, reporting incompatible sketches (e.g. REQ sketches with different rank accuracy
@@ -251,15 +274,15 @@ static list_entry_t DSSortedView(Vector &result, const SKETCH &sketch) {
     });
 }
 
-static inline string_t DSHLLMerge(Vector &result, const datasketches::hll_sketch &a, const datasketches::hll_sketch &b) {
-    datasketches::hll_union u(std::max(a.get_lg_config_k(), b.get_lg_config_k()));
+static inline string_t DSHLLMerge(Vector &result, const DSHLLSketch &a, const DSHLLSketch &b) {
+    DSHLLUnion u(std::max(a.get_lg_config_k(), b.get_lg_config_k()));
     u.update(a);
     u.update(b);
     return DSAddBytes(result, u.get_result(a.get_target_type()).serialize_updatable());
 }
 
-static inline string_t DSCPCMerge(Vector &result, const datasketches::cpc_sketch &a, const datasketches::cpc_sketch &b) {
-    datasketches::cpc_union u(std::max(a.get_lg_k(), b.get_lg_k()));
+static inline string_t DSCPCMerge(Vector &result, const DSCPCSketch &a, const DSCPCSketch &b) {
+    DSCPCUnion u(std::max(a.get_lg_k(), b.get_lg_k()));
     u.update(a);
     u.update(b);
     return DSAddBytes(result, u.get_result().serialize());
@@ -395,18 +418,18 @@ struct DSQuantilesCreateOperation : DSQuantilesOperationBase {
 };
 
 // A union's contents as a sketch another union can absorb, and its result in each type's wire format.
-static inline datasketches::hll_sketch UnionContents(const datasketches::hll_union &u) {
+static inline DSHLLSketch UnionContents(const DSHLLUnion &u) {
     return u.get_result(datasketches::target_hll_type::HLL_8);
 }
-static inline datasketches::cpc_sketch UnionContents(const datasketches::cpc_union &u) {
+static inline DSCPCSketch UnionContents(const DSCPCUnion &u) {
     return u.get_result();
 }
 template <class BIND_DATA_TYPE>
-static inline auto SerializeUnion(const datasketches::hll_union &u, const BIND_DATA_TYPE &bind) {
+static inline auto SerializeUnion(const DSHLLUnion &u, const BIND_DATA_TYPE &bind) {
     return u.get_result(bind.target_type).serialize_updatable();
 }
 template <class BIND_DATA_TYPE>
-static inline auto SerializeUnion(const datasketches::cpc_union &u, const BIND_DATA_TYPE &) {
+static inline auto SerializeUnion(const DSCPCUnion &u, const BIND_DATA_TYPE &) {
     return u.get_result().serialize();
 }
 
@@ -523,7 +546,7 @@ struct DSCPCCreateOperation : DSSketchOperationBase {
             return;
         }
         // Move the sketches into the union so it adopts their tables instead of copying them.
-        datasketches::cpc_union u(target.sketch->get_lg_k());
+        DSCPCUnion u(target.sketch->get_lg_k());
         u.update(std::move(*target.sketch));
         if (destructive) {
             u.update(std::move(*const_cast<STATE &>(source).sketch));

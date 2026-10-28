@@ -27,7 +27,8 @@ namespace duckdb
 
     namespace
     {
-        using FrequentItemsSketch = datasketches::frequent_items_sketch<std::string>;
+        using FrequentItemsSketch = datasketches::frequent_items_sketch<std::string, uint64_t, std::hash<std::string>, std::equal_to<std::string>,
+                                                                         DSAllocator<std::string>>;
 
         const vector<string> DS_FREQ_ITEMS_CATEGORIES = {"sketch", "frequent_items"};
 

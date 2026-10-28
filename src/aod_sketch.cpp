@@ -12,7 +12,8 @@
 namespace datasketches
 {
     // tuple_sketch::to_string needs to be able to print the summaries (it only does when asked for the items).
-    inline std::ostream &operator<<(std::ostream &os, const array<double> &values)
+    template <class A>
+    inline std::ostream &operator<<(std::ostream &os, const array<double, A> &values)
     {
         os << "[";
         for (uint8_t i = 0; i < values.size(); i++)
@@ -27,10 +28,12 @@ namespace duckdb
 {
     namespace
     {
-        using DSAodArray = datasketches::array<double>;
-        using DSAodUpdate = datasketches::update_array_of_doubles_sketch;
-        using DSAodCompact = datasketches::compact_array_of_doubles_sketch;
-        using DSAodUnion = datasketches::array_of_doubles_union;
+        // The library's classes, allocating through DuckDB's allocator (see DSAllocator): the sketches take their
+        // allocator from the array type.
+        using DSAodArray = datasketches::array<double, DSAllocator<double>>;
+        using DSAodUpdate = datasketches::update_array_tuple_sketch<DSAodArray>;
+        using DSAodCompact = datasketches::compact_array_tuple_sketch<DSAodArray>;
+        using DSAodUnion = datasketches::array_tuple_union<DSAodArray>;
 
         constexpr idx_t DS_AOD_MAX_VALUES = 255;
 
@@ -49,7 +52,7 @@ namespace duckdb
             uint8_t num_values;
         };
 
-        using DSAodIntersection = datasketches::array_of_doubles_intersection<DSAodSumPolicy>;
+        using DSAodIntersection = datasketches::array_tuple_intersection<DSAodArray, DSAodSumPolicy>;
 
         void DSAodThrowNumValues(const char *function_name, idx_t a, idx_t b)
         {
@@ -84,7 +87,7 @@ namespace duckdb
 
             static Compact ANotB(uint64_t seed, const Compact &a, const Compact &b)
             {
-                return datasketches::array_of_doubles_a_not_b(seed).compute(a, b);
+                return datasketches::array_tuple_a_not_b<DSAodArray>(seed).compute(a, b);
             }
 
             static void CheckCompatible(const Compact &a, const Compact &b, const char *function_name)
@@ -100,7 +103,7 @@ namespace duckdb
 
         DSAodCompact DSAodEmptySketch(uint8_t lg_k, uint64_t seed, uint8_t num_values)
         {
-            DSAodUpdate::builder b{datasketches::default_array_of_doubles_update_policy(num_values)};
+            DSAodUpdate::builder b{datasketches::default_array_tuple_update_policy<DSAodArray>(num_values)};
             b.set_lg_k(lg_k);
             b.set_seed(seed);
             return b.build().compact();
@@ -233,7 +236,7 @@ namespace duckdb
                 CheckNumValues(count, "datasketch_aod");
                 if (!update_sketch)
                 {
-                    DSAodUpdate::builder b{datasketches::default_array_of_doubles_update_policy(num_values)};
+                    DSAodUpdate::builder b{datasketches::default_array_tuple_update_policy<DSAodArray>(num_values)};
                     b.set_lg_k(bind_data.lg_k);
                     b.set_seed(bind_data.seed);
                     b.set_p(bind_data.p);
@@ -252,7 +255,7 @@ namespace duckdb
                 {
                     seed = union_seed;
                 }
-                DSAodUnion::builder b{datasketches::default_array_of_doubles_union_policy(num_values)};
+                DSAodUnion::builder b{datasketches::default_array_tuple_union_policy<DSAodArray>(num_values)};
                 b.set_lg_k(lg_k);
                 b.set_seed(seed);
                 auto grown = new DSAodUnion(b.build());
@@ -587,7 +590,7 @@ namespace duckdb
             }
             return ThetaGuard([&]()
                               {
-                                  DSAodUnion::builder b{datasketches::default_array_of_doubles_union_policy(num_values.NumValues())};
+                                  DSAodUnion::builder b{datasketches::default_array_tuple_union_policy<DSAodArray>(num_values.NumValues())};
                                   b.set_lg_k(lg_k);
                                   b.set_seed(seeds.Seed());
                                   auto union_obj = b.build();
