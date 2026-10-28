@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "duckdb.hpp"
 #include <string>
 #include "duckdb/function/aggregate_function.hpp"
@@ -287,6 +289,38 @@ namespace duckdb
 			throw InvalidInputException("Failed to deserialize %s sketch: %s", sketch_name, e.what());
 		}
 	}
+
+	// The last sketch a scalar function deserialized, reused while the following rows hold the same bytes (a constant
+	// sketch argument, or a sketch joined to many rows). Deserializing is most of the cost of a call, and quantile
+	// sketches also cache their sorted view, which every rank or quantile query needs. Lives for one chunk, so a blob
+	// that is not inlined stays valid and an equal pointer means equal bytes.
+	template <class SKETCH>
+	struct DSSketchCache
+	{
+		const SKETCH &Get(const string_t &blob, const char *sketch_name)
+		{
+			if (!sketch || !Same(blob))
+			{
+				sketch.reset();
+				sketch.emplace(DSDeserialize<SKETCH>(blob, sketch_name));
+				key = blob;
+			}
+			return *sketch;
+		}
+
+	private:
+		bool Same(const string_t &blob) const
+		{
+			if (!blob.IsInlined() && blob.GetData() == key.GetData() && blob.GetSize() == key.GetSize())
+			{
+				return true;
+			}
+			return blob == key;
+		}
+
+		string_t key;
+		std::optional<SKETCH> sketch;
+	};
 
 	// Checks the number of standard deviations of a bound: the libraries accept 1, 2 or 3.
 	inline uint8_t DSCheckNumStdDevs(int64_t num_std_devs, const char *function_name)

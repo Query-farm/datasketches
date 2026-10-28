@@ -261,8 +261,9 @@ namespace duckdb
         template <typename T, class FUNC>
         void DSFreqItemsItemFunction(DataChunk &args, Vector &result, FUNC &&fun)
         {
+            DSSketchCache<FrequentItemsSketch> cache;
             BinaryExecutor::Execute<string_t, T, int64_t>(args.data[0], args.data[1], result, [&](string_t sketch_blob, T item)
-                                                          { return static_cast<int64_t>(fun(DSFreqItemsDeserialize(sketch_blob), DSFreqItemsToString(item))); });
+                                                          { return static_cast<int64_t>(fun(cache.Get(sketch_blob, "Frequent Items"), DSFreqItemsToString(item))); });
         }
 
         template <typename T>
