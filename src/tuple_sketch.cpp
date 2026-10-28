@@ -5,6 +5,7 @@
 // DataSketches libraries), so functions that combine summaries (merge, union, intersection) take it as an option.
 
 #include "datasketches_tuple_common.hpp"
+#include "datasketches_theta_arena.hpp"
 
 #include <DataSketches/tuple_sketch.hpp>
 #include <DataSketches/tuple_union.hpp>
@@ -123,43 +124,15 @@ namespace duckdb
 
         using DSTupleScalars = DSTupleFunctions<DSTupleDoubleTraits>;
 
-        DSTupleCompact DSTupleEmptySketch(uint8_t lg_k, uint64_t seed)
-        {
-            DSTupleUpdate::builder b;
-            b.set_lg_k(lg_k);
-            b.set_seed(seed);
-            return b.build().compact();
-        }
-
         // ============================================================
         // Bind Data
         // ============================================================
 
-        struct DSTupleBindData : public FunctionData
+        using DSTupleBindData = DSThetaFamilyBindData;
+
+        uint8_t DSTupleBindMode(BindAggregateFunctionInput &input)
         {
-            DSTupleBindData() = default;
-
-            unique_ptr<FunctionData> Copy() const override
-            {
-                return make_uniq<DSTupleBindData>(*this);
-            }
-
-            bool Equals(const FunctionData &other_p) const override
-            {
-                auto &other = other_p.Cast<DSTupleBindData>();
-                return lg_k == other.lg_k && infer_lg_k == other.infer_lg_k && seed == other.seed && p == other.p && mode == other.mode;
-            }
-
-            uint8_t lg_k = DS_THETA_DEFAULT_LG_K;
-            bool infer_lg_k = false;
-            uint64_t seed = DS_THETA_DEFAULT_SEED;
-            float p = 1.0f;
-            DSTupleMode mode = DSTupleMode::SUM;
-        };
-
-        DSTupleMode DSTupleBindMode(BindAggregateFunctionInput &input)
-        {
-            return DSTupleParseMode(input.GetNonNullConstant(Identifier("mode")).GetValue<string>());
+            return static_cast<uint8_t>(DSTupleParseMode(input.GetNonNullConstant(Identifier("mode")).GetValue<string>()));
         }
 
         template <bool HAS_LG_K>
@@ -172,6 +145,7 @@ namespace duckdb
             }
             DSTupleBindSeedAndP(input, result->seed, result->p);
             result->mode = DSTupleBindMode(input);
+            DSThetaRecordConstants(input, *result, HAS_LG_K ? 1 : 0, HAS_LG_K ? 3 : 2);
             return std::move(result);
         }
 
@@ -188,324 +162,143 @@ namespace duckdb
                 result->infer_lg_k = true;
             }
             result->mode = DSTupleBindMode(input);
+            DSThetaRecordConstants(input, *result, HAS_LG_K ? 1 : 0, HAS_LG_K ? 2 : 1);
             return std::move(result);
         }
 
-        // ============================================================
-        // Build / Union Aggregate
-        // ============================================================
-
-        struct DSTupleState
+        unique_ptr<FunctionData> DSTupleBindIntersect(BindAggregateFunctionInput &input)
         {
-            DSTupleUpdate *update_sketch = nullptr;
-            DSTupleUnion *union_sketch = nullptr;
-            uint8_t union_lg_k = 0;
-            uint64_t union_seed = DS_THETA_DEFAULT_SEED;
-            //! A merged input sketch was empty: with no other input, the result is an empty sketch rather than NULL
-            bool saw_empty_sketch = false;
-
-            ~DSTupleState()
-            {
-                delete update_sketch;
-                delete union_sketch;
-            }
-
-            void CreateUpdateSketch(const DSTupleBindData &bind_data)
-            {
-                if (!update_sketch)
-                {
-                    DSTupleUpdate::builder b{DSTupleDoublePolicy(bind_data.mode)};
-                    b.set_lg_k(bind_data.lg_k);
-                    b.set_seed(bind_data.seed);
-                    b.set_p(bind_data.p);
-                    update_sketch = new DSTupleUpdate(b.build());
-                }
-            }
-
-            // Creates the union, or grows it to a larger lg_k (re-adding what it holds so far).
-            void EnsureUnion(uint8_t lg_k, uint64_t seed, DSTupleMode mode)
-            {
-                if (union_sketch && lg_k <= union_lg_k)
-                {
-                    return;
-                }
-                if (union_sketch)
-                {
-                    seed = union_seed;
-                }
-                DSTupleUnion::builder b{DSTupleDoublePolicy(mode)};
-                b.set_lg_k(lg_k);
-                b.set_seed(seed);
-                auto grown = new DSTupleUnion(b.build());
-                if (union_sketch)
-                {
-                    grown->update(union_sketch->get_result());
-                    delete union_sketch;
-                }
-                union_sketch = grown;
-                union_lg_k = lg_k;
-                union_seed = seed;
-            }
-
-            bool HasData() const
-            {
-                return update_sketch || union_sketch;
-            }
-
-            uint64_t Seed(const DSTupleBindData &bind_data) const
-            {
-                return union_sketch ? union_seed : bind_data.seed;
-            }
-
-            uint8_t LgK(const DSTupleBindData &bind_data) const
-            {
-                return union_sketch ? union_lg_k : bind_data.lg_k;
-            }
-        };
+            auto result = make_uniq<DSTupleBindData>();
+            result->mode = DSTupleBindMode(input);
+            DSThetaRecordConstants(input, *result, 0, 1);
+            return std::move(result);
+        }
 
         void DSTupleThrowSeedMismatch(const char *function_name, uint16_t a, uint16_t b)
         {
             throw InvalidInputException("%s: cannot combine Tuple sketches built with different seeds (seed hashes %d and %d)", function_name, a, b);
         }
 
-        struct DSTupleOperationBase
-        {
-            template <class STATE>
-            static void Initialize(STATE &state)
-            {
-                state.update_sketch = nullptr;
-                state.union_sketch = nullptr;
-                state.union_lg_k = 0;
-                state.union_seed = DS_THETA_DEFAULT_SEED;
-                state.saw_empty_sketch = false;
-            }
-
-            template <class STATE>
-            static void Destroy(STATE &state, AggregateInputData &)
-            {
-                delete state.update_sketch;
-                delete state.union_sketch;
-                state.update_sketch = nullptr;
-                state.union_sketch = nullptr;
-            }
-
-            static bool IgnoreNull() { return true; }
-
-            template <class STATE, class OP>
-            static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data)
-            {
-                target.saw_empty_sketch = target.saw_empty_sketch || source.saw_empty_sketch;
-                if (!source.HasData())
-                    return;
-                auto &bind_data = aggr_input_data.bind_data->template Cast<DSTupleBindData>();
-                auto source_seed = source.Seed(bind_data);
-                if (target.HasData() && ThetaSeedHash(source_seed) != ThetaSeedHash(target.Seed(bind_data)))
-                {
-                    DSTupleThrowSeedMismatch("datasketch_tuple", ThetaSeedHash(target.Seed(bind_data)), ThetaSeedHash(source_seed));
-                }
-                auto lg_k = MaxValue(source.LgK(bind_data), target.LgK(bind_data));
-                target.EnsureUnion(lg_k, target.HasData() ? target.Seed(bind_data) : source_seed, bind_data.mode);
-                if (target.update_sketch)
-                {
-                    target.union_sketch->update(target.update_sketch->compact());
-                    delete target.update_sketch;
-                    target.update_sketch = nullptr;
-                }
-                if (source.update_sketch)
-                    target.union_sketch->update(source.update_sketch->compact());
-                if (source.union_sketch)
-                    target.union_sketch->update(source.union_sketch->get_result());
-            }
-
-            template <class T, class STATE>
-            static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data)
-            {
-                if (state.union_sketch)
-                {
-                    target = DSTupleDoubleTraits::Serialize(finalize_data.result, state.union_sketch->get_result());
-                }
-                else if (state.update_sketch)
-                {
-                    target = DSTupleDoubleTraits::Serialize(finalize_data.result, state.update_sketch->compact());
-                }
-                else if (state.saw_empty_sketch)
-                {
-                    auto &bind_data = finalize_data.input.bind_data->template Cast<DSTupleBindData>();
-                    target = DSTupleDoubleTraits::Serialize(finalize_data.result, DSTupleEmptySketch(bind_data.lg_k, bind_data.seed));
-                }
-                else
-                {
-                    // no input rows: NULL, as for the other sketches' aggregates
-                    finalize_data.ReturnNull();
-                }
-            }
-        };
-
-        struct DSTupleCreateOperation : DSTupleOperationBase
-        {
-            template <class KEY_TYPE, class VALUE_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const KEY_TYPE &key, const VALUE_TYPE &value, AggregateBinaryInput &idata)
-            {
-                auto &bind_data = idata.input.bind_data->template Cast<DSTupleBindData>();
-                state.CreateUpdateSketch(bind_data);
-                if constexpr (std::is_same_v<KEY_TYPE, duckdb::string_t>)
-                {
-                    state.update_sketch->update(key.GetData(), key.GetSize(), value);
-                }
-                else
-                {
-                    state.update_sketch->update(key, value);
-                }
-            }
-        };
-
-        struct DSTupleMergeOperation : DSTupleOperationBase
-        {
-            template <class A_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &blob, AggregateUnaryInput &idata)
-            {
-                auto &bind_data = idata.input.bind_data->template Cast<DSTupleBindData>();
-                auto sketch = DSTupleDoubleTraits::Deserialize(blob);
-                if (sketch.is_empty())
-                {
-                    state.saw_empty_sketch = true;
-                    return;
-                }
-                if (state.union_sketch && sketch.get_seed_hash() != ThetaSeedHash(state.union_seed))
-                {
-                    DSTupleThrowSeedMismatch("datasketch_tuple", ThetaSeedHash(state.union_seed), sketch.get_seed_hash());
-                }
-                auto lg_k = bind_data.infer_lg_k ? MaxValue(bind_data.lg_k, ThetaInferLgK(sketch)) : bind_data.lg_k;
-                state.EnsureUnion(lg_k, ThetaSeedForHash(sketch.get_seed_hash()), bind_data.mode);
-                ThetaGuard([&]()
-                           { state.union_sketch->update(sketch); },
-                           "Tuple");
-            }
-
-            template <class INPUT_TYPE, class STATE, class OP>
-            static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t count)
-            {
-                // Merging the same sketch repeatedly is not idempotent for mode sum: merge it count times.
-                for (idx_t i = 0; i < count; i++)
-                {
-                    Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-                }
-            }
-        };
-
         // ============================================================
-        // Intersection Aggregate
+        // Aggregate states (see datasketches_theta_arena.hpp)
         // ============================================================
 
-        struct DSTupleIntersectBindData : public FunctionData
+        struct DSTupleTraits
         {
-            explicit DSTupleIntersectBindData(DSTupleMode mode) : mode(mode) {}
-            unique_ptr<FunctionData> Copy() const override { return make_uniq<DSTupleIntersectBindData>(mode); }
-            bool Equals(const FunctionData &other) const override { return mode == other.Cast<DSTupleIntersectBindData>().mode; }
-            DSTupleMode mode;
-        };
+            using Alloc = DSTupleAllocator;
+            using Entry = std::pair<uint64_t, double>;
+            using Update = DSTupleUpdate;
+            using Compact = DSTupleCompact;
+            using Union = DSTupleUnion;
+            using Intersection = DSTupleIntersection;
+            static constexpr bool SET_ONLY = false;
+            static constexpr bool HAS_NUM_VALUES = false;
+            static constexpr const char *KIND = "Tuple";
+            static constexpr const char *BUILD_NAME = "datasketch_tuple";
+            static constexpr const char *INTERSECT_NAME = "datasketch_tuple_intersect_agg";
 
-        unique_ptr<FunctionData> DSTupleBindIntersect(BindAggregateFunctionInput &input)
-        {
-            return make_uniq<DSTupleIntersectBindData>(DSTupleBindMode(input));
-        }
-
-        struct DSTupleIntersectState
-        {
-            DSTupleIntersection *intersection = nullptr;
-            uint64_t seed = DS_THETA_DEFAULT_SEED;
-            bool saw_empty = false;
-
-            ~DSTupleIntersectState()
+            static DSTupleDoublePolicy Policy(const DSThetaParams &params)
             {
-                delete intersection;
+                return DSTupleDoublePolicy(static_cast<DSTupleMode>(params.mode));
             }
 
-            void Add(const DSTupleCompact &sketch, DSTupleMode mode)
+            static uint64_t Key(const Entry &entry) { return entry.first; }
+            static idx_t SummarySize(const DSThetaParams &) { return sizeof(double); }
+            static void WriteSummary(const Entry &entry, data_ptr_t data, const DSThetaParams &)
             {
-                if (sketch.is_empty())
-                {
-                    saw_empty = true;
-                    return;
-                }
-                if (!intersection)
-                {
-                    seed = ThetaSeedForHash(sketch.get_seed_hash());
-                    intersection = new DSTupleIntersection(seed, DSTupleDoublePolicy(mode));
-                }
-                else if (sketch.get_seed_hash() != ThetaSeedHash(seed))
-                {
-                    DSTupleThrowSeedMismatch("datasketch_tuple_intersect_agg", ThetaSeedHash(seed), sketch.get_seed_hash());
-                }
-                ThetaGuard([&]()
-                           { intersection->update(sketch); },
-                           "Tuple");
+                memcpy(data, &entry.second, sizeof(double));
             }
-        };
-
-        struct DSTupleIntersectOperation
-        {
-            template <class STATE>
-            static void Initialize(STATE &state)
+            static Entry MakeEntry(uint64_t key, const_data_ptr_t data, const DSThetaParams &)
             {
-                state.intersection = nullptr;
-                state.seed = DS_THETA_DEFAULT_SEED;
-                state.saw_empty = false;
+                double value;
+                memcpy(&value, data, sizeof(double));
+                return Entry(key, value);
             }
-
-            template <class STATE>
-            static void Destroy(STATE &state, AggregateInputData &)
+            static void Fold(data_ptr_t data, const Entry &incoming, const DSThetaParams &params)
             {
-                delete state.intersection;
-                state.intersection = nullptr;
+                double value;
+                memcpy(&value, data, sizeof(double));
+                Policy(params)(value, incoming.second);
+                memcpy(data, &value, sizeof(double));
             }
+            static idx_t PayloadSize(const DSThetaParams &) { return sizeof(double); }
+            static uint8_t NumValues(const Compact &) { return 1; }
 
-            static bool IgnoreNull() { return true; }
-
-            template <class A_TYPE, class STATE, class OP>
-            static void Operation(STATE &state, const A_TYPE &blob, AggregateUnaryInput &idata)
+            template <class KEY>
+            static void Apply(Update &sketch, const_data_ptr_t key, uint32_t length, const_data_ptr_t payload, const DSThetaParams &)
             {
-                auto &bind_data = idata.input.bind_data->template Cast<DSTupleIntersectBindData>();
-                state.Add(DSTupleDoubleTraits::Deserialize(blob), bind_data.mode);
-            }
-
-            template <class INPUT_TYPE, class STATE, class OP>
-            static void ConstantOperation(STATE &state, const INPUT_TYPE &input, AggregateUnaryInput &unary_input, idx_t count)
-            {
-                for (idx_t i = 0; i < count; i++)
+                double value;
+                memcpy(&value, payload, sizeof(double));
+                if constexpr (std::is_same<KEY, string_t>::value)
                 {
-                    Operation<INPUT_TYPE, STATE, OP>(state, input, unary_input);
-                }
-            }
-
-            template <class STATE, class OP>
-            static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data)
-            {
-                target.saw_empty = target.saw_empty || source.saw_empty;
-                if (source.intersection)
-                {
-                    auto &bind_data = aggr_input_data.bind_data->template Cast<DSTupleIntersectBindData>();
-                    target.Add(source.intersection->get_result(), bind_data.mode);
-                }
-            }
-
-            template <class T, class STATE>
-            static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data)
-            {
-                if (state.saw_empty)
-                {
-                    target = DSTupleDoubleTraits::Serialize(finalize_data.result, DSTupleEmptySketch(DS_THETA_DEFAULT_LG_K, state.seed));
-                }
-                else if (state.intersection)
-                {
-                    target = DSTupleDoubleTraits::Serialize(finalize_data.result, state.intersection->get_result());
+                    sketch.update(key, length, value);
                 }
                 else
                 {
-                    finalize_data.ReturnNull();
+                    KEY typed;
+                    memcpy(&typed, key, sizeof(KEY));
+                    sketch.update(typed, value);
                 }
             }
+
+            static Update NewUpdate(const DSTupleBindData &bind, const DSThetaParams &params)
+            {
+                DSTupleUpdate::builder b{Policy(params), Alloc(DSArenaMode())};
+                b.set_lg_k(bind.lg_k);
+                b.set_seed(bind.seed);
+                b.set_p(bind.p);
+                return b.build();
+            }
+
+            static Union NewUnion(uint8_t lg_k, uint64_t seed, const DSThetaParams &params)
+            {
+                DSTupleUnion::builder b{Policy(params), Alloc(DSArenaMode())};
+                b.set_lg_k(lg_k);
+                b.set_seed(seed);
+                return b.build();
+            }
+
+            static Intersection NewIntersection(uint64_t seed, const DSThetaParams &params)
+            {
+                return Intersection(seed, Policy(params), Alloc(DSArenaMode()));
+            }
+
+            static Compact Deserialize(const string_t &blob)
+            {
+                auto seed = DSTupleSeedFor(blob);
+                return ThetaGuard([&]()
+                                  { return Compact::deserialize(blob.GetData(), blob.GetSize(), seed, datasketches::serde<double>(), Alloc(DSArenaMode())); },
+                                  KIND);
+            }
+
+            static Compact Empty(uint8_t lg_k, uint64_t seed, const DSThetaParams &)
+            {
+                DSTupleUpdate::builder b{DSTupleDoublePolicy(), Alloc(DSArenaMode())};
+                b.set_lg_k(lg_k);
+                b.set_seed(seed);
+                return b.build().compact();
+            }
+
+            static auto Serialize(const Compact &sketch) -> decltype(sketch.serialize())
+            {
+                return sketch.serialize();
+            }
+
+            static void ThrowSeedMismatch(const char *function_name, uint16_t a, uint16_t b)
+            {
+                DSTupleThrowSeedMismatch(function_name, a, b);
+            }
+
+            static void ThrowNumValues(const char *, idx_t, idx_t) {}
         };
+
+        template <class KEY>
+        using DSTupleState = DSThetaFamilyState<DSTupleTraits, KEY>;
+        using DSTupleMergeState = DSTupleState<string_t>;
+        using DSTupleIntersectState = DSThetaFamilyIntersectState<DSTupleTraits>;
+        // merging the same sketch repeatedly is not idempotent for mode sum
+        using DSTupleMergeOperation = DSThetaFamilyOperation<false>;
+        using DSTupleIntersectOperation = DSThetaFamilyIntersectOperation<false>;
 
         // ============================================================
         // Scalar Functions
@@ -671,9 +464,10 @@ namespace duckdb
         {
             for (bool with_lg_k : {false, true})
             {
-                auto fun = AggregateFunction::BinaryAggregate<DSTupleState, T, double, string_t, DSTupleCreateOperation, AggregateDestructorType::LEGACY>(
-                    key_type, LogicalType::DOUBLE, sketch_type);
-                fun.SetStateDestructorCallback(AggregateFunction::StateDestroy<DSTupleState, DSTupleCreateOperation>);
+                using STATE = DSTupleState<T>;
+                using OP = DSThetaFamilyCreatePairOperation;
+                auto fun = AggregateFunction::BinaryAggregate<STATE, T, double, string_t, OP>(key_type, LogicalType::DOUBLE, sketch_type);
+                DSThetaSetStateExport<STATE>(fun);
                 auto signature = DSTupleSignature(with_lg_k, {key_type, LogicalType::DOUBLE}, sketch_type);
                 DSTupleAddMode(signature);
                 DSTupleAddSeedAndP(signature);
@@ -681,12 +475,12 @@ namespace duckdb
                 if (with_lg_k)
                 {
                     fun.SetBindCallback(DSTupleBindBuild<true>);
-                    DSReadDataArgumentsAt<1, 2, DSTupleState, T, double, DSTupleCreateOperation>(fun);
+                    DSReadDataArgumentsAt<1, 2, STATE, T, double, OP>(fun);
                 }
                 else
                 {
                     fun.SetBindCallback(DSTupleBindBuild<false>);
-                    DSReadDataArgumentsAt<0, 1, DSTupleState, T, double, DSTupleCreateOperation>(fun);
+                    DSReadDataArgumentsAt<0, 1, STATE, T, double, OP>(fun);
                 }
                 fun.SetOrderDependent(AggregateOrderDependent::NOT_ORDER_DEPENDENT);
                 set.AddFunction(fun);
@@ -748,15 +542,15 @@ namespace duckdb
 
             for (bool with_lg_k : {false, true})
             {
-                auto fun = AggregateFunction::UnaryAggregate<DSTupleState, string_t, string_t, DSTupleMergeOperation, AggregateDestructorType::LEGACY>(
-                    sketch_type, sketch_type);
+                auto fun = AggregateFunction::UnaryAggregate<DSTupleMergeState, string_t, string_t, DSTupleMergeOperation>(sketch_type, sketch_type);
+                DSThetaSetStateExport<DSTupleMergeState>(fun);
                 auto signature = DSTupleSignature(with_lg_k, {sketch_type}, sketch_type);
                 DSTupleAddMode(signature);
                 fun.GetSignature() = std::move(signature);
                 if (with_lg_k)
                 {
                     fun.SetBindCallback(DSTupleBindMerge<true>);
-                    DSReadDataArgumentAt<1, DSTupleState, string_t, DSTupleMergeOperation>(fun);
+                    DSReadDataArgumentAt<1, DSTupleMergeState, string_t, DSTupleMergeOperation>(fun);
                     descs.push_back(DSTupleDescription("Merges (unions) Tuple sketches into one with the given log2 of nominal entries (lg_k); the "
                                                        "summaries of a key are combined by mode := 'sum' (default), 'min', 'max' or 'one'",
                                                        {ex.QueryPartials("datasketch_tuple(16, sketch)"), ex.QueryPartials("datasketch_tuple(16, sketch, mode := 'max')")},
@@ -765,7 +559,7 @@ namespace duckdb
                 else
                 {
                     fun.SetBindCallback(DSTupleBindMerge<false>);
-                    DSReadDataArgumentAt<0, DSTupleState, string_t, DSTupleMergeOperation>(fun);
+                    DSReadDataArgumentAt<0, DSTupleMergeState, string_t, DSTupleMergeOperation>(fun);
                     descs.push_back(DSTupleDescription("Merges (unions) Tuple sketches into one, keeping as many entries as the largest input "
                                                        "(at least lg_k 12); the summaries of a key are combined by mode := 'sum' (default), 'min', 'max' or 'one'",
                                                        {ex.QueryPartials("datasketch_tuple(sketch)"), ex.QueryPartials("datasketch_tuple(sketch, mode := 'max')")},
@@ -780,8 +574,8 @@ namespace duckdb
         // --- datasketch_tuple_intersect_agg
         {
             AggregateFunctionSet set("datasketch_tuple_intersect_agg");
-            auto fun = AggregateFunction::UnaryAggregate<DSTupleIntersectState, string_t, string_t, DSTupleIntersectOperation, AggregateDestructorType::LEGACY>(
-                sketch_type, sketch_type);
+            auto fun = AggregateFunction::UnaryAggregate<DSTupleIntersectState, string_t, string_t, DSTupleIntersectOperation>(sketch_type, sketch_type);
+            DSThetaSetStateExport<DSTupleIntersectState>(fun);
             auto signature = DSTupleSignature(false, {sketch_type}, sketch_type);
             DSTupleAddMode(signature);
             fun.GetSignature() = std::move(signature);
