@@ -1,35 +1,20 @@
+# The library comes from the Query.Farm fork's duckdb-5.3.0 branch: release 5.3.0 plus the fixes below, one commit
+# each, until releases include them. Drop a commit (and move REF) once its fix ships upstream.
+#   apache/datasketches-cpp#552  req_sketch kept K in 8 bits (256 became 4)
+#   apache/datasketches-cpp#555  count_min_sketch hash seeds differed between standard libraries
+#   apache/datasketches-cpp#556  hll_union copied input sketches with their allocator
+#   apache/datasketches-cpp#557  ebpps_sketch::merge(const&) called an unqualified swap
+#   apache/datasketches-cpp#558  kll_sketch allocated K items in its constructor
+#   apache/datasketches-cpp#559  count_min_sketch hash seeds ignored the sketch's allocator
+#   apache/datasketches-cpp#560  frequent-items purge allocated a temporary sample each time
+#   apache/datasketches-cpp#561  tdigest reserved its buffers up front
+#   apache/datasketches-cpp#562  density_sketch did not work with a custom allocator
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
-    REPO apache/datasketches-cpp
-    REF 5b5524f55d121225a7909c2851271327684585d7 # 5.3.0
-    SHA512 f37a85be727782afae155126198f1839d2a67dd1bb6025b46d8a84eefc5629b5ae2695208c244acccb4aa646f0fd23740d763e169103812324315643c99b3488
-    HEAD_REF master
-    PATCHES
-        # req_sketch kept K in 8 bits, so a K of 256 or more wrapped around (256 became 4). Not yet fixed upstream.
-        req-k-16-bit.patch
-        # count_min_sketch drew its hash seeds with std::default_random_engine and std::uniform_int_distribution, which
-        # differ between standard libraries, so sketches built on Linux, macOS and Windows disagreed. The patch
-        # computes libstdc++'s seeds on every platform.
-        count-min-portable-hash-seeds.patch
-        # hll_union copied input sketches with their own allocator, so a union could hold memory of another allocator
-        # (https://github.com/apache/datasketches-cpp/pull/556).
-        hll-union-allocator.patch
-        # ebpps_sketch::merge(const&) called an unqualified swap, which does not compile with DSAllocator
-        # (https://github.com/apache/datasketches-cpp/pull/557).
-        ebpps-merge-qualified-swap.patch
-        # kll_sketch allocated K items in its constructor; it now allocates them on first use
-        # (https://github.com/apache/datasketches-cpp/pull/558).
-        kll-lazy-items.patch
-        # count_min_sketch kept its hash seeds in a std::vector with std::allocator, ignoring the sketch's allocator
-        # (https://github.com/apache/datasketches-cpp/pull/559).
-        count-min-hash-seeds-allocator.patch
-        # reverse_purge_hash_map::purge (frequent items) took its temporary median sample from the sketch's
-        # allocator, which an arena never gets back; it now lives on the stack
-        # (https://github.com/apache/datasketches-cpp/pull/560).
-        frequent-items-purge-samples.patch
-        # tdigest reserved room for 2K + 30 centroids and four times as many buffered values in its constructor (and when
-        # deserialized); both now grow as they fill (https://github.com/apache/datasketches-cpp/pull/561).
-        tdigest-lazy-buffers.patch
+    REPO rustyconover/datasketches-cpp
+    REF 44f777b89af7d81fb575c1a805432328d422bbde # duckdb-5.3.0
+    SHA512 66a610ccfc7633e7e7f0afadec2963522bed16fe07886c48275e231428106517ef053ad7ef4d22bfae1a9ca48bc95a034223a7e877ea4515f34f461426f43c10
+    HEAD_REF duckdb-5.3.0
 )
 
 set(VCPKG_BUILD_TYPE release) # header-only port

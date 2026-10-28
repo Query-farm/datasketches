@@ -1,0 +1,76 @@
+# name: test/sql/datasketch_spill_density.test
+# description: Density aggregate states live in the arena: they count toward memory_limit and spill
+# group: [datasketches]
+
+require datasketches
+
+require skip_reload
+
+statement ok
+SET threads=4;
+
+statement ok
+SET temp_directory='{TEST_DIR}/datasketch_spill_density';
+
+statement ok
+SET preserve_insertion_order=false;
+
+# Groups of 3 two-dimensional points stay below K, so every sketch is exact and its estimate deterministic
+statement ok
+CREATE TABLE points AS SELECT i % 300000 AS g, [(i % 300000)::DOUBLE, (i // 300000)::DOUBLE] AS p FROM range(900000) t(i);
+
+statement ok
+SET memory_limit='4GB';
+
+statement ok
+CREATE TABLE expected AS
+SELECT g, datasketch_density_n(s) AS n, datasketch_density_estimate(s, [g::DOUBLE, 1.0]) AS e
+FROM (SELECT g, datasketch_density(16, p) AS s FROM points GROUP BY g);
+
+statement ok
+SET memory_limit='128MB';
+
+query I
+SELECT count(*) FROM (
+    SELECT g, datasketch_density(16, p) AS s FROM points GROUP BY g
+) a JOIN expected USING (g)
+WHERE datasketch_density_n(a.s) != expected.n OR datasketch_density_dim(a.s) != 2
+   OR abs(datasketch_density_estimate(a.s, [g::DOUBLE, 1.0]) - expected.e) > 1e-12;
+----
+0
+
+# Merging stored sketches spills too
+statement ok
+SET memory_limit='4GB';
+
+statement ok
+CREATE TABLE parts AS SELECT g, i % 3 AS part, datasketch_density(16, p) AS s
+FROM (SELECT i % 100000 AS g, i, [(i % 100000)::DOUBLE, (i % 7)::DOUBLE] AS p FROM range(600000) t(i)) GROUP BY g, part;
+
+statement ok
+SET memory_limit='128MB';
+
+query I
+SELECT count(*) FROM (SELECT g, datasketch_density(16, s) AS m FROM parts GROUP BY g)
+WHERE datasketch_density_n(m) != 6 OR datasketch_density_dim(m) != 2;
+----
+0
+
+statement ok
+SET memory_limit='4GB';
+
+# Larger sketches compact (estimation mode) and still merge across threads and spilled partitions
+query III
+SELECT count(*), min(datasketch_density_n(s)), bool_and(datasketch_density_is_estimation_mode(s))
+FROM (SELECT i % 50 AS g, datasketch_density(8, [i::DOUBLE, (i % 13)::DOUBLE]) AS s FROM range(200000) t(i) GROUP BY g);
+----
+50	4000	true
+
+# Exported states finalize to the aggregate's result
+query II
+SELECT datasketch_density_n(finalize(datasketch_density(16, [i::DOUBLE, 1.0]) EXPORT_STATE)),
+       datasketch_density_estimate(finalize(datasketch_density(16, [i::DOUBLE, 1.0]) EXPORT_STATE), [3.0, 1.0])
+     = datasketch_density_estimate(datasketch_density(16, [i::DOUBLE, 1.0]), [3.0, 1.0])
+FROM range(10) t(i);
+----
+10	true
