@@ -1,4 +1,4 @@
-"""Generates src/generated.cpp and test/sql/datasketch_generated_examples.test.
+"""Generates src/generated/<sketch>.cpp (one file per sketch) and test/sql/datasketch_generated_examples.test.
 
 The generated sketches are described in SKETCHES and their scalar functions in scalar_functions();
 codegen/generated.cpp.j2 renders them. Run it from anywhere: `python codegen/generator.py`.
@@ -756,9 +756,19 @@ def main() -> None:
         "k_logical_type": K_LOGICAL_TYPE,
     }
 
-    (ROOT / "src" / "generated.cpp").write_text(template.render(data))
+    # One source file per sketch, so the families compile in parallel and a change rebuilds only what it touches.
+    out_dir = ROOT / "src" / "generated"
+    out_dir.mkdir(exist_ok=True)
+    written = set()
+    for sketch in SKETCHES:
+        path = out_dir / f"{sketch.sql}.cpp"
+        path.write_text(template.render({**data, "sketches": [sketch]}))
+        written.add(path.name)
+    for stale in out_dir.glob("*.cpp"):
+        if stale.name not in written:
+            stale.unlink()
     (ROOT / "test" / "sql" / "datasketch_generated_examples.test").write_text(render_examples_test())
-    print("Generated src/generated.cpp and test/sql/datasketch_generated_examples.test")
+    print(f"Generated src/generated/{{{','.join(sorted(written))}}} and test/sql/datasketch_generated_examples.test")
 
 
 if __name__ == "__main__":

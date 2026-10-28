@@ -22,7 +22,13 @@ project(${TARGET_NAME})
 include_directories(src/include)
 
 
-set(EXTENSION_SOURCES src/datasketches_extension.cpp src/generated.cpp
+set(EXTENSION_SOURCES src/datasketches_extension.cpp
+src/generated/quantiles.cpp
+src/generated/kll.cpp
+src/generated/req.cpp
+src/generated/tdigest.cpp
+src/generated/hll.cpp
+src/generated/cpc.cpp
 src/query_farm_telemetry.cpp
 src/theta_sketch.cpp
 src/tuple_sketch.cpp

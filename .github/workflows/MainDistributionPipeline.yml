@@ -30,7 +30,9 @@ jobs:
         python3 -m pip install jinja2
         python3 codegen/generator.py
     - name: Fail if the generated files differ from the committed ones
-      run: git diff --exit-code -- src/generated.cpp test/sql/datasketch_generated_examples.test
+      run: |
+        git status --porcelain -- src/generated src/generated.cpp test/sql/datasketch_generated_examples.test
+        test -z "$(git status --porcelain -- src/generated src/generated.cpp test/sql/datasketch_generated_examples.test)"
   duckdb-stable-build:
     name: Build extension binaries
     uses: Query-farm/extension-ci-tools/.github/workflows/build.yml@query-farm
