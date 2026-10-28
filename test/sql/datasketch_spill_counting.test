@@ -1,0 +1,357 @@
+# name: test/sql/datasketch_spill_counting.test
+# description: HLL and CPC aggregate states live in the arena and spill under a memory limit, with the results of unspilled runs
+# group: [datasketches]
+
+require datasketches
+
+require skip_reload
+
+statement ok
+SET threads=4;
+
+statement ok
+SET temp_directory='{TEST_DIR}/datasketch_spill_counting';
+
+statement ok
+SET preserve_insertion_order=false;
+
+# Every input type family. Each group gets 10 values: more than an HLL state buffers (7), fewer than a CPC state
+# buffers (16). Strings are longer than 12 bytes so their bytes are copied into the arena.
+statement ok
+CREATE VIEW src AS
+SELECT i % 100000 AS g,
+       i AS v_int,
+       (i::HUGEINT << 80) + i AS v_huge,
+       'value number ' || i AS v_str,
+       ('blob value ' || i)::BLOB AS v_blob,
+       md5(i::VARCHAR)::UUID AS v_uuid
+FROM range(1000000) t(i);
+
+# Distinct counts this small are estimated almost exactly, but two values can share a coupon, and whether a group's
+# rows met in one partial state or were merged from several (which changes a CPC estimate slightly) depends on the
+# threads: so each run is compared, rounded, against the same query without a limit, through a checksum of its rows
+# (tables of an in-memory database count toward the limit).
+statement ok
+SET memory_limit='4GB';
+
+statement ok
+CREATE TABLE expected AS
+SELECT 'hll_v_int' AS name, count(*) AS n, bit_xor(hash(g, e)) AS checksum, count(*) FILTER (WHERE abs(e - 10) > 3) AS off
+FROM (SELECT g, round(datasketch_hll_estimate(datasketch_hll(12, v_int))) AS e FROM src GROUP BY g)
+UNION ALL
+SELECT 'hll_v_huge' AS name, count(*) AS n, bit_xor(hash(g, e)) AS checksum, count(*) FILTER (WHERE abs(e - 10) > 3) AS off
+FROM (SELECT g, round(datasketch_hll_estimate(datasketch_hll(12, v_huge))) AS e FROM src GROUP BY g)
+UNION ALL
+SELECT 'hll_v_str' AS name, count(*) AS n, bit_xor(hash(g, e)) AS checksum, count(*) FILTER (WHERE abs(e - 10) > 3) AS off
+FROM (SELECT g, round(datasketch_hll_estimate(datasketch_hll(12, v_str))) AS e FROM src GROUP BY g)
+UNION ALL
+SELECT 'hll_v_blob' AS name, count(*) AS n, bit_xor(hash(g, e)) AS checksum, count(*) FILTER (WHERE abs(e - 10) > 3) AS off
+FROM (SELECT g, round(datasketch_hll_estimate(datasketch_hll(12, v_blob))) AS e FROM src GROUP BY g)
+UNION ALL
+SELECT 'hll_v_uuid' AS name, count(*) AS n, bit_xor(hash(g, e)) AS checksum, count(*) FILTER (WHERE abs(e - 10) > 3) AS off
+FROM (SELECT g, round(datasketch_hll_estimate(datasketch_hll(12, v_uuid))) AS e FROM src GROUP BY g)
+UNION ALL
+SELECT 'cpc_v_int' AS name, count(*) AS n, bit_xor(hash(g, e)) AS checksum, count(*) FILTER (WHERE abs(e - 10) > 3) AS off
+FROM (SELECT g, round(datasketch_cpc_estimate(datasketch_cpc(12, v_int))) AS e FROM src GROUP BY g)
+UNION ALL
+SELECT 'cpc_v_huge' AS name, count(*) AS n, bit_xor(hash(g, e)) AS checksum, count(*) FILTER (WHERE abs(e - 10) > 3) AS off
+FROM (SELECT g, round(datasketch_cpc_estimate(datasketch_cpc(12, v_huge))) AS e FROM src GROUP BY g)
+UNION ALL
+SELECT 'cpc_v_str' AS name, count(*) AS n, bit_xor(hash(g, e)) AS checksum, count(*) FILTER (WHERE abs(e - 10) > 3) AS off
+FROM (SELECT g, round(datasketch_cpc_estimate(datasketch_cpc(12, v_str))) AS e FROM src GROUP BY g)
+UNION ALL
+SELECT 'cpc_v_blob' AS name, count(*) AS n, bit_xor(hash(g, e)) AS checksum, count(*) FILTER (WHERE abs(e - 10) > 3) AS off
+FROM (SELECT g, round(datasketch_cpc_estimate(datasketch_cpc(12, v_blob))) AS e FROM src GROUP BY g)
+UNION ALL
+SELECT 'cpc_v_uuid' AS name, count(*) AS n, bit_xor(hash(g, e)) AS checksum, count(*) FILTER (WHERE abs(e - 10) > 3) AS off
+FROM (SELECT g, round(datasketch_cpc_estimate(datasketch_cpc(12, v_uuid))) AS e FROM src GROUP BY g);
+
+query I
+SELECT count(*) FROM expected WHERE n != 100000 OR off != 0;
+----
+0
+
+statement ok
+SET memory_limit='128MB';
+
+query I
+SELECT bit_xor(hash(g, e)) = (SELECT checksum FROM expected WHERE name = 'hll_v_int')
+FROM (SELECT g, round(datasketch_hll_estimate(datasketch_hll(12, v_int))) AS e FROM src GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, e)) = (SELECT checksum FROM expected WHERE name = 'hll_v_huge')
+FROM (SELECT g, round(datasketch_hll_estimate(datasketch_hll(12, v_huge))) AS e FROM src GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, e)) = (SELECT checksum FROM expected WHERE name = 'hll_v_str')
+FROM (SELECT g, round(datasketch_hll_estimate(datasketch_hll(12, v_str))) AS e FROM src GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, e)) = (SELECT checksum FROM expected WHERE name = 'hll_v_blob')
+FROM (SELECT g, round(datasketch_hll_estimate(datasketch_hll(12, v_blob))) AS e FROM src GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, e)) = (SELECT checksum FROM expected WHERE name = 'hll_v_uuid')
+FROM (SELECT g, round(datasketch_hll_estimate(datasketch_hll(12, v_uuid))) AS e FROM src GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, e)) = (SELECT checksum FROM expected WHERE name = 'cpc_v_int')
+FROM (SELECT g, round(datasketch_cpc_estimate(datasketch_cpc(12, v_int))) AS e FROM src GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, e)) = (SELECT checksum FROM expected WHERE name = 'cpc_v_huge')
+FROM (SELECT g, round(datasketch_cpc_estimate(datasketch_cpc(12, v_huge))) AS e FROM src GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, e)) = (SELECT checksum FROM expected WHERE name = 'cpc_v_str')
+FROM (SELECT g, round(datasketch_cpc_estimate(datasketch_cpc(12, v_str))) AS e FROM src GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, e)) = (SELECT checksum FROM expected WHERE name = 'cpc_v_blob')
+FROM (SELECT g, round(datasketch_cpc_estimate(datasketch_cpc(12, v_blob))) AS e FROM src GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, e)) = (SELECT checksum FROM expected WHERE name = 'cpc_v_uuid')
+FROM (SELECT g, round(datasketch_cpc_estimate(datasketch_cpc(12, v_uuid))) AS e FROM src GROUP BY g);
+----
+true
+
+# With one thread the runs are deterministic, so a spilled HLL run returns the very same sketches: a group's values
+# make the same union whether its rows met in one state or in several. (A CPC sketch merged from several states is
+# marked merged, which changes its estimate slightly, and spilling decides which rows meet: so CPC runs are compared,
+# rounded, by estimate.) Groups of 2 values stay buffered; groups of 20 build a sketch.
+statement ok
+SET threads=1;
+
+statement ok
+SET memory_limit='4GB';
+
+statement ok
+CREATE TABLE expected_sketches AS
+SELECT 0 AS e, 2 AS rows_per_group, count(*) AS n, bit_xor(hash(g, s)) AS checksum
+FROM (SELECT g, datasketch_hll(12, v) AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
+UNION ALL
+SELECT 0 AS e, 20 AS rows_per_group, count(*) AS n, bit_xor(hash(g, s)) AS checksum
+FROM (SELECT g, datasketch_hll(12, v) AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
+UNION ALL
+SELECT 1 AS e, 2 AS rows_per_group, count(*) AS n, bit_xor(hash(g, s)) AS checksum
+FROM (SELECT g, datasketch_hll(12, v::VARCHAR || ' padding the string') AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
+UNION ALL
+SELECT 1 AS e, 20 AS rows_per_group, count(*) AS n, bit_xor(hash(g, s)) AS checksum
+FROM (SELECT g, datasketch_hll(12, v::VARCHAR || ' padding the string') AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
+UNION ALL
+SELECT 2 AS e, 2 AS rows_per_group, count(*) AS n, bit_xor(hash(g, s)) AS checksum
+FROM (SELECT g, datasketch_hll(10, md5(v::VARCHAR)::UUID, 'HLL_8') AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
+UNION ALL
+SELECT 2 AS e, 20 AS rows_per_group, count(*) AS n, bit_xor(hash(g, s)) AS checksum
+FROM (SELECT g, datasketch_hll(10, md5(v::VARCHAR)::UUID, 'HLL_8') AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
+UNION ALL
+SELECT 3 AS e, 2 AS rows_per_group, count(*) AS n, bit_xor(hash(g, round(datasketch_cpc_estimate(s)))) AS checksum
+FROM (SELECT g, datasketch_cpc(12, v) AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
+UNION ALL
+SELECT 3 AS e, 20 AS rows_per_group, count(*) AS n, bit_xor(hash(g, round(datasketch_cpc_estimate(s)))) AS checksum
+FROM (SELECT g, datasketch_cpc(12, v) AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
+UNION ALL
+SELECT 4 AS e, 2 AS rows_per_group, count(*) AS n, bit_xor(hash(g, round(datasketch_cpc_estimate(s)))) AS checksum
+FROM (SELECT g, datasketch_cpc(12, v::VARCHAR || ' padding the string') AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
+UNION ALL
+SELECT 4 AS e, 20 AS rows_per_group, count(*) AS n, bit_xor(hash(g, round(datasketch_cpc_estimate(s)))) AS checksum
+FROM (SELECT g, datasketch_cpc(12, v::VARCHAR || ' padding the string') AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
+UNION ALL
+SELECT 5 AS e, 2 AS rows_per_group, count(*) AS n, bit_xor(hash(g, round(datasketch_cpc_estimate(s)))) AS checksum
+FROM (SELECT g, datasketch_cpc(10, v::VARCHAR::BLOB) AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
+UNION ALL
+SELECT 5 AS e, 20 AS rows_per_group, count(*) AS n, bit_xor(hash(g, round(datasketch_cpc_estimate(s)))) AS checksum
+FROM (SELECT g, datasketch_cpc(10, v::VARCHAR::BLOB) AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
+
+query I
+SELECT count(*) FROM expected_sketches WHERE n != 1000000 // rows_per_group;
+----
+0
+
+statement ok
+SET memory_limit='128MB';
+
+query I
+SELECT bit_xor(hash(g, s)) = (SELECT checksum FROM expected_sketches WHERE e = 0 AND rows_per_group = 2)
+FROM (SELECT g, datasketch_hll(12, v) AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, s)) = (SELECT checksum FROM expected_sketches WHERE e = 0 AND rows_per_group = 20)
+FROM (SELECT g, datasketch_hll(12, v) AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, s)) = (SELECT checksum FROM expected_sketches WHERE e = 1 AND rows_per_group = 2)
+FROM (SELECT g, datasketch_hll(12, v::VARCHAR || ' padding the string') AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, s)) = (SELECT checksum FROM expected_sketches WHERE e = 1 AND rows_per_group = 20)
+FROM (SELECT g, datasketch_hll(12, v::VARCHAR || ' padding the string') AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, s)) = (SELECT checksum FROM expected_sketches WHERE e = 2 AND rows_per_group = 2)
+FROM (SELECT g, datasketch_hll(10, md5(v::VARCHAR)::UUID, 'HLL_8') AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, s)) = (SELECT checksum FROM expected_sketches WHERE e = 2 AND rows_per_group = 20)
+FROM (SELECT g, datasketch_hll(10, md5(v::VARCHAR)::UUID, 'HLL_8') AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, round(datasketch_cpc_estimate(s)))) = (SELECT checksum FROM expected_sketches WHERE e = 3 AND rows_per_group = 2)
+FROM (SELECT g, datasketch_cpc(12, v) AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, round(datasketch_cpc_estimate(s)))) = (SELECT checksum FROM expected_sketches WHERE e = 3 AND rows_per_group = 20)
+FROM (SELECT g, datasketch_cpc(12, v) AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, round(datasketch_cpc_estimate(s)))) = (SELECT checksum FROM expected_sketches WHERE e = 4 AND rows_per_group = 2)
+FROM (SELECT g, datasketch_cpc(12, v::VARCHAR || ' padding the string') AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, round(datasketch_cpc_estimate(s)))) = (SELECT checksum FROM expected_sketches WHERE e = 4 AND rows_per_group = 20)
+FROM (SELECT g, datasketch_cpc(12, v::VARCHAR || ' padding the string') AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, round(datasketch_cpc_estimate(s)))) = (SELECT checksum FROM expected_sketches WHERE e = 5 AND rows_per_group = 2)
+FROM (SELECT g, datasketch_cpc(10, v::VARCHAR::BLOB) AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
+----
+true
+
+query I
+SELECT bit_xor(hash(g, round(datasketch_cpc_estimate(s)))) = (SELECT checksum FROM expected_sketches WHERE e = 5 AND rows_per_group = 20)
+FROM (SELECT g, datasketch_cpc(10, v::VARCHAR::BLOB) AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
+----
+true
+
+statement ok
+SET memory_limit='4GB';
+
+statement ok
+SET threads=4;
+
+# Merging stored sketches spills too
+statement ok
+CREATE TABLE parts AS
+SELECT g, p, datasketch_hll(12, v) AS h, datasketch_cpc(12, v) AS c
+FROM (SELECT i % 100000 AS g, i % 3 AS p, i AS v FROM range(900000) t(i))
+GROUP BY g, p;
+
+statement ok
+CREATE MACRO merged() AS TABLE
+SELECT g, round(datasketch_hll_estimate(datasketch_hll_union(12, h))) AS h,
+       round(datasketch_cpc_estimate(datasketch_cpc_union(12, c))) AS c
+FROM parts GROUP BY g;
+
+statement ok
+CREATE TABLE expected_merged AS
+SELECT count(*) AS n, bit_xor(hash(t)) AS checksum, count(*) FILTER (WHERE abs(h - 9) > 3 OR abs(c - 9) > 3) AS off
+FROM merged() t;
+
+query II
+SELECT n, off FROM expected_merged;
+----
+100000	0
+
+statement ok
+SET memory_limit='128MB';
+
+query I
+SELECT (SELECT bit_xor(hash(t)) FROM merged() t) = (SELECT checksum FROM expected_merged);
+----
+true
+
+statement ok
+SET memory_limit='4GB';
+
+# Exported states finalize to the aggregate's result: buffered states (3 values) and states with a sketch, for every
+# input type family
+query IIIIII
+SELECT finalize(datasketch_hll(12, i) EXPORT_STATE) = datasketch_hll(12, i),
+       finalize(datasketch_cpc(12, i) EXPORT_STATE) = datasketch_cpc(12, i),
+       finalize(datasketch_hll(12, i::HUGEINT << 70) EXPORT_STATE) = datasketch_hll(12, i::HUGEINT << 70),
+       finalize(datasketch_cpc(12, i::HUGEINT << 70) EXPORT_STATE) = datasketch_cpc(12, i::HUGEINT << 70),
+       finalize(datasketch_hll(12, 'a long string value ' || i) EXPORT_STATE) = datasketch_hll(12, 'a long string value ' || i),
+       finalize(datasketch_cpc(12, ('blob ' || i)::BLOB) EXPORT_STATE) = datasketch_cpc(12, ('blob ' || i)::BLOB)
+FROM range(3) t(i);
+----
+true	true	true	true	true	true
+
+query IIIIII
+SELECT finalize(datasketch_hll(12, i) EXPORT_STATE) = datasketch_hll(12, i),
+       finalize(datasketch_cpc(12, i) EXPORT_STATE) = datasketch_cpc(12, i),
+       finalize(datasketch_hll(12, md5(i::VARCHAR)::UUID) EXPORT_STATE) = datasketch_hll(12, md5(i::VARCHAR)::UUID),
+       finalize(datasketch_cpc(12, md5(i::VARCHAR)::UUID) EXPORT_STATE) = datasketch_cpc(12, md5(i::VARCHAR)::UUID),
+       finalize(datasketch_hll(12, 'a long string value ' || i) EXPORT_STATE) = datasketch_hll(12, 'a long string value ' || i),
+       finalize(datasketch_cpc(12, ('blob ' || i)::BLOB) EXPORT_STATE) = datasketch_cpc(12, ('blob ' || i)::BLOB)
+FROM range(100000) t(i);
+----
+true	true	true	true	true	true
+
+# Exported states of the union aggregates
+query II
+SELECT round(datasketch_hll_estimate(finalize(datasketch_hll_union(12, h) EXPORT_STATE))) = round(datasketch_hll_estimate(datasketch_hll_union(12, h))),
+       round(datasketch_cpc_estimate(finalize(datasketch_cpc_union(12, c) EXPORT_STATE))) = round(datasketch_cpc_estimate(datasketch_cpc_union(12, c)))
+FROM parts;
+----
+true	true
+
+# Combining exported states: buffered with buffered, buffered with a sketch, and two sketches
+query IIIIII
+SELECT round(datasketch_hll_estimate(finalize(combine(a.h, b.h)))),
+       round(datasketch_cpc_estimate(finalize(combine(a.c, b.c)))),
+       round(datasketch_hll_estimate(finalize(combine(l.h, a.h)))),
+       round(datasketch_cpc_estimate(finalize(combine(a.c, l.c)))),
+       round(datasketch_hll_estimate(finalize(combine(l.h, m.h)))),
+       round(datasketch_cpc_estimate(finalize(combine(l.c, m.c))))
+FROM (SELECT datasketch_hll(12, i) EXPORT_STATE AS h, datasketch_cpc(12, i) EXPORT_STATE AS c FROM range(3) t(i)) a,
+     (SELECT datasketch_hll(12, i) EXPORT_STATE AS h, datasketch_cpc(12, i) EXPORT_STATE AS c FROM range(2, 5) t(i)) b,
+     (SELECT datasketch_hll(12, i) EXPORT_STATE AS h, datasketch_cpc(12, i) EXPORT_STATE AS c FROM range(100, 200) t(i)) l,
+     (SELECT datasketch_hll(12, i) EXPORT_STATE AS h, datasketch_cpc(12, i) EXPORT_STATE AS c FROM range(150, 300) t(i)) m;
+----
+5.0	5.0	103.0	103.0	200.0	200.0
+
+# A constant input is added once
+query II
+SELECT (SELECT datasketch_hll(12, 42) FROM range(10000)) = (SELECT datasketch_hll(12, 42)),
+       (SELECT datasketch_cpc(12, 42) FROM range(10000)) = (SELECT datasketch_cpc(12, 42));
+----
+true	true

@@ -110,12 +110,14 @@ class Sketch:
     option: Optional[Option] = None
     counting: bool = False
     """Counting sketches have one sketch type for every input type; the others have one per item type."""
-    union_accepts_values: bool = False
-    """The library union also accepts raw values, so the create aggregate builds the union directly."""
     arena: bool = False
     """The aggregates keep their sketches in the aggregate arena, so DuckDB can spill them (see the arena states in
     datasketches_generated_common.hpp). Item sketches over VARCHAR stay on the heap: their std::string items do not
-    allocate from the arena."""
+    allocate from the arena. Counting sketches must use it: the template has no heap states for them."""
+
+    def __post_init__(self):
+        if self.counting and not self.arena:
+            raise ValueError(f"{self.name}: counting sketches keep their states in the arena (arena=True)")
 
     @property
     def sql(self) -> str:
@@ -195,9 +197,9 @@ SKETCHES = [
            example_k=100, k_min=10, k_max=65535, k_label="K (compression)"),
     Sketch("HLL", "DSHLLSketch", COUNTING_TYPES,
            example_k=12, k_min=4, k_max=21, k_label="K (lg_k)", option=HLL_TARGET_TYPE,
-           counting=True, union_accepts_values=True, arena=True),
+           counting=True, arena=True),
     Sketch("CPC", "DSCPCSketch", COUNTING_TYPES,
-           example_k=12, k_min=4, k_max=26, k_label="K (lg_k)", counting=True),
+           example_k=12, k_min=4, k_max=26, k_label="K (lg_k)", counting=True, arena=True),
 ]
 
 QUANTILE_SKETCHES = frozenset({"Quantiles", "KLL", "REQ", "TDigest"})
