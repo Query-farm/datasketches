@@ -10,8 +10,8 @@ require datasketches
 statement ok
 CREATE TABLE w AS SELECT i, i % 7 AS g, (i * 37) % 101 AS v, ((i * 37) % 101)::DOUBLE AS d FROM range(2000) t(i);
 
-# Running frames: n counts the rows so far. (The counts are compared as BIGINT: a UBIGINT = BIGINT comparison goes
-# through HUGEINT, which some DuckDB 2.0 development builds evaluate wrongly in a projection.)
+# Running frames: n counts the rows so far. (The counts are compared as BIGINT: DuckDB built with GCC 14 on aarch64
+# evaluates a UBIGINT = BIGINT comparison wrongly in a projection; the official builds are correct.)
 query IIIIII
 SELECT bool_and(kll = i + 1), bool_and(q = i + 1), bool_and(req = i + 1), bool_and(td = i + 1), bool_and(vo = i + 1), bool_and(dn = i + 1)
 FROM (
