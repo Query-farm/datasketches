@@ -20,13 +20,15 @@ vcpkg_from_github(
         # kll_sketch allocated K items in its constructor; it now allocates them on first use
         # (https://github.com/apache/datasketches-cpp/pull/558).
         kll-lazy-items.patch
-        # count_min_sketch kept its hash seeds in a std::vector with std::allocator, ignoring the sketch's allocator.
+        # count_min_sketch kept its hash seeds in a std::vector with std::allocator, ignoring the sketch's allocator
+        # (https://github.com/apache/datasketches-cpp/pull/559).
         count-min-hash-seeds-allocator.patch
         # reverse_purge_hash_map::purge (frequent items) took its temporary median sample from the sketch's
-        # allocator, which an arena never gets back; it now lives on the stack.
+        # allocator, which an arena never gets back; it now lives on the stack
+        # (https://github.com/apache/datasketches-cpp/pull/560).
         frequent-items-purge-samples.patch
         # tdigest reserved room for 2K + 30 centroids and four times as many buffered values in its constructor (and when
-        # deserialized); both now grow as they fill.
+        # deserialized); both now grow as they fill (https://github.com/apache/datasketches-cpp/pull/561).
         tdigest-lazy-buffers.patch
 )
 
