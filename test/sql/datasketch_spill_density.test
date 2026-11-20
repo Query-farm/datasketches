@@ -15,6 +15,9 @@ SET temp_directory='{TEST_DIR}/datasketch_spill_density';
 statement ok
 SET preserve_insertion_order=false;
 
+# The limit leaves room for DuckDB v2.0.1's hash aggregate, which holds more fixed memory per thread before it can
+# spill (four threads fail at 128MB); every limited query here still spills to the temp directory.
+
 # Groups of 3 two-dimensional points stay below K, so every sketch is exact and its estimate deterministic
 statement ok
 CREATE TABLE points AS SELECT i % 300000 AS g, [(i % 300000)::DOUBLE, (i // 300000)::DOUBLE] AS p FROM range(900000) t(i);
@@ -28,7 +31,7 @@ SELECT g, datasketch_density_n(s) AS n, datasketch_density_estimate(s, [g::DOUBL
 FROM (SELECT g, datasketch_density(16, p) AS s FROM points GROUP BY g);
 
 statement ok
-SET memory_limit='128MB';
+SET memory_limit='192MB';
 
 query I
 SELECT count(*) FROM (
@@ -48,7 +51,7 @@ CREATE TABLE parts AS SELECT g, i % 3 AS part, datasketch_density(16, p) AS s
 FROM (SELECT i % 100000 AS g, i, [(i % 100000)::DOUBLE, (i % 7)::DOUBLE] AS p FROM range(600000) t(i)) GROUP BY g, part;
 
 statement ok
-SET memory_limit='128MB';
+SET memory_limit='192MB';
 
 query I
 SELECT count(*) FROM (SELECT g, datasketch_density(16, s) AS m FROM parts GROUP BY g)

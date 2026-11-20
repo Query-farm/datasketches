@@ -134,12 +134,17 @@ FROM (SELECT g, round(datasketch_cpc_estimate(datasketch_cpc(12, v_uuid))) AS e 
 ----
 true
 
-# With one thread the runs are deterministic, so a spilled HLL run returns the very same sketches: a group's values
-# make the same union whether its rows met in one state or in several. (A CPC sketch merged from several states is
-# marked merged, which changes its estimate slightly, and spilling decides which rows meet: so CPC runs are compared,
-# rounded, by estimate.) Groups of 2 values stay buffered; groups of 20 build a sketch.
+# With one thread the runs are deterministic, so a spilled HLL run returns the same sketches: a group's values make
+# the same union whether its rows met in one state or in several. Groups of 2 values stay buffered and are compared
+# byte for byte. Groups of 20 build a SET-mode union, whose coupons sit in a hash table: merging partial states
+# (which spilling causes) stores the same coupons in other slots, so those are compared by their sorted coupons.
+# (A CPC sketch merged from several states is marked merged, which changes its estimate slightly, and spilling
+# decides which rows meet: so CPC runs are compared, rounded, by estimate.)
 statement ok
 SET threads=1;
+
+statement ok
+CREATE MACRO hll_coupons(s) AS list_sort(regexp_extract_all(datasketch_hll_describe(s, false, true), '(?m)^[0-9]+ +([0-9]+)', 1));
 
 statement ok
 SET memory_limit='4GB';
@@ -149,19 +154,19 @@ CREATE TABLE expected_sketches AS
 SELECT 0 AS e, 2 AS rows_per_group, count(*) AS n, bit_xor(hash(g, s)) AS checksum
 FROM (SELECT g, datasketch_hll(12, v) AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
 UNION ALL
-SELECT 0 AS e, 20 AS rows_per_group, count(*) AS n, bit_xor(hash(g, s)) AS checksum
+SELECT 0 AS e, 20 AS rows_per_group, count(*) AS n, bit_xor(hash(g, hll_coupons(s))) AS checksum
 FROM (SELECT g, datasketch_hll(12, v) AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
 UNION ALL
 SELECT 1 AS e, 2 AS rows_per_group, count(*) AS n, bit_xor(hash(g, s)) AS checksum
 FROM (SELECT g, datasketch_hll(12, v::VARCHAR || ' padding the string') AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
 UNION ALL
-SELECT 1 AS e, 20 AS rows_per_group, count(*) AS n, bit_xor(hash(g, s)) AS checksum
+SELECT 1 AS e, 20 AS rows_per_group, count(*) AS n, bit_xor(hash(g, hll_coupons(s))) AS checksum
 FROM (SELECT g, datasketch_hll(12, v::VARCHAR || ' padding the string') AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
 UNION ALL
 SELECT 2 AS e, 2 AS rows_per_group, count(*) AS n, bit_xor(hash(g, s)) AS checksum
 FROM (SELECT g, datasketch_hll(10, md5(v::VARCHAR)::UUID, 'HLL_8') AS s FROM (SELECT i % (500000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
 UNION ALL
-SELECT 2 AS e, 20 AS rows_per_group, count(*) AS n, bit_xor(hash(g, s)) AS checksum
+SELECT 2 AS e, 20 AS rows_per_group, count(*) AS n, bit_xor(hash(g, hll_coupons(s))) AS checksum
 FROM (SELECT g, datasketch_hll(10, md5(v::VARCHAR)::UUID, 'HLL_8') AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g)
 UNION ALL
 SELECT 3 AS e, 2 AS rows_per_group, count(*) AS n, bit_xor(hash(g, round(datasketch_cpc_estimate(s)))) AS checksum
@@ -197,7 +202,7 @@ FROM (SELECT g, datasketch_hll(12, v) AS s FROM (SELECT i % (500000) AS g, i * 7
 true
 
 query I
-SELECT bit_xor(hash(g, s)) = (SELECT checksum FROM expected_sketches WHERE e = 0 AND rows_per_group = 20)
+SELECT bit_xor(hash(g, hll_coupons(s))) = (SELECT checksum FROM expected_sketches WHERE e = 0 AND rows_per_group = 20)
 FROM (SELECT g, datasketch_hll(12, v) AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
 ----
 true
@@ -209,7 +214,7 @@ FROM (SELECT g, datasketch_hll(12, v::VARCHAR || ' padding the string') AS s FRO
 true
 
 query I
-SELECT bit_xor(hash(g, s)) = (SELECT checksum FROM expected_sketches WHERE e = 1 AND rows_per_group = 20)
+SELECT bit_xor(hash(g, hll_coupons(s))) = (SELECT checksum FROM expected_sketches WHERE e = 1 AND rows_per_group = 20)
 FROM (SELECT g, datasketch_hll(12, v::VARCHAR || ' padding the string') AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
 ----
 true
@@ -221,7 +226,7 @@ FROM (SELECT g, datasketch_hll(10, md5(v::VARCHAR)::UUID, 'HLL_8') AS s FROM (SE
 true
 
 query I
-SELECT bit_xor(hash(g, s)) = (SELECT checksum FROM expected_sketches WHERE e = 2 AND rows_per_group = 20)
+SELECT bit_xor(hash(g, hll_coupons(s))) = (SELECT checksum FROM expected_sketches WHERE e = 2 AND rows_per_group = 20)
 FROM (SELECT g, datasketch_hll(10, md5(v::VARCHAR)::UUID, 'HLL_8') AS s FROM (SELECT i % (50000) AS g, i * 7919 AS v FROM range(1000000) t(i)) GROUP BY g);
 ----
 true

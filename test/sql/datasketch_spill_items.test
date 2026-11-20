@@ -15,6 +15,9 @@ SET temp_directory='{TEST_DIR}/datasketch_spill_items';
 statement ok
 SET preserve_insertion_order=false;
 
+# The limit leaves room for DuckDB v2.0.1's hash aggregate, which holds more fixed memory per thread before it can
+# spill (four threads fail at 128MB); every limited query here still spills to the temp directory.
+
 # Inputs (views, so they take no memory) and reference results, computed with plenty of memory: 100k groups of 40 rows (more than a state buffers) and 400k groups of
 # 3 rows (fewer)
 statement ok
@@ -35,7 +38,7 @@ SELECT g, hash(datasketch_bloom_filter(1000, 0.01, v)) AS b, hash(datasketch_cou
 FROM big GROUP BY g;
 
 statement ok
-SET memory_limit='128MB';
+SET memory_limit='192MB';
 
 # Bloom filters and Count-Min sketches are deterministic: the same bytes as with plenty of memory
 query I
@@ -114,7 +117,7 @@ CREATE TABLE merged_ref AS
 SELECT g, hash(datasketch_bloom_filter(b)) AS b, hash(datasketch_count_min(c)) AS c FROM parts GROUP BY g;
 
 statement ok
-SET memory_limit='128MB';
+SET memory_limit='192MB';
 
 query I
 SELECT count(*) FROM (
@@ -172,7 +175,7 @@ true	true	true
 
 # VARCHAR frequent items and samples keep their heap states and still work under the limit
 statement ok
-SET memory_limit='128MB';
+SET memory_limit='192MB';
 
 query I
 SELECT count(*) FROM (
